@@ -61,5 +61,5 @@ function FilterServiceFactory($rootScope, $timeout) {
     return new FilterService();
 }
 
-angular.module('common.factories')
+angular.module('ev-fdm')
     .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);

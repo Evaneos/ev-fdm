@@ -1,6 +1,6 @@
 'use strict';
 
-var module = angular.module('demo.services');
+var module = angular.module('demo');
 
 function DemoContextService() {
     return {

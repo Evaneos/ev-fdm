@@ -12,7 +12,7 @@
  *     promise-default-styles="true">
  *
  */
-angular.module('common.directives')
+angular.module('ev-fdm')
     .directive('promise', ['$timeout', function ($timeout) {
 
     function applyClass(classes, element) {

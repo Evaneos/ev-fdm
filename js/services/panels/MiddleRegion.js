@@ -1,4 +1,4 @@
-var module = angular.module('common.services.panels');
+var module = angular.module('ev-fdm');
 
 /**
  * Taken from Angular-UI > $modal

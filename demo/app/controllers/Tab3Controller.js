@@ -1,5 +1,5 @@
 
-angular.module('demo.controllers')
+angular.module('demo')
     .filter('demoJson',  function($filter) {
         return function(obj) {
             return JSON.stringify(obj, null, 2);

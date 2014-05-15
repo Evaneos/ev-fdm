@@ -1,4 +1,4 @@
-var module = angular.module('common.services');
+var module = angular.module('ev-fdm');
 
 module.factory('panelFactory', function() {
     var Panel = function(extensions) {

@@ -32,5 +32,5 @@ var TranslationController = ['$rootScope', '$scope', 'SidonieModalService', 'Not
 }];
 
 
-angular.module('common.controllers')
+angular.module('ev-fdm')
     .controller('TranslationController', TranslationController);

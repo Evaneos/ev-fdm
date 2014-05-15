@@ -1,5 +1,5 @@
 
-angular.module('demo.controllers')
+angular.module('demo')
     .controller('Tab1Controller', ['$scope', 'SidonieModalService', 'PanelService', 'NotificationsService', function($scope, sidonieModalService, panelService, notificationsService) {
 
     this.test = function() {

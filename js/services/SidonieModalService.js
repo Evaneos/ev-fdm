@@ -1,4 +1,4 @@
-var module = angular.module('common.services');
+var module = angular.module('ev-fdm');
 
 var SidonieModalService = function($modal, $animate, $log) {
 

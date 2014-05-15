@@ -3,7 +3,7 @@
  */
 
 // Angular depedencies for this app
-var commonModule = angular.module('common', [ 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'ngRoute', 'common.services', 'common.storages', 'common.factories', 'common.directives', 'checklist-model' ]);
+var commonModule = angular.module('ev-fdm', [ 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'ngRoute', 'checklist-model', 'ui.bootstrap']);
 
 // configure the loading bar to be displayed
 // just beneath the menu
@@ -71,8 +71,9 @@ Initalizer.prototype.run = function($rootScope, $state, $location, notifications
 
 Initalizer.prototype._decorateScope = function($rootScope) {
 
+    console.warn("Penser a corriger cette zone");
     // attach some global variables to the $rootScope
-    if (evaneos._frontData) {
+    /*if (evaneos._frontData) {
         var scopeKeys = evaneos.frontData('__scopeKeys');
         _(scopeKeys).each(function(key) {
             $rootScope[key] = evaneos.frontData(key);
@@ -91,6 +92,7 @@ Initalizer.prototype._decorateScope = function($rootScope) {
             scope.$apply(fn);
         }
     }
+    */
 }
 
 

@@ -1,7 +1,7 @@
 'use strict';
 
 /* Services */
-var module = angular.module('common.storages');
+var module = angular.module('ev-fdm');
 
 var AbstractAutocompleteStorage = function (AbstractStorage, $timeout) {
     _.extend (this, AbstractStorage);

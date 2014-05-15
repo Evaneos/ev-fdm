@@ -1,5 +1,5 @@
 
-angular.module('demo.controllers')
+angular.module('demo')
     .controller('Tab3LeftController', [ '$scope', 'NotificationsService', 'DemoContextService', function($scope, notificationsService, demoContext) {
 
     $scope.context = demoContext;

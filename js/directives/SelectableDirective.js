@@ -1,6 +1,6 @@
 'use strict';
 /// This directive currently depend on ng-repeat $index for the shift selection. It would be great to remove this depency.
-angular.module('common.directives')
+angular.module('ev-fdm')
     .directive('selectableSet', [function() {
         return {
             restrict: 'A',

@@ -2,7 +2,7 @@
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
 */
-angular.module('common.filters')
+angular.module('ev-fdm')
     .filter('cleanupDate', function() {
         return function(input) {
             var res = '';

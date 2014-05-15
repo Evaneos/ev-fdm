@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('common.directives')
+angular.module('ev-fdm')
 .directive('evModuleHeader', function ($timeout) {
 
     var self = this;

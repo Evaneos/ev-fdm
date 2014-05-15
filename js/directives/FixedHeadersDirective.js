@@ -1,5 +1,5 @@
 
-angular.module('common.directives')
+angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
     function _sync($table) {

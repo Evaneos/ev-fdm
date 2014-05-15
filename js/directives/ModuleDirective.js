@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('common.directives')
+angular.module('ev-fdm')
     .directive('evModule', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
 
     var bars = {

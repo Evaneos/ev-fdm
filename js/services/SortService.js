@@ -1,6 +1,6 @@
 'use strict';
 
-var module = angular.module('common.services');
+var module = angular.module('ev-fdm');
 
 module.service('SortService', [function() {
     var currentSortValue = '';

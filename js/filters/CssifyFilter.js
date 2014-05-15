@@ -7,7 +7,7 @@
  * and we do not want our controller to store a data for that
  * We can use this filter, and feed it with an object with the matching key,value we want
  */
-angular.module('common.filters')
+angular.module('ev-fdm')
     .filter('cssify', function() {
         return function(input, possibilities) {
             var res = '';

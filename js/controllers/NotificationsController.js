@@ -30,5 +30,5 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
     };
 }];
 
-angular.module('common.controllers')
+angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);

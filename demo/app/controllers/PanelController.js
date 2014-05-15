@@ -1,5 +1,5 @@
 
-angular.module('demo.controllers')
+angular.module('demo')
     .controller('PanelController', [ '$scope', '$instance', 'DemoDataFactory', 'PanelService', 'NotificationsService', 'item', 'cols', function($scope, $instance, demoData, panelService, notificationsService, item, itemCols) {
 
     $scope.context = {

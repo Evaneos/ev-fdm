@@ -1,6 +1,6 @@
 'use strict';
 
-var module = angular.module('common.storages');
+var module = angular.module('ev-fdm');
 
 function Storage(AjaxStorage) {
 

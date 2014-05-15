@@ -1,6 +1,6 @@
 'use strict';
 
-var module = angular.module('common.directives')
+var module = angular.module('ev-fdm')
     .directive('evPagination', function ($document, $route) {
         var ELLIPSIS = '...';
         return {

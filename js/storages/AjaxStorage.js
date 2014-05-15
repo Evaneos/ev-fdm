@@ -54,5 +54,5 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
 }
 
-angular.module('common.storages')
+angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('common.directives')
+angular.module('ev-fdm')
     .directive('linkDisabled', function() {
         return {
             restrict: 'A',

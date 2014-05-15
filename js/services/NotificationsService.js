@@ -1,7 +1,7 @@
 'use strict';
 
 /* Services */
-var module = angular.module('common.services');
+var module = angular.module('ev-fdm');
 
 // Map that stores the selected filters across pages
 module.service('NotificationsService', function($timeout) {

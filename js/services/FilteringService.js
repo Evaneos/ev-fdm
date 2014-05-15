@@ -1,7 +1,7 @@
 'use strict';
 
 // Map that stores the selected filters across pages
-angular.module('common.services').
+angular.module('ev-fdm').
     service('FilteringService', ['$location', function ($location) {
 
         var filters = {};

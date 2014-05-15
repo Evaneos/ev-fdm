@@ -1,5 +1,5 @@
 
-angular.module('demo.controllers')
+angular.module('demo')
     .controller('GridController', [ '$scope', 'DemoDataFactory', 'DemoContextService', function($scope, demoData, context) {
 
     $scope.context = context;
