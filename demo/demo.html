@@ -1,0 +1,907 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+
+        <title>Pro.evaneos</title>
+
+        <meta charset='utf-8'>
+
+        <script>var _gaq = _gaq || [];</script>
+
+        <!-- ALL STYLES -->
+        
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+
+<link href="http://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" media="screen" type="text/css" href="/dist/lisette.css?debug"/>
+
+    </head>
+
+    <!-- BODY -->
+    <body class="module-bootstrapping controller-demo">
+
+
+        <!-- LISETTE MENU -->
+
+            <div id="lisette-menu" class="navbar navbar-inverse affix">
+
+                                <div class="navbar-header">
+                    <a class="navbar-brand" href="/backoffice"></a>
+                </div>
+
+                                <ul id="small-menu" class="nav navbar-right navbar-nav">
+                    <li class="dropdown module menu-item">
+                        <a class="toggle dropdown-toggle" data-toggle="dropdown" href="#">
+                            <i class="icon icon-display-inline"></i>
+                            <span>Menu</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                    
+        <li class="menu-item module "><a href="/backoffice/transaction/">
+            <i class="icon icon-money"></i>
+            <span class="title">Comptabilité</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/dashboard/">
+            <i class="icon icon-stats"></i>
+            <span class="title">Statistiques</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:agencies">
+            <i class="icon icon-agences-locales"></i>
+            <span class="title">Agences</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:article">
+            <i class="icon icon-article"></i>
+            <span class="title">Articles</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/source/">
+            <i class="icon icon-source"></i>
+            <span class="title">Source</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:workflowstat">
+            <i class="icon icon-workflow"></i>
+            <span class="title">Workflow</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:travellersource">
+            <i class="icon icon-source"></i>
+            <span class="title">Traveller Source</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/prefilled/">
+            <i class="icon icon-prefilled"></i>
+            <span class="title">Prefilled</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/pixel/">
+            <i class="icon icon-pixels"></i>
+            <span class="title">Pixel</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module active"><a href="/backoffice/demo/">
+            <i class="icon icon-pixels"></i>
+            <span class="title">Demo</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:testimonials">
+            <i class="icon icon-pixelpartner"></i>
+            <span class="title">Témoignages</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/cotcot/">
+            <i class="icon icon-dossiers-voyageurs"></i>
+            <span class="title">Discussions voyageurs</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:redirection">
+            <i class="icon icon-analytics"></i>
+            <span class="title">Redirections</span>
+            <span class="caret"></span>
+
+        </a></li>
+                        <li class="menu-item module menu-help">
+                                <a href="http://www.evaneos.com/backoffice/session/zendeskin/" target="_blank">
+                                <i class="icon icon-help"></i>
+                    <span class="title">Besoin d'aide ?</span>
+                    <span class="caret"></span>
+                    </a>
+                </li>
+                                        <li class="divider"></li>
+                            <li class="menu-item">
+                                <a href="/backoffice/session/change-password">
+                                    <span class="title text-center">Changer mon mot de passe</span>
+                                </a>
+                            </li>
+                            <li class="menu-item">
+                                <a href="/backoffice/session/logout">
+                                    <span class="title text-center">Déconnexion</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                                <ul id="profile-menu" class="nav navbar-nav navbar-right">
+                    <li class="dropdown menu-item">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <i class="icon icon-user"></i>
+                            <span class="title">
+                                Clement <Clément> fdfdfd&nbsp;<span class="caret"></span>
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="menu-item">
+                                <a href="/backoffice/session/change-password">
+                                    <span class="title">Mot de passe</span>
+                                </a>
+                            </li>
+
+                                                        <li class="menu-item" ng-controller="TranslationController">
+                                <a href="" ng-click="displayTranslationPopup()">
+                                    <span class="title">Traduction</span>
+                                </a>
+                            </li>
+                            
+                            <li class="menu-item">
+                                <a href="/backoffice/session/logout">
+                                    <span class="title">Déconnexion</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                                    <li class="menu-item module menu-help">
+                                <a href="http://evaneos.zendesk.com/account/dropboxes/20287143" onClick="script: Zenbox.show(); return false;">
+                                <i class="icon icon-help"></i>
+                    <span class="title">Besoin d'aide ?</span>
+                    <span class="caret"></span>
+                    </a>
+                </li>
+                            </ul>
+
+                                <ul id="lisette-menu-items" class="nav navbar-nav">
+                    
+        <li class="menu-item module "><a href="/backoffice/transaction/">
+            <i class="icon icon-money"></i>
+            <span class="title">Comptabilité</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/dashboard/">
+            <i class="icon icon-stats"></i>
+            <span class="title">Statistiques</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:agencies">
+            <i class="icon icon-agences-locales"></i>
+            <span class="title">Agences</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module active"><a href="/backoffice/demo/">
+            <i class="icon icon-pixels"></i>
+            <span class="title">Demo</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+                        <li class="dropdown module menu-item">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                <i class="icon icon-other"></i>
+                                <span class="title">Autres apps<span class="caret"></span></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                    
+        <li class="menu-item module "><a href="/backoffice#module:article">
+            <i class="icon icon-article"></i>
+            <span class="title">Articles</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/source/">
+            <i class="icon icon-source"></i>
+            <span class="title">Source</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:workflowstat">
+            <i class="icon icon-workflow"></i>
+            <span class="title">Workflow</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:travellersource">
+            <i class="icon icon-source"></i>
+            <span class="title">Traveller Source</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/prefilled/">
+            <i class="icon icon-prefilled"></i>
+            <span class="title">Prefilled</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/pixel/">
+            <i class="icon icon-pixels"></i>
+            <span class="title">Pixel</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:testimonials">
+            <i class="icon icon-pixelpartner"></i>
+            <span class="title">Témoignages</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice/cotcot/">
+            <i class="icon icon-dossiers-voyageurs"></i>
+            <span class="title">Discussions voyageurs</span>
+            <span class="caret"></span>
+
+        </a></li>
+        
+        <li class="menu-item module "><a href="/backoffice#module:redirection">
+            <i class="icon icon-analytics"></i>
+            <span class="title">Redirections</span>
+            <span class="caret"></span>
+
+        </a></li>
+                                    </ul>
+                        </li>
+
+                                    </ul>
+            </div>
+
+
+        <!-- NOTIFICATIONS AREA -->
+        <div class="lisette-module-notification"
+            ng-controller="NotificationsController"
+            ng-show="activeNotification"
+            ng-cloak>
+            <div class="inner"
+                ng-class="getClass(activeNotification)"
+                ng-bind="activeNotification.text"></div>
+            <button type="button"
+                class="close"
+                ng-click="remove(activeNotification)">×</button>
+        </div>
+
+        <!-- CENTER PANEL -->
+        <div class="lisette-body">
+            <div ev-module
+    ng-cloak>
+
+    <ev-menu></ev-menu>
+
+    <div class="lisette-module-leftbar" ui-view="leftbar">
+        <div class="very-long">
+            LEFT BAR
+        </div>
+    </div>
+
+    <div ui-view></div>
+
+</div>            <div class="lisette-module-region right animate">
+            </div>
+        </div>
+
+
+        <!-- SCRIPTS AND SCOPE INITIALISATION -->
+        <script type='text/ng-template' id='pagination.phtml'><ul class="pagination" ng-show="nbPage > 1" class="ng-cloak">
+    <li data-ng-click="previousPage()">
+        <a href="javascript:void(0)">&laquo;</a>
+    </li>
+    <li ng-repeat="btn in paginationButtons" 
+        class="{{btn.class}}" 
+        data-ng-click="changePage(btn.value)">
+        <a href="javascript:void(0)">{{ btn.value }}</a>
+    </li>
+    <li data-ng-click="nextPage()">
+        <a href="javascript:void(0)" >&raquo;</a>
+    </li>
+</ul></script>
+<script type='text/ng-template' id='module.phtml'><div class="lisette-module"
+    ng-class="{ 'has-tabs': hasTabs }">
+    <ev-menu ng-if="hasTabs"></ev-menu>
+    <div class="lisette-module-body" ng-transclude>
+    </div>
+</div></script>
+<script type='text/ng-template' id='value.phtml'><div class="common-value" ng-class="{ 'common-empty': !value }" >
+    {{ value || noValue }}
+</div></script>
+<script type='text/ng-template' id='translationsEditor.phtml'><div class="modal-header">
+    <button type="button"
+        class="close"
+        ng-click='$dismiss()'>
+        &times;
+    </button>
+    <h3 class="modal-title">Traductions</h3>
+</div>
+<div class="modal-body">
+
+    <div ng-repeat="currTranslationKey in translationsList | filter:filterTranslation">
+        <span>{{ currTranslationKey.key }}</span>
+
+        <div class="form-group" ng-repeat="currTranslation in currTranslationKey.translations" >
+            <label class="col-sm-1 control-label" for="name">{{ currTranslation.lang }}</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" ng-model="currTranslation.value">
+                <div class="error">Champs obligatoire</div>
+            </div>
+            <button ng-click="updateTranslation(currTranslationKey.key, currTranslation)" class="btn btn-default">Update</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="$close()">Fermer</button>
+</div></script>
+<script type='text/ng-template' id='filters.phtml'><div class="lisette-module-searchbar">
+
+    <div class="border-top"></div>
+
+    <!-- inner scrollable content -->
+    
+    <div class="inner">
+
+        <!-- SEARCH BOX : FILTERS -->
+        
+        <h2>Recherche</h2>
+
+        <div class="searchbox">
+            <div class="inner">
+                <ul class="filters-list" ng-transclude>
+                    <!-- This part gets inherited -->
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+</div></script>
+<script type='text/ng-template' id='panels/right-window.phtml'><div class="panel {{ panelClass }}">
+    <div class="inner" ng-transclude>
+    </div>
+</div></script>
+<script type='text/ng-template' id='panels/middle-window.phtml'><div tabindex="-1" class="modal fade {{ panelClass }}" ng-class="{in: animate}" ng-style="{'z-index': 1050 + index*10, display: 'block'}" ng-click="close($event)">
+    <div class="modal-dialog"><div class="modal-content" ng-transclude></div></div>
+</div></script>
+<script type='text/ng-template' id='tab3.phtml'><!-- <div class="lisette-module-topbar version-size-mini">
+</div>
+ -->
+
+<div class="lisette-module-topbar lisette-module-actionbar">
+    <button
+        class="btn btn-primary">
+        Primary button
+    </button>
+    <button
+        class="btn btn-default">
+        Default button
+    </button>
+    <div class="divider"></div>
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            Dropdown button
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li><a>test1</a></li>
+            <li><a>test2</a></li>
+            <li><a>test3</a></li>
+            <li><a>test4</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="lisette-module-body spaced">
+
+    <pre><code ng-bind="context.selectedFilters | demoJson"></code></pre>
+
+</div></script>
+<script type='text/ng-template' id='demopanel.phtml'><div class="header">
+    <span class="title" ng-bind="(item ? 'Details' : 'List') + $instance.$$id"></span>
+    <button type="button"
+        class="close"
+        ng-click="$dismiss()">
+        &times;
+    </button>
+
+    <div
+        ng-if="item"
+        class="modal-action-bar">
+
+        <button type="button"
+            class="btn btn-primary"
+            ng-click="$close(item)">
+            Ok
+        </button>
+        <button type="button"
+            class="btn btn-default"
+            ng-click="$dismiss()">
+            Cancel
+        </button>
+    </div>
+
+</div>
+
+<div class="body">
+
+    <div ng-if="item">
+        <h4>Details</h4>
+
+        <form name="itemForm"
+            class="form-horizontal">
+            <div class="form-group"
+                ng-repeat="col in itemCols" >
+                <label class="col-sm-4 control-label"
+                    ng-bind="col">
+                </label>
+                <div class="col-sm-8">
+                    <input ng-model="item.cells[col]"
+                        required
+                        class="form-control" />
+                </div>
+            </div>
+        </form>
+
+        <label>
+            <input type="checkbox" ng-model="context.blocked" name="blocking" required />
+            Bloquer la fermeture
+        </label>
+
+        <hr>
+        <h4>Sub-items</h4>
+        <br/>
+    </div>
+
+    <div class="items">
+        <table class="table items-table"
+            ev-fixed-headers rows="data.rows">
+            <thead>
+                <tr>
+                    <th ng-repeat="col in data.cols"
+                        ng-bind="col"></th>
+                </tr>
+            </thead>
+            <tbody activable-set
+                active-element="context.active">
+                <tr ng-repeat="row in data.rows"
+                    activable="row">
+                    <td ng-repeat="col in data.cols" ng-bind="row.cells[col]"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="items-inline">
+            <div ng-repeat="row in data.rows"
+                ng-class="{active: context.active == row}">
+                <div ng-bind="row.cells.Name"
+                    ng-click="context.active = row">
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div></script>
+<script type='text/ng-template' id='grid.phtml'><div class="lisette-module-topbar">
+    <div class="lisette-module-actionbar">
+        <button href="#"
+            class="btn btn-primary"
+            ng-click="addRow()">
+            Add row
+        </button>
+    </div>
+</div>
+
+<div class="lisette-module-body">
+    <table class="table"
+        ev-fixed-headers rows="data.rows"
+        selectable-set
+        selected-elements="context.grid.selected">
+        <thead>
+            <tr sortable-set 
+                sort-by="context.grid.sort.by"
+                sort-change="sort()"
+                reverse-sort="context.grid.sort.reverse">
+                <th><select-all /></th>
+                <th ng-repeat="col in data.cols"
+                    sortable="{{ col }}"
+                    ng-bind="col"></th>
+            </tr>
+        </thead>
+        <tbody activable-set
+            active-element="context.grid.active">
+            <tr ng-repeat="row in data.rows"
+                activable="row"
+                selectable="row">
+                <td><select-box class="block-active"/></td>
+                <td ng-repeat="col in data.cols" ng-bind="row.cells[col]"></td>
+            </tr>
+        </tbody>
+    </table>
+</div></script>
+<script type='text/ng-template' id='tab3-leftbar.phtml'><ev-filters ng-cloak
+    filters="context.selectedFilters">
+
+    <li>
+        <label for="userRole">Titre</label>
+        <div class="control">
+            <input
+                ng-model="context.selectedFilters.title"
+                throttle
+                clearable
+                ng-change="onSearch()"
+                class="form-control" />
+        </div>
+    </li>
+    <li>
+        <label for="userRole">Destinataire</label>
+        <div class="control">
+            <select
+                type="hidden"
+                ui-select2
+                id="userRole"
+                name="userRole"
+                ng-change="onSearch()"
+                class="searchFilter"
+                ng-model="context.selectedFilters.userRole"
+                data-placeholder="Tous">
+                <option selected="selected" value=""></option>
+                <option value="traveller">Voyageur</option>
+                <option value="localAgent">Agent local</option>
+                <option value="evaneos">Evaneos</option>
+            </select>
+        </div>
+    </li>
+    <li>
+        <label for="show">Visible</label>
+        <div class="control">
+            <select
+                type="hidden"
+                ui-select2
+                id="show"
+                name="show"
+                ng-change="onSearch()"
+                class="searchFilter"
+                ng-model="context.selectedFilters.show"
+                data-placeholder="Tous">
+                <option selected="selected" value=""></option>
+                <option value="1">Visible</option>
+                <option value="0">Non visible</option>
+            </select>
+        </div>
+    </li>
+    <li>
+        <label for="show">Fruits</label>
+        <ul class="checkboxes">
+            <li ng-repeat="item in context.fruits">
+                <label>
+                    <input type="checkbox" class="checkbox"
+                        ng-change="onSearch()"
+                        checklist-model="context.selectedFilters.fruits"
+                        checklist-value="item.value"
+                        ng-class="{ active: context.selectedFilters.fruits[item.value] }">
+                    <span ng-bind="item.name"></span>
+                </label>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <label for="show">Sports</label>
+        <ul class="radioboxes">
+            <li ng-repeat="item in context.sports">
+                <label>
+                    <input type="radio"
+                        ng-change="onSearch()"
+                        class="radiobox"
+                        ng-model="context.selectedFilters.sport"
+                        ng-value="item.value"></span>
+                    <span ng-bind="item.name"></span>
+                </label>
+            </li>
+        </ul>
+    </li>
+
+</ev-filters></script>
+<script type='text/ng-template' id='grid-leftbar.phtml'><div class="left-padding">
+    <pre><code ng-bind="context.grid | demoJson"></code></pre>
+</div></script>
+<script type='text/ng-template' id='modal.phtml'><div class="modal-header">
+    <button type="button"
+        class="close"
+        ng-click="$dismiss()">
+        &times;
+    </button>
+    <h3 class="modal-title">
+        Modal sample    </h3>
+</div>
+
+<div class="modal-body"><p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ut tincidunt massa. Nullam volutpat consequat erat. Vivamus non felis sed felis mattis rutrum. Integer libero mi, egestas non bibendum a, laoreet eget nibh. Phase.
+</p></div>
+
+<div class="modal-footer">
+    <button class="btn btn-default"
+        ng-click="$dismiss()">
+        Fermer    </button>
+</div></script>
+<script type='text/ng-template' id='tab1.phtml'><div class="lisette-module-topbar lisette-module-actionbar">
+    <button
+        class="btn btn-primary"
+        ng-click="tab1ctrl.test()">
+        Primary button
+    </button>
+    <button
+        class="btn btn-default">
+        Default button
+    </button>
+    <div class="divider"></div>
+    <div class="btn-group">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            Dropdown button
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li><a>test1</a></li>
+            <li><a>test2</a></li>
+            <li><a>test3</a></li>
+            <li><a>test4</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="lisette-module-body spaced">
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
+            Notify
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li>
+                <a href="#"
+                    ng-click="notify(0)">
+                    SUCCESS
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="notify(1)">
+                    ERROR
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="notify(2)">
+                    INFO
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="notify(3)">
+                    WARNING
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
+            Open middle panel
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li>
+                <a href="#"
+                    ng-click="openMiddlePanel('small')">
+                    Middle, small
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="openMiddlePanel()">
+                    Middle, default
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="openMiddlePanel('big')">
+                    Middle, big
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="openMiddlePanel('error')">
+                    Middle, error
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
+            Open right panel
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu">
+            <li>
+                <a href="#"
+                    ng-click="openRightPanel()">
+                    No push
+                </a>
+            </li>
+            <li>
+                <a href="#"
+                    ng-click="openRightPanel(true)">
+                    Push
+                </a>
+            </li>
+        </ul>
+    </div>
+
+</div></script>
+<script type='text/javascript' src='js/sidonie_vendor/jquery/jquery.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/bootstrap/dist/js/bootstrap.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/underscore/underscore.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/select2/select2.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/moment/min/moment-with-langs.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular/angular.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-route/angular-route.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-ui-router/release/angular-ui-router.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-loading-bar/src/loading-bar.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-animate/angular-animate.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-bootstrap/ui-bootstrap-tpls.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-i18n/angular-locale_fr.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/select2/select2_locale_fr.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-moment/angular-moment.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/sprintf/src/sprintf.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/angular-ui-select2/src/select2.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/jquery-ui/ui/jquery.ui.core.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/jquery-ui/ui/jquery.ui.datepicker.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/jquery-ui/ui/i18n/jquery.ui.datepicker-fr.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/jquery-ui/ui/minified/jquery-ui.min.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/css-element-queries/src/ResizeSensor.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/css-element-queries/src/ElementQueries.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie_vendor/checklist-model/checklist-model.js?v=debug'></script>
+
+
+<script type='text/javascript' src='js/sidonie/utils.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/Evaneos.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/filters/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/storages/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/fanny/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/panels/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/services/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/factories/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/controllers/index.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/LinkDisabledDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/MouseFollowerDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/ActivableDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/DatePickerDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/ThrottleDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/PromiseDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/ValueDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/ModuleHeaderDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/SortableDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/filters/UnsafeFilter.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/filters/I18nFilter.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/filters/CssifyFilter.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/FixedHeadersDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/factories/FilterServiceFactory.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/filters/CleanupDate.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/FlagDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/ClearableDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/EnterDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/PanelService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/PaginationDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/ModalService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/panels/RightRegion.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/NotificationsService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/SortService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/controllers/NotificationsController.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/controllers/TranslationController.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/SidonieModalService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/panels/MiddleRegion.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/services/FilteringService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/ModuleDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/storages/AjaxStorage.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/FiltersDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/SelectableDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/LoadingDotsDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/directives/EvMenuDirective.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/storages/Storage.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/storages/AbstractAutocompleteStorage.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/storages/localstorageService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/GridController.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/GridLeftController.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/PanelController.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/Tab1Controller.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/Tab3Controller.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/controllers/Tab3LeftController.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/services/DemoContextService.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/services/DemoDataFactory.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/common/app.js?v=debug'></script>
+<script type='text/javascript' src='js/sidonie/demo/app.js?v=debug'></script>
+
+<script type="text/javascript">
+    // attach data to by proxied to our angular app
+    evaneos._frontData = {"__i18n":[],"__baseUrl":"http:\/\/www.evaneos.com.dev\/","__debug":false,"__user":{"id":83028,"lastName":"fdfdfd","firstName":"Clement","acl":523264,"nickName":"Cl\u00e9ment"},"__language":1,"__languageIso2":"fr","__scopeKeys":["__baseUrl","__debug","__user","__language","__languageIso2"]};
+    // bootstraps the app common and our angular module app
+    evaneos.bootstrap("demo");
+
+    _gaq.push(['_setAccount', 'UA-5520857-3']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+</script>
+
+<script type="text/javascript" src="//assets.zendesk.com/external/zenbox/v2.6/zenbox.js"></script>
+<style type="text/css" media="screen, projection">
+    @import url(//assets.zendesk.com/external/zenbox/v2.6/zenbox.css);
+</style>
+<script type="text/javascript">
+if (typeof(Zenbox) !== "undefined") {
+Zenbox.init(
+{ dropboxID: "20287143", url: "https://evaneos.zendesk.com", tabTooltip: "Besoin d'aide", tabImageURL: "https://assets.zendesk.com/external/zenbox/images/tab_fr_help_right.png", tabColor: "#F79400", tabPosition: "Right", hide_tab: "true" }
+);
+}
+</script>
+
+            <script type="text/javascript">
+    evaneos.availableTranslations = [{"key":"r_vols","translations":[{"lang":"fr","value":"r_vols"}]},{"key":"r_vols_resultats","translations":[{"lang":"fr","value":"r_vols_resultats"}]},{"key":"r_vols_redirection","translations":[{"lang":"fr","value":"r_vols_redirection"}]},{"key":"Comptabilit\u00e9","translations":[{"lang":"fr","value":"Comptabilit\u00e9"}]},{"key":"Agences","translations":[{"lang":"fr","value":"Agences"}]},{"key":"Articles","translations":[{"lang":"fr","value":"Articles"}]},{"key":"T\u00e9moignages","translations":[{"lang":"fr","value":"T\u00e9moignages"}]},{"key":"Source","translations":[{"lang":"fr","value":"Source"}]},{"key":"Discussions voyageurs","translations":[{"lang":"fr","value":"Discussions voyageurs"}]},{"key":"Prefilled","translations":[{"lang":"fr","value":"Prefilled"}]},{"key":"Pixel","translations":[{"lang":"fr","value":"Pixel"}]},{"key":"Traveller Source","translations":[{"lang":"fr","value":"Traveller Source"}]},{"key":"Statistiques","translations":[{"lang":"fr","value":"Statistiques"}]},{"key":"Redirections","translations":[{"lang":"fr","value":"Redirections"}]},{"key":"Demo","translations":[{"lang":"fr","value":"Demo"}]},{"key":"Workflow","translations":[{"lang":"fr","value":"Workflow"}]},{"key":"Translations","translations":[{"lang":"fr","value":"Traductions"}]},{"key":"Flush Cache","translations":[{"lang":"fr","value":"Vider le cache"}]},{"key":"Acc\u00e9der \u00e0 l'interface de traduction de tous les \u00e9l\u00e9ments de cette page","translations":[{"lang":"fr","value":"Acc\u00e9der \u00e0 l'interface de traduction de tous les \u00e9l\u00e9ments de cette page"}]},{"key":"Pro.evaneos","translations":[{"lang":"fr","value":"Pro.evaneos"}]},{"key":"Besoin d'aide ?","translations":[{"lang":"fr","value":"Besoin d'aide ?"}]},{"key":"Changer mon mot de passe","translations":[{"lang":"fr","value":"Changer mon mot de passe"}]},{"key":"D\u00e9connexion","translations":[{"lang":"fr","value":"D\u00e9connexion"}]},{"key":"Mot de passe","translations":[{"lang":"fr","value":"Mot de passe"}]},{"key":"Traduction","translations":[{"lang":"fr","value":"Traduction"}]},{"key":"Autres apps","translations":[{"lang":"fr","value":"Autres apps"}]},{"key":"\u00c0 travailler","translations":[{"lang":"fr","value":"\u00c0 travailler"}]},{"key":"Moyen","translations":[{"lang":"fr","value":"Moyen"}]},{"key":"Excellent !","translations":[{"lang":"fr","value":"Excellent !"}]},{"key":"Fermer","translations":[{"lang":"fr","value":"Fermer"}]},{"key":"Recherche","translations":[{"lang":"fr","value":"Recherche"}]},{"key":"Titre","translations":[{"lang":"fr","value":"Titre"}]},{"key":"Destinataire","translations":[{"lang":"fr","value":"Destinataire"}]},{"key":"Tous","translations":[{"lang":"fr","value":"Tous"}]},{"key":"Voyageur","translations":[{"lang":"fr","value":"Voyageur"}]},{"key":"Agent local","translations":[{"lang":"fr","value":"Agent local"}]},{"key":"Evaneos","translations":[{"lang":"fr","value":"Evaneos"}]},{"key":"Visible","translations":[{"lang":"fr","value":"Visible"}]},{"key":"Non visible","translations":[{"lang":"fr","value":"Non visible"}]},{"key":"Fruits","translations":[{"lang":"fr","value":"Fruits"}]},{"key":"Sports","translations":[{"lang":"fr","value":"Sports"}]},{"key":"Modal sample","translations":[{"lang":"fr","value":"Modal sample"}]}];
+    </script>
+
+    </body>
+</html>

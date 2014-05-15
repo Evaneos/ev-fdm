@@ -1,0 +1,13 @@
+<ul class="pagination" ng-show="nbPage > 1" class="ng-cloak">
+    <li data-ng-click="previousPage()">
+        <a href="javascript:void(0)">&laquo;</a>
+    </li>
+    <li ng-repeat="btn in paginationButtons" 
+        class="{{btn.class}}" 
+        data-ng-click="changePage(btn.value)">
+        <a href="javascript:void(0)">{{ btn.value }}</a>
+    </li>
+    <li data-ng-click="nextPage()">
+        <a href="javascript:void(0)" >&raquo;</a>
+    </li>
+</ul>
