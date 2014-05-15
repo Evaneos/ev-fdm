@@ -6,23 +6,23 @@ app.config(['$stateProvider', '$urlRouterProvider', 'menuManagerProvider', 'menu
 
     menuManagerProvider
         .addTab({
-            name: t('1. Modals, Notifs'),
+            name: '1. Modals, Notifs',
             state: 'tab1'
         })
         .addTab({
-            name: t('2. Grid features'),
+            name: '2. Grid features',
             state: 'tab2'
         })
         .addTab({
-            name: t('3. Filters'),
+            name: '3. Filters',
             state: 'tab3'
         })
         .addTab({
-            name: t('4. Resolved'),
+            name: '4. Resolved',
             state: 'tab4'
         })
         .addTab({
-            name: t('5. Rejected'),
+            name: '5. Rejected',
             state: 'tab5'
         });
 
