@@ -95,6 +95,6 @@ function EvMenuDirective(menuManager) {
 
 };
 
-angular.module('evMenu', [])
+angular.module('ev-fdm')
     .provider('menuManager', [MenuManagerProvider])
     .directive('evMenu', ['menuManager', EvMenuDirective]);

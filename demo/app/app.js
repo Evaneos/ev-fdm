@@ -1,5 +1,5 @@
 'use strict';
-var app = angular.module('demo', [ 'ngAnimate', 'ui.router', 'evMenu', 'ev-fdm', 'ev-fdm' ]);
+var app = angular.module('demo', [ 'ui.router', 'ev-fdm']);
 
 app.config(['$stateProvider', '$urlRouterProvider', 'menuManagerProvider', 'menuManagerProvider', function($stateProvider, $urlRouterProvider, menuManagerProvider) {
 
