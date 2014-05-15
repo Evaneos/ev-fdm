@@ -11,6 +11,6 @@
     "tests"
   ],
   "dependencies": {
-    "ev-fdm": "0.0.0",
+    "ev-fdm": "git@github.com:Evaneos/ev-fdm.git"
   }
 }
