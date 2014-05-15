@@ -1,0 +1,81 @@
+.loading-dots {
+    font-size: 1em; /* set size here */
+
+    line-height: 1;
+    width: 2.75em;
+
+    > span {
+        background: @gray;
+        border-radius: 50%;
+        // box-shadow: inset 0 0 1px rgba(0,0,0,0.3);
+        display: inline-block;
+        height: 0.2em;
+        width: 0.2em;
+        margin: 0.1em;
+        -webkit-animation: loading-dots-anim 0.8s linear infinite;
+        -moz-animation: loading-dots-anim 0.8s linear infinite;
+        -ms-animation: loading-dots-anim 0.8s linear infinite;
+        animation: loading-dots-anim 0.8s linear infinite;
+    }
+    > span:nth-child(2) {
+        margin-left: 0.1em;
+        -webkit-animation-delay: 0.2s;
+        -moz-animation-delay: 0.2s;
+        -ms-animation-delay: 0.2s;
+        animation-delay: 0.2s;
+    }
+    > span:nth-child(1) {
+        margin-left: 0em;
+        -webkit-animation-delay: 0.4s;
+        -moz-animation-delay: 0.4s;
+        -ms-animation-delay: 0.4s;
+        animation-delay: 0.4s;
+    }
+}
+
+
+@-webkit-keyframes loading-dots-anim {
+    0% {
+        background: transparent;
+    }
+    50% {
+        background: @gray;
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+@-moz-keyframes loading-dots-anim {
+    0% {
+        background: transparent;
+    }
+    50% {
+        background: @gray;
+    }
+    100% {
+        background: transparent;
+    }
+}
+@-ms-keyframes loading-dots-anim {
+    0% {
+        background: transparent;
+    }
+    50% {
+        background: @gray;
+    }
+    100% {
+        background: transparent;
+    }
+}
+@keyframes loading-dots-anim {
+    0% {
+        background: transparent;
+    }
+    50% {
+        background: @gray;
+    }
+    100% {
+        background: transparent;
+    }
+}

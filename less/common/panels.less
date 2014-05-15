@@ -1,0 +1,210 @@
+.panel-placeholder {
+    height: 100%;
+    float: left;
+    position: relative;
+
+    &:first-child {
+        box-shadow: 0 5px 10px rgba(0,0,0,.3);
+    }
+
+    .panel {
+        background: #FFF;
+        height: 100%;
+        width: 450px;
+        border-left: 1px solid @gray-light;
+        position: relative;
+        left: auto!important;
+        z-index: @zindex-modal;
+        background: #FFF;
+
+        > .inner {
+            height: 100%;
+            border-left: 7px solid @gray-lighter;
+            border-right: 7px solid @gray-lighter;
+            overflow-x: hidden;
+            overflow-y: hidden;
+
+            /*********************************************************
+             * HEADER
+             ********************************************************/
+
+            > .header {
+                background: @gray-lighter;
+                padding: 9px 16px;
+                z-index: 2;
+                .title {
+                    font-size: 20px;
+                    text-transform: uppercase;
+                    line-height: 1.7em;
+                    margin-right: 30px;
+                    display: block;
+                    .text-overflow();
+                }
+                .close {
+                    font-size: 32px;
+                    color: @gray;
+                    opacity: 1;
+                    width: 50px;
+                    height: 50px;
+                    box-shadow: none;
+                    text-shadow: none;
+                    outline: none;
+                    position: absolute;
+                    top: 1px;
+                    right: 0px;
+
+                    &:hover {
+                        color: @gray-dark;
+                    }
+                }
+            }
+
+            /*********************************************************
+             * BODY
+             ********************************************************/
+
+            > .body {
+                padding: 15px;
+                &.nopadding {
+                    padding: 0;
+                }
+                h4 {
+                    margin-top: 20px;
+                    color: @gray;
+                    text-transform: uppercase;
+                    font-size: 14px;
+                    margin-bottom: 10px;
+                    &:first-child {
+                        margin-top: 0px;
+                    }
+                }
+            }
+
+            /*********************************************************
+             * FOOTER
+             ********************************************************/
+
+
+            > .footer {
+                padding: 9px 16px;
+                background: @gray-lighter;
+                text-align: right;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 2;
+                .btn {
+                    margin-left: 10px;
+                    min-width: 150px;
+                    &:first-child {
+                        margin-left: 0;
+                    }
+                }
+            }
+        }
+
+
+        /*********************************************************
+         * RESIZABLE HANDLER
+         ********************************************************/
+
+        > .ui-resizable-handle {
+            left: 0;
+        }
+        &.ui-resizable-resizing {
+            > .ui-resizable-handle {
+                width: 100%;
+                background: transparent;
+                border-left: 7px solid @gray-light;
+            }
+        }
+    }
+
+    /*********************************************************
+     * STACKED STATE
+     ********************************************************/
+
+    &.stacked {
+        // important to override size set by jq ui
+        max-width: 15px;
+        > .panel > .inner > .header .title,
+        > .panel > .inner > .body,
+        > .panel > .inner > .footer {
+            display: none;
+        }
+    }
+
+
+    &.stacked-add.stacked-add-active,
+    &.stacked-remove {
+        max-width: 30px;
+    }
+
+    &.stacked-add,
+    &.stacked-remove.stacked-remove-active {
+        max-width: 1000px;
+    }
+}
+
+/*********************************************************
+ * ANIMATIONS
+ ********************************************************/
+
+.lisette-module-region.right.animate .panel-placeholder {
+    @animation-duration: 0.2s;
+    .obfuscate() {
+        // animation : slow at the beginning, fast at the end
+        // => after will be hidden at the really end of the animation
+        -webkit-transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
+        transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: @gray-lighter;
+        z-index: 200000000;
+        content: ' ';
+    }
+
+    &.stacked-add {
+        -webkit-transition:all ease-in-out @animation-duration;
+        -moz-transition:all ease-in-out @animation-duration;
+        -o-transition:all ease-in-out @animation-duration;
+        transition:all ease-in-out @animation-duration;
+    }
+    &.stacked-remove {
+        -webkit-transition:all ease-in-out @animation-duration;
+        -moz-transition:all ease-in-out @animation-duration;
+        -o-transition:all ease-in-out @animation-duration;
+        transition:all ease-in-out @animation-duration;
+    }
+
+    &.ng-enter,
+    &.ng-leave {
+        -webkit-transition: all ease-in-out @animation-duration;
+        transition: all ease-in-out @animation-duration;
+        &:after {
+            .obfuscate();
+        }
+    }
+
+    &.ng-enter,
+    &.ng-leave.ng-leave-active {
+        max-width: 0;
+        &:after {
+            opacity: 1;
+        }
+    }
+
+    &.ng-leave,
+    &.ng-enter.ng-enter-active {
+        max-width: 1000px;
+        &.ng-enter.ng-enter-active {
+            &:after {
+                opacity: 0;
+            }
+        }
+    }
+}

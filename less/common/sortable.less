@@ -1,0 +1,61 @@
+// sortable column headers
+.sortable {
+    cursor: pointer;
+    white-space: nowrap;
+
+    // display the arrow of the sort predicted
+    &:after {
+        visibilty: display;
+        border-top: @caret-width-base solid @gray;
+        border-bottom: 0 dotted;
+    }
+
+    &:hover {
+        color: @gray-dark;
+        // display the arrow of the sort predicted
+        &:after {
+            visibilty: display;
+            border-top: @caret-width-base solid @gray-dark;
+            border-bottom: 0 dotted;
+        }
+    }
+
+    &:after {
+        visibilty: hidden;
+        display: inline-block;;
+        width: 0;
+        height: 0;
+        margin-left: 2px;
+        vertical-align: middle;
+        border-right: @caret-width-base solid transparent;
+        border-left:  @caret-width-base solid transparent;
+        content: "";
+        position: relative;
+        top: -1px;
+    }
+    &.sort-down,
+    &.sort-up {
+        padding-right: 15px;
+        color: @brand-primary;
+        font-weight: bold;
+        &:hover:after {
+            border-top-color: @brand-primary;
+        }
+    }
+
+    &.sort-down {
+        &:after {
+            display: inline-block;
+            border-bottom: @caret-width-base solid @brand-primary;
+            border-top: 0 dotted;
+        }
+    }
+
+    &.sort-up {
+        &:after {
+            display: inline-block;
+            border-top: @caret-width-base solid @brand-primary;
+            border-bottom: 0 dotted;
+        }
+    }
+}

@@ -1,0 +1,32 @@
+// --------------------------------------------------------
+// BOOTSTRAP
+// --------------------------------------------------------
+
+@import "variables.less";
+@import "vendor/bootstrap/less/mixins.less";
+// selection used in sidonie
+@import "overrides/bootstrap/modules.less";
+// some global overrides
+@import "overrides/bootstrap/index.less";
+
+
+// --------------------------------------------------------
+// OTHER VENDORS
+// --------------------------------------------------------
+
+@import (less) "../vendor/angular-loading-bar/src/loading-bar.css";
+@import "overrides/loading-bar.less";
+@import "overrides/datepicker.less";
+
+
+// --------------------------------------------------------
+// WEIRD VENDORS (they need special treatment)
+//
+// Any generated vendor file
+// /!\ run grunt tasks 'copy', 'less:jquery', 'less:select2'
+//
+// --------------------------------------------------------
+
+@import (inline) "/generated/jquery-ui.min.css";
+@import (inline) "/generated/select2.min.css";
+@import "overrides/select2.less";

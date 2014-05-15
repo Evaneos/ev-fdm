@@ -1,0 +1,64 @@
+/******************************************************
+ * Put here all the styles likely to be reused
+ * throughout Lisette
+ * - make separate common/*.less files for components
+ *   getting too big
+ ******************************************************/
+
+.common-block {
+    display: block;
+}
+
+.common-truncate {
+    .text-overflow();
+}
+
+.common-empty-indic {
+    padding: 40px;
+    color: @gray;
+    font-size: 14px;
+    text-align: center;
+}
+
+// case switching scenarios
+.case-create,
+.case-edit {
+    display: none;
+}
+.incase-create .case-create,
+.incase-edit .case-edit {
+    display: block;
+}
+.incase-create .case-create-i,
+.incase-edit .case-edit-i {
+    display: inline-block;
+}
+
+// big fat splashscreen used in modules
+// to indicate that an operation is in progress
+.progress-splashscreen {
+    &:extend(.container-loading all);
+    &:before {
+        background: #FFF !important;
+    }
+}
+
+// values that are undefined
+.common-value {
+    &.common-empty {
+        font-style: italic;
+        color: @gray;
+    }
+}
+
+@import "icons.less";
+@import "trends.less";
+@import "table.less";
+@import "flags.less";
+@import "data.less";
+@import "loading-dots.less";
+@import "sortable.less";
+@import "animations.less";
+@import "controls.less";
+@import "panels.less";
+@import "promise.less";

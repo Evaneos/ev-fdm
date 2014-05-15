@@ -1,0 +1,63 @@
+.lisette-module-tabs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: @module-tabs-height;
+
+    text-align: center;
+    display: block;
+    font-size: 0;
+    padding-top: @layout-gutter;
+    border: none;
+
+    li {
+        float: none;
+        display: inline-block;
+        text-align: center;
+        text-transform: uppercase;
+        margin: 0;
+        font-size: 14px;
+        a {
+            cursor: pointer;
+            color: @gray;
+            border: none;
+            padding: 8px 20px 6px 20px;
+            border-radius: 0;
+            margin: 0;
+            line-height: 1em;
+
+            &:hover {
+                background: transparent;
+                color: @gray-dark;
+                border: none;
+            }
+        }
+        &.active {
+            a {
+                cursor: default;
+                background: @gray-lighter;
+                border: none;
+                color: @gray-dark;
+                border-radius: @border-radius-base @border-radius-base 0 0;
+                &:hover {
+                    border: none;
+                    background: @gray-lighter;
+                    color: @gray-dark;
+                }
+            }
+        }
+    }
+}
+
+body.state-resolving .lisette-module-tabs li {
+
+    a {
+        cursor: not-allowed;
+        opacity: .4;
+    }
+    &.active a {
+        cursor: default;
+        opacity: 1;
+    }
+}

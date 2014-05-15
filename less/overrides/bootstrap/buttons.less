@@ -1,0 +1,88 @@
+/*************************************************************************************
+ * BUTTONS
+ *************************************************************************************/
+
+.btn-link-danger.btn-link {
+  color: @brand-danger;
+}
+
+.btn-default.active {
+    box-shadow: none;
+    color: #444;
+}
+
+.btn {
+    text-transform: uppercase;
+    outline: none !important;
+    border: 1px solid @gray-light;
+    margin-right: 3px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    box-shadow: none;
+
+    .icon {
+        margin-right: 5px;
+    }
+}
+
+.ev-btn(@color) {
+    background: @color;
+    &:hover {
+        background: lighten(@color, 4%);
+    }
+    &:active {
+        background: darken(@color, 2%);
+    }
+    &.btn-xs,
+    &.btn-sm,
+    &.btn-xs:hover,
+    &.btn-xs:active,
+    &.btn-sm:hover,
+    &.btn-sm:active {
+        box-shadow: none;
+    }
+}
+
+.btn-default { .ev-btn(@gray-lighter); }
+.btn-danger { .ev-btn(@brand-danger); }
+.btn-info { .ev-btn(@brand-info); }
+.btn-warning { .ev-btn(@brand-warning); }
+.btn-primary { .ev-btn(@brand-primary); }
+
+.btn-primary {
+  border: none;
+}
+
+.btn-primary[disabled] {
+    background-color: @gray;
+}
+
+.btn-default {
+    background: transparent;
+    color: @gray-dark;
+    &:hover {
+        box-shadow: none;
+        border-color: @gray-light;
+    }
+    &:active {
+        box-shadow: none;
+        opacity: .6;
+    }
+}
+
+.dropdown {
+    list-style: none;
+    display: inline-block;
+}
+
+.open .dropdown-toggle.btn-default {
+    background: lighten(@gray-lighter, 4%);
+    border-color: @gray-light;
+}
+
+.dropdown-menu {
+  cursor: pointer;
+  border: 1px solid @gray-light;
+}

@@ -1,0 +1,107 @@
+table {
+    .iconizer {
+        background-image: url(/stylesheets/lisette/pics/lisette_icons_16.png);
+        width: 16px;
+        height: 16px;
+        background-repeat: no-repeat;
+        background-position-x : 0px;
+        display: inline-block;
+    }
+
+    .flagizer {
+        background-image: url(/images/francine/flags_sprite.png);
+        width: 16px;
+        height: 11px;
+        margin-top : 3px;
+        background-repeat: no-repeat;
+        display: inline-block;
+    }
+
+    td.td-icon, td {
+        i.icon {
+            .iconizer;
+        }
+
+        i.icon.icon-flag {
+            .flagizer;
+        }
+
+        i.icon.icon-created         { background-position : 0px -288px; }
+        i.icon.icon-assigned        { background-position : 0px -272px; }
+        i.icon.icon-submitted       { background-position : 0px -256px; }
+        i.icon.icon-refused         { background-position : 0px -208px; }
+        i.icon.icon-validated       { background-position : 0px -224px; }
+        i.icon.icon-online          { background-position : 0px -192px; }
+        i.icon.icon-deleted         { background-position : 0px -208px; }
+
+        i.icon.flag-fr              { background-position: -128px -44px; }
+        i.icon.flag-en              { background-position: -160px -44px; }
+        i.icon.flag-unknown         { background-position: 0 0; }
+        i.icon.flag-es              { background-position: 0px -44px; }
+        i.icon.flag-it              { background-position: -144px -66px; }
+        i.icon.flag-de              { background-position: -64px -33px; }
+    }
+
+    tr:hover td.td-icon, td.td-icon:hover, tr:hover td, td:hover {
+        i.icon.icon-flag {
+            .flagizer;
+        }
+
+        i.icon.icon-created         { background-position : -16px -288px; }
+        i.icon.icon-assigned        { background-position : -16px -272px; }
+        i.icon.icon-submitted       { background-position : -16px -256px; }
+        i.icon.icon-refused         { background-position : -16px -208px; }
+        i.icon.icon-validated       { background-position : -16px -224px; }
+        i.icon.icon-online          { background-position : -16px -192px; }
+        i.icon.icon-deleted         { background-position : -16px -208px; }
+
+        i.icon.flag-fr              { background-position: -128px -44px; }
+        i.icon.flag-en              { background-position: -160px -44px; }
+        i.icon.flag-unknown         { background-position: 0 0; }
+        i.icon.flag-es              { background-position: 0px -44px; }
+        i.icon.flag-it              { background-position: -144px -66px; }
+        i.icon.flag-de              { background-position: -64px -33px; }
+    }
+
+    tr:active td.td-icon, td.td-icon:active, tr:active td, td:active {
+        i.icon.icon-flag {
+            .flagizer;
+        }
+
+        i.icon.icon-created         { background-position : -32px -288px; }
+        i.icon.icon-assigned        { background-position : -32px -272px; }
+        i.icon.icon-submitted       { background-position : -32px -256px; }
+        i.icon.icon-refused         { background-position : -32px -208px; }
+        i.icon.icon-validated       { background-position : -32px -224px; }
+        i.icon.icon-online          { background-position : -32px -192px; }
+        i.icon.icon-deleted         { background-position : -32px -208px; }
+
+        i.icon.flag-fr              { background-position: -128px -44px; }
+        i.icon.flag-es              { background-position: 0px -44px; }
+        i.icon.flag-en              { background-position: -160px -44px; }
+        i.icon.flag-unknown         { background-position: 0 0; }
+        i.icon.flag-it              { background-position: -144px -66px; }
+        i.icon.flag-de              { background-position: -64px -33px; }
+    }
+
+    tr.selected {
+        i.icon.icon-flag {
+            .flagizer;
+        }
+
+        i.icon.icon-created         { background-position : -48px -288px; }
+        i.icon.icon-assigned        { background-position : -48px -272px; }
+        i.icon.icon-submitted       { background-position : -48px -256px; }
+        i.icon.icon-refused         { background-position : -48px -208px; }
+        i.icon.icon-validated       { background-position : -48px -224px; }
+        i.icon.icon-online          { background-position : -48px -192px; }
+        i.icon.icon-deleted         { background-position : -48px -208px; }
+
+        i.icon.flag-fr              { background-position: -128px -44px; }
+        i.icon.flag-es              { background-position: 0px -44px; }
+        i.icon.flag-en              { background-position: -160px -44px; }
+        i.icon.flag-unknown         { background-position: 0 0; }
+        i.icon.flag-it              { background-position: -144px -66px; }
+        i.icon.flag-de              { background-position: -64px -33px; }
+    }
+}

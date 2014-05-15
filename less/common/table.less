@@ -1,0 +1,70 @@
+.table-empty-indicator {
+    color: @gray;
+    font-size: 14px;
+    text-align: center;
+
+    > div {
+        border-bottom: 1px solid @gray-light;
+        background: #FFF;
+        min-height: 40px;
+
+        &.message {
+            padding: 0;
+            line-height: 3em;
+        }
+    }
+}
+
+table.table {
+    thead > tr > th {
+        font-size: 13px;
+        padding-left: 0;
+    }
+    tr {
+        &:last-child {
+            &.no-bottom-border-if-last {
+                td, th {
+                    border-bottom: none;
+                    padding-bottom: 0;
+                }
+            }
+        }
+    }
+
+    td, th {
+        &:last-child {
+            &.text-right, &.amounts {
+                padding-right: 10px;
+            }
+        }
+    }
+
+    td.icon-cell {
+        width: 14px;
+
+        .icon-bin,
+        .glyphicon-trash {
+            color: @gray;
+            cursor: pointer;
+
+            &:hover {
+                color: @gray-dark;
+            }
+        }
+        .icon-bin {
+            line-height: 34px;
+        }
+    }
+
+    .block-active {
+        .user-select(none);
+    }
+
+    &.noselect{
+        .user-select(none);
+    }
+}
+
+.clickable {
+    cursor:pointer;
+}

@@ -1,0 +1,79 @@
+.lisette-module-notification {
+    height: @menu-height;
+    border: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: (@zindex-modal-background - 1);
+    line-height: @menu-height;
+    text-align: center;
+    color: #FFF;
+
+    > .inner {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        background: @brand-primary;
+        // padding for the close button
+        padding-right: 40px;
+        .text-overflow();
+        &.danger {
+            background: @brand-danger;
+        }
+        &.warning {
+            background: @brand-warning;
+        }
+        &.info {
+            background: @brand-info;
+        }
+        &.success {
+            background: @brand-success;
+        }
+    }
+
+    > .close {
+        outline: none;
+        position: absolute;
+        line-height: @menu-height;
+        top: 0;
+        color: #FFF;
+        box-shadow: none;
+        right: 10px;
+        opacity: .8;
+    }
+    
+    // ----------------
+    // animations
+    // ----------------
+
+    .transition(all ease-in-out .3s);
+    > .inner {
+        opacity: 1;
+        .transition(all ease-in-out .3s);
+    }
+
+    &.ng-hide-remove,
+    &.ng-hide-add {
+        display: block!important; // coz ng-hide causes a display: none;
+    }
+
+    &.ng-hide-add,
+    &.ng-hide-remove.ng-hide-remove-active {
+        opacity: 1;
+    }
+
+    &.ng-hide-remove,
+    &.ng-hide-add.ng-hide-add-active  {
+        opacity: 0;
+        > .inner {
+            background: @brand-primary;
+        }
+    }
+}
+
+.module-bootstrapping {
+    .lisette-module-notifications {
+        display: none;
+    }
+}

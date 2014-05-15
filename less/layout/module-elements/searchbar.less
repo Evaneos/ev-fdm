@@ -1,0 +1,212 @@
+/**
+ * Search bar featuring a wonderful search text input
+ * and filters beneath it
+ */
+
+.lisette-module-searchbar {
+    @filters-padding: 16px;
+    width: 100%;
+
+    @filter-title: @gray;
+    @header-color: @gray-dark;
+
+    > .border-top {
+        position: absolute;
+        height: (@filters-padding/2);
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: @gray-lighter;
+        z-index: 1;
+    }
+
+    > .inner {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: @gray-lighter;
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        .btn {
+            display: block;
+        }
+
+        h2 {
+            color: @header-color;
+            font-size: @font-size-base;
+            padding: (@filters-padding + 2px) 0 (@filters-padding + 2px) 0;
+            margin: 0 @filters-padding @filters-padding @filters-padding;
+            border-bottom: 1px solid @gray-light;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        > .searchbox {
+            padding: 0 @filters-padding (2*@filters-padding) @filters-padding;
+            background: @gray-lighter;
+
+            > .inner {
+                padding: 0px;
+                position: relative;
+
+                .filters-list {
+                    left: 0;
+                    right: 2px;
+                    border: none;
+                    list-style: none;
+                    margin: 0;
+                    padding: 0;
+
+                    li {
+                        position: relative;
+                        margin: 0 0 @filters-padding 0;
+                        min-height: 26px;
+                        > label {
+                            .text-overflow();
+                            font-weight: normal;
+                            line-height: 1.2em;
+                            margin-bottom: 0;
+                            padding-left: 1px;
+                            color: @filter-title;
+                            text-transform: uppercase;
+                            width: 100%;
+                        }
+                        &.divider {
+                            padding: 0;
+                            min-height: 0;
+                            margin: @filters-padding 0 @filters-padding 0;
+                            height: 1px;
+                            border-bottom: 1px dotted @gray-light;
+                        }
+                        &:after {
+                            content: '';
+                            display: block;
+                            clear: both;
+                            height: 0;
+                        }
+                        .control {
+                            overflow: hidden;
+                            position: relative;
+                            input,
+                            .select2-container {
+                                width: 100%;
+                                display: block;
+                                box-shadow: none;
+                            }
+
+                            input {
+                                border: 1px solid @gray-light;
+                                padding: 2px 6px;
+                                border-radius: @border-radius-base;
+                                outline: none;
+                            }
+                            .clear {
+                                border: none;
+                                background: none;
+                                position: absolute;
+                                right: 0;
+                                top: 0;
+                                color: @gray;
+                                font-size: 20px;
+                                line-height: 32px;
+                                text-align: center;
+                                width: 25px;
+                                height: 100%;
+                                display: inline-block;
+                                padding-left: 3px;
+                                border-left: 1px solid @gray-lighter;
+                                outline: none;
+                            }
+                        }
+                        .checkboxes,
+                        .radioboxes {
+                            list-style: none;
+                            padding: 4px 0 0 0;
+
+                            > li {
+                                margin: 0;
+                                padding: 0;
+                                label {
+                                    color: @gray-darker;
+                                    text-transform: none;
+
+                                    & > * {
+                                        vertical-align: middle;
+                                    }
+                                }
+                            }
+                            .radiobox,
+                            .checkbox {
+                                margin: 0 3px 0 0;
+                                width: 14px;
+                                height: 14px;
+                                max-width: 14px;
+                                max-height: 14px;
+                            }
+                        }
+                        .dates {
+                            font-size: 0;
+                            .control {
+                                width: 50%;
+                                display: inline-block;
+                                &:first-child input {
+                                    border-top-right-radius: 0;
+                                    border-bottom-right-radius: 0;
+                                    border-right: 1px solid @gray-light;
+                                }
+                                &:last-child input {
+                                    margin-left: -1px;
+                                    border-left: 1px solid @gray-light;
+                                    border-top-left-radius: 0;
+                                    border-bottom-left-radius: 0;
+                                }
+                                input[readonly] {
+                                    cursor: pointer;
+                                    background: #FFF;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                .filters-actions {
+                    padding: 0;
+                    margin: @filters-padding 0 0 0;
+                    .btn {
+                        display: block;
+                        padding: 5px;
+                        &.btn-primary {
+                            color: #FFF;
+                            .ev-btn(@brand-primary);
+                        }
+                        &.btn-default {
+                            .ev-btn(@gray-light);
+                        }
+                    }
+                    .filters-submit {
+                        width: 100%;
+                        display: block;
+                        text-align: center;
+                        padding: (@filters-padding/2);
+
+                        .icon {
+                            margin-right: (@filters-padding/2);
+                        }
+                    }
+                    .filters-save {
+                        display: block;
+                        color: @gray;
+                        font-size: 12px;
+                        line-height: 1.5em;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// media query TO BE UPDATED
+.lisette-module-leftbar[max-width~="250px"] .lisette-module-searchbar {
+    display: none;
+}

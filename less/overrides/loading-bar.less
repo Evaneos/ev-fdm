@@ -1,0 +1,28 @@
+/**
+ * These override styles definded in vendor/angular-loading-bar/src/..css
+ */
+
+@loading-bar-color: darken(@navbar-inverse-bg, 15%); //@brand-primary;
+
+#loading-bar {
+
+     .bar {
+        background: @loading-bar-color;
+        position: absolute;
+        top: auto;
+        bottom: -3px;
+        height: 3px;
+    }
+
+    /**
+     * Hide that crap for the moment
+     */
+    .peg {
+        display: none;
+    }
+
+    #loading-bar-spinner .spinner-icon {
+        border-top-color:  @loading-bar-color;
+        border-left-color: @loading-bar-color;
+    }
+}

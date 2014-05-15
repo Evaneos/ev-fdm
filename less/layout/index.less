@@ -1,0 +1,24 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    background: #FFF;
+}
+
+body {
+    // hack to make chrome display nice effects
+    // + fixes color changes when transitions happen
+    //-webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+
+    .lisette-body {
+        position: fixed;
+        top: @menu-height;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+
+@import "menu.less";
+@import "module.less";

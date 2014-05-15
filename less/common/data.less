@@ -1,0 +1,57 @@
+div.common-data {
+
+    @gutter-size: 5px;
+
+    > div {
+
+        &.common-header {
+            border-bottom: 1px solid @gray-lighter;
+
+            > .common-label,
+            > .common-value {
+                color: @gray;
+                font-size: 12px;
+            }
+        }
+
+        > div {
+            line-height: 1.4em;
+            padding-top: @gutter-size;
+            padding-bottom: @gutter-size;
+
+            &.common-label {
+                color: @gray;
+                &:after {
+                    content: ":";
+                    margin-left: 3px;
+                }
+            }
+
+            &.common-value {
+                color: @gray-dark;
+            }
+        }
+    }
+
+    /**
+     * or use BS3's table.table(.table-condensed)
+     */
+    &.common-table-mode {
+        > div {
+            border-bottom: 1px solid @gray-lighter;
+
+            &.common-header {
+                border-bottom: 1px solid @gray-lighter;
+            }
+
+            > div {
+
+                &.common-label {
+                    &:after {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}

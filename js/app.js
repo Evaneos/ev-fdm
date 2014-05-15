@@ -3,7 +3,7 @@
  */
 
 // Angular depedencies for this app
-var commonModule = evaneos.getModule('common', [ 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'ngRoute', 'common.services', 'common.storages', 'common.factories', 'common.directives', 'checklist-model' ]);
+var commonModule = angular.module('common', [ 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'ngRoute', 'common.services', 'common.storages', 'common.factories', 'common.directives', 'checklist-model' ]);
 
 // configure the loading bar to be displayed
 // just beneath the menu

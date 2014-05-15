@@ -1,0 +1,16 @@
+// always in the bottom bar
+
+.lisette-module-bottombar .pagination {
+    margin: 0;
+    li {
+        a {
+            border: none;
+            cursor: pointer;
+            color: @gray;
+        }
+        &.active a {
+            color: @gray-dark;
+            z-index: inherit;
+        }
+    }
+}
