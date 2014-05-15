@@ -4,7 +4,7 @@
 var module = angular.module('ev-fdm');
 
 // Map that stores the selected filters across pages
-module.service('NotificationsService', function($timeout) {
+module.service('NotificationsService', ['$timeout', function($timeout) {
 
     var self = this;
     var queue = [];
@@ -80,4 +80,4 @@ module.service('NotificationsService', function($timeout) {
         add(notification);
     };
     this.type = TYPES;
-});
+}]);

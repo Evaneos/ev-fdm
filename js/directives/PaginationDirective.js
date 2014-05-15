@@ -1,7 +1,7 @@
 'use strict';
 
 var module = angular.module('ev-fdm')
-    .directive('evPagination', function ($document, $route) {
+    .directive('evPagination', [function () {
         var ELLIPSIS = '...';
         return {
             restrict: 'AE',
@@ -100,4 +100,4 @@ var module = angular.module('ev-fdm')
                 });
             }
     };
-});
+}]);

@@ -13,7 +13,7 @@
  *
  */
 angular.module('ev-fdm')
-    .directive('promise', ['$timeout', function ($timeout) {
+    .directive('promise', [function () {
 
     function applyClass(classes, element) {
         element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');

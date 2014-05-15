@@ -201,7 +201,7 @@ angular.module('ev-fdm')
 
 var module = angular.module('ev-fdm');
 
-module.directive('clearable', function($timeout) {
+module.directive('clearable', ['$timeout', function($timeout) {
 
     return {
         restrict: 'A',
@@ -229,7 +229,7 @@ module.directive('clearable', function($timeout) {
 
         }
     }
-});;'use strict';
+}]);;'use strict';
 
 angular.module('ev-fdm')
 .directive('evDatepicker', function() {
@@ -564,7 +564,7 @@ angular.module('ev-fdm')
 ]);;'use strict';
 
 angular.module('ev-fdm')
-.directive('evModuleHeader', function ($timeout) {
+.directive('evModuleHeader', ['$timeout', function ($timeout) {
 
     var self = this;
 
@@ -596,7 +596,7 @@ angular.module('ev-fdm')
             _sync($wrapper);
         });
     }
-});;'use strict';
+}]);;'use strict';
 
 angular.module('ev-fdm')
     .directive('mouseFollower', ['$document', function ($document) {
@@ -618,7 +618,7 @@ angular.module('ev-fdm')
     }]);;'use strict';
 
 var module = angular.module('ev-fdm')
-    .directive('evPagination', function ($document, $route) {
+    .directive('evPagination', [function () {
         var ELLIPSIS = '...';
         return {
             restrict: 'AE',
@@ -717,7 +717,7 @@ var module = angular.module('ev-fdm')
                 });
             }
     };
-});;/**
+}]);;/**
  * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
  * + Supports empty lists by displaying a message (promise-empty)
  *
@@ -732,7 +732,7 @@ var module = angular.module('ev-fdm')
  *
  */
 angular.module('ev-fdm')
-    .directive('promise', ['$timeout', function ($timeout) {
+    .directive('promise', [function () {
 
     function applyClass(classes, element) {
         element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
@@ -1071,7 +1071,7 @@ angular.module('ev-fdm')
 
 var module = angular.module('ev-fdm');
 
-module.directive('throttle', function($timeout) {
+module.directive('throttle', ['$timeout', function($timeout) {
 
     return {
         restrict: 'A',
@@ -1109,10 +1109,10 @@ module.directive('throttle', function($timeout) {
             };
         }
     }
-});;'use strict';
+}]);;'use strict';
 
 angular.module('ev-fdm')
-    .directive('evValue', function ($document) {
+    .directive('evValue', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -1408,11 +1408,11 @@ angular.module('ev-fdm')
     });;'use strict';
 
 angular.module('ev-fdm')
-    .filter('unsafe', function($sce) {
+    .filter('unsafe', ['$sce', function($sce) {
         return function(val) {
             return $sce.trustAsHtml(val);
         };
-    });;'use strict';
+    }]);;'use strict';
 
 // Map that stores the selected filters across pages
 angular.module('ev-fdm').
@@ -1534,7 +1534,7 @@ module.service('ModalService', [
 var module = angular.module('ev-fdm');
 
 // Map that stores the selected filters across pages
-module.service('NotificationsService', function($timeout) {
+module.service('NotificationsService', ['$timeout', function($timeout) {
 
     var self = this;
     var queue = [];
@@ -1610,7 +1610,7 @@ module.service('NotificationsService', function($timeout) {
         add(notification);
     };
     this.type = TYPES;
-});
+}]);
 ;var module = angular.module('ev-fdm');
 
 module.factory('panelFactory', function() {

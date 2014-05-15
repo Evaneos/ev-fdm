@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('ev-fdm')
-.directive('evModuleHeader', function ($timeout) {
+.directive('evModuleHeader', ['$timeout', function ($timeout) {
 
     var self = this;
 
@@ -33,4 +33,4 @@ angular.module('ev-fdm')
             _sync($wrapper);
         });
     }
-});
+}]);

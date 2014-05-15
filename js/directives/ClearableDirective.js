@@ -2,7 +2,7 @@
 
 var module = angular.module('ev-fdm');
 
-module.directive('clearable', function($timeout) {
+module.directive('clearable', ['$timeout', function($timeout) {
 
     return {
         restrict: 'A',
@@ -30,4 +30,4 @@ module.directive('clearable', function($timeout) {
 
         }
     }
-});
+}]);

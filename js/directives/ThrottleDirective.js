@@ -2,7 +2,7 @@
 
 var module = angular.module('ev-fdm');
 
-module.directive('throttle', function($timeout) {
+module.directive('throttle', ['$timeout', function($timeout) {
 
     return {
         restrict: 'A',
@@ -40,4 +40,4 @@ module.directive('throttle', function($timeout) {
             };
         }
     }
-});
+}]);
