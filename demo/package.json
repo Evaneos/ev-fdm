@@ -4,17 +4,16 @@
   "description": "Evaneos frontend framework demo",
   "directories": {
   },
-  // "repository": {
-  //   "type": "git",
-  //   "url": "git://github.com/evaneos/ev-fdm.git#1.2.3"
-  // },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/evaneos/ev-fdm.git"
+  },
   "author": "Evaneos",
   "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/evaneos/ev-fdm/issues"
   },
   "devDependencies": {
-    "ev-fmd": "git://github.com/evaneos/ev-fdm.git#1.2.3",
     "grunt": "^0.4.2",
     "path": "~0.4.9",
     "grunt-contrib-less": "^0.9.0",
