@@ -1,13 +1,13 @@
 module.exports = function(grunt) {
 
   grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
+    // pkg: grunt.file.readJSON('package.json'),
     concat: {
       options: {
         separator: ';'
       },
       dist: {
-        src: ['js.app.js', 'js/**/*.js'],
+        src: ['js/app.js', 'js/**/*.js'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -35,16 +35,16 @@ module.exports = function(grunt) {
             src: "less/generators/production.less",
             dest: "dist/ev-fdm.min.css"
         },
-        // vendors: {
-        //     options: {
-        //         outputSourceFiles: true,
-        //         sourceMap: true,
-        //         sourceMapFilename: 'dist/vendors.css.map',
-        //         sourceMapURL: 'dist/vendors.css.map'
-        //     },
-        //     src: 'less/vendors.less',
-        //     dest: 'dist/vendors.css'
-        // }
+        vendors: {
+            options: {
+                outputSourceFiles: true,
+                sourceMap: true,
+                sourceMapFilename: 'dist/vendors.css.map',
+                sourceMapURL: 'dist/vendors.css.map'
+            },
+            src: 'less/vendors.less',
+            dest: 'dist/vendors.css'
+        }
     },
   });
 
@@ -54,7 +54,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.registerTask('js', ['concat', 'uglify']);
-  grunt.registerTask('css', [/*'less:development',*/ 'less:production' /*, 'less:vendors'*/]);
+  grunt.registerTask('css', ['less:production', 'less:vendors']);
 
   grunt.registerTask('default', ['js', 'uglify']);
 
