@@ -1,7 +1,7 @@
 module.exports = function(grunt) {
 
   grunt.initConfig({
-    // pkg: grunt.file.readJSON('package.json'),
+    pkg: grunt.file.readJSON('package.json'),
     concat: {
       options: {
         separator: ';'
@@ -25,7 +25,7 @@ module.exports = function(grunt) {
         options: {
                 paths: [
                     'less',
-                    '.'
+                    'bower_components'
                 ]
         },
         production: {
@@ -56,6 +56,6 @@ module.exports = function(grunt) {
   grunt.registerTask('js', ['concat', 'uglify']);
   grunt.registerTask('css', ['less:production', 'less:vendors']);
 
-  grunt.registerTask('default', ['js', 'uglify']);
+  grunt.registerTask('default', ['js', 'css']);
 
 };

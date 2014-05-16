@@ -1,4 +1,4 @@
 demo/bower_components/*
 demo/node_modules/*
 node_modules/*
-vendor/*
+bower_components

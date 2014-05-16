@@ -5,9 +5,7 @@ module.exports = function(grunt) {
     less: {
         options: {
                 paths: [
-                    'less',
-                    '../less',
-                    '..'
+                    'bower_components'
                 ]
         },
         demo: {
