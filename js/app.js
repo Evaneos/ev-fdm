@@ -3,7 +3,7 @@
  */
 
 // Angular depedencies for this app
-var commonModule = angular.module('ev-fdm', [ 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'ngRoute', 'checklist-model', 'ui.bootstrap']);
+var commonModule = angular.module('ev-fdm', ['ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'ngRoute', 'checklist-model', 'ui.bootstrap']);
 
 // configure the loading bar to be displayed
 // just beneath the menu

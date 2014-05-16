@@ -31,9 +31,6 @@
 
             <div id="lisette-menu" class="navbar navbar-inverse affix">
 
-                                <div class="navbar-header">
-                    <a class="navbar-brand" href="/backoffice"></a>
-                </div>
 
                                 <ul id="small-menu" class="nav navbar-right navbar-nav">
                     <li class="dropdown module menu-item">
@@ -647,6 +644,12 @@
             </li>
         </ul>
     </li>
+    <li>
+        <label>Anniversaire
+                <input ui-date
+                    class="form-control" ng-model="context.selectedFilters.birthday"/>
+        </label>
+    </li>
 
 </ev-filters></script>
 <script type='text/ng-template' id='grid-leftbar.phtml'><div class="left-padding">
@@ -813,6 +816,7 @@
 <!-- <script type='text/javascript' src='bower_components/css-element-queries/src/ResizeSensor.js'></script> -->
 <!-- <script type='text/javascript' src='bower_components/css-element-queries/src/ElementQueries.js'></script> -->
 <script type='text/javascript' src='bower_components/checklist-model/checklist-model.js'></script>
+<script type='text/javascript' src='../bower_components/angular-ui-date/src/date.js'></script>
 
 
 <!-- <script type='text/javascript' src='js/sidonie/utils.js'></script> -->
