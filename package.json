@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/evaneos/ev-fdm.git"
+    "url": "https://github.com/evaneos/ev-fdm.git#grunt"
   },
   "author": "Evaneos",
   "license": "BSD-2-Clause",
