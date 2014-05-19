@@ -1,29 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="fr">
     <head>
-
         <title>Pro.evaneos</title>
-
         <meta charset='utf-8'>
-
-        <script>var _gaq = _gaq || [];</script>
-
-        <!-- ALL STYLES -->
-        
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
-
-<link href="http://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet" type="text/css" />
-
-    <link rel="stylesheet" media="screen" type="text/css" href="../dist/ev-fdm.min.css"/>
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="bower_components/ev-fdm/dist/ev-fdm.min.css"/> -->
-    <link rel="stylesheet" media="screen" type="text/css" href="dist/demo.min.css"/>
-
-    <!-- <link rel="stylesheet" media="screen" type="text/css" href="../dist/lisette.css"/> -->
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+        <script>var _gaq = _gaq || [];</script>       
+        <link href="http://fonts.googleapis.com/css?family=Droid+Sans:400,700" rel="stylesheet" type="text/css" />
+        <link rel="stylesheet" media="screen" type="text/css" href="../dist/ev-fdm.min.css"/>
+        <!-- <link rel="stylesheet" media="screen" type="text/css" href="bower_components/ev-fdm/dist/ev-fdm.min.css"/> -->
+        <link rel="stylesheet" media="screen" type="text/css" href="dist/demo.min.css"/>
     </head>
 
-    <!-- BODY -->
     <body class="controller-demo" ng-app="demo">
 
         <!-- LISETTE MENU -->
@@ -206,532 +193,529 @@
 
         <!-- CENTER PANEL -->
         <div class="lisette-body">
-            <div ev-module
-    ng-cloak>
+            <div ev-module ng-cloak>
+            <ev-menu></ev-menu>
 
-    <ev-menu></ev-menu>
+            <div class="lisette-module-leftbar" ui-view="leftbar">
+                <div class="very-long">
+                    LEFT BAR
+                </div>
+            </div>
 
-    <div class="lisette-module-leftbar" ui-view="leftbar">
-        <div class="very-long">
-            LEFT BAR
-        </div>
-    </div>
+            <div ui-view></div>
 
-    <div ui-view></div>
-
-</div>            <div class="lisette-module-region right animate">
             </div>
         </div>
 
 
         <!-- SCRIPTS AND SCOPE INITIALISATION -->
-        <script type='text/ng-template' id='pagination.phtml'><ul class="pagination" ng-show="nbPage > 1" class="ng-cloak">
-    <li data-ng-click="previousPage()">
-        <a href="javascript:void(0)">&laquo;</a>
-    </li>
-    <li ng-repeat="btn in paginationButtons" 
-        class="{{btn.class}}" 
-        data-ng-click="changePage(btn.value)">
-        <a href="javascript:void(0)">{{ btn.value }}</a>
-    </li>
-    <li data-ng-click="nextPage()">
-        <a href="javascript:void(0)" >&raquo;</a>
-    </li>
-</ul></script>
-<script type='text/ng-template' id='module.phtml'><div class="lisette-module"
-    ng-class="{ 'has-tabs': hasTabs }">
-    <ev-menu ng-if="hasTabs"></ev-menu>
-    <div class="lisette-module-body" ng-transclude>
-    </div>
-</div></script>
-<script type='text/ng-template' id='value.phtml'><div class="common-value" ng-class="{ 'common-empty': !value }" >
-    {{ value || noValue }}
-</div></script>
-<script type='text/ng-template' id='translationsEditor.phtml'><div class="modal-header">
-    <button type="button"
-        class="close"
-        ng-click='$dismiss()'>
-        &times;
-    </button>
-    <h3 class="modal-title">Traductions</h3>
-</div>
-<div class="modal-body">
-
-    <div ng-repeat="currTranslationKey in translationsList | filter:filterTranslation">
-        <span>{{ currTranslationKey.key }}</span>
-
-        <div class="form-group" ng-repeat="currTranslation in currTranslationKey.translations" >
-            <label class="col-sm-1 control-label" for="name">{{ currTranslation.lang }}</label>
-            <div class="col-sm-9">
-                <input type="text" class="form-control" ng-model="currTranslation.value">
-                <div class="error">Champs obligatoire</div>
-            </div>
-            <button ng-click="updateTranslation(currTranslationKey.key, currTranslation)" class="btn btn-default">Update</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-footer">
-    <button class="btn btn-default" ng-click="$close()">Fermer</button>
-</div></script>
-<script type='text/ng-template' id='filters.phtml'><div class="lisette-module-searchbar">
-
-    <div class="border-top"></div>
-
-    <!-- inner scrollable content -->
-    
-    <div class="inner">
-
-        <!-- SEARCH BOX : FILTERS -->
-        
-        <h2>Recherche</h2>
-
-        <div class="searchbox">
-            <div class="inner">
-                <ul class="filters-list" ng-transclude>
-                    <!-- This part gets inherited -->
-                </ul>
-            </div>
-        </div>
-
-    </div>
-
-</div></script>
-<script type='text/ng-template' id='panels/right-window.phtml'><div class="panel {{ panelClass }}">
-    <div class="inner" ng-transclude>
-    </div>
-</div></script>
-<script type='text/ng-template' id='panels/middle-window.phtml'><div tabindex="-1" class="modal fade {{ panelClass }}" ng-class="{in: animate}" ng-style="{'z-index': 1050 + index*10, display: 'block'}" ng-click="close($event)">
-    <div class="modal-dialog"><div class="modal-content" ng-transclude></div></div>
-</div></script>
-<script type='text/ng-template' id='tab3.phtml'><!-- <div class="lisette-module-topbar version-size-mini">
-</div>
- -->
-
-<div class="lisette-module-topbar lisette-module-actionbar">
-    <button
-        class="btn btn-primary">
-        Primary button
-    </button>
-    <button
-        class="btn btn-default">
-        Default button
-    </button>
-    <div class="divider"></div>
-    <div class="btn-group">
-        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-            Dropdown button
-            <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-            <li><a>test1</a></li>
-            <li><a>test2</a></li>
-            <li><a>test3</a></li>
-            <li><a>test4</a></li>
-        </ul>
-    </div>
-</div>
-
-<div class="lisette-module-body spaced">
-
-    <pre><code ng-bind="context.selectedFilters | json"></code></pre>
-
-</div></script>
-<script type='text/ng-template' id='demopanel.phtml'><div class="header">
-    <span class="title" ng-bind="(item ? 'Details' : 'List') + $instance.$$id"></span>
-    <button type="button"
-        class="close"
-        ng-click="$dismiss()">
-        &times;
-    </button>
-
-    <div
-        ng-if="item"
-        class="modal-action-bar">
-
-        <button type="button"
-            class="btn btn-primary"
-            ng-click="$close(item)">
-            Ok
-        </button>
-        <button type="button"
-            class="btn btn-default"
-            ng-click="$dismiss()">
-            Cancel
-        </button>
-    </div>
-
-</div>
-
-<div class="body">
-
-    <div ng-if="item">
-        <h4>Details</h4>
-
-        <form name="itemForm"
-            class="form-horizontal">
-            <div class="form-group"
-                ng-repeat="col in itemCols" >
-                <label class="col-sm-4 control-label"
-                    ng-bind="col">
-                </label>
-                <div class="col-sm-8">
-                    <input ng-model="item.cells[col]"
-                        required
-                        class="form-control" />
+        <script type='text/ng-template' id='pagination.phtml'>
+            <ul class="pagination" ng-show="nbPage > 1" class="ng-cloak">
+                <li data-ng-click="previousPage()">
+                    <a href="javascript:void(0)">&laquo;</a>
+                </li>
+                <li ng-repeat="btn in paginationButtons" 
+                    class="{{btn.class}}" 
+                    data-ng-click="changePage(btn.value)">
+                    <a href="javascript:void(0)">{{ btn.value }}</a>
+                </li>
+                <li data-ng-click="nextPage()">
+                    <a href="javascript:void(0)" >&raquo;</a>
+                </li>
+            </ul>
+        </script>
+        <script type='text/ng-template' id='module.phtml'>
+            <div class="lisette-module" ng-class="{ 'has-tabs': hasTabs }">
+                <ev-menu ng-if="hasTabs"></ev-menu>
+                <div class="lisette-module-body" ng-transclude>
                 </div>
             </div>
-        </form>
+        </script>
+        <script type='text/ng-template' id='value.phtml'>
+            <div class="common-value" ng-class="{ 'common-empty': !value }" >
+                {{ value || noValue }}
+            </div>
+        </script>
+        <script type='text/ng-template' id='translationsEditor.phtml'>
+            <div class="modal-header">
+                <button type="button" class="close" ng-click='$dismiss()'>
+                    &times;
+                </button>
+                <h3 class="modal-title">Traductions</h3>
+            </div>
 
-        <label>
-            <input type="checkbox" ng-model="context.blocked" name="blocking" required />
-            Bloquer la fermeture
-        </label>
+            <div class="modal-body">
+                <div ng-repeat="currTranslationKey in translationsList | filter:filterTranslation">
+                    <span>{{ currTranslationKey.key }}</span>
 
-        <hr>
-        <h4>Sub-items</h4>
-        <br/>
-    </div>
-
-    <div class="items">
-        <table class="table items-table"
-            ev-fixed-headers rows="data.rows">
-            <thead>
-                <tr>
-                    <th ng-repeat="col in data.cols"
-                        ng-bind="col"></th>
-                </tr>
-            </thead>
-            <tbody activable-set
-                active-element="context.active">
-                <tr ng-repeat="row in data.rows"
-                    activable="row">
-                    <td ng-repeat="col in data.cols" ng-bind="row.cells[col]"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="items-inline">
-            <div ng-repeat="row in data.rows"
-                ng-class="{active: context.active == row}">
-                <div ng-bind="row.cells.Name"
-                    ng-click="context.active = row">
+                    <div class="form-group" ng-repeat="currTranslation in currTranslationKey.translations" >
+                        <label class="col-sm-1 control-label" for="name">{{ currTranslation.lang }}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" ng-model="currTranslation.value">
+                            <div class="error">Champs obligatoire</div>
+                        </div>
+                        <button ng-click="updateTranslation(currTranslationKey.key, currTranslation)" class="btn btn-default">Update</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-</div></script>
-<script type='text/ng-template' id='grid.phtml'><div class="lisette-module-topbar">
-    <div class="lisette-module-actionbar">
-        <button href="#"
-            class="btn btn-primary"
-            ng-click="addRow()">
-            Add row
-        </button>
-    </div>
-</div>
+            <div class="modal-footer">
+                <button class="btn btn-default" ng-click="$close()">Fermer</button>
+            </div>
+        </script>
+        <script type='text/ng-template' id='filters.phtml'>
+            <div class="lisette-module-searchbar">
+                <div class="border-top">
+                </div>
+                <!-- inner scrollable content -->
+                <div class="inner">
+                    <h2>Recherche</h2>
 
-<div class="lisette-module-body">
-    <table class="table"
-        ev-fixed-headers rows="data.rows"
-        selectable-set
-        selected-elements="context.grid.selected">
-        <thead>
-            <tr sortable-set 
-                sort-by="context.grid.sort.by"
-                sort-change="sort()"
-                reverse-sort="context.grid.sort.reverse">
-                <th><select-all /></th>
-                <th ng-repeat="col in data.cols"
-                    sortable="{{ col }}"
-                    ng-bind="col"></th>
-            </tr>
-        </thead>
-        <tbody activable-set
-            active-element="context.grid.active">
-            <tr ng-repeat="row in data.rows"
-                activable="row"
-                selectable="row">
-                <td><select-box class="block-active"/></td>
-                <td ng-repeat="col in data.cols" ng-bind="row.cells[col]"></td>
-            </tr>
-        </tbody>
-    </table>
-</div></script>
-<script type='text/ng-template' id='tab3-leftbar.phtml'><ev-filters ng-cloak
-    filters="context.selectedFilters">
+                    <div class="searchbox">
+                        <div class="inner">
+                            <ul class="filters-list" ng-transclude>
+                                <!-- This part gets inherited -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+        <script type='text/ng-template' id='panels/right-window.phtml'>
+            <div class="panel {{ panelClass }}">
+                <div class="inner" ng-transclude>
+                </div>
+            </div>
+        </script>
+        <script type='text/ng-template' id='panels/middle-window.phtml'>
+            <div tabindex="-1" class="modal fade {{ panelClass }}" ng-class="{in: animate}" ng-style="{'z-index': 1050 + index*10, display: 'block'}" ng-click="close($event)">
+                <div class="modal-dialog">
+                    <div class="modal-content" ng-transclude></div>
+                </div>
+            </div>
+        </script>
 
-    <li>
-        <label for="userRole">Titre</label>
-        <div class="control">
-            <input
-                ng-model="context.selectedFilters.title"
-                throttle
-                clearable
-                ng-change="onSearch()"
-                class="form-control" />
-        </div>
-    </li>
-    <li>
-        <label for="userRole">Destinataire</label>
-        <div class="control">
-            <select
-                type="hidden"
-                ui-select2
-                id="userRole"
-                name="userRole"
-                ng-change="onSearch()"
-                class="searchFilter"
-                ng-model="context.selectedFilters.userRole"
-                data-placeholder="Tous">
-                <option selected="selected" value=""></option>
-                <option value="traveller">Voyageur</option>
-                <option value="localAgent">Agent local</option>
-                <option value="evaneos">Evaneos</option>
-            </select>
-        </div>
-    </li>
-    <li>
-        <label for="show">Visible</label>
-        <div class="control">
-            <select
-                type="hidden"
-                ui-select2
-                id="show"
-                name="show"
-                ng-change="onSearch()"
-                class="searchFilter"
-                ng-model="context.selectedFilters.show"
-                data-placeholder="Tous">
-                <option selected="selected" value=""></option>
-                <option value="1">Visible</option>
-                <option value="0">Non visible</option>
-            </select>
-        </div>
-    </li>
-    <li>
-        <label for="show">Fruits</label>
-        <ul class="checkboxes">
-            <li ng-repeat="item in context.fruits">
-                <label>
-                    <input type="checkbox" class="checkbox"
-                        ng-change="onSearch()"
-                        checklist-model="context.selectedFilters.fruits"
-                        checklist-value="item.value"
-                        ng-class="{ active: context.selectedFilters.fruits[item.value] }">
-                    <span ng-bind="item.name"></span>
-                </label>
-            </li>
-        </ul>
-    </li>
-    <li>
-        <label for="show">Sports</label>
-        <ul class="radioboxes">
-            <li ng-repeat="item in context.sports">
-                <label>
-                    <input type="radio"
-                        ng-change="onSearch()"
-                        class="radiobox"
-                        ng-model="context.selectedFilters.sport"
-                        ng-value="item.value"></span>
-                    <span ng-bind="item.name"></span>
-                </label>
-            </li>
-        </ul>
-    </li>
-    <li>
-        <label>Anniversaire
-                <input ui-date
-                    class="form-control" ng-model="context.selectedFilters.birthday"/>
-        </label>
-    </li>
+        <script type='text/ng-template' id='tab3.phtml'>
 
-</ev-filters></script>
-<script type='text/ng-template' id='grid-leftbar.phtml'><div class="left-padding">
-    <pre><code ng-bind="context.grid | json"></code></pre>
-</div></script>
-<script type='text/ng-template' id='modal.phtml'><div class="modal-header">
-    <button type="button"
-        class="close"
-        ng-click="$dismiss()">
-        &times;
-    </button>
-    <h3 class="modal-title">
-        Modal sample    </h3>
-</div>
+            <div class="lisette-module-topbar lisette-module-actionbar">
+                <button
+                    class="btn btn-primary">
+                    Primary button
+                </button>
+                <button
+                    class="btn btn-default">
+                    Default button
+                </button>
+                <div class="divider"></div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        Dropdown button
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a>test1</a></li>
+                        <li><a>test2</a></li>
+                        <li><a>test3</a></li>
+                        <li><a>test4</a></li>
+                    </ul>
+                </div>
+            </div>
 
-<div class="modal-body"><p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ut tincidunt massa. Nullam volutpat consequat erat. Vivamus non felis sed felis mattis rutrum. Integer libero mi, egestas non bibendum a, laoreet eget nibh. Phase.
-</p></div>
+            <div class="lisette-module-body spaced">
 
-<div class="modal-footer">
-    <button class="btn btn-default"
-        ng-click="$dismiss()">
-        Fermer    </button>
-</div></script>
-<script type='text/ng-template' id='tab1.phtml'><div class="lisette-module-topbar lisette-module-actionbar">
-    <button
-        class="btn btn-primary"
-        ng-click="tab1ctrl.test()">
-        Primary button
-    </button>
-    <button
-        class="btn btn-default">
-        Default button
-    </button>
-    <div class="divider"></div>
-    <div class="btn-group">
-        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-            Dropdown button
-            <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-            <li><a>test1</a></li>
-            <li><a>test2</a></li>
-            <li><a>test3</a></li>
-            <li><a>test4</a></li>
-        </ul>
-    </div>
-</div>
+                <pre><code ng-bind="context.selectedFilters | json"></code></pre>
 
-<div class="lisette-module-body spaced">
+            </div>
+        </script>
+        <script type='text/ng-template' id='demopanel.phtml'>
+            <div class="header">
+                <span class="title" ng-bind="(item ? 'Details' : 'List') + $instance.$$id"></span>
+                <button type="button"
+                    class="close"
+                    ng-click="$dismiss()">
+                    &times;
+                </button>
 
-    <div class="btn-group">
-        <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
-            Notify
-            <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-            <li>
-                <a href="#"
-                    ng-click="notify(0)">
-                    SUCCESS
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="notify(1)">
-                    ERROR
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="notify(2)">
-                    INFO
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="notify(3)">
-                    WARNING
-                </a>
-            </li>
-        </ul>
-    </div>
+                <div
+                    ng-if="item"
+                    class="modal-action-bar">
 
-    <hr>
+                    <button type="button"
+                        class="btn btn-primary"
+                        ng-click="$close(item)">
+                        Ok
+                    </button>
+                    <button type="button"
+                        class="btn btn-default"
+                        ng-click="$dismiss()">
+                        Cancel
+                    </button>
+                </div>
 
-    <div class="btn-group">
-        <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
-            Open middle panel
-            <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-            <li>
-                <a href="#"
-                    ng-click="openMiddlePanel('small')">
-                    Middle, small
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="openMiddlePanel()">
-                    Middle, default
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="openMiddlePanel('big')">
-                    Middle, big
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="openMiddlePanel('error')">
-                    Middle, error
-                </a>
-            </li>
-        </ul>
-    </div>
+            </div>
 
-    <hr>
+            <div class="body">
 
-    <div class="btn-group">
-        <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
-            Open right panel
-            <span class="caret"></span>
-        </button>
-        <ul class="dropdown-menu" role="menu">
-            <li>
-                <a href="#"
-                    ng-click="openRightPanel()">
-                    No push
-                </a>
-            </li>
-            <li>
-                <a href="#"
-                    ng-click="openRightPanel(true)">
-                    Push
-                </a>
-            </li>
-        </ul>
-    </div>
+                <div ng-if="item">
+                    <h4>Details</h4>
 
-</div></script>
-<script type='text/javascript' src='bower_components/jquery/jquery.js'></script>
-<script type='text/javascript' src='bower_components/bootstrap/dist/js/bootstrap.min.js'></script>
-<script type='text/javascript' src='bower_components/underscore/underscore.js'></script>
-<script type='text/javascript' src='bower_components/select2/select2.js'></script>
-<script type='text/javascript' src='bower_components/moment/min/moment-with-langs.min.js'></script>
-<script type='text/javascript' src='bower_components/angular/angular.js'></script>
-<script type='text/javascript' src='bower_components/angular-route/angular-route.js'></script>
-<script type='text/javascript' src='bower_components/angular-ui-router/release/angular-ui-router.min.js'></script>
-<script type='text/javascript' src='bower_components/angular-loading-bar/src/loading-bar.js'></script>
-<script type='text/javascript' src='bower_components/angular-animate/angular-animate.js'></script>
-<script type='text/javascript' src='bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'></script>
-<!-- <script type='text/javascript' src='bower_components/angular-i18n/angular-locale_fr.js'></script> -->
-<!-- <script type='text/javascript' src='bower_components/select2/select2_locale_fr.js'></script> -->
-<script type='text/javascript' src='bower_components/angular-moment/angular-moment.min.js'></script>
-<!-- <script type='text/javascript' src='bower_components/sprintf/src/sprintf.min.js'></script> -->
-<script type='text/javascript' src='bower_components/angular-ui-select2/src/select2.js'></script>
-<script type='text/javascript' src='bower_components/jquery-ui/ui/jquery.ui.core.js'></script>
-<script type='text/javascript' src='bower_components/jquery-ui/ui/jquery.ui.datepicker.js'></script>
-<script type='text/javascript' src='bower_components/jquery-ui/ui/i18n/jquery.ui.datepicker-fr.js'></script>
-<script type='text/javascript' src='bower_components/jquery-ui/ui/minified/jquery-ui.min.js'></script>
-<!-- <script type='text/javascript' src='bower_components/css-element-queries/src/ResizeSensor.js'></script> -->
-<!-- <script type='text/javascript' src='bower_components/css-element-queries/src/ElementQueries.js'></script> -->
-<script type='text/javascript' src='bower_components/checklist-model/checklist-model.js'></script>
-<script type='text/javascript' src='bower_components/angular-ui-date/src/date.js'></script>
+                    <form name="itemForm"
+                        class="form-horizontal">
+                        <div class="form-group"
+                            ng-repeat="col in itemCols" >
+                            <label class="col-sm-4 control-label"
+                                ng-bind="col">
+                            </label>
+                            <div class="col-sm-8">
+                                <input ng-model="item.cells[col]"
+                                    required
+                                    class="form-control" />
+                            </div>
+                        </div>
+                    </form>
 
+                    <label>
+                        <input type="checkbox" ng-model="context.blocked" name="blocking" required />
+                        Bloquer la fermeture
+                    </label>
 
-<!-- <script type='text/javascript' src='js/sidonie/utils.js'></script> -->
-<!-- <script type='text/javascript' src='js/sidonie/Evaneos.js'></script> -->
+                    <hr>
+                    <h4>Sub-items</h4>
+                    <br/>
+                </div>
 
-<script type='text/javascript' src='../dist/ev-fdm.js'></script>
-<script type='text/javascript' src='app/app.js'></script>
+                <div class="items">
+                    <table class="table items-table"
+                        ev-fixed-headers rows="data.rows">
+                        <thead>
+                            <tr>
+                                <th ng-repeat="col in data.cols"
+                                    ng-bind="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody activable-set
+                            active-element="context.active">
+                            <tr ng-repeat="row in data.rows"
+                                activable="row">
+                                <td ng-repeat="col in data.cols" ng-bind="row.cells[col]"></td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-<script type='text/javascript' src='app/controllers/GridController.js'></script>
-<script type='text/javascript' src='app/controllers/GridLeftController.js'></script>
-<script type='text/javascript' src='app/controllers/PanelController.js'></script>
-<script type='text/javascript' src='app/controllers/Tab1Controller.js'></script>
-<script type='text/javascript' src='app/controllers/Tab3Controller.js'></script>
-<script type='text/javascript' src='app/controllers/Tab3LeftController.js'></script>
-<script type='text/javascript' src='app/services/DemoContextService.js'></script>
-<script type='text/javascript' src='app/services/DemoDataFactory.js'></script>
+                    <div class="items-inline">
+                        <div ng-repeat="row in data.rows"
+                            ng-class="{active: context.active == row}">
+                            <div ng-bind="row.cells.Name"
+                                ng-click="context.active = row">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+        <script type='text/ng-template' id='grid.phtml'>
+            <div class="lisette-module-topbar">
+                <div class="lisette-module-actionbar">
+                    <button href="#"
+                        class="btn btn-primary"
+                        ng-click="addRow()">
+                        Add row
+                    </button>
+                </div>
+            </div>
 
+            <div class="lisette-module-body">
+                <table class="table"
+                    ev-fixed-headers rows="data.rows"
+                    selectable-set
+                    selected-elements="context.grid.selected">
+                    <thead>
+                        <tr sortable-set 
+                            sort-by="context.grid.sort.by"
+                            sort-change="sort()"
+                            reverse-sort="context.grid.sort.reverse">
+                            <th><select-all /></th>
+                            <th ng-repeat="col in data.cols"
+                                sortable="{{ col }}"
+                                ng-bind="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody activable-set
+                        active-element="context.grid.active">
+                        <tr ng-repeat="row in data.rows"
+                            activable="row"
+                            selectable="row">
+                            <td><select-box class="block-active"/></td>
+                            <td ng-repeat="col in data.cols" ng-bind="row.cells[col]"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </script>
+        <script type='text/ng-template' id='tab3-leftbar.phtml'>
+            <ev-filters ng-cloak filters="context.selectedFilters">
+                <li>
+                    <label for="userRole">Titre</label>
+                    <div class="control">
+                        <input
+                            ng-model="context.selectedFilters.title"
+                            throttle
+                            clearable
+                            ng-change="onSearch()"
+                            class="form-control" />
+                    </div>
+                </li>
+                <li>
+                    <label for="userRole">Destinataire</label>
+                    <div class="control">
+                        <select
+                            type="hidden"
+                            ui-select2
+                            id="userRole"
+                            name="userRole"
+                            ng-change="onSearch()"
+                            class="searchFilter"
+                            ng-model="context.selectedFilters.userRole"
+                            data-placeholder="Tous">
+                            <option selected="selected" value=""></option>
+                            <option value="traveller">Voyageur</option>
+                            <option value="localAgent">Agent local</option>
+                            <option value="evaneos">Evaneos</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <label for="show">Visible</label>
+                    <div class="control">
+                        <select
+                            type="hidden"
+                            ui-select2
+                            id="show"
+                            name="show"
+                            ng-change="onSearch()"
+                            class="searchFilter"
+                            ng-model="context.selectedFilters.show"
+                            data-placeholder="Tous">
+                            <option selected="selected" value=""></option>
+                            <option value="1">Visible</option>
+                            <option value="0">Non visible</option>
+                        </select>
+                    </div>
+                </li>
+                <li>
+                    <label for="show">Fruits</label>
+                    <ul class="checkboxes">
+                        <li ng-repeat="item in context.fruits">
+                            <label>
+                                <input type="checkbox" class="checkbox"
+                                    ng-change="onSearch()"
+                                    checklist-model="context.selectedFilters.fruits"
+                                    checklist-value="item.value"
+                                    ng-class="{ active: context.selectedFilters.fruits[item.value] }">
+                                <span ng-bind="item.name"></span>
+                            </label>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <label for="show">Sports</label>
+                    <ul class="radioboxes">
+                        <li ng-repeat="item in context.sports">
+                            <label>
+                                <input type="radio"
+                                    ng-change="onSearch()"
+                                    class="radiobox"
+                                    ng-model="context.selectedFilters.sport"
+                                    ng-value="item.value"></span>
+                                <span ng-bind="item.name"></span>
+                            </label>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <label>Anniversaire
+                            <input ui-date
+                                class="form-control" ng-model="context.selectedFilters.birthday"/>
+                    </label>
+                </li>
+            </ev-filters>
+        </script>
+        <script type='text/ng-template' id='grid-leftbar.phtml'>
+            <div class="left-padding">
+                <pre><code ng-bind="context.grid | json"></code></pre>
+            </div>
+        </script>
+        <script type='text/ng-template' id='modal.phtml'>
+            <div class="modal-header">
+                <button type="button"
+                    class="close"
+                    ng-click="$dismiss()">
+                    &times;
+                </button>
+                <h3 class="modal-title">Modal sample</h3>
+            </div>
 
+            <div class="modal-body">
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ut tincidunt massa. Nullam volutpat consequat erat. Vivamus non felis sed felis mattis rutrum. Integer libero mi, egestas non bibendum a, laoreet eget nibh. Phase.</p>
+            </div>
 
+            <div class="modal-footer">
+                <button class="btn btn-default" ng-click="$dismiss()">
+                    Fermer
+                </button>
+            </div>
+        </script>
+        <script type='text/ng-template' id='tab1.phtml'>
+            <div class="lisette-module-topbar lisette-module-actionbar">
+                <button
+                    class="btn btn-primary"
+                    ng-click="tab1ctrl.test()">
+                    Primary button
+                </button>
+                <button
+                    class="btn btn-default">
+                    Default button
+                </button>
+                <div class="divider"></div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                        Dropdown button
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a>test1</a></li>
+                        <li><a>test2</a></li>
+                        <li><a>test3</a></li>
+                        <li><a>test4</a></li>
+                    </ul>
+                </div>
+            </div>
 
+            <div class="lisette-module-body spaced">
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
+                        Notify
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <a href="#"
+                                ng-click="notify(0)">
+                                SUCCESS
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="notify(1)">
+                                ERROR
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="notify(2)">
+                                INFO
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="notify(3)">
+                                WARNING
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <hr>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
+                        Open middle panel
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <a href="#"
+                                ng-click="openMiddlePanel('small')">
+                                Middle, small
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="openMiddlePanel()">
+                                Middle, default
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="openMiddlePanel('big')">
+                                Middle, big
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="openMiddlePanel('error')">
+                                Middle, error
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <hr>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown">
+                        Open right panel
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <a href="#"
+                                ng-click="openRightPanel()">
+                                No push
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#"
+                                ng-click="openRightPanel(true)">
+                                Push
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </script>
+        <script type='text/javascript' src='bower_components/jquery/jquery.js'></script>
+        <script type='text/javascript' src='bower_components/bootstrap/dist/js/bootstrap.min.js'></script>
+        <script type='text/javascript' src='bower_components/underscore/underscore.js'></script>
+        <script type='text/javascript' src='bower_components/select2/select2.js'></script>
+        <script type='text/javascript' src='bower_components/moment/min/moment-with-langs.min.js'></script>
+        <script type='text/javascript' src='bower_components/angular/angular.js'></script>
+        <script type='text/javascript' src='bower_components/angular-route/angular-route.js'></script>
+        <script type='text/javascript' src='bower_components/angular-ui-router/release/angular-ui-router.min.js'></script>
+        <script type='text/javascript' src='bower_components/angular-loading-bar/src/loading-bar.js'></script>
+        <script type='text/javascript' src='bower_components/angular-animate/angular-animate.js'></script>
+        <script type='text/javascript' src='bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'></script>
+        <script type='text/javascript' src='bower_components/angular-moment/angular-moment.min.js'></script>
+        <script type='text/javascript' src='bower_components/angular-ui-select2/src/select2.js'></script>
+        <script type='text/javascript' src='bower_components/jquery-ui/ui/jquery.ui.core.js'></script>
+        <script type='text/javascript' src='bower_components/jquery-ui/ui/jquery.ui.datepicker.js'></script>
+        <script type='text/javascript' src='bower_components/jquery-ui/ui/i18n/jquery.ui.datepicker-fr.js'></script>
+        <script type='text/javascript' src='bower_components/jquery-ui/ui/minified/jquery-ui.min.js'></script>
+        <script type='text/javascript' src='bower_components/checklist-model/checklist-model.js'></script>
+        <script type='text/javascript' src='bower_components/angular-ui-date/src/date.js'></script>
+
+        <script type='text/javascript' src='../dist/ev-fdm.js'></script>
+        <script type='text/javascript' src='app/app.js'></script>
+
+        <script type='text/javascript' src='app/controllers/GridController.js'></script>
+        <script type='text/javascript' src='app/controllers/GridLeftController.js'></script>
+        <script type='text/javascript' src='app/controllers/PanelController.js'></script>
+        <script type='text/javascript' src='app/controllers/Tab1Controller.js'></script>
+        <script type='text/javascript' src='app/controllers/Tab3Controller.js'></script>
+        <script type='text/javascript' src='app/controllers/Tab3LeftController.js'></script>
+        <script type='text/javascript' src='app/services/DemoContextService.js'></script>
+        <script type='text/javascript' src='app/services/DemoDataFactory.js'></script>
     </body>
 </html>
