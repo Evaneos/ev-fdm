@@ -26,13 +26,11 @@
     <!-- BODY -->
     <body class="controller-demo" ng-app="demo">
 
-
         <!-- LISETTE MENU -->
 
             <div id="lisette-menu" class="navbar navbar-inverse affix">
 
-
-                                <ul id="small-menu" class="nav navbar-right navbar-nav">
+                <ul id="small-menu" class="nav navbar-right navbar-nav">
                     <li class="dropdown module menu-item">
                         <a class="toggle dropdown-toggle" data-toggle="dropdown" href="#">
                             <i class="icon icon-display-inline"></i>
@@ -40,109 +38,55 @@
                         </a>
                         <ul class="dropdown-menu">
                     
-        <li class="menu-item module "><a href="/backoffice/transaction/">
-            <i class="icon icon-money"></i>
-            <span class="title">Comptabilité</span>
-            <span class="caret"></span>
+                            <li class="menu-item module ">
+                                <a href="#">
+                                    <i class="icon icon-money"></i>
+                                    <span class="title">Comptabilité</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                            
+                            <li class="menu-item module ">
+                                <a href="#">
+                                    <i class="icon icon-source"></i>
+                                    <span class="title">Source</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
 
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/dashboard/">
-            <i class="icon icon-stats"></i>
-            <span class="title">Statistiques</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:agencies">
-            <i class="icon icon-agences-locales"></i>
-            <span class="title">Agences</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:article">
-            <i class="icon icon-article"></i>
-            <span class="title">Articles</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/source/">
-            <i class="icon icon-source"></i>
-            <span class="title">Source</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:workflowstat">
-            <i class="icon icon-workflow"></i>
-            <span class="title">Workflow</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:travellersource">
-            <i class="icon icon-source"></i>
-            <span class="title">Traveller Source</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/prefilled/">
-            <i class="icon icon-prefilled"></i>
-            <span class="title">Prefilled</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/pixel/">
-            <i class="icon icon-pixels"></i>
-            <span class="title">Pixel</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module active"><a href="/backoffice/demo/">
-            <i class="icon icon-pixels"></i>
-            <span class="title">Demo</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:testimonials">
-            <i class="icon icon-pixelpartner"></i>
-            <span class="title">Témoignages</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/cotcot/">
-            <i class="icon icon-dossiers-voyageurs"></i>
-            <span class="title">Discussions voyageurs</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:redirection">
-            <i class="icon icon-analytics"></i>
-            <span class="title">Redirections</span>
-            <span class="caret"></span>
-
-        </a></li>
-                        <li class="menu-item module menu-help">
+                            
+                            <li class="menu-item module active">
+                                <a href="#">
+                                    <i class="icon icon-pixels"></i>
+                                    <span class="title">Demo</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                            
+                            <li class="menu-item module ">
+                                <a href="#">
+                                    <i class="icon icon-pixelpartner"></i>
+                                    <span class="title">Témoignages</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                            
+                            <li class="menu-item module menu-help">
                                 <a href="http://www.evaneos.com/backoffice/session/zendeskin/" target="_blank">
-                                <i class="icon icon-help"></i>
-                    <span class="title">Besoin d'aide ?</span>
-                    <span class="caret"></span>
-                    </a>
-                </li>
-                                        <li class="divider"></li>
+                                    <i class="icon icon-help"></i>
+                                    <span class="title">Besoin d'aide ?</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+
+                            <li class="divider"></li>
+
                             <li class="menu-item">
                                 <a href="/backoffice/session/change-password">
                                     <span class="title text-center">Changer mon mot de passe</span>
                                 </a>
                             </li>
+
                             <li class="menu-item">
                                 <a href="/backoffice/session/logout">
                                     <span class="title text-center">Déconnexion</span>
@@ -151,147 +95,99 @@
                         </ul>
                     </li>
                 </ul>
-
-                                <ul id="profile-menu" class="nav navbar-nav navbar-right">
+        
+                <ul id="profile-menu" class="nav navbar-nav navbar-right">
                     <li class="dropdown menu-item">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                             <i class="icon icon-user"></i>
                             <span class="title">
-                                Clement <Clément> fdfdfd&nbsp;<span class="caret"></span>
+                                Cl&eacute;ment<span class="caret"></span>
                             </span>
                         </a>
                         <ul class="dropdown-menu">
                             <li class="menu-item">
-                                <a href="/backoffice/session/change-password">
+                                <a href="#">
                                     <span class="title">Mot de passe</span>
-                                </a>
-                            </li>
-
-                                                        <li class="menu-item" ng-controller="TranslationController">
-                                <a href="" ng-click="displayTranslationPopup()">
-                                    <span class="title">Traduction</span>
                                 </a>
                             </li>
                             
                             <li class="menu-item">
-                                <a href="/backoffice/session/logout">
+                                <a href="#">
                                     <span class="title">Déconnexion</span>
                                 </a>
                             </li>
                         </ul>
                     </li>
-                                    <li class="menu-item module menu-help">
-                                <a href="http://evaneos.zendesk.com/account/dropboxes/20287143" onClick="script: Zenbox.show(); return false;">
-                                <i class="icon icon-help"></i>
-                    <span class="title">Besoin d'aide ?</span>
-                    <span class="caret"></span>
-                    </a>
-                </li>
-                            </ul>
+                                    
 
-                                <ul id="lisette-menu-items" class="nav navbar-nav">
+                    <li class="menu-item module menu-help">
+                        <a href="http://evaneos.zendesk.com/account/dropboxes/20287143" onClick="script: Zenbox.show(); return false;">
+                            <i class="icon icon-help"></i>
+                                <span class="title">Besoin d'aide ?</span>
+                                <span class="caret"></span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul id="lisette-menu-items" class="nav navbar-nav">
                     
-        <li class="menu-item module "><a href="/backoffice/transaction/">
-            <i class="icon icon-money"></i>
-            <span class="title">Comptabilité</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/dashboard/">
-            <i class="icon icon-stats"></i>
-            <span class="title">Statistiques</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:agencies">
-            <i class="icon icon-agences-locales"></i>
-            <span class="title">Agences</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module active"><a href="/backoffice/demo/">
-            <i class="icon icon-pixels"></i>
-            <span class="title">Demo</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-                        <li class="dropdown module menu-item">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                <i class="icon icon-other"></i>
-                                <span class="title">Autres apps<span class="caret"></span></span>
-                            </a>
-                            <ul class="dropdown-menu">
+                    <li class="menu-item module ">
+                        <a href="#">
+                            <i class="icon icon-money"></i>
+                            <span class="title">Comptabilité</span>
+                            <span class="caret"></span>
+                        </a>
+                    </li>
                     
-        <li class="menu-item module "><a href="/backoffice#module:article">
-            <i class="icon icon-article"></i>
-            <span class="title">Articles</span>
-            <span class="caret"></span>
-
-        </a></li>
+                    <li class="menu-item module ">
+                        <a href="#">
+                            <i class="icon icon-stats"></i>
+                            <span class="title">Statistiques</span>
+                            <span class="caret"></span>
+                        </a>
+                    </li>
+                    
+                    <li class="menu-item module active">
+                        <a href="#">
+                            <i class="icon icon-pixels"></i>
+                            <span class="title">Demo</span>
+                            <span class="caret"></span>
+                        </a>
+                    </li>
         
-        <li class="menu-item module "><a href="/backoffice/source/">
-            <i class="icon icon-source"></i>
-            <span class="title">Source</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:workflowstat">
-            <i class="icon icon-workflow"></i>
-            <span class="title">Workflow</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:travellersource">
-            <i class="icon icon-source"></i>
-            <span class="title">Traveller Source</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/prefilled/">
-            <i class="icon icon-prefilled"></i>
-            <span class="title">Prefilled</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/pixel/">
-            <i class="icon icon-pixels"></i>
-            <span class="title">Pixel</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:testimonials">
-            <i class="icon icon-pixelpartner"></i>
-            <span class="title">Témoignages</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice/cotcot/">
-            <i class="icon icon-dossiers-voyageurs"></i>
-            <span class="title">Discussions voyageurs</span>
-            <span class="caret"></span>
-
-        </a></li>
-        
-        <li class="menu-item module "><a href="/backoffice#module:redirection">
-            <i class="icon icon-analytics"></i>
-            <span class="title">Redirections</span>
-            <span class="caret"></span>
-
-        </a></li>
-                                    </ul>
-                        </li>
-
-                                    </ul>
+                    <li class="dropdown module menu-item">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <i class="icon icon-other"></i>
+                            <span class="title">Autres apps<span class="caret"></span></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                        
+                            <li class="menu-item module ">
+                                <a href="#">
+                                    <i class="icon icon-prefilled"></i>
+                                    <span class="title">Prefilled</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                            
+                            <li class="menu-item module ">
+                                <a href="#">
+                                    <i class="icon icon-pixels"></i>
+                                    <span class="title">Pixel</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                            
+                            <li class="menu-item module ">
+                                <a href="#">
+                                    <i class="icon icon-pixelpartner"></i>
+                                    <span class="title">Témoignages</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
 
 
