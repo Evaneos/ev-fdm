@@ -47,8 +47,7 @@ module.exports = function(grunt) {
         options: {
                 paths: [
                     'less',
-                    // '<%= components_dir %>',
-                    'bower_components'
+                    '<%= components_dir %>'
                 ]
         },
         production: {
