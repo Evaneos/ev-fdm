@@ -52,20 +52,14 @@ module.exports = function(grunt) {
         },
         production: {
             options: {
-                compress: true
-            },
-            src: "less/generators/production.less",
-            dest: "<%= dist_dir %>/ev-fdm.min.css"
-        },
-        vendors: {
-            options: {
+                compress: true,
                 outputSourceFiles: true,
                 sourceMap: true,
-                sourceMapFilename: '<%= dist_dir %>/vendors.css.map',
-                sourceMapURL: '<%= dist_dir %>/vendors.css.map'
+                sourceMapFilename: '<%= dist_dir %>/ev-fdm.css.map',
+                sourceMapURL: 'ev-fdm.css.map'
             },
-            src: 'less/vendors.less',
-            dest: '<%= dist_dir %>/vendors.css'
+            src: "less/index.less",
+            dest: "<%= dist_dir %>/ev-fdm.min.css"
         }
     },
   });
@@ -77,7 +71,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('js', ['concat', 'uglify']);
-  grunt.registerTask('css', ['less:production', 'less:vendors']);
+  grunt.registerTask('css', ['less:production']);
 
   grunt.registerTask('default', ['copy', 'js', 'css']);
 
