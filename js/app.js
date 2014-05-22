@@ -7,17 +7,17 @@ var commonModule = angular.module('ev-fdm', ['ui.date', 'chieffancypants.loading
 
 // configure the loading bar to be displayed
 // just beneath the menu
-commonModule.config(function(cfpLoadingBarProvider) {
+commonModule.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.parentSelector = '#lisette-menu';
-});
+}]);
 
-commonModule.config(function($tooltipProvider) {
+commonModule.config(['$tooltipProvider', function($tooltipProvider) {
     $tooltipProvider.options({
         placement: 'bottom',
         popupDelay: 100
     });
-});
+}]);
 
 
 // ----------------------------------------------------
