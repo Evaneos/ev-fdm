@@ -40,11 +40,8 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
             $('body').addClass('state-resolving');
         }
     });
-    $rootScope.$on('$stateChangeSuccess', function() {
-        $('body').removeClass('state-resolving');
-    });
+
     $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        $('body').removeClass('state-resolving');
         notificationsService.add({
             text: 'Loading error',
             type: notificationsService.type.ERROR

@@ -40,11 +40,8 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
             $('body').addClass('state-resolving');
         }
     });
-    $rootScope.$on('$stateChangeSuccess', function() {
-        $('body').removeClass('state-resolving');
-    });
+
     $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        $('body').removeClass('state-resolving');
         notificationsService.add({
             text: 'Loading error',
             type: notificationsService.type.ERROR
@@ -779,6 +776,28 @@ angular.module('ev-fdm')
         }]
     }
 
+}]);;'use strict';
+
+angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($rootScope, $state) {
+    return {
+        restrict: 'E',
+        link: function(scope, element, attrs) {
+
+            $rootScope.$on('$stateChangeStart', function(event, toState) {
+                if (!$state.current.name || toState.name.indexOf($state.current.name) !== 0) {
+                    element.addClass('state-resolving');
+                }
+            });
+
+            $rootScope.$on('$stateChangeSuccess', function() {
+                element.removeClass('state-resolving');
+            });
+
+            $rootScope.$on('$stateChangeError', function() {
+                element.removeClass('state-resolving');
+            });
+        }
+    };
 }]);;'use strict';
 /// This directive currently depend on ng-repeat $index for the shift selection. It would be great to remove this depency.
 angular.module('ev-fdm')
