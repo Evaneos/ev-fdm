@@ -2,43 +2,35 @@
 
 function MenuManagerProvider() {
 
-    var tabs = [];
     var self = this;
-    var lastActiveTab = null;
-    var resolvingTab = null;
+    this.tabs = [];
+    this.activeTab = null;
+    this.lastTab = null;
 
     this.addTab = function(tab) {
-        tabs.push(tab);
+        this.tabs.push(tab);
         return this;
     }
 
     function findTab(stateName) {
-        return _(tabs).find(function(t) {
-            return stateName.indexOf(t.state) === 0;
-        });
-    }
+        var res = null;
+        angular.forEach(self.tabs, function(tab) {
+            if(stateName === tab.state) {
+                res = tab;
+            }
+        })
 
-    function getActiveTab() {
-        return _(tabs).findWhere({ active: true });
+        return res;
     }
 
     function selectTab(tab) {
-        // a tab was still resolving
-        if (resolvingTab) resolvingTab.active = false;
-        // cache current and resolving tab
-        resolvingTab = tab;
-        lastActiveTab = getActiveTab();
-        if (tab) tab.active = true;
-        if (lastActiveTab) lastActiveTab.active = false;
-    }
+        if(self.activeTab) {
+            self.lastTab = self.activeTab;
+            self.activeTab.active = false;
+        }
 
-    function isResolving() {
-        return resolvingTab !== null;
-    }
-
-    function _reset() {
-        lastActiveTab = null;
-        resolvingTab = null;
+        tab.active = true;
+        self.activeTab = tab;
     }
 
     this.$get = ['$rootScope', '$state', function($rootScope, $state) {
@@ -47,28 +39,20 @@ function MenuManagerProvider() {
         $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
             if (fromState.name === '') {
                 var toTab = findTab(toState.name);
-                selectTab(toTab);
+
+                if(toTab) {
+                    selectTab(toTab);
+                }
             }
         });
 
-        $rootScope.$on('$stateChangeSuccess', function(event) {
-            _reset();
-            // state coming from url change or at first page load
-            var activeTab = getActiveTab();
-            if (activeTab) activeTab.active = false;
-            var tab = findTab($state.current.name);
-            if (tab) tab.active = true;
-        });
         $rootScope.$on('$stateChangeError', function(event) {
-            // switch back to last tab
-            if (resolvingTab) resolvingTab.active = false;
-            if (lastActiveTab) lastActiveTab.active = true;
-            _reset();
+            selectTab(self.lastTab);
         });
+
         return {
-            tabs: tabs,
-            selectTab: selectTab,
-            isResolving: isResolving
+            tabs: self.tabs,
+            selectTab: selectTab
         }
     }];
 }
@@ -85,10 +69,8 @@ function EvMenuDirective(menuManager) {
         controller: [ '$scope', '$state', function($scope, $state) {
             $scope.tabs = menuManager.tabs;
             $scope.selectTab = function(tab) {
-                if (!menuManager.isResolving()) {
-                    menuManager.selectTab(tab);
-                    $state.go(tab.state);
-                }
+                menuManager.selectTab(tab);
+                $state.go(tab.state);
             }
         }]
     }
