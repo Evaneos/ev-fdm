@@ -1,8 +1,7 @@
 {
-  "name": "lisette",
+  "name": "ev-fdm",
   "version": "0.0.1",
-  "homepage": "https://github.com/getvega/Evaneos",
-  "license": "MIT",
+  "homepage": "https://github.com/evaneos/pro.evaneos.com",
   "ignore": [
     "**/.*",
     "node_modules",
