@@ -55,17 +55,17 @@ module.exports = function(grunt) {
                 compress: true
             },
             src: "less/generators/production.less",
-            dest: "<%= dist_dir %>/ev-fdm.min.css"
+            dest: "<%= dist_dir %>/css/ev-fdm.min.css"
         },
         vendors: {
             options: {
                 outputSourceFiles: true,
                 sourceMap: true,
-                sourceMapFilename: '<%= dist_dir %>/vendors.css.map',
-                sourceMapURL: '<%= dist_dir %>/vendors.css.map'
+                sourceMapFilename: '<%= dist_dir %>/css/vendors.css.map',
+                sourceMapURL: '<%= dist_dir %>/css/vendors.css.map'
             },
             src: 'less/vendors.less',
-            dest: '<%= dist_dir %>/vendors.css'
+            dest: '<%= dist_dir %>/css/vendors.css'
         }
     },
   });
