@@ -13,7 +13,7 @@
     "jquery": "~2.0.3",
     "angular": "1.2.16",
     "angular-ui-router": "~0.2.0",
-    "angular-animate": "~1.2.0-rc.2",
+    "angular-animate": "1.2.16",
     "angular-ui-select2": "~0.0.2",
     "angular-loading-bar": "25ece2a54c683b98aef598b3d2739999d1b8bba4",
     "bootstrap": "3.0.0",
