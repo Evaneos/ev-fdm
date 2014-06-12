@@ -3,7 +3,7 @@
  */
 
 // Angular depedencies for this app
-var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap']);
+var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap', 'restangular']);
 
 // configure the loading bar to be displayed
 // just beneath the menu
@@ -18,6 +18,10 @@ commonModule.config(function($tooltipProvider) {
         popupDelay: 100
     });
 });
+
+commonModule.config(['RestangularProvider', function(restangularProvider) {
+
+}]);
 
 
 // ----------------------------------------------------

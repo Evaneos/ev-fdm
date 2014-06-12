@@ -3,7 +3,7 @@
  */
 
 // Angular depedencies for this app
-var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap']);
+var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap', 'restangular']);
 
 // configure the loading bar to be displayed
 // just beneath the menu
@@ -18,6 +18,10 @@ commonModule.config(function($tooltipProvider) {
         popupDelay: 100
     });
 });
+
+commonModule.config(['RestangularProvider', function(restangularProvider) {
+
+}]);
 
 
 // ----------------------------------------------------
@@ -60,7 +64,135 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
     */
 
 
-}]);;'use strict';
+}]);;angular.module('ev-fdm')
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+            var self = this;
+
+            /*
+                Properties
+             */
+            this.$scope = $scope;
+            this.elementName = elementName;
+            this.elements = elements;
+            this.defaultSortKey = defaultSortKey;
+            this.defaultReverseSort = defaultReverseSort;
+            this.sortKey = this.defaultSortKey;
+            this.reverseSort = this.defaultReverseSort;
+            
+            this.updateScope();
+
+            /*
+                Pagination method that should be called from the template
+             */
+            this.$scope.changePage = function(newPage) {
+                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Sort method that should be called from the template
+             */
+            this.$scope.sortChanged = function() {
+                self.sortKey = self.$scope.sortKey;
+                self.reverseSort = self.$scope.reverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Display an item by changing route
+             */
+            this.$scope.toggleDetailView = function(element) {
+
+                if(!element) {
+                    $state.go(self.elementName);
+                    return;
+                }
+
+                var id = restangular.configuration.getIdFromElem(element);
+
+                if(!id || $stateParams.id === id) {
+                    $state.go(self.elementName);
+                }
+                else {
+                    $state.go(self.elementName + '.view', {id: id});
+                }
+            };
+
+            /*
+                Update the view when filter are changed in the SearchController
+             */
+            this.$scope.$on('common::filters.changed', function(event, filters) {
+                self.filters = filters;
+                self.sortKey = self.defaultSortKey;
+                self.defaultReverseSort = self.defaultReverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            });
+
+
+            /*
+                When returning to the list state remove the active element
+             */
+            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
+                if(toState.name === self.elementName) {
+                    self.$scope.activeElement = null;
+                }
+            });
+
+            this.$scope.$on(this.elementName + '::update', function(event, updatedElements) {
+                var updatedElementId,
+                    currentElementId,
+                    i,
+                    j;
+
+                updatedElements = angular.isArray(updatedElements) || [updatedElements];
+
+                for(i = 0; i < updatedElements.length; i++) {
+                    updatedElementId = restangular.configuration.getIdFromElem(updatedElements[i]);
+
+                    for(j = 0; i < self.elements.length; j++) {
+                        currentElementId = restangular.configuration.getIdFromElem(self.elements[j]);
+                        if(currentElementId === updatedElementId) {
+                            self.elements[j] = updatedElements[i];
+                            break;
+                        }
+                    }
+                }
+            });
+        };
+
+        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
+            var self = this;
+            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                self.elements = elements;
+                self.updateScope();
+            });
+        };
+
+        ListController.prototype.updateScope = function () {
+            var self = this;
+
+            this.$scope[this.elementName] = this.elements;
+            this.$scope.currentPage = this.elements.pagination.current_page;
+            this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.sortKey = this.sortKey;
+            this.$scope.reverseSort = this.reverseSort;
+            this.$scope.selectedElements = [];
+            this.$scope.activeElement = null;
+
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if(elementId === $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
+        };
+
+        return ListController;
+
+    }]);;'use strict';
 
 var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
     $scope.notifications = NotificationsService.list;
@@ -93,43 +225,22 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 }];
 
 angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);;'use strict';
+    .controller('NotificationsController', NotificationsController);;angular.module('ev-fdm')
+    .factory('SearchController', ['$rootScope', function($rootScope) {
 
-var TranslationController = ['$rootScope', '$scope', 'SidonieModalService', 'NotificationsService', function($rootScope, $scope, modalService, notificationsService) {
-    var updateTranslation = function (translationKey, translationData) {
-        translationData.key = translationKey;
-        // I shamelessly stole this from js/default/translations.js
-        $.ajax({
-            url : BASE_URL + 'betty/translation/update',
-            type:'post',
-            dataType:'json',
-            data : { translations : [translationData] },
-            success : function(result) {
-                if (typeof result.success != "undefined" && !result.success){
-                    notificationsService.addError ({text: t("Oops ! Il y a eu un problème lors de la sauvegarde de cette traduction") });
-                }
-            }
-        });
-        notificationsService.addSuccess ({text: t("Modification prise en compte au prochain rechargement de la page") });
-    }
+        function SearchController($scope) {
+            var self = this;
 
+            this.$scope = $scope;
+            this.$scope.filters = {};
 
-    $scope.displayTranslationPopup = function (){
-        modalService.open('right', 'translation.modal', {
-            templateUrl: 'translationsEditor.phtml',
-            controller: ['$scope', function($scope) {
-                $scope.translationsList =evaneos.availableTranslations;
-                $scope.updateTranslation = updateTranslation;
-            }],
-            backdrop: false
-        });
-    }
-}];
+            this.$scope.filtersChanged = function() {
+                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
+            };
+        };
 
-
-angular.module('ev-fdm')
-    .controller('TranslationController', TranslationController);
-;'use strict';
+        return SearchController;
+    }]);;'use strict';
 
 angular.module('ev-fdm')
     .directive('activableSet', function() {
@@ -254,7 +365,24 @@ angular.module('ev-fdm')
             });
         }
     }
-});;'use strict';
+});;angular.module('ev-fdm')
+.directive('download', ['$http', '$location', '$document', function($http, $location, $document) {
+    var iframe = null;
+    return {
+        link: function(scope, elm, attrs) {
+            elm.on('click', function(event) {
+                $http.get(attrs.download).success(function(data) {
+                    if(!iframe) {
+                        iframe = $document[0].createElement('iframe');
+                        iframe.style.display = 'none';
+                        $document[0].body.appendChild(iframe);
+                    }
+                    iframe.src = data.url;
+                });
+            });
+        }
+    }
+}]);;'use strict';
 
 angular.module('ev-fdm')
 .directive('ngEnter', function() {
@@ -467,6 +595,40 @@ var module = angular.module('ev-fdm')
         },
         template: '<i class="icon icon-flag flag-{{lang}}"></i>'
     };
+});;angular.module('ev-fdm')
+.directive('focus', [function() {
+    return {
+        link: function(scope, elm, attrs, ctrl) {
+            scope.$evalAsync(function() {
+                elm[0].focus();
+            });
+        }
+    }
+}]);;angular.module('ev-fdm')
+.directive('strictMin', function() {
+    return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+
+            function validator(viewValue) {
+                var testedValue = parseFloat(viewValue),
+                    min = parseFloat(attrs.strictMin);
+
+                if(testedValue > min ) {
+                    ctrl.$setValidity('strictMin', true);
+                    return viewValue;
+                }
+                else {
+                    ctrl.$setValidity('strictMin', false);
+                    return undefined;
+                }
+
+            };
+
+            ctrl.$parsers.unshift(validator);
+            ctrl.$formatters.push(validator);
+        }
+    }
 });;'use strict';
 
 angular.module('ev-fdm')
@@ -2538,7 +2700,90 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
 angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
-;'use strict';
+;angular.module('ev-fdm')
+    .factory('RestangularStorage', ['Restangular', function(restangular) {
+
+        function RestangularStorage(resourceName, defaultEmbed) {
+            this.restangular = restangular;
+            this.resourceName = resourceName;
+            this.defaultEmbed = defaultEmbed || [];
+        };
+
+        RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
+            var sortDir = reverseSort ? 'DESC' : 'ASC';
+            return sortKey + ':' + sortDir;
+        };
+
+        RestangularStorage.buildEmbed = function(embed) {
+            return embed.join(',');
+        };
+
+        RestangularStorage.buildFilters = function(filters) {
+            var res = {};
+
+            angular.forEach(filters, function(filter, filterKey) {
+
+                if(angular.isObject(filter) && angular.isDefined(filter.uuid)) {
+                    res[filterKey + '.uuid'] = filter.uuid;
+                }
+                else if(angular.isObject(filter) && angular.isDefined(filter.id)) {
+                    res[filterKey + '.id'] = filter.id;
+                }
+                else if(angular.isDate(filter)) {
+                    res[filterKey] = filter.toISOString();
+                }
+                else if(angular.isDefined(filter) && filter !== '' && filter !== null) {
+                    res[filterKey] = filter;
+                }
+
+            });
+
+            return res;
+        };
+
+        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+            var parameters = {};
+
+            if(angular.isNumber(page) && page > 0) {
+                parameters.page = page;
+            }
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed);
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+            
+            if(sortKey) {
+                parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
+            }
+
+            if(filters) {
+                filters = RestangularStorage.buildFilters(filters);
+                angular.extend(parameters, filters);
+            }
+
+            return this.restangular.all(this.resourceName).getList(parameters);
+        };
+
+
+        RestangularStorage.prototype.getById = function(id, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed);
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return this.restangular.one(this.resourceName, id).get(parameters);
+        };
+
+
+        return RestangularStorage;
+    }]);;'use strict';
 
 var module = angular.module('ev-fdm');
 

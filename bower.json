@@ -24,7 +24,8 @@
     "moment": "~2.5.1",
     "angular-moment": "~0.6.2",
     "angular-ui-date": "~0.0.3",
-    "underscore": "~1.5.1"
+    "underscore": "~1.5.1",
+    "restangular": "~1.4.0"
   },
   "resolutions": {
     "angular": "1.2.16"
