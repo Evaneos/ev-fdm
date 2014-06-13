@@ -2836,6 +2836,19 @@ angular.module('ev-fdm')
             return this.restangular.one(this.resourceName, id).get(parameters);
         };
 
+        RestangularStorage.prototype.update = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed);
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.put(parameters);
+        };
+
 
         return RestangularStorage;
     }]);;'use strict';
