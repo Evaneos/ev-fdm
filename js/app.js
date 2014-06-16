@@ -5,19 +5,20 @@
 // Angular depedencies for this app
 var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap', 'restangular']);
 
+
 // configure the loading bar to be displayed
 // just beneath the menu
-commonModule.config(function(cfpLoadingBarProvider) {
+commonModule.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.parentSelector = '#lisette-menu';
-});
+}]);
 
-commonModule.config(function($tooltipProvider) {
+commonModule.config(['$tooltipProvider', function($tooltipProvider) {
     $tooltipProvider.options({
         placement: 'bottom',
         popupDelay: 100
     });
-});
+}]);
 
 commonModule.config(['RestangularProvider', function(restangularProvider) {
 
@@ -44,11 +45,8 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
             $('body').addClass('state-resolving');
         }
     });
-    $rootScope.$on('$stateChangeSuccess', function() {
-        $('body').removeClass('state-resolving');
-    });
+
     $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        $('body').removeClass('state-resolving');
         notificationsService.add({
             text: 'Loading error',
             type: notificationsService.type.ERROR

@@ -203,7 +203,7 @@
             </div>
 
             <div ui-view></div>
-
+            <div class="lisette-module-region right animate"></div>
             </div>
         </div>
 
@@ -234,33 +234,6 @@
         <script type='text/ng-template' id='value.phtml'>
             <div class="common-value" ng-class="{ 'common-empty': !value }" >
                 {{ value || noValue }}
-            </div>
-        </script>
-        <script type='text/ng-template' id='translationsEditor.phtml'>
-            <div class="modal-header">
-                <button type="button" class="close" ng-click='$dismiss()'>
-                    &times;
-                </button>
-                <h3 class="modal-title">Traductions</h3>
-            </div>
-
-            <div class="modal-body">
-                <div ng-repeat="currTranslationKey in translationsList | filter:filterTranslation">
-                    <span>{{ currTranslationKey.key }}</span>
-
-                    <div class="form-group" ng-repeat="currTranslation in currTranslationKey.translations" >
-                        <label class="col-sm-1 control-label" for="name">{{ currTranslation.lang }}</label>
-                        <div class="col-sm-9">
-                            <input type="text" class="form-control" ng-model="currTranslation.value">
-                            <div class="error">Champs obligatoire</div>
-                        </div>
-                        <button ng-click="updateTranslation(currTranslationKey.key, currTranslation)" class="btn btn-default">Update</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-default" ng-click="$close()">Fermer</button>
             </div>
         </script>
         <script type='text/ng-template' id='filters.phtml'>
@@ -704,6 +677,7 @@
         <script type='text/javascript' src='bower_components/jquery-ui/ui/minified/jquery-ui.min.js'></script>
         <script type='text/javascript' src='bower_components/checklist-model/checklist-model.js'></script>
         <script type='text/javascript' src='bower_components/angular-ui-date/src/date.js'></script>
+        <script type='text/javascript' src='bower_components/restangular/dist/restangular.js'></script>
 
         <script type='text/javascript' src='../dist/ev-fdm.js'></script>
         <script type='text/javascript' src='app/app.js'></script>

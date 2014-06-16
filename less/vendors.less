@@ -2,11 +2,10 @@
 // BOOTSTRAP
 // --------------------------------------------------------
 
-@import "variables.less";
 @import "bootstrap/less/mixins.less";
-// selection used in sidonie
+// We just need a few modules in our framework. Get them !
 @import "overrides/bootstrap/modules.less";
-// some global overrides
+// Do some stuff that override bootstrap
 @import "overrides/bootstrap/index.less";
 
 
@@ -17,16 +16,6 @@
 @import (less) "angular-loading-bar/src/loading-bar.css";
 @import "overrides/loading-bar.less";
 @import "overrides/datepicker.less";
-
-
-// --------------------------------------------------------
-// WEIRD VENDORS (they need special treatment)
-//
-// Any generated vendor file
-// /!\ run grunt tasks 'copy', 'less:jquery', 'less:select2'
-//
-// --------------------------------------------------------
-
 @import (inline) "jquery-ui/themes/base/jquery-ui.css";
 @import (inline) "select2/select2.css";
 @import "overrides/select2.less";

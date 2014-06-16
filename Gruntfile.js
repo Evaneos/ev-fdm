@@ -54,7 +54,7 @@ module.exports = function(grunt) {
             options: {
                 compress: true
             },
-            src: "less/generators/production.less",
+            src: "less/index.less",
             dest: "<%= dist_dir %>/css/ev-fdm.min.css"
         },
         vendors: {
@@ -77,7 +77,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('js', ['concat', 'uglify']);
-  grunt.registerTask('css', ['less:production', 'less:vendors']);
+  grunt.registerTask('css', ['less:production']);
 
   grunt.registerTask('default', ['copy', 'js', 'css']);
 
