@@ -77,7 +77,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('js', ['concat', 'uglify']);
-  grunt.registerTask('css', ['less:production']);
+  grunt.registerTask('css', ['less:production', 'less:vendors']);
 
   grunt.registerTask('default', ['copy', 'js', 'css']);
 
