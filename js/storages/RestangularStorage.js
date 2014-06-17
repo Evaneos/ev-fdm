@@ -83,7 +83,7 @@ angular.module('ev-fdm')
             var parameters = {};
 
             if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed);
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
             }
             else if(this.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
