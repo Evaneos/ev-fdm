@@ -13,11 +13,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.buildEmbed = function(embed) {
-            if(angular.isArray(embed) && embed.length) {
-                return embed.concat(this.defaultEmbed).join(',');
-            }
-
-            return this.defaultEmbed.join(',');
+            return embed.join(',');
         };
 
         RestangularStorage.buildFilters = function(filters) {
@@ -50,7 +46,12 @@ angular.module('ev-fdm')
                 parameters.page = page;
             }
 
-            parameters.embed = RestangularStorage.buildEmbed(embed);
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
             
             if(sortKey) {
                 parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
