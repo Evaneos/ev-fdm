@@ -74,24 +74,7 @@ angular.module('ev-fdm')
             });
 
             this.$scope.$on(this.elementName + '::update', function(event, updatedElements) {
-                var updatedElementId,
-                    currentElementId,
-                    i,
-                    j;
-
-                updatedElements = angular.isArray(updatedElements) || [updatedElements];
-
-                for(i = 0; i < updatedElements.length; i++) {
-                    updatedElementId = restangular.configuration.getIdFromElem(updatedElements[i]);
-
-                    for(j = 0; i < self.elements.length; j++) {
-                        currentElementId = restangular.configuration.getIdFromElem(self.elements[j]);
-                        if(currentElementId === updatedElementId) {
-                            self.elements[j] = updatedElements[i];
-                            break;
-                        }
-                    }
-                }
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         };
 
