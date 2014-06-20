@@ -1337,12 +1337,12 @@ angular.module('ev-fdm')
 ;angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
     
-        return function(dataProvider, formatter, resultModifier) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
             var oldQueryTerm = '',
                 filterTextTimeout;
 
             return {
-                minimumInputLength: 3,
+                minimumInputLength: minimumInputLength || 3,
                 allowClear: true,
                 query: function(query) {
                     var res = [],
