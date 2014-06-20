@@ -6,7 +6,7 @@ angular.module('ev-fdm')
                 filterTextTimeout;
 
             return {
-                minimumInputLength: minimumInputLength || 3,
+                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
                 allowClear: true,
                 query: function(query) {
                     var res = [],
@@ -23,7 +23,7 @@ angular.module('ev-fdm')
 
                             var res = [];
                             if(resultModifier) {
-                                angular.forEach(resources, function(resource) {
+                                angular.forEach(resources, function(resource ){
                                     res.push(resultModifier(resource));
                                 });
                             }
