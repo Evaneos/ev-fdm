@@ -26,8 +26,5 @@
     "angular-ui-date": "~0.0.3",
     "underscore": "~1.5.1",
     "restangular": "~1.4.0"
-  },
-  "resolutions": {
-    "angular": "1.2.16"
   }
 }
