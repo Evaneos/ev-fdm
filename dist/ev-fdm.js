@@ -953,6 +953,14 @@ angular.module('ev-fdm')
                     }
                 );
 
+                $scope.$watch(function() {
+                    return selectedElementsGet($scope);
+                  },
+                  function() {
+                    self.selectedElements = selectedElementsGet($scope);
+                  }
+                );
+
                 // Toggle a noselect class on the element when the shift key is pressed
                 // This allows us to disable selection overlay via css
                 $document.on('keydown', function(event) {
