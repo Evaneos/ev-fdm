@@ -78,7 +78,7 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
-            
+
             this.updateScope();
 
             /*
@@ -173,7 +173,8 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
 
         return ListController;
 
-    }]);;'use strict';
+    }]);
+;'use strict';
 
 var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
     $scope.notifications = NotificationsService.list;
