@@ -14,7 +14,7 @@ angular.module('ev-fdm')
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
-            
+
             this.updateScope();
 
             /*
@@ -94,7 +94,7 @@ angular.module('ev-fdm')
             this.$scope.pageCount = this.elements.pagination.total_pages;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements.length = 0;
+            this.$scope.selectedElements = [];
             this.$scope.activeElement = null;
 
             if(angular.isDefined($state.params.id)) {
