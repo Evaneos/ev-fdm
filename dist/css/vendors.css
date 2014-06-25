@@ -7347,6 +7347,16 @@ table.table tr.active {
 table.table tr[activable] {
   cursor: pointer;
 }
+.tooltip {
+  font-weight: bold;
+}
+.tooltip .tooltip-small {
+  font-style: italic;
+  font-size: 11px;
+}
+.tooltip .white-space {
+  white-space: pre-wrap;
+}
 /* Make clicks pass-through */
 #loading-bar,
 #loading-bar-spinner {
