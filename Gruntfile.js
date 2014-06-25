@@ -52,7 +52,11 @@ module.exports = function(grunt) {
         },
         production: {
             options: {
-                compress: true
+                compress: true,
+                outputSourceFiles: true,
+                sourceMap: true,
+                sourceMapFilename: '<%= dist_dir %>/css/ev-fdm.css.map',
+                sourceMapURL: 'css/ev-fdm.css.map'
             },
             src: "less/index.less",
             dest: "<%= dist_dir %>/css/ev-fdm.min.css"
