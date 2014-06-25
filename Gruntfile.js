@@ -71,7 +71,7 @@ module.exports = function(grunt) {
             src: 'less/vendors.less',
             dest: '<%= dist_dir %>/css/vendors.css'
         }
-    },
+    }
   });
 
   grunt.loadNpmTasks('grunt-contrib-uglify');

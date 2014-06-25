@@ -1,13 +1,21 @@
-
 @font-face {
     font-family: 'icomoon';
-    src:url('@{path-fonts}/icomoon/sidonie.eot?2006141605');
-    src:url('@{path-fonts}/icomoon/sidonie.eot?2006141605#iefix') format('embedded-opentype'),
-        url('@{path-fonts}/icomoon/sidonie.woff?2006141605') format('woff'),
-        url('@{path-fonts}/icomoon/sidonie.ttf?2006141605') format('truetype'),
-        url('@{path-fonts}/icomoon/sidonie.svg?2006141605#icomoon') format('svg');
+    src:url('@{path-fonts}/icomoon/sidonie.woff?2014-06-18-1630') format('woff'),
+        url('@{path-fonts}/icomoon/sidonie.svg?2014-06-18-1630#icomoon') format('svg'),
+        url('@{path-fonts}/icomoon/sidonie.eot?2014-06-18-1630#iefix') format('embedded-opentype'),
+        url('@{path-fonts}/icomoon/sidonie.ttf?2014-06-18-1630') format('truetype');
     font-weight: normal;
     font-style: normal;
+}
+
+/**
+ * Hack for Chrome on Windows
+ */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    @font-face {
+        font-family: 'icomoon';
+        src: url('@{path-fonts}/icomoon/sidonie.svg?2014-06-18-1630#icomoon') format('svg');
+    }
 }
 
 /* Use the following CSS code if you want to have a class per icon */
@@ -18,6 +26,13 @@ you can use the generic selector below, but it's slower:
 */
 .icon,
 .icon-edit,
+.icon-clock,
+.icon-blocked,
+.icon-warning,
+.icon-read,
+.icon-phone,
+.icon-note,
+.icon-mail,
 .icon-tick,
 .icon-help,
 .icon-calendar,
@@ -89,7 +104,28 @@ you can use the generic selector below, but it's slower:
 }
 
 .icon-edit:before {
-  content: "\e637";
+    content: "\e637";
+}
+.icon-clock:before {
+    content: "\e635";
+}
+.icon-blocked:before {
+     content: "\e636";
+}
+.icon-warning:before {
+     content: "\e630";
+}
+.icon-read:before {
+     content: "\e631";
+}
+.icon-phone:before {
+     content: "\e632";
+}
+.icon-note:before {
+     content: "\e633";
+}
+.icon-mail:before {
+    content: "\e634";
 }
 .icon-tick:before {
     content: "\e62f";
@@ -164,6 +200,7 @@ you can use the generic selector below, but it's slower:
 }
 .icon-pdf:before {
     content: "\e60f";
+    color: @brand-red;
 }
 .icon-other:before {
     content: "\e610";

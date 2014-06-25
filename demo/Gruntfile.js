@@ -8,7 +8,7 @@ module.exports = function(grunt) {
     less: {
         options: {
                 paths: [
-                    'bower_components'
+                    '<%= components_dir %>'
                 ]
         },
         demo: {
@@ -16,7 +16,7 @@ module.exports = function(grunt) {
                 compress: true
             },
             src: "less/demo.less",
-            dest: "<%= dist_dir %>/demo.min.css"
+            dest: "<%= dist_dir %>/css/demo.min.css"
         }
     },
     copy: {

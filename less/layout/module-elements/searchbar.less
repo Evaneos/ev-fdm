@@ -95,6 +95,15 @@
                                 box-shadow: none;
                             }
 
+                            /**
+                             * Fix the double arrow (on retina) on select2 fields
+                             */
+                            .select2-container {
+                                .select2-choice .select2-arrow b {
+                                    background-image: none !important;
+                                }
+                            }
+
                             input {
                                 border: 1px solid @gray-light;
                                 padding: 2px 6px;
@@ -134,6 +143,10 @@
                                     & > * {
                                         vertical-align: middle;
                                     }
+
+                                    span {
+                                        padding-left: 5px;
+                                    }
                                 }
                             }
                             .radiobox,
@@ -143,6 +156,16 @@
                                 height: 14px;
                                 max-width: 14px;
                                 max-height: 14px;
+                                float: left;
+                            }
+
+                            .state {
+                                float: left;
+                                display: block;
+                                position: relative;
+                                top: 1px;
+                                left: 1px;
+                                vertical-align: middle;
                             }
                         }
                         .dates {
