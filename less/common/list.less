@@ -1,0 +1,156 @@
+/**
+ *  A list containing elements
+ *
+ *  Template example:
+ *
+    <div class="list-container">
+        <div ng-repeat="message in messagesArray"
+            activable-set
+            activable="message"
+            active-element="context.activeMessage"
+            class="list-element"
+            ng-class="{'list-element-new':message.isNew}">
+
+            <div class="infos">
+                <div class="state state-{{message.state | stateNameFromId}}">&nbsp;</div>
+            </div>
+            <div class="element-content">
+                <div class="header">
+                    <div class="main-information">
+                        {{ message.user.fullName }}
+                    </div>
+                    <div class="extra-information">
+                        <span am-time-ago="message.sendDate"></span>
+                    </div>
+                </div>
+                <div class="title">{{ message.subject }}</div>
+                <div class="description">{{ message.shortBody }}</div>
+            </div>
+        </div>
+    </div>
+ */
+.list-container {
+    height: 100%;
+    overflow-y: auto;
+
+    /**
+     * The element
+     */
+    .list-element {
+        padding: 5px;
+        border-bottom: 1px solid @gray-lighter;
+        border-left: @layout-gutter solid transparent;
+        cursor: pointer;
+        position: relative;
+        height: 71px;
+
+        /**
+         * The left section containing informations
+         */
+        .infos {
+            width: 20px;
+            height: 100%;
+            float: left;
+            text-align: center;
+            padding-top: 2px;
+
+            > div {
+                margin-top: 3px;
+
+                &:first-child {
+                    margin-top: 0;
+                }
+            }
+
+            .icon {
+                color: @gray;
+            }
+        }
+
+        /**
+         * Element content
+         */
+        .element-content {
+            /**
+             * The header with main informations
+             */
+            .header {
+                .main-information {
+                    margin-right: 80px;
+                    .text-overflow();
+
+                    .icon {
+                        color: @gray;
+                    }
+                }
+
+                .extra-information {
+                    color: @gray;
+                    position: absolute;
+                    right: 8px;
+                    top: 5px;
+
+                    .icon-warning, .icon-blocked {
+                        color: @brand-warning;
+                    }
+                }
+
+            }
+
+            /**
+             * Second line on this element
+             */
+            .title {
+                color: @gray;
+                display: block;
+                .text-overflow();
+            }
+
+            /**
+             * Third line
+             */
+            .description {
+                color: @gray;
+                display:block;
+                .text-overflow();
+            }
+        }
+
+        /**
+         * An active element get a colorful border left
+         */
+        &.active {
+            border-left: @layout-gutter solid @brand-primary;
+            background: @gray-lighter;
+        }
+
+        /**
+         * An element with a new class, is more visible
+         */
+        &-new {
+            .main-information {
+                color: @gray-darker;
+                font-weight: bold;
+            }
+
+            .extra-information {
+                color: @gray-dark;
+            }
+        }
+    }
+}
+
+// Responsive lines in a panel
+.panel {
+    &[data-breakpoint='min'],
+    &[data-breakpoint='100'],
+    &[data-breakpoint='200'],
+    &[data-breakpoint='300'] {
+        .list-container .list-element {
+            height: auto;
+            .title, .description {
+                display: none;
+            }
+        }
+    }
+}

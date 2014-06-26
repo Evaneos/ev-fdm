@@ -1345,7 +1345,7 @@ angular.module('ev-fdm')
     .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
 ;angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
-    
+
         return function(dataProvider, formatter, resultModifier, minimumInputLength) {
             var oldQueryTerm = '',
                 filterTextTimeout;
@@ -1377,7 +1377,8 @@ angular.module('ev-fdm')
                                 results: res.length ? res : resources
                             };
 
-                            if(resources.pagination.current_page < resources.pagination.total_pages) {
+                            if(resources.pagination &&
+                                resources.pagination.current_page < resources.pagination.total_pages) {
                                 result.more = true;
                             }
 
