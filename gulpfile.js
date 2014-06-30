@@ -1,5 +1,4 @@
-/* global require */
-/* jshint -W097 */
+/* jshint node: true */
 "use strict";
 
 

@@ -91,7 +91,7 @@ do
 done
 # echo $JSHINT_BIN $REPORTER $EXCLUDE $STAGED_FILES
 ($JSHINT_BIN $REPORTER --verbose  $EXLUDE $STAGED_FILES)
-EXIT_VALUE = $RETVAL
+EXIT_VALUE=$RETVAL
 
 # delete temporary copy of staging area
 rm -rf $TMP_STAGING
