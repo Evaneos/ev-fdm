@@ -27,6 +27,9 @@ angular.module('ev-fdm')
                 else if(angular.isObject(filter) && angular.isDefined(filter.id)) {
                     res[filterKey + '.id'] = filter.id;
                 }
+                else if(angular.isArray(filter) && filter.length > 0) {
+                  res[filterKey] = filter.join(',');
+                }
                 else if(angular.isDate(filter)) {
                     res[filterKey] = filter.toISOString();
                 }
