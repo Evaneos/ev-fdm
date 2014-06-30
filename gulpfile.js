@@ -7,7 +7,7 @@ var gulp = require('gulp');
 var less = require('gulp-less');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
-var minifyCss = require('gulp-minify-css');
+var csso = require('gulp-csso');
 var sourcemaps = require('gulp-sourcemaps');
 var rename = require('gulp-rename');
 var jshint = require('gulp-jshint');
@@ -107,7 +107,7 @@ function minifyLess (src, paths, dest, name) {
             .pipe(less({
                 paths: paths
             }))
-            .pipe(minifyCss())
+            .pipe(csso())
             .pipe(rename(name + '.min.css'))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(dest));
@@ -178,4 +178,5 @@ gulp.task('copy', function () {
         .pipe(gulp.dest(dest + '/fonts'));
 });
 
-gulp.task('default', ['watch-js', 'watch-less', 'copy']);
+gulp.task('default', ['js-all', 'less-all', 'copy']);
+gulp.task('watch', ['copy', 'watch-less', 'watch-js']);
