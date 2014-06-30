@@ -17,5 +17,5 @@
     "eqnull": true,
     "node": true,
     "browser": true,
-    "predef": ["angular", "$", "t"]
+    "predef": ["angular", "$"]
 }
