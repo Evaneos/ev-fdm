@@ -9,8 +9,11 @@ This is the JS and CSS framework used for the backoffice of Evaneos.com
 
 This repository contains the following things:
 
- - the main framework code, in the js and less directories
+ - the main framework code, in the `core` directory
+ - the plugin code, available in the `plugin` directory
  - the compiled files, in the dist directory
+
+NB: Different compiled files can be found. You'll have the default ones, with all the js files from plugins and core concatenated in one file (`ev-fdm-core-and-plugins.js`). But also the `js` files before concatenation, corresponding to the `core` and `plugins`
 
 ## Requirements
 
@@ -20,7 +23,7 @@ However if you want to recompile the sources, this framework require the followi
 
  - node
  - npm
- - grunt
+ - gulp
  - bower
 
 ## Using the demo
@@ -35,4 +38,4 @@ and you are good to go !
 
 At the root of the project, run
 
-    bower install && grunt
+    bower install && gulp

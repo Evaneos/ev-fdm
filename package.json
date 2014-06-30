@@ -19,16 +19,19 @@
   },
   "devDependencies": {
     "grunt": "^0.4.2",
-    "path": "~0.4.9",
-    "grunt-contrib-less": "^0.9.0",
+    "grunt-bell": "^0.1.2",
+    "grunt-cli": "^0.1.13",
+    "grunt-concurrent": "^0.4.3",
+    "grunt-contrib-concat": "^0.3.0",
     "grunt-contrib-copy": "^0.5.0",
     "grunt-contrib-jshint": "^0.8.0",
-    "grunt-contrib-concat": "^0.3.0",
+    "grunt-contrib-less": "^0.9.0",
     "grunt-contrib-uglify": "^0.3.2",
     "grunt-contrib-watch": "^0.5.3",
+    "gulp-jshint": "^1.6.3",
+    "jshint": "^2.5.1",
+    "jshint-stylish": "^0.2.0",
     "load-grunt-tasks": "^0.4.0",
-    "grunt-concurrent": "^0.4.3",
-    "grunt-bell": "^0.1.2",
-    "grunt-cli": "^0.1.13"
+    "path": "~0.4.9"
   }
 }
