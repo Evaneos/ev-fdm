@@ -1,9 +1,7 @@
-(function () {
-'use strict';
-
 /**
  * Common Application
  */
+
 // Angular depedencies for this app
 var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar', 'ui.bootstrap.tooltip', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap', 'restangular']);
 
@@ -65,7 +63,6 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
 
 
 }]);
-})();
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
 
@@ -144,7 +141,7 @@ angular.module('ev-fdm')
             this.$scope.$on(this.elementName + '::update', function(event, updatedElements) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
-        }
+        };
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
             var self = this;
@@ -179,17 +176,17 @@ angular.module('ev-fdm')
 
     }]);
 
+'use strict';
 
 var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
-    'use strict';
     $scope.notifications = NotificationsService.list;
-
+    
     $scope.$watch(function() {
         return NotificationsService.activeNotification;
     }, function() {
         $scope.activeNotification = NotificationsService.activeNotification;
     });
-
+    
     $scope.getClass = function (notification){
         if (!notification) return '';
         switch (notification.type){
