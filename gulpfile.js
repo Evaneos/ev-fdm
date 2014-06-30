@@ -18,7 +18,7 @@ var fs = require('fs');
 var bowerDirectory = './bower_components';
 
 var dest = 'dist';
-var plugins = fs.readdirSync('plugins/').filter(function (name) {
+var plugins = fs.readdirSync('plugins/').filter(function(name) {
     return fs.statSync('plugins/' + name).isDirectory();
 });
 
@@ -28,7 +28,7 @@ var plugins = fs.readdirSync('plugins/').filter(function (name) {
 // //////////////////////////////////////////////////
 
 
-function minifySrc (src, dest, name) {
+function minifySrc(src, dest, name) {
     return gulp.src(src)
         .pipe(sourcemaps.init())
             .pipe(concat(name + '.js'))
@@ -67,7 +67,7 @@ function jsConcatCorePlugins() {
 
 
 
-plugins.forEach(function (name) {
+plugins.forEach(function(name) {
     var dir = 'plugins/' + name;
     var src = [dir + '/js/app.js', dir + '/js/**/*.js'];
     gulp.task('plugin-' + name + '-js-hint', function () {
@@ -92,8 +92,7 @@ gulp.task('js-all', tasks, jsConcatCorePlugins);
 
 
 tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-js'; });
-tasks.unshift('watch-core-js');
-tasks.unshift('js-all');
+tasks.unshift('js-all', 'watch-core-js');
 gulp.task('watch-js', tasks);
 
 
@@ -101,7 +100,7 @@ gulp.task('watch-js', tasks);
 // LESS
 // //////////////////////////////////////////////////
 
-function minifyLess (src, paths, dest, name) {
+function minifyLess(src, paths, dest, name) {
     return gulp.src(src)
         .pipe(sourcemaps.init())
             .pipe(less({
@@ -138,7 +137,7 @@ function lessConcatCorePlugins() {
 
 
 
-plugins.forEach(function (name) {
+plugins.forEach(function(name) {
     var dir = 'plugins/' + name;
     var src = [dir + '/less/index.less'];
     var paths = [dir + '/less', bowerDirectory];
@@ -157,8 +156,7 @@ gulp.task('less-all', tasks, lessConcatCorePlugins);
 
 
 tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-less'; });
-tasks.unshift('watch-core-less');
-tasks.unshift('less-all');
+tasks.unshift('less-all', 'watch-core-less');
 gulp.task('watch-less', tasks);
 
 
@@ -168,11 +166,11 @@ gulp.task('watch-less', tasks);
 
 
 
-gulp.task('copy', function () {
+gulp.task('copy', function() {
     gulp.src(bowerDirectory + '/jquery-ui/themes/smoothness/images', { base: './' })
         .pipe(gulp.dest(dest + '/images'));
     gulp.src([
-            bowerDirectory + '/bootstrap/fonts/*',
+        bowerDirectory + '/bootstrap/fonts/*',
             '/fonts/*'
         ], { base: './' })
         .pipe(gulp.dest(dest + '/fonts'));
