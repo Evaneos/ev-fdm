@@ -43,7 +43,7 @@ function minifySrc(src, dest, name) {
 
 
 function jsConcatCorePlugins() {
-    return gulp.src([dest + '/**/*.min.js', '!' + dest +  pkg.name + '.min.js'])
+    return gulp.src([dest + '/**/*.min.js', '!' + dest + '/' +  pkg.name + '.min.js'])
         .pipe(sourcemaps.init())
             .pipe(concat(pkg.name + '.min.js'))
         .pipe(sourcemaps.write('.'))
@@ -114,11 +114,11 @@ function minifyLess(src, paths, dest, name) {
 
 
 function lessConcatCorePlugins() {
-    return gulp.src([dest + '/**/*.min.css', '!' + dest +  pkg.name + '.min.css'])
+    return gulp.src([dest + '/**/*.min.css', '!' + dest +'/css/' +  pkg.name + '.min.css'])
         .pipe(sourcemaps.init())
             .pipe(concat(pkg.name + '.min.css'))
         .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest(dest));
+        .pipe(gulp.dest(dest + '/css'));
 }
 
 
