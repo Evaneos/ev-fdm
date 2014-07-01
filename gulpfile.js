@@ -167,12 +167,12 @@ gulp.task('watch-less', tasks);
 
 
 gulp.task('copy', function() {
-    gulp.src(bowerDirectory + '/jquery-ui/themes/smoothness/images', { base: './' })
+    gulp.src(bowerDirectory + '/jquery-ui/themes/smoothness/images/*')
         .pipe(gulp.dest(dest + '/images'));
     gulp.src([
-        bowerDirectory + '/bootstrap/fonts/*',
-            '/fonts/*'
-        ], { base: './' })
+            bowerDirectory + '/bootstrap/fonts/*',
+            'fonts/*'
+        ])
         .pipe(gulp.dest(dest + '/fonts'));
 });
 
