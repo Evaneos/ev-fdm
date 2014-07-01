@@ -43,9 +43,9 @@ function minifySrc(src, dest, name) {
 
 
 function jsConcatCorePlugins() {
-    return gulp.src([dest + '/**/*.min.js', '!' + dest +  pkg.name + '-core-and-plugins.min.js'])
+    return gulp.src([dest + '/**/*.min.js', '!' + dest +  pkg.name + '.min.js'])
         .pipe(sourcemaps.init())
-            .pipe(concat(pkg.name + '-core-and-plugins.min.js'))
+            .pipe(concat(pkg.name + '.min.js'))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(dest));
 }
@@ -55,7 +55,7 @@ function jsConcatCorePlugins() {
 
     // Uglification
     gulp.task('core-js', function () {
-        return minifySrc(src, dest + '/core', pkg.name);
+        return minifySrc(src, dest + '/core', pkg.name + '-core');
     });
     // Watchers
     gulp.task('watch-core-js', function () {
@@ -114,9 +114,9 @@ function minifyLess(src, paths, dest, name) {
 
 
 function lessConcatCorePlugins() {
-    return gulp.src([dest + '/**/*.min.css', '!' + dest +  pkg.name + '-core-and-plugins.min.css'])
+    return gulp.src([dest + '/**/*.min.css', '!' + dest +  pkg.name + '.min.css'])
         .pipe(sourcemaps.init())
-            .pipe(concat(pkg.name + '-core-and-plugins.min.css'))
+            .pipe(concat(pkg.name + '.min.css'))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(dest));
 }
@@ -127,7 +127,7 @@ function lessConcatCorePlugins() {
     var paths = ['core/less', bowerDirectory];
     gulp.task('less-concat-core-plugins', lessConcatCorePlugins);
     gulp.task('core-less', function () {
-        return minifyLess(src, paths, dest + '/core/css', pkg.name);
+        return minifyLess(src, paths, dest + '/core/css', pkg.name + '-core');
     });
     gulp.task('watch-core-less', function () {
         gulp.watch(src, ['core-less', 'concat-core-plugins']);
