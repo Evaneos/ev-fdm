@@ -75,7 +75,7 @@ function minifySrc(src, dest, name) {
          return concatCorePlugins([dest + '/**/*.min.js', '!' + dest + '/' +  pkg.name + '.min.js'], '.min.js');
     });
     gulp.task('js-concat-core-plugins-raw', function () {
-         return concatCorePlugins([dest + '/**/*.js', '!' + dest + '/' +  pkg.name + '.js', '!*.min.js'], '.js');
+         return concatCorePlugins([dest + '/**/*.js', '!' + dest + '/' +  pkg.name + '.js', '!**/*.min.js'], '.js');
     });
     gulp.task('js-concat-core-plugins', ['js-concat-core-plugins-min', 'js-concat-core-plugins-raw']);
 })();
