@@ -104,7 +104,7 @@ plugins.forEach(function(name) {
 var tasks = plugins.map(function(name) { return 'plugin-' + name + '-js'; });
 tasks.unshift('core-js');
 gulp.task('js-all', tasks, function () {
-    gulp.start('js-concat-core-plugins');
+    return gulp.start('js-concat-core-plugins');
 });
 
 
