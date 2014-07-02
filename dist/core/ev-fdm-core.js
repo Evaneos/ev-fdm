@@ -20,6 +20,15 @@ commonModule.config(['$tooltipProvider', function($tooltipProvider) {
     });
 }]);
 
+/**
+ * Define a default error state for our app
+ */
+commonModule.config(['$stateProvider', function($stateProvider) {
+    $stateProvider.state('ev-error', {
+        templateUrl: 'ev-error.phtml'
+    });
+}]);
+
 commonModule.config(['RestangularProvider', function(restangularProvider) {
 
 }]);
@@ -46,11 +55,39 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
         }
     });
 
+    $rootScope.$on('$stateChangeSuccess', function() {
+        $('body').removeClass('state-resolving');
+    });
+
+    /**
+     * When there is an error on a state change
+     *
+     * In your state config you can add the following.
+     * This will allows the router to fallback to this state on error
+     * while displaying the specified message
+
+          fallback: {
+            state: 'list',
+            message: t('Unable to open this transaction!')
+          }
+     */
     $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        notificationsService.add({
-            text: 'Loading error',
-            type: notificationsService.type.ERROR
+        $('body').removeClass('state-resolving');
+
+        var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+        notificationsService.addError({
+            text: errorMessage
         });
+
+        // Redirect to the fallback we defined in our state
+        if(toState && toState.fallback && toState.fallback.state) {
+          $state.go(toState.fallback.state);
+        }
+        // Or our default error page
+        else {
+          $state.go('ev-error');
+        }
     });
 
     /*if (evaneos._frontData) {
@@ -62,7 +99,8 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
     */
 
 
-}]);;angular.module('ev-fdm')
+}]);
+angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
@@ -174,7 +212,8 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
         return ListController;
 
     }]);
-;'use strict';
+
+'use strict';
 
 var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
     $scope.notifications = NotificationsService.list;
@@ -207,7 +246,8 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 }];
 
 angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);;angular.module('ev-fdm')
+    .controller('NotificationsController', NotificationsController);
+angular.module('ev-fdm')
     .factory('SearchController', ['$rootScope', function($rootScope) {
 
         function SearchController($scope) {
@@ -222,7 +262,8 @@ angular.module('ev-fdm')
         };
 
         return SearchController;
-    }]);;'use strict';
+    }]);
+'use strict';
 
 angular.module('ev-fdm')
     .directive('activableSet', function() {
@@ -290,7 +331,8 @@ angular.module('ev-fdm')
                 });
             }
         }
-    });;'use strict';
+    });
+'use strict';
 
 var module = angular.module('ev-fdm');
 
@@ -322,7 +364,8 @@ module.directive('clearable', [function() {
 
         }
     }
-}]);;'use strict';
+}]);
+'use strict';
 
 angular.module('ev-fdm')
 .directive('evDatepicker', function() {
@@ -347,7 +390,8 @@ angular.module('ev-fdm')
             });
         }
     }
-});;angular.module('ev-fdm')
+});
+angular.module('ev-fdm')
 .directive('download', ['$http', '$location', '$document', function($http, $location, $document) {
     var iframe = null;
     return {
@@ -364,7 +408,8 @@ angular.module('ev-fdm')
             });
         }
     }
-}]);;'use strict';
+}]);
+'use strict';
 
 angular.module('ev-fdm')
 .directive('ngEnter', function() {
@@ -379,7 +424,8 @@ angular.module('ev-fdm')
             }
         });
     };
-});;'use strict';
+});
+'use strict';
 
 function MenuManagerProvider() {
 
@@ -460,7 +506,8 @@ function EvMenuDirective(menuManager) {
 
 angular.module('ev-fdm')
     .provider('menuManager', [MenuManagerProvider])
-    .directive('evMenu', ['menuManager', EvMenuDirective]);;'use strict';
+    .directive('evMenu', ['menuManager', EvMenuDirective]);
+'use strict';
 
 var module = angular.module('ev-fdm');
 
@@ -471,7 +518,8 @@ module.directive('evFilters', function() {
         transclude: true,
         templateUrl: 'filters.phtml'
     };
-});;
+});
+
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
@@ -547,7 +595,8 @@ angular.module('ev-fdm')
         }
     }
 
-}]);;'use strict';
+}]);
+'use strict';
 
 var module = angular.module('ev-fdm')
 .directive('evFlag', function () {
@@ -559,7 +608,8 @@ var module = angular.module('ev-fdm')
         },
         template: '<i class="icon icon-flag flag-{{lang}}"></i>'
     };
-});;angular.module('ev-fdm')
+});
+angular.module('ev-fdm')
 .directive('focus', [function() {
     return {
         link: function(scope, elm, attrs, ctrl) {
@@ -568,32 +618,8 @@ var module = angular.module('ev-fdm')
             });
         }
     }
-}]);;angular.module('ev-fdm')
-.directive('strictMin', function() {
-    return {
-        require: 'ngModel',
-        link: function(scope, elm, attrs, ctrl) {
-
-            function validator(viewValue) {
-                var testedValue = parseFloat(viewValue),
-                    min = parseFloat(attrs.strictMin);
-
-                if(testedValue > min ) {
-                    ctrl.$setValidity('strictMin', true);
-                    return viewValue;
-                }
-                else {
-                    ctrl.$setValidity('strictMin', false);
-                    return undefined;
-                }
-
-            };
-
-            ctrl.$parsers.unshift(validator);
-            ctrl.$formatters.push(validator);
-        }
-    }
-});;'use strict';
+}]);
+'use strict';
 
 angular.module('ev-fdm')
     .directive('linkDisabled', function() {
@@ -617,7 +643,8 @@ angular.module('ev-fdm')
                 }
             }
         };
-    });;'use strict';
+    });
+'use strict';
 
 var module = angular.module('ev-fdm')
 .directive('evLoadingDots', function () {
@@ -626,7 +653,8 @@ var module = angular.module('ev-fdm')
         replace: true,
         template: '<span class="loading-dots"><span></span><span></span><span></span></span>'
     };
-});;'use strict';
+});
+'use strict';
 
 angular.module('ev-fdm')
     .directive('evModule', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
@@ -687,7 +715,8 @@ angular.module('ev-fdm')
         }
     };
 }
-]);;'use strict';
+]);
+'use strict';
 
 angular.module('ev-fdm')
 .directive('evModuleHeader', ['$timeout', function ($timeout) {
@@ -722,7 +751,8 @@ angular.module('ev-fdm')
             _sync($wrapper);
         });
     }
-}]);;'use strict';
+}]);
+'use strict';
 
 angular.module('ev-fdm')
     .directive('mouseFollower', ['$document', function ($document) {
@@ -741,7 +771,8 @@ angular.module('ev-fdm')
                 });
             }
         }
-    }]);;'use strict';
+    }]);
+'use strict';
 
 var module = angular.module('ev-fdm')
     .directive('evPagination', [function () {
@@ -843,7 +874,8 @@ var module = angular.module('ev-fdm')
                 });
             }
     };
-}]);;/**
+}]);
+/**
  * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
  * + Supports empty lists by displaying a message (promise-empty)
  *
@@ -905,7 +937,8 @@ angular.module('ev-fdm')
         }]
     }
 
-}]);;'use strict';
+}]);
+'use strict';
 
 angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($rootScope, $state) {
     return {
@@ -927,7 +960,8 @@ angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($r
             });
         }
     };
-}]);;'use strict';
+}]);
+'use strict';
 /// This directive currently depend on ng-repeat $index for the shift selection. It would be great to remove this depency.
 angular.module('ev-fdm')
     .directive('selectableSet', [function() {
@@ -1133,7 +1167,8 @@ angular.module('ev-fdm')
                 });
             }
         }
-    });;'use strict';
+    });
+'use strict';
 
 angular.module('ev-fdm')
     .directive('sortableSet', function() {
@@ -1224,7 +1259,8 @@ angular.module('ev-fdm')
                 }
             }
         }
-    });;'use strict';
+    });
+'use strict';
 
 var module = angular.module('ev-fdm');
 
@@ -1266,7 +1302,8 @@ module.directive('throttle', ['$timeout', function($timeout) {
             };
         }
     }
-}]);;'use strict';
+}]);
+'use strict';
 
 angular.module('ev-fdm')
     .directive('evValue', function () {
@@ -1279,7 +1316,8 @@ angular.module('ev-fdm')
             },
             templateUrl: 'value.phtml'
         };
-    });;'use strict';
+    });
+'use strict';
 
 function FilterServiceFactory($rootScope, $timeout) {
 
@@ -1344,7 +1382,8 @@ function FilterServiceFactory($rootScope, $timeout) {
 
 angular.module('ev-fdm')
     .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-;angular.module('ev-fdm')
+
+angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
         return function(dataProvider, formatter, resultModifier, minimumInputLength) {
@@ -1400,7 +1439,8 @@ angular.module('ev-fdm')
                 }
              };
         };
-    }]);;
+    }]);
+
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
 };
@@ -1558,7 +1598,8 @@ Fanny.Utils = {
             }
         }
     }
-};'use strict';
+}
+'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
 */
@@ -1576,7 +1617,8 @@ angular.module('ev-fdm')
 
             return res;
         };
-    });;'use strict';
+    });
+'use strict';
 
 /**
  * Meant to be used for stuff like this:
@@ -1603,14 +1645,16 @@ angular.module('ev-fdm')
 
             return res;
         };
-    });;'use strict';
+    });
+'use strict';
 
 angular.module('ev-fdm')
     .filter('unsafe', ['$sce', function($sce) {
         return function(val) {
             return $sce.trustAsHtml(val);
         };
-    }]);;'use strict';
+    }]);
+'use strict';
 
 // Map that stores the selected filters across pages
 angular.module('ev-fdm').
@@ -1645,7 +1689,8 @@ angular.module('ev-fdm').
             }
         }
     }]
-    );;/**
+    );
+/**
  * ModalService
  *     Angularization of bootstrap's $.fn.modal into a service
  *     - read template from ng's template cache
@@ -1726,7 +1771,8 @@ module.service('ModalService', [
     '$compile',
     '$controller',
     ModalService
-]);;'use strict';
+]);
+'use strict';
 
 /* Services */
 var module = angular.module('ev-fdm');
@@ -1809,7 +1855,8 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
     };
     this.type = TYPES;
 }]);
-;var module = angular.module('ev-fdm');
+
+var module = angular.module('ev-fdm');
 
 module.factory('panelFactory', function() {
     var Panel = function(extensions) {
@@ -2124,7 +2171,8 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             return dismissChildren(region, instance, reason);
         }
     };
-}]);;var module = angular.module('ev-fdm');
+}]);
+var module = angular.module('ev-fdm');
 
 var SidonieModalService = function($modal, $animate, $log) {
 
@@ -2289,7 +2337,8 @@ SidonieModalService.REGION_RIGHT = 'right';
 SidonieModalService.REGION_MIDDLE = 'middle';
 
 
-module.service('SidonieModalService', [ '$modal', '$animate', '$log', SidonieModalService ]);;'use strict';
+module.service('SidonieModalService', [ '$modal', '$animate', '$log', SidonieModalService ]);
+'use strict';
 
 var module = angular.module('ev-fdm');
 
@@ -2337,303 +2386,8 @@ module.service('SortService', [function() {
         'setReverse'    : setReverse,
         'isReverse'     : isReverse
     }
-}]);;var module = angular.module('ev-fdm');
-
-/**
- * Taken from Angular-UI > $modal
- * A helper directive for the $modal service. It creates a backdrop element.
- */
-module.directive('middlePanelBackdrop', ['$timeout', 
-    function($timeout) {
-        return {
-            restrict: 'EA',
-            replace: true,
-            template: '<div class="modal-backdrop fade" ng-class="{in: animate}" ng-style="{\'z-index\': 1040 + index*10}"></div>',
-            link: function(scope, element) {
-                scope.animate = false;
-                //trigger CSS transitions
-                $timeout(function() {
-                    scope.animate = true;
-                });
-            }
-        };
-    }
-]);
-
-/**
- * Taken from Angular-UI > $modal
- */
-module.directive('middlePanelWindow', ['$timeout', 'middleRegion',
-    function($timeout, middleRegion) {
-        return {
-            restrict: 'EA',
-            scope: {
-                index: '@'
-            },
-            replace: true,
-            transclude: true,
-            templateUrl: 'panels/middle-window.phtml',
-            link: function(scope, element, attrs) {
-                $timeout(function() {
-                    // trigger CSS transitions
-                    scope.animate = true;
-                    // focus a freshly-opened modal
-                    element[0].focus();
-                });
-                scope.close = function(evt) {
-                    if (evt.target === evt.currentTarget) {
-                        evt.preventDefault();
-                        evt.stopPropagation();
-                        middleRegion.dismissAll();
-                    }
-                };
-            }
-        };
-    }
-]);
-
-module.service('middleRegion', ['$compile', '$document', '$rootScope', 'sidonieRegion', function($compile, $document, $rootScope, sidonieRegion) {
-
-    var els = {};
-    var body = $document.find('body').eq(0);
-
-    var region = sidonieRegion.create(false, {
-
-        open: function(instance, options) {
-
-            // create backdrop element
-            var backdropjqLiteEl, backdropDomEl;
-            backdropjqLiteEl = angular.element('<div middle-panel-backdrop></div>');
-            backdropDomEl = $compile(backdropjqLiteEl)($rootScope.$new(true));
-            body.append(backdropDomEl);
-            
-            // create window
-            var angularDomEl = angular.element('<div middle-panel-window></div>');
-            angularDomEl.addClass(options.panelClass);
-            angularDomEl.html(options.content);
-            // dom el
-            var modalDomEl = $compile(angularDomEl)(options.scope);
-            body.append(modalDomEl);
-
-            els[instance.$$id] = {
-                window: modalDomEl,
-                backdrop: backdropDomEl
-            }
-
-            return instance;
-        },
-
-        replace: function(fromInstance, toInstance, options) {
-            throw new Error('Not implemented');
-        },
-
-        close: function(instance, result) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                els[instance.$$id].window.remove();
-                els[instance.$$id].backdrop.remove();
-                delete els[instance.$$id];
-            }
-        }
-    });
-
-    $document.bind('keydown', function(evt) {
-        if (evt.which === 27) {
-            var instance = region.last();
-            if (instance) {
-                $rootScope.$apply(function() {
-                    instance.dismiss('escape');
-                });
-            }
-        }
-    });
-
-    return region;
-}]);;var module = angular.module('ev-fdm');
-
-module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
-    
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
-    }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
-        } else {
-            attributeValue = BREAKS[breakpIndex];
-        }
-        element.attr('data-breakpoint', attributeValue);
-    }
-
-    return {
-        restrict: 'A',
-        replace: true,
-        transclude: true,
-        templateUrl: 'panels/right-window.phtml',
-        link: function(scope, element, attrs) {
-            element.resizable({
-                handles: "w",
-                resize: function(event, ui) {
-                    var bp = getBPMatching(ui.size.width);
-                    applyBPAttribute(element, bp);
-                }
-            });
-            scope.$on('animation-complete', function() {
-                var bp = getBPMatching(element.outerWidth());
-                applyBPAttribute(element, bp);
-            });
-            $timeout(function() {
-                var bp = getBPMatching(element.outerWidth());
-                applyBPAttribute(element, bp);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
-        }
-    }
 }]);
-
-module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
-
-    var STACKED_WIDTH = 15;
-    var els = {};
-
-    function getEl(instance) {
-        if (els[instance.$$id]) {
-            return els[instance.$$id];
-        } else {
-            return null;
-        }
-    }
-
-    function getStylesFromCache(instance, options) {
-        var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
-        if (savedWidth)
-            return 'style="width: ' + savedWidth + 'px;"';
-        else
-            return '';
-    }
-
-    function stack(fromInstanceIndex) {
-        for (var i = 0; i < region.panels.size(); i++) {
-            var shouldStack = (i < fromInstanceIndex);
-            var instance = region.at(i);
-            var el = getEl(instance);
-            if (instance.$$stacked && !shouldStack) {
-                delete instance.$$actualWidth;
-                $animate.removeClass(el, 'stacked');
-            } else if (!instance.$$stacked && shouldStack) {
-                instance.$$actualWidth = getEl(instance).outerWidth();
-                $animate.addClass(el, 'stacked');
-            }
-            instance.$$stacked = shouldStack;
-        }
-    }
-
-    function checkStacking() {
-        var maxWidth = $(window).innerWidth() - 100;
-        for (var i = 0; i < region.panels.size(); i++) {
-            var j = 0;
-            var totalWidth = _(region.panels).reduce(function(memo, instance) {
-                if (j++ < i)
-                    return memo + STACKED_WIDTH;
-                else {
-                    var el = getEl(instance);
-                    if (!el) return memo;
-                    if (instance.$$stacked) return memo + instance.$$actualWidth;
-                    var width = el.outerWidth();
-                    if (width < 50) {
-                        // most probably before animation has finished landing
-                        // we neeed to anticipate a final w
-                        return memo + 300;
-                    } else {
-                        return memo + width;
-                    }
-                }
-            }, 0);
-            if (totalWidth < maxWidth) {
-                return stack(i);
-            }
-        }
-        // stack all
-        stack(region.panels.size() - 1);
-    }
-
-    var checkStackingThrottled = _(checkStacking).debounce(50);
-
-    $(window).on('resize', function() {
-        region.updateStacking();
-    });
-
-    var stylesCache = window.stylesCache = {};
-
-    var region = sidonieRegion.create(true, {
-        updateStacking: function() {
-            return $timeout(checkStackingThrottled);
-        },
-        open: function(instance, options) {
-            instance.$$depth = region.panels.size();
-            var el = angular.element('<div class="panel-placeholder"></div>');
-            var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
-            inner.html(options.content);
-            options.scope.panelClass = options.panelClass;
-            inner = $compile(inner)(options.scope);
-            el.html(inner);
-            els[instance.$$id] = el;
-            $animate.enter(el, $('.lisette-module-region.right'), null, function() {
-                options.scope.$emit('animation-complete');
-                $rootScope.$broadcast('module-layout-changed');
-                region.updateStacking();
-            });
-            el.on('resize', function(event, ui) {
-                stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
-                region.updateStacking();
-            });
-            region.updateStacking();
-            return instance;
-        },
-        replace: function(fromInstance, toInstance, options) {
-            if (typeof(els[fromInstance.$$id]) != 'undefined') {
-                var el = els[fromInstance.$$id];
-                toInstance.$$depth = region.panels.size() - 1;
-                var inner = angular.element('<div right-panel-window ' + getStylesFromCache(toInstance, options) + '></div>');
-                inner.html(options.content);
-                options.scope.panelClass = options.panelClass;
-                inner = $compile(inner)(options.scope);
-                el.html(inner);
-                els[toInstance.$$id] = el;
-                delete els[fromInstance.$$id];
-                region.updateStacking();
-                return toInstance;
-            } else {
-                return region.open(toInstance, options);
-            }
-        },
-        close: function(instance) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                var el = els[instance.$$id];
-                $animate.leave(el, function() {
-                    delete els[instance.$$id];
-                    region.updateStacking();
-                });
-                region.updateStacking();
-            }
-        }
-    });
-
-    return region;
-
-}]);;'use strict';
+'use strict';
 
 /* Services */
 var module = angular.module('ev-fdm');
@@ -2678,7 +2432,8 @@ AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (sea
 // Demonstrate how to register services
 // In this case it is a simple value service.
 module.service('AbstractAutocompleteStorage', ['Storage', '$timeout', AbstractAutocompleteStorage]);
-;'use strict';
+
+'use strict';
 
 function AjaxStorage($http, $q, $cacheFactory, $log) {
 
@@ -2736,7 +2491,8 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
 angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
-;angular.module('ev-fdm')
+
+angular.module('ev-fdm')
     .factory('RestangularStorage', ['Restangular', function(restangular) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
@@ -2835,7 +2591,8 @@ angular.module('ev-fdm')
 
 
         return RestangularStorage;
-    }]);;'use strict';
+    }]);
+'use strict';
 
 var module = angular.module('ev-fdm');
 
@@ -2850,7 +2607,8 @@ function Storage(AjaxStorage) {
         }
 }
 
-module.service('Storage', ['AjaxStorage', Storage]);;'use strict';
+module.service('Storage', ['AjaxStorage', Storage]);
+'use strict';
 
 /* Start angularLocalStorage */
 
@@ -3109,5 +2867,329 @@ angularLocalStorage.service('localStorageService', [
       clearAll: clearAllFromCookies
     }
   };
+
+}]);
+angular.module('ev-fdm')
+.directive('strictMin', function() {
+    return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+
+            function validator(viewValue) {
+                var testedValue = parseFloat(viewValue),
+                    min = parseFloat(attrs.strictMin);
+
+                if(testedValue > min ) {
+                    ctrl.$setValidity('strictMin', true);
+                    return viewValue;
+                }
+                else {
+                    ctrl.$setValidity('strictMin', false);
+                    return undefined;
+                }
+
+            };
+
+            ctrl.$parsers.unshift(validator);
+            ctrl.$formatters.push(validator);
+        }
+    }
+});
+var module = angular.module('ev-fdm');
+
+/**
+ * Taken from Angular-UI > $modal
+ * A helper directive for the $modal service. It creates a backdrop element.
+ */
+module.directive('middlePanelBackdrop', ['$timeout', 
+    function($timeout) {
+        return {
+            restrict: 'EA',
+            replace: true,
+            template: '<div class="modal-backdrop fade" ng-class="{in: animate}" ng-style="{\'z-index\': 1040 + index*10}"></div>',
+            link: function(scope, element) {
+                scope.animate = false;
+                //trigger CSS transitions
+                $timeout(function() {
+                    scope.animate = true;
+                });
+            }
+        };
+    }
+]);
+
+/**
+ * Taken from Angular-UI > $modal
+ */
+module.directive('middlePanelWindow', ['$timeout', 'middleRegion',
+    function($timeout, middleRegion) {
+        return {
+            restrict: 'EA',
+            scope: {
+                index: '@'
+            },
+            replace: true,
+            transclude: true,
+            templateUrl: 'panels/middle-window.phtml',
+            link: function(scope, element, attrs) {
+                $timeout(function() {
+                    // trigger CSS transitions
+                    scope.animate = true;
+                    // focus a freshly-opened modal
+                    element[0].focus();
+                });
+                scope.close = function(evt) {
+                    if (evt.target === evt.currentTarget) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        middleRegion.dismissAll();
+                    }
+                };
+            }
+        };
+    }
+]);
+
+module.service('middleRegion', ['$compile', '$document', '$rootScope', 'sidonieRegion', function($compile, $document, $rootScope, sidonieRegion) {
+
+    var els = {};
+    var body = $document.find('body').eq(0);
+
+    var region = sidonieRegion.create(false, {
+
+        open: function(instance, options) {
+
+            // create backdrop element
+            var backdropjqLiteEl, backdropDomEl;
+            backdropjqLiteEl = angular.element('<div middle-panel-backdrop></div>');
+            backdropDomEl = $compile(backdropjqLiteEl)($rootScope.$new(true));
+            body.append(backdropDomEl);
+            
+            // create window
+            var angularDomEl = angular.element('<div middle-panel-window></div>');
+            angularDomEl.addClass(options.panelClass);
+            angularDomEl.html(options.content);
+            // dom el
+            var modalDomEl = $compile(angularDomEl)(options.scope);
+            body.append(modalDomEl);
+
+            els[instance.$$id] = {
+                window: modalDomEl,
+                backdrop: backdropDomEl
+            }
+
+            return instance;
+        },
+
+        replace: function(fromInstance, toInstance, options) {
+            throw new Error('Not implemented');
+        },
+
+        close: function(instance, result) {
+            if (typeof(els[instance.$$id]) != 'undefined') {
+                els[instance.$$id].window.remove();
+                els[instance.$$id].backdrop.remove();
+                delete els[instance.$$id];
+            }
+        }
+    });
+
+    $document.bind('keydown', function(evt) {
+        if (evt.which === 27) {
+            var instance = region.last();
+            if (instance) {
+                $rootScope.$apply(function() {
+                    instance.dismiss('escape');
+                });
+            }
+        }
+    });
+
+    return region;
+}]);
+var module = angular.module('ev-fdm');
+
+module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
+    
+    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
+
+    function getBPMatching(width) {
+        var breakp, index;
+        for (index = 0; index < BREAKS.length; index++) {
+            if (width < BREAKS[index]) {
+                breakp = BREAKS[index];
+                break;
+            }
+        }
+        if (breakp) return index;
+        else return -1;
+    }
+
+    function applyBPAttribute(element, breakpIndex) {
+        var attributeValue = '';
+        if (breakpIndex == -1) {
+            attributeValue = 'max';
+        } else {
+            attributeValue = BREAKS[breakpIndex];
+        }
+        element.attr('data-breakpoint', attributeValue);
+    }
+
+    return {
+        restrict: 'A',
+        replace: true,
+        transclude: true,
+        templateUrl: 'panels/right-window.phtml',
+        link: function(scope, element, attrs) {
+            element.resizable({
+                handles: "w",
+                resize: function(event, ui) {
+                    var bp = getBPMatching(ui.size.width);
+                    applyBPAttribute(element, bp);
+                }
+            });
+            scope.$on('animation-complete', function() {
+                var bp = getBPMatching(element.outerWidth());
+                applyBPAttribute(element, bp);
+            });
+            $timeout(function() {
+                var bp = getBPMatching(element.outerWidth());
+                applyBPAttribute(element, bp);
+                // focus a freshly-opened modal
+                element[0].focus();
+            });
+        }
+    }
+}]);
+
+module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
+
+    var STACKED_WIDTH = 15;
+    var els = {};
+
+    function getEl(instance) {
+        if (els[instance.$$id]) {
+            return els[instance.$$id];
+        } else {
+            return null;
+        }
+    }
+
+    function getStylesFromCache(instance, options) {
+        var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
+        if (savedWidth)
+            return 'style="width: ' + savedWidth + 'px;"';
+        else
+            return '';
+    }
+
+    function stack(fromInstanceIndex) {
+        for (var i = 0; i < region.panels.size(); i++) {
+            var shouldStack = (i < fromInstanceIndex);
+            var instance = region.at(i);
+            var el = getEl(instance);
+            if (instance.$$stacked && !shouldStack) {
+                delete instance.$$actualWidth;
+                $animate.removeClass(el, 'stacked');
+            } else if (!instance.$$stacked && shouldStack) {
+                instance.$$actualWidth = getEl(instance).outerWidth();
+                $animate.addClass(el, 'stacked');
+            }
+            instance.$$stacked = shouldStack;
+        }
+    }
+
+    function checkStacking() {
+        var maxWidth = $(window).innerWidth() - 100;
+        for (var i = 0; i < region.panels.size(); i++) {
+            var j = 0;
+            var totalWidth = _(region.panels).reduce(function(memo, instance) {
+                if (j++ < i)
+                    return memo + STACKED_WIDTH;
+                else {
+                    var el = getEl(instance);
+                    if (!el) return memo;
+                    if (instance.$$stacked) return memo + instance.$$actualWidth;
+                    var width = el.outerWidth();
+                    if (width < 50) {
+                        // most probably before animation has finished landing
+                        // we neeed to anticipate a final w
+                        return memo + 300;
+                    } else {
+                        return memo + width;
+                    }
+                }
+            }, 0);
+            if (totalWidth < maxWidth) {
+                return stack(i);
+            }
+        }
+        // stack all
+        stack(region.panels.size() - 1);
+    }
+
+    var checkStackingThrottled = _(checkStacking).debounce(50);
+
+    $(window).on('resize', function() {
+        region.updateStacking();
+    });
+
+    var stylesCache = window.stylesCache = {};
+
+    var region = sidonieRegion.create(true, {
+        updateStacking: function() {
+            return $timeout(checkStackingThrottled);
+        },
+        open: function(instance, options) {
+            instance.$$depth = region.panels.size();
+            var el = angular.element('<div class="panel-placeholder"></div>');
+            var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
+            inner.html(options.content);
+            options.scope.panelClass = options.panelClass;
+            inner = $compile(inner)(options.scope);
+            el.html(inner);
+            els[instance.$$id] = el;
+            $animate.enter(el, $('.lisette-module-region.right'), null, function() {
+                options.scope.$emit('animation-complete');
+                $rootScope.$broadcast('module-layout-changed');
+                region.updateStacking();
+            });
+            el.on('resize', function(event, ui) {
+                stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
+                region.updateStacking();
+            });
+            region.updateStacking();
+            return instance;
+        },
+        replace: function(fromInstance, toInstance, options) {
+            if (typeof(els[fromInstance.$$id]) != 'undefined') {
+                var el = els[fromInstance.$$id];
+                toInstance.$$depth = region.panels.size() - 1;
+                var inner = angular.element('<div right-panel-window ' + getStylesFromCache(toInstance, options) + '></div>');
+                inner.html(options.content);
+                options.scope.panelClass = options.panelClass;
+                inner = $compile(inner)(options.scope);
+                el.html(inner);
+                els[toInstance.$$id] = el;
+                delete els[fromInstance.$$id];
+                region.updateStacking();
+                return toInstance;
+            } else {
+                return region.open(toInstance, options);
+            }
+        },
+        close: function(instance) {
+            if (typeof(els[instance.$$id]) != 'undefined') {
+                var el = els[instance.$$id];
+                $animate.leave(el, function() {
+                    delete els[instance.$$id];
+                    region.updateStacking();
+                });
+                region.updateStacking();
+            }
+        }
+    });
+
+    return region;
 
 }]);
