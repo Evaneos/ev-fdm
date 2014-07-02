@@ -173,16 +173,19 @@ gulp.task('core-copy', function() {
         ])
         .pipe(gulp.dest(dest + '/fonts'));
 });
-
+gulp.task('watch-core-copy', function () {
+    gulp.watch([
+        bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
+        bowerDirectory + '/bootstrap/fonts/*',
+        'fonts/*'
+    ], ['core-copy']);
+});
 
 plugins.forEach(function(name) {
     var dir = 'plugins/' + name;
     var src = assets.map(function (asset) {
         return dir + '/' + asset + '/**/*';
     });
-    console.log(src);
-    console.log(dir);
-    console.log(dest);
     gulp.task('plugin-' + name + '-copy', function () {
         gulp.src(src, {base: dir})
                 .pipe(rename(function (path) {
