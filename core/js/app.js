@@ -20,6 +20,15 @@ commonModule.config(['$tooltipProvider', function($tooltipProvider) {
     });
 }]);
 
+/**
+ * Define a default error state for our app
+ */
+commonModule.config(['$stateProvider', function($stateProvider) {
+    $stateProvider.state('ev-error', {
+        templateUrl: 'ev-error.phtml'
+    });
+}]);
+
 commonModule.config(['RestangularProvider', function(restangularProvider) {
 
 }]);
@@ -46,11 +55,39 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
         }
     });
 
+    $rootScope.$on('$stateChangeSuccess', function() {
+        $('body').removeClass('state-resolving');
+    });
+
+    /**
+     * When there is an error on a state change
+     *
+     * In your state config you can add the following.
+     * This will allows the router to fallback to this state on error
+     * while displaying the specified message
+
+          fallback: {
+            state: 'list',
+            message: t('Unable to open this transaction!')
+          }
+     */
     $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        notificationsService.add({
-            text: 'Loading error',
-            type: notificationsService.type.ERROR
+        $('body').removeClass('state-resolving');
+
+        var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+        notificationsService.addError({
+            text: errorMessage
         });
+
+        // Redirect to the fallback we defined in our state
+        if(toState && toState.fallback && toState.fallback.state) {
+          $state.go(toState.fallback.state);
+        }
+        // Or our default error page
+        else {
+          $state.go('ev-error');
+        }
     });
 
     /*if (evaneos._frontData) {
