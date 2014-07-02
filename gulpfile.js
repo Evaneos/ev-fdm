@@ -22,6 +22,8 @@ var plugins = fs.readdirSync('plugins/').filter(function(name) {
     return fs.statSync('plugins/' + name).isDirectory();
 });
 
+var assets = ['images', 'fonts'];
+
 
 // ///////////////////////////////////////////////////
 // JS
@@ -78,7 +80,7 @@ plugins.forEach(function(name) {
     });
 
     gulp.task('plugin-' + name + '-js', ['plugin-' + name + '-js-hint'], function () {
-        return minifySrc(src, dest + '/plugins', pkg.name + '-' + name);
+        return minifySrc(src, dest + '/' + dir, pkg.name + '-' + name);
     });
 
     gulp.task('watch-plugin-' + name + '-js', function () {
@@ -134,15 +136,12 @@ function lessConcatCorePlugins() {
     });
 })();
 
-
-
-
 plugins.forEach(function(name) {
     var dir = 'plugins/' + name;
     var src = [dir + '/less/index.less'];
     var paths = [dir + '/less', bowerDirectory];
     gulp.task('plugin-' + name + '-less', function () {
-        minifyLess(src, paths, dest + '/plugins/css', pkg.name + '-' + name);
+        minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
     });
 
     gulp.task('watch-plugin-' + name + '-less', function () {
@@ -165,8 +164,7 @@ gulp.task('watch-less', tasks);
 // //////////////////////////////////////////////////
 
 
-
-gulp.task('copy', function() {
+gulp.task('core-copy', function() {
     gulp.src(bowerDirectory + '/jquery-ui/themes/smoothness/images/*')
         .pipe(gulp.dest(dest + '/images'));
     gulp.src([
@@ -175,6 +173,44 @@ gulp.task('copy', function() {
         ])
         .pipe(gulp.dest(dest + '/fonts'));
 });
+gulp.task('watch-core-copy', function () {
+    gulp.watch([
+        bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
+        bowerDirectory + '/bootstrap/fonts/*',
+        'fonts/*'
+    ], ['core-copy']);
+});
 
-gulp.task('default', ['js-all', 'less-all', 'copy']);
-gulp.task('watch', ['copy', 'watch-less', 'watch-js']);
+plugins.forEach(function(name) {
+    var dir = 'plugins/' + name;
+    var src = assets.map(function (asset) {
+        return dir + '/' + asset + '/**/*';
+    });
+    gulp.task('plugin-' + name + '-copy', function () {
+        gulp.src(src, {base: dir})
+                .pipe(rename(function (path) {
+                    var tmp = path.dirname.split('/');
+                    path.dirname = tmp[0] + '/' + name + '/' + tmp.splice(1).join('/');
+                }))
+                .pipe(gulp.dest(dest));
+    });
+
+
+    gulp.task('watch-plugin-' + name + '-copy', function () {
+        gulp.watch(src, ['plugin-' + name + '-copy']);
+    });
+});
+
+var tasks = plugins.map(function(name) { return 'plugin-' + name + '-copy'; });
+tasks.unshift('core-copy');
+gulp.task('copy-all', tasks, lessConcatCorePlugins);
+
+
+tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-copy'; });
+tasks.unshift('copy-all', 'watch-core-copy');
+gulp.task('watch-copy', tasks);
+
+
+
+gulp.task('default', ['js-all', 'less-all', 'copy-all']);
+gulp.task('watch', ['watch-copy', 'watch-less', 'watch-js']);
