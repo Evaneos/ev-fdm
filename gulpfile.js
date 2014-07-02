@@ -131,7 +131,7 @@ function minifyLess(src, paths, dest, name) {
 
 
 function lessConcatCorePlugins() {
-    concatCorePlugins(
+    return concatCorePlugins(
         [dest + '/**/*.min.css', '!' + dest +'/css/' +  pkg.name + '.min.css'],
         '.min.css',
         dest + '/css'
@@ -147,7 +147,7 @@ function lessConcatCorePlugins() {
         return minifyLess(src, paths, dest + '/core/css', pkg.name + '-core');
     });
     gulp.task('watch-core-less', function () {
-        gulp.watch(src, ['core-less', 'less-concat-core-plugins']);
+        gulp.watch(['core/less/**/*.less'], ['core-less', 'less-concat-core-plugins']);
     });
 })();
 
@@ -156,11 +156,11 @@ plugins.forEach(function(name) {
     var src = [dir + '/less/index.less'];
     var paths = [dir + '/less', bowerDirectory];
     gulp.task('plugin-' + name + '-less', function () {
-        minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
+        return minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
     });
 
     gulp.task('watch-plugin-' + name + '-less', function () {
-        gulp.watch(src, ['plugin-' + name + '-less', 'less-concat-core-plugins']);
+        gulp.watch([dir + '/less/**/*.less'], ['plugin-' + name + '-less', 'less-concat-core-plugins']);
     });
 });
 
@@ -202,7 +202,7 @@ plugins.forEach(function(name) {
         return dir + '/' + asset + '/**/*';
     });
     gulp.task('plugin-' + name + '-copy', function () {
-        gulp.src(src, {base: dir})
+        return gulp.src(src, {base: dir})
                 .pipe(rename(function (path) {
                     var tmp = path.dirname.split('/');
                     path.dirname = tmp[0] + '/' + name + '/' + tmp.splice(1).join('/');
