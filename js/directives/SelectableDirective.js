@@ -133,13 +133,14 @@ angular.module('ev-fdm')
             }]
         };
     }])
-    .directive('selectable', [function() {
+    .directive('selectable', ['$parse', function($parse) {
         return {
             restrict: 'A',
             require: '^selectableSet',
             link: function(scope, element, attr, ctrl) {
 
-                var currentElement = scope[attr.selectable];
+                var currentElementGetter = $parse(attr.selectable);
+                var currentElement = currentElementGetter(scope);;
 
                 ctrl.selectableElements.push(currentElement);
 
