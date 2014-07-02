@@ -131,11 +131,7 @@ function minifyLess(src, paths, dest, name) {
 
 
 function lessConcatCorePlugins() {
-<<<<<<< HEAD
     return concatCorePlugins(
-=======
-    concatCorePlugins(
->>>>>>> Adding ev-fdm.js to dist
         [dest + '/**/*.min.css', '!' + dest +'/css/' +  pkg.name + '.min.css'],
         '.min.css',
         dest + '/css'
