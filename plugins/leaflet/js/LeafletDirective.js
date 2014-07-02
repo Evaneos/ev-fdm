@@ -1,4 +1,4 @@
-angular.module('ev-fdm')
+angular.module('ev-leaflet', ['leaflet-directive'])
     .provider('evLeaflet', function() {
         this.$get =function () {
             return {icons: this.icons};

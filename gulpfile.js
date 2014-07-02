@@ -14,8 +14,13 @@ var jshint = require('gulp-jshint');
 var pkg = require('./package.json');
 var fs = require('fs');
 
-
-var bowerDirectory = './bower_components';
+var bowerrc = '';
+try {
+    bowerrc = require('./.bowerrc.json');
+} catch (e) {
+    bowerrc = {};
+}
+var bowerDirectory =  (bowerrc.directory) ? bowerrc.directory : './bower_components';
 
 var dest = 'dist';
 var plugins = fs.readdirSync('plugins/').filter(function(name) {
@@ -24,6 +29,15 @@ var plugins = fs.readdirSync('plugins/').filter(function(name) {
 
 var assets = ['images', 'fonts'];
 
+
+function concatCorePlugins(src, suffix, customDest) {
+    customDest = customDest || dest;
+    return gulp.src(src)
+        .pipe(sourcemaps.init())
+            .pipe(concat(pkg.name + suffix))
+        .pipe(sourcemaps.write('.'))
+        .pipe(gulp.dest(customDest));
+}
 
 // ///////////////////////////////////////////////////
 // JS
@@ -44,14 +58,6 @@ function minifySrc(src, dest, name) {
 }
 
 
-function jsConcatCorePlugins() {
-    return gulp.src([dest + '/**/*.min.js', '!' + dest + '/' +  pkg.name + '.min.js'])
-        .pipe(sourcemaps.init())
-            .pipe(concat(pkg.name + '.min.js'))
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest(dest));
-}
-
 (function() {
     var src = ['core/js/app.js', 'core/js/**/*.js'];
 
@@ -61,10 +67,17 @@ function jsConcatCorePlugins() {
     });
     // Watchers
     gulp.task('watch-core-js', function () {
-        gulp.watch(src, ['core-js', 'concat-core-plugins']);
+        gulp.watch(src, ['core-js', 'js-concat-core-plugins']);
     });
+
     // Concatenation with plugins
-    gulp.task('js-concat-core-plugins', jsConcatCorePlugins);
+    gulp.task('js-concat-core-plugins-min', function () {
+         return concatCorePlugins([dest + '/**/*.min.js', '!' + dest + '/' +  pkg.name + '.min.js'], '.min.js');
+    });
+    gulp.task('js-concat-core-plugins-raw', function () {
+         return concatCorePlugins([dest + '/**/*.js', '!' + dest + '/' +  pkg.name + '.js', '!**/*.min.js'], '.js');
+    });
+    gulp.task('js-concat-core-plugins', ['js-concat-core-plugins-min', 'js-concat-core-plugins-raw']);
 })();
 
 
@@ -90,7 +103,9 @@ plugins.forEach(function(name) {
 
 var tasks = plugins.map(function(name) { return 'plugin-' + name + '-js'; });
 tasks.unshift('core-js');
-gulp.task('js-all', tasks, jsConcatCorePlugins);
+gulp.task('js-all', tasks, function () {
+    gulp.start('js-concat-core-plugins');
+});
 
 
 tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-js'; });
@@ -116,11 +131,11 @@ function minifyLess(src, paths, dest, name) {
 
 
 function lessConcatCorePlugins() {
-    return gulp.src([dest + '/**/*.min.css', '!' + dest +'/css/' +  pkg.name + '.min.css'])
-        .pipe(sourcemaps.init())
-            .pipe(concat(pkg.name + '.min.css'))
-        .pipe(sourcemaps.write('.'))
-        .pipe(gulp.dest(dest + '/css'));
+    return concatCorePlugins(
+        [dest + '/**/*.min.css', '!' + dest +'/css/' +  pkg.name + '.min.css'],
+        '.min.css',
+        dest + '/css'
+    );
 }
 
 
@@ -132,7 +147,7 @@ function lessConcatCorePlugins() {
         return minifyLess(src, paths, dest + '/core/css', pkg.name + '-core');
     });
     gulp.task('watch-core-less', function () {
-        gulp.watch(src, ['core-less', 'concat-core-plugins']);
+        gulp.watch(['core/less/**/*.less'], ['core-less', 'less-concat-core-plugins']);
     });
 })();
 
@@ -141,11 +156,11 @@ plugins.forEach(function(name) {
     var src = [dir + '/less/index.less'];
     var paths = [dir + '/less', bowerDirectory];
     gulp.task('plugin-' + name + '-less', function () {
-        minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
+        return minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
     });
 
     gulp.task('watch-plugin-' + name + '-less', function () {
-        gulp.watch(src, ['plugin-' + name + '-less', 'less-concat-core-plugins']);
+        gulp.watch([dir + '/less/**/*.less'], ['plugin-' + name + '-less', 'less-concat-core-plugins']);
     });
 });
 
@@ -187,7 +202,7 @@ plugins.forEach(function(name) {
         return dir + '/' + asset + '/**/*';
     });
     gulp.task('plugin-' + name + '-copy', function () {
-        gulp.src(src, {base: dir})
+        return gulp.src(src, {base: dir})
                 .pipe(rename(function (path) {
                     var tmp = path.dirname.split('/');
                     path.dirname = tmp[0] + '/' + name + '/' + tmp.splice(1).join('/');
