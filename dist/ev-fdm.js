@@ -966,17 +966,19 @@ angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($r
     };
 }]);
 'use strict';
-/// This directive currently depend on ng-repeat $index for the shift selection. It would be great to remove this depency.
+/// This directive currently depend on ng-repeat $index for the
+///  shift selection. It would be great to remove this depency.
 angular.module('ev-fdm')
     .directive('selectableSet', [function() {
         return {
             restrict: 'A',
-            controller: ['$scope', '$parse', '$element', '$attrs', '$document', function($scope, $parse, $element, $attrs, $document) {
+            controller: ['$scope', '$parse', '$element', '$attrs', '$document',
+            function($scope, $parse, $element, $attrs, $document) {
                 var self = this,
                     shiftKey = 16;
 
                 var selectedElementsGet = $parse($attrs.selectedElements),
-                    selectedElementsSet = selectedElementsGet.assign;
+                  selectedElementsSet = selectedElementsGet.assign;
 
                 this.selectableElements = [];
                 this.selectedElement = [];
@@ -988,9 +990,14 @@ angular.module('ev-fdm')
                     return selectedElementsGet($scope);
                   },
                   function() {
-                    self.selectedElements = angular.isArray(selectedElementsGet($scope))? selectedElementsGet($scope) : [];
+                    self.selectedElements = angular.isArray(selectedElementsGet($scope))?
+                      selectedElementsGet($scope) : [];
                   }
                 );
+
+                $scope.$on('$destroy', function() {
+                  selectedElementsSet($scope, angular.copy(self.selectedElements));
+                });
 
                 // Toggle a noselect class on the element when the shift key is pressed
                 // This allows us to disable selection overlay via css
@@ -1024,12 +1031,11 @@ angular.module('ev-fdm')
                         this.selectedElements.length = 0;
                     }
                     else {
-                        var index;
-                        angular.forEach(this.selectableElements, function(element) {
-                            if(!self.isElementSelected(element)) {
-                                selectElement(element);
-                            }
-                        });
+                      angular.forEach(this.selectableElements, function(element) {
+                        if(!self.isElementSelected(element)) {
+                          selectElement(element);
+                          }
+                      });
                     }
                 };
 
@@ -1056,7 +1062,8 @@ angular.module('ev-fdm')
                 };
 
                 this.areAllElementSelected = function() {
-                  return this.selectedElements.length === this.selectableElements.length && this.selectedElements.length !== 0;
+                  return this.selectedElements.length === this.selectableElements.length
+                     && this.selectedElements.length !== 0;
                 };
 
                 this.isElementSelected = function(element) {
@@ -1068,14 +1075,15 @@ angular.module('ev-fdm')
                     var lastElement = getElementAtIndex(lastIndex),
                         min = Math.min(firstIndex, lastIndex),
                         max = Math.max(firstIndex, lastIndex),
-                        element;
+                        element,
+                        i;
 
                     angular.forEach(shiftSelectedElements, function(element, index) {
                         unselectElement(element);
                     });
 
                     if(self.isElementSelected(lastElement)) {
-                        for(var i = min; i <= max; i++) {
+                        for(i = min; i <= max; i++) {
                             element = getElementAtIndex(i);
                             unselectElement(element);
                         }
@@ -1085,13 +1093,13 @@ angular.module('ev-fdm')
                     }
                     else {
                         shiftSelectedElements.length = 0;
-                        for(var i = min; i <= max; i++) {
+                        for(i = min; i <= max; i++) {
                             element = getElementAtIndex(i);
                             selectElement(element);
                             shiftSelectedElements.push(element);
                         }
                     }
-                };
+                }
 
                 function getElementAtIndex(index) {
                     return self.selectableElements[index];
@@ -1101,14 +1109,14 @@ angular.module('ev-fdm')
                     if(!self.isElementSelected(element)) {
                         self.selectedElements.push(element);
                     }
-                };
+                }
 
                 function unselectElement(element) {
                     var index = self.selectedElements.indexOf(element);
                     if(index > -1) {
                         self.selectedElements.splice(index, 1);
                     }
-                };
+                }
             }]
         };
     }])
@@ -1119,7 +1127,7 @@ angular.module('ev-fdm')
             link: function(scope, element, attr, ctrl) {
 
                 var currentElementGetter = $parse(attr.selectable);
-                var currentElement = currentElementGetter(scope);;
+                var currentElement = currentElementGetter(scope);
 
                 ctrl.registerElement(currentElement);
 
@@ -1147,7 +1155,7 @@ angular.module('ev-fdm')
                 }
 
             }
-        }
+        };
     }])
     .directive('selectBox', function() {
         return {
@@ -1155,7 +1163,7 @@ angular.module('ev-fdm')
             require: '^selectable',
             replace: true,
             template: '<span class="checkbox" ng-class="{ active: selected }"></span>'
-        }
+        };
     })
     .directive('selectAll', function() {
         return {
@@ -1173,7 +1181,7 @@ angular.module('ev-fdm')
                     scope.allSelected = ctrl.areAllElementSelected();
                 });
             }
-        }
+        };
     });
 'use strict';
 

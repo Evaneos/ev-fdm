@@ -10,7 +10,8 @@ angular.module('ev-fdm')
                 var self = this,
                     shiftKey = 16;
 
-                var selectedElementsGet = $parse($attrs.selectedElements);
+                var selectedElementsGet = $parse($attrs.selectedElements),
+                  selectedElementsSet = selectedElementsGet.assign;
 
                 this.selectableElements = [];
                 this.selectedElement = [];
@@ -26,6 +27,10 @@ angular.module('ev-fdm')
                       selectedElementsGet($scope) : [];
                   }
                 );
+
+                $scope.$on('$destroy', function() {
+                  selectedElementsSet($scope, angular.copy(self.selectedElements));
+                });
 
                 // Toggle a noselect class on the element when the shift key is pressed
                 // This allows us to disable selection overlay via css
