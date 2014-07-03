@@ -979,24 +979,16 @@ angular.module('ev-fdm')
                     selectedElementsSet = selectedElementsGet.assign;
 
                 this.selectableElements = [];
-                this.selectedElements = selectedElementsGet($scope);
+                this.selectedElement = [];
 
                 var lastClickedIndex,
                     shiftSelectedElements = [];
-
-                $scope.$watchCollection(function() {
-                    return self.selectableElements;
-                    },
-                    function() {
-                        self.selectedElements.length = 0;
-                    }
-                );
 
                 $scope.$watch(function() {
                     return selectedElementsGet($scope);
                   },
                   function() {
-                    self.selectedElements = selectedElementsGet($scope);
+                    self.selectedElements = angular.isArray(selectedElementsGet($scope))? selectedElementsGet($scope) : [];
                   }
                 );
 
@@ -1018,7 +1010,7 @@ angular.module('ev-fdm')
                     lastClickedIndex = index;
                     shiftSelectedElements.length = 0;
 
-                    if(isElementSelected(element)) {
+                    if(this.isElementSelected(element)) {
                         unselectElement(element);
                     }
                     else {
@@ -1034,7 +1026,7 @@ angular.module('ev-fdm')
                     else {
                         var index;
                         angular.forEach(this.selectableElements, function(element) {
-                            if(!isElementSelected(element)) {
+                            if(!self.isElementSelected(element)) {
                                 selectElement(element);
                             }
                         });
@@ -1045,6 +1037,30 @@ angular.module('ev-fdm')
                     if(typeof lastClickedIndex !== undefined) {
                         toggleRangeUpTo(lastClickedIndex, index);
                     }
+                };
+
+                this.registerElement = function(element, directive) {
+                  this.selectableElements.push(element);
+                };
+
+                this.unregisterElement = function(element) {
+                  var index = this.selectableElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectableElements.splice(index, 1);
+                  }
+
+                  index = this.selectedElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectedElements.splice(index, 1);
+                  }
+                };
+
+                this.areAllElementSelected = function() {
+                  return this.selectedElements.length === this.selectableElements.length && this.selectedElements.length !== 0;
+                };
+
+                this.isElementSelected = function(element) {
+                    return self.selectedElements.indexOf(element) > -1;
                 };
 
                 function toggleRangeUpTo(firstIndex, lastIndex) {
@@ -1058,7 +1074,7 @@ angular.module('ev-fdm')
                         unselectElement(element);
                     });
 
-                    if(isElementSelected(lastElement)) {
+                    if(self.isElementSelected(lastElement)) {
                         for(var i = min; i <= max; i++) {
                             element = getElementAtIndex(i);
                             unselectElement(element);
@@ -1081,12 +1097,8 @@ angular.module('ev-fdm')
                     return self.selectableElements[index];
                 }
 
-                function isElementSelected(element) {
-                    return self.selectedElements.indexOf(element) > -1;
-                };
-
                 function selectElement(element) {
-                    if(!isElementSelected(element)) {
+                    if(!self.isElementSelected(element)) {
                         self.selectedElements.push(element);
                     }
                 };
@@ -1109,22 +1121,14 @@ angular.module('ev-fdm')
                 var currentElementGetter = $parse(attr.selectable);
                 var currentElement = currentElementGetter(scope);;
 
-                ctrl.selectableElements.push(currentElement);
+                ctrl.registerElement(currentElement);
 
                 scope.$on('$destroy', function() {
-                    var index = ctrl.selectableElements.indexOf(currentElement);
-                    if(index > -1) {
-                        ctrl.selectableElements.splice(index, 1);
-                    }
-
-                    index = ctrl.selectedElements.indexOf(currentElement);
-                    if(index > -1) {
-                        ctrl.selectedElements.splice(index, 1);
-                    }
+                    ctrl.unregisterElement(currentElement);
                 });
 
-                scope.$watchCollection(function() { return ctrl.selectedElements; }, function(newSelection) {
-                        scope.selected = newSelection.indexOf(currentElement) > -1;
+                scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
+                  scope.selected = ctrl.isElementSelected(currentElement);
                 });
 
                 element.on('click', function(event) {
@@ -1165,9 +1169,8 @@ angular.module('ev-fdm')
                     ctrl.toggleSelectAll();
                 };
 
-                scope.$watchCollection(function() { return ctrl.selectedElements; }, function() {
-                    scope.allSelected = ctrl.selectedElements.length === ctrl.selectableElements.length
-                                     && ctrl.selectedElements.length !== 0;
+                scope.$watchCollection(function() { return ctrl.areAllElementSelected(); }, function() {
+                    scope.allSelected = ctrl.areAllElementSelected();
                 });
             }
         }
@@ -2885,7 +2888,7 @@ angular.module('ev-fdm')
           if (!control) {
             control = form[element.attr("name")];
           }
-          if (value == false) {
+          if (value === false) {
             form.$addControl(control);
             angular.forEach(control.$error, function(validity, validationToken) {
               form.$setValidity(validationToken, !validity, control);

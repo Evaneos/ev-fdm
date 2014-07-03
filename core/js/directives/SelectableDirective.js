@@ -1,35 +1,29 @@
 'use strict';
-/// This directive currently depend on ng-repeat $index for the shift selection. It would be great to remove this depency.
+/// This directive currently depend on ng-repeat $index for the
+///  shift selection. It would be great to remove this depency.
 angular.module('ev-fdm')
     .directive('selectableSet', [function() {
         return {
             restrict: 'A',
-            controller: ['$scope', '$parse', '$element', '$attrs', '$document', function($scope, $parse, $element, $attrs, $document) {
+            controller: ['$scope', '$parse', '$element', '$attrs', '$document',
+            function($scope, $parse, $element, $attrs, $document) {
                 var self = this,
                     shiftKey = 16;
 
-                var selectedElementsGet = $parse($attrs.selectedElements),
-                    selectedElementsSet = selectedElementsGet.assign;
+                var selectedElementsGet = $parse($attrs.selectedElements);
 
                 this.selectableElements = [];
-                this.selectedElements = selectedElementsGet($scope);
+                this.selectedElement = [];
 
                 var lastClickedIndex,
                     shiftSelectedElements = [];
-
-                $scope.$watchCollection(function() {
-                    return self.selectableElements;
-                    },
-                    function() {
-                        self.selectedElements.length = 0;
-                    }
-                );
 
                 $scope.$watch(function() {
                     return selectedElementsGet($scope);
                   },
                   function() {
-                    self.selectedElements = selectedElementsGet($scope);
+                    self.selectedElements = angular.isArray(selectedElementsGet($scope))?
+                      selectedElementsGet($scope) : [];
                   }
                 );
 
@@ -51,7 +45,7 @@ angular.module('ev-fdm')
                     lastClickedIndex = index;
                     shiftSelectedElements.length = 0;
 
-                    if(isElementSelected(element)) {
+                    if(this.isElementSelected(element)) {
                         unselectElement(element);
                     }
                     else {
@@ -65,12 +59,11 @@ angular.module('ev-fdm')
                         this.selectedElements.length = 0;
                     }
                     else {
-                        var index;
-                        angular.forEach(this.selectableElements, function(element) {
-                            if(!isElementSelected(element)) {
-                                selectElement(element);
-                            }
-                        });
+                      angular.forEach(this.selectableElements, function(element) {
+                        if(!self.isElementSelected(element)) {
+                          selectElement(element);
+                          }
+                      });
                     }
                 };
 
@@ -80,19 +73,45 @@ angular.module('ev-fdm')
                     }
                 };
 
+                this.registerElement = function(element, directive) {
+                  this.selectableElements.push(element);
+                };
+
+                this.unregisterElement = function(element) {
+                  var index = this.selectableElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectableElements.splice(index, 1);
+                  }
+
+                  index = this.selectedElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectedElements.splice(index, 1);
+                  }
+                };
+
+                this.areAllElementSelected = function() {
+                  return this.selectedElements.length === this.selectableElements.length
+                     && this.selectedElements.length !== 0;
+                };
+
+                this.isElementSelected = function(element) {
+                    return self.selectedElements.indexOf(element) > -1;
+                };
+
                 function toggleRangeUpTo(firstIndex, lastIndex) {
 
                     var lastElement = getElementAtIndex(lastIndex),
                         min = Math.min(firstIndex, lastIndex),
                         max = Math.max(firstIndex, lastIndex),
-                        element;
+                        element,
+                        i;
 
                     angular.forEach(shiftSelectedElements, function(element, index) {
                         unselectElement(element);
                     });
 
-                    if(isElementSelected(lastElement)) {
-                        for(var i = min; i <= max; i++) {
+                    if(self.isElementSelected(lastElement)) {
+                        for(i = min; i <= max; i++) {
                             element = getElementAtIndex(i);
                             unselectElement(element);
                         }
@@ -102,34 +121,30 @@ angular.module('ev-fdm')
                     }
                     else {
                         shiftSelectedElements.length = 0;
-                        for(var i = min; i <= max; i++) {
+                        for(i = min; i <= max; i++) {
                             element = getElementAtIndex(i);
                             selectElement(element);
                             shiftSelectedElements.push(element);
                         }
                     }
-                };
+                }
 
                 function getElementAtIndex(index) {
                     return self.selectableElements[index];
                 }
 
-                function isElementSelected(element) {
-                    return self.selectedElements.indexOf(element) > -1;
-                };
-
                 function selectElement(element) {
-                    if(!isElementSelected(element)) {
+                    if(!self.isElementSelected(element)) {
                         self.selectedElements.push(element);
                     }
-                };
+                }
 
                 function unselectElement(element) {
                     var index = self.selectedElements.indexOf(element);
                     if(index > -1) {
                         self.selectedElements.splice(index, 1);
                     }
-                };
+                }
             }]
         };
     }])
@@ -140,24 +155,16 @@ angular.module('ev-fdm')
             link: function(scope, element, attr, ctrl) {
 
                 var currentElementGetter = $parse(attr.selectable);
-                var currentElement = currentElementGetter(scope);;
+                var currentElement = currentElementGetter(scope);
 
-                ctrl.selectableElements.push(currentElement);
+                ctrl.registerElement(currentElement);
 
                 scope.$on('$destroy', function() {
-                    var index = ctrl.selectableElements.indexOf(currentElement);
-                    if(index > -1) {
-                        ctrl.selectableElements.splice(index, 1);
-                    }
-
-                    index = ctrl.selectedElements.indexOf(currentElement);
-                    if(index > -1) {
-                        ctrl.selectedElements.splice(index, 1);
-                    }
+                    ctrl.unregisterElement(currentElement);
                 });
 
-                scope.$watchCollection(function() { return ctrl.selectedElements; }, function(newSelection) {
-                        scope.selected = newSelection.indexOf(currentElement) > -1;
+                scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
+                  scope.selected = ctrl.isElementSelected(currentElement);
                 });
 
                 element.on('click', function(event) {
@@ -176,7 +183,7 @@ angular.module('ev-fdm')
                 }
 
             }
-        }
+        };
     }])
     .directive('selectBox', function() {
         return {
@@ -184,7 +191,7 @@ angular.module('ev-fdm')
             require: '^selectable',
             replace: true,
             template: '<span class="checkbox" ng-class="{ active: selected }"></span>'
-        }
+        };
     })
     .directive('selectAll', function() {
         return {
@@ -198,10 +205,9 @@ angular.module('ev-fdm')
                     ctrl.toggleSelectAll();
                 };
 
-                scope.$watchCollection(function() { return ctrl.selectedElements; }, function() {
-                    scope.allSelected = ctrl.selectedElements.length === ctrl.selectableElements.length
-                                     && ctrl.selectedElements.length !== 0;
+                scope.$watchCollection(function() { return ctrl.areAllElementSelected(); }, function() {
+                    scope.allSelected = ctrl.areAllElementSelected();
                 });
             }
-        }
+        };
     });
