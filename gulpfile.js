@@ -184,7 +184,7 @@ gulp.task('core-copy', function() {
         .pipe(gulp.dest(dest + '/images'));
     gulp.src([
             bowerDirectory + '/bootstrap/fonts/*',
-            'fonts/*'
+            'fonts/**/*'
         ])
         .pipe(gulp.dest(dest + '/fonts'));
 });
@@ -192,7 +192,7 @@ gulp.task('watch-core-copy', function () {
     gulp.watch([
         bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
         bowerDirectory + '/bootstrap/fonts/*',
-        'fonts/*'
+        'fonts/**/*'
     ], ['core-copy']);
 });
 
