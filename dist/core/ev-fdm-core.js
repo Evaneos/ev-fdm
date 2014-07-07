@@ -89,9 +89,10 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
           $state.go(toState.fallback.state);
         }
         // Or our default error page
-        else {
-          $state.go('ev-error');
-        }
+        // It's commented because ev-error is a template (in views) that doesn't seems to be loaded
+        // else {
+        //   $state.go('ev-error');
+        // }
     });
 
     /*if (evaneos._frontData) {
