@@ -256,7 +256,7 @@
         </script>
         <script type='text/ng-template' id='panels/right-window.phtml'>
             <div class="panel {{ panelClass }}">
-                <div class="inner" ng-transclude>
+                <div class="pannel-inner" ng-transclude>
                 </div>
             </div>
         </script>
@@ -301,8 +301,8 @@
             </div>
         </script>
         <script type='text/ng-template' id='demopanel.phtml'>
-            <div class="header">
-                <span class="title" ng-bind="(item ? 'Details' : 'List') + $instance.$$id"></span>
+            <div class="panel-header">
+                <span class="panel-title" ng-bind="(item ? 'Details' : 'List') + $instance.$$id"></span>
                 <button type="button"
                     class="close"
                     ng-click="$dismiss()">
@@ -311,7 +311,7 @@
 
                 <div
                     ng-if="item"
-                    class="modal-action-bar">
+                    class="panel-action-bar">
 
                     <button type="button"
                         class="btn btn-primary"
@@ -327,7 +327,7 @@
 
             </div>
 
-            <div class="body">
+            <div class="panel-body">
 
                 <div ng-if="item">
                     <h4>Details</h4>
