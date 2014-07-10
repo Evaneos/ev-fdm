@@ -1,0 +1,49 @@
+@import "variables.less";
+@import "common/animations.less";
+
+.ev-picture-upload {
+  width: 100%;
+  height: 190px;
+  padding: @thumbnail-padding;
+  color: @gray;
+  background-color: @gray-lighter;
+  text-align: center;
+  position:relative;
+  h4, button {
+    margin-bottom: @padding-large-vertical !important;
+  }
+  h4 {
+    line-height: @font-size-large;
+  }
+  .ev-picture-uploading {
+    > * {
+      padding-bottom: @padding-large-vertical !important;
+    }
+
+    p {
+      position: absolute;
+      padding: @padding-large-vertical;
+      bottom: 0;
+      left:0;
+      right:0;
+      text-align: center
+    }
+
+    .spinner {
+      @size: 60px;
+      &:extend(.icon-evaneos all);
+      color: @gray-light;
+      font-size: @size;
+      left: 50%;
+      margin-left: (@size * -0.5);
+      margin-top: (@size * -0.5);
+      content: "\e616";
+      .spin(2s);
+    }
+  }
+
+  &.dz-drag-hover {
+    border: 2px dashed @gray;
+  }
+}
+

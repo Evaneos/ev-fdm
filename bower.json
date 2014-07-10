@@ -26,6 +26,9 @@
     "restangular": "~1.4.0",
 
 
-    "angular-leaflet-directive": "~0.7.7"
+    "angular-leaflet-directive": "~0.7.7",
+
+
+    "dropzone": "~3.10.2"
   }
 }
