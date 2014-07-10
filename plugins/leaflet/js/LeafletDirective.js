@@ -12,6 +12,7 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         return {
             template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
             restrict: 'AE',
+            replace: true,
             scope: {
                 coordinate: '=',
                 editable: '='
