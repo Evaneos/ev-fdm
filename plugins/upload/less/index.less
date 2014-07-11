@@ -10,12 +10,16 @@
   background-color: @gray-lighter;
   text-align: center;
   position:relative;
+  h4, button {
+    margin-bottom: @line-height-computed !important;
+  }
   h4 {
     line-height: @font-size-large;
   }
   .ev-picture-uploading {
     > * {
       padding-bottom: @line-height-computed !important;
+      margin-bottom: 0;
     }
 
     p {
@@ -29,17 +33,18 @@
 
     .spinner {
       @size: 60px;
-      .icon-evaneos;
+      &:extend(.icon-evaneos all);
       color: @gray-light;
-      margin: 0;
-      padding: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       font-size: @size;
+      content: "\e616";
       .spin(2s);
     }
   }
 
   &.dz-drag-hover {
-    border: 2px dashed @gray-light;
+    border: 2px dashed @gray;
   }
 }
 
