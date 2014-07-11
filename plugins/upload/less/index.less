@@ -1,10 +1,10 @@
 @import "variables.less";
-@import "common/animations.less";
 @import "common/icons.less";
+@import "common/animations.less";
+@import "common/thumbnails.less";
 
 .ev-picture-upload {
-  width: 240px;
-  height: 190px;
+  .pic-thumbnail;
   padding: @padding-base-horizontal @padding-base-vertical;
   color: @gray;
   background-color: @gray-lighter;
@@ -32,12 +32,11 @@
 
     .spinner {
       @size: 60px;
-      &:extend(.icon-evaneos all);
+      .icon-evaneos;
       color: @gray-light;
+      margin: 0;
+      padding: 0;
       font-size: @size;
-      left: 50%;
-      margin-left: (@size * -0.5);
-      margin-top: (@size * -0.5);
       content: "\e616";
       .spin(2s);
     }
