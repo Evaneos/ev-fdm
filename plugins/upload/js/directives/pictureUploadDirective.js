@@ -40,7 +40,7 @@ angular.module('ev-upload')
                 '</div>' +
                 '<div class="ev-picture-uploading" ng-show="uploading">' +
                     '<h4> {{"Upload en cours"| i18n}} </h4>' +
-                    '<div class="spinner" ></div>' +
+                    '<div class="spinner"></div>' +
                     '<p> {{upload.done}} / {{upload.total}} {{ "photo(s) uploadée(s)" | i18n }} </p>' +
                 '</div>' +
                 '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
