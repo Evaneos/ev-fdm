@@ -169,7 +169,6 @@ angular.module('ev-fdm')
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             });
 
-
             /*
                 When returning to the list state remove the active element
              */
@@ -179,10 +178,18 @@ angular.module('ev-fdm')
                 }
             });
 
-            this.$scope.$on(this.elementName + '::update', function(event, updatedElements) {
+            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
-        };
+
+            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+        }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
             var self = this;
@@ -977,8 +984,7 @@ angular.module('ev-fdm')
                 var self = this,
                     shiftKey = 16;
 
-                var selectedElementsGet = $parse($attrs.selectedElements),
-                  selectedElementsSet = selectedElementsGet.assign;
+                var selectedElementsGet = $parse($attrs.selectedElements);
 
                 this.selectableElements = [];
                 this.selectedElement = [];
@@ -994,10 +1000,6 @@ angular.module('ev-fdm')
                       selectedElementsGet($scope) : [];
                   }
                 );
-
-                $scope.$on('$destroy', function() {
-                  selectedElementsSet($scope, angular.copy(self.selectedElements));
-                });
 
                 // Toggle a noselect class on the element when the shift key is pressed
                 // This allows us to disable selection overlay via css
