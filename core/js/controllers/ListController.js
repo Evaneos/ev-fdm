@@ -63,7 +63,6 @@ angular.module('ev-fdm')
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             });
 
-
             /*
                 When returning to the list state remove the active element
              */
@@ -73,10 +72,18 @@ angular.module('ev-fdm')
                 }
             });
 
-            this.$scope.$on(this.elementName + '::update', function(event, updatedElements) {
+            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
-        };
+
+            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+        }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
             var self = this;
