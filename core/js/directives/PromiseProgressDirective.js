@@ -1,6 +1,6 @@
-(function (Dropzone) {
+(function () {
     'use strict';
-    angular.module('ev-common')
+    angular.module('ev-fdm')
         .directive('evPromiseProgress', [function () {
 
     /*  ev-promise-progress
