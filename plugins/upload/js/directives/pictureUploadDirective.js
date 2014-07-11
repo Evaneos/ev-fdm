@@ -62,17 +62,17 @@ angular.module('ev-upload')
                             https://www.flickr.com/photos/{user-id}/{photo-id}/blabla/1512
                         will not be parsed nicely
                      */
-                    $scope.upload = {
-                        done: 0,
-                        total: 1,
-                        progress: 0
-                    };
                     flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/.exec(flickrUrl)[0];
                     var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
                     uploadPromise.success(function (response) {
                         $scope.pictureSuccess({picture: response});
                     });
                     $scope.newUpload(uploadPromise);
+                    $scope.upload = {
+                        done: 0,
+                        total: 1,
+                        progress: 0
+                    };
                 };
 
                 $scope.newUpload = function (upload) {
