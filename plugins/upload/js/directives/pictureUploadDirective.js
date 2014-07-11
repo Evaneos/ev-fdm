@@ -26,7 +26,7 @@ angular.module('ev-upload')
                 '<div ng-hide="uploading">' +
                     '<h4>{{ "Glissez une photo ici pour l\'ajouter à la liste" | i18n }}</h4>' +
                     '<button type="button" class="btn btn-default ev-upload-clickable">' +
-                        '{{ "Importer | i18n"}}</button>' +
+                        '{{ "Importer" | i18n}}</button>' +
                     '<form novalidate name="flickr" ng-submit="flickr.$valid && uploadFlickrUrl(flickrUrl)" '+
                         'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
                         '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
