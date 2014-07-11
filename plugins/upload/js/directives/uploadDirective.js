@@ -1,5 +1,5 @@
 /* global Dropzone */
-(function (Dropzone) {
+; (function (Dropzone) {
     'use strict';
     angular.module('ev-upload')
         .directive('evUpload', ['$log', '$q', function ($log, $q) {

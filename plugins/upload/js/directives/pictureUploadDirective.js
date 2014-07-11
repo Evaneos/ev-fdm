@@ -1,4 +1,4 @@
-(function () {
+; (function () {
 'use strict';
 angular.module('ev-upload')
     .directive('evPictureUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {

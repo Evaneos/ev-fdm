@@ -2,7 +2,7 @@
     'use strict';
     angular.module('ev-upload', ['ev-fdm']);
 }) ();
-(function () {
+; (function () {
 'use strict';
 angular.module('ev-upload')
     .directive('evPictureUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {
@@ -109,7 +109,7 @@ angular.module('ev-upload')
 }]);
 }) ();
 /* global Dropzone */
-(function (Dropzone) {
+; (function (Dropzone) {
     'use strict';
     angular.module('ev-upload')
         .directive('evUpload', ['$log', '$q', function ($log, $q) {
