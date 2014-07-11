@@ -104,7 +104,7 @@ plugins.forEach(function(name) {
 var tasks = plugins.map(function(name) { return 'plugin-' + name + '-js'; });
 tasks.unshift('core-js');
 gulp.task('js-all', tasks, function () {
-    gulp.start('js-concat-core-plugins');
+    return gulp.start('js-concat-core-plugins');
 });
 
 
@@ -154,7 +154,7 @@ function lessConcatCorePlugins() {
 plugins.forEach(function(name) {
     var dir = 'plugins/' + name;
     var src = [dir + '/less/index.less'];
-    var paths = [dir + '/less', bowerDirectory];
+    var paths = [dir + '/less', bowerDirectory, 'core/less'];
     gulp.task('plugin-' + name + '-less', function () {
         return minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
     });
