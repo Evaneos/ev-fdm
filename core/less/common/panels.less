@@ -17,7 +17,7 @@
         z-index: @zindex-modal;
         background: #FFF;
 
-        > .inner {
+        > .panel-inner {
             height: 100%;
             border-left: 7px solid @gray-lighter;
             border-right: 7px solid @gray-lighter;
@@ -28,17 +28,22 @@
              * HEADER
              ********************************************************/
 
-            > .header {
+            .panel-header {
                 background: @gray-lighter;
                 padding: 9px 16px;
                 z-index: 2;
-                .title {
+                .panel-title {
                     font-size: 20px;
                     text-transform: uppercase;
                     line-height: 1.7em;
                     margin-right: 30px;
                     display: block;
                     .text-overflow();
+
+                    .small {
+                        color: @gray;
+                        font-size: 15px;
+                    }
                 }
                 .close {
                     font-size: 32px;
@@ -63,7 +68,7 @@
              * BODY
              ********************************************************/
 
-            > .body {
+            .panel-body {
                 padding: 15px;
                 &.nopadding {
                     padding: 0;
@@ -85,7 +90,7 @@
              ********************************************************/
 
 
-            > .footer {
+            .panel-footer {
                 padding: 9px 16px;
                 background: @gray-lighter;
                 text-align: right;
@@ -128,9 +133,9 @@
     &.stacked {
         // important to override size set by jq ui
         max-width: 15px;
-        > .panel > .inner > .header .title,
-        > .panel > .inner > .body,
-        > .panel > .inner > .footer {
+        > .panel > .panel-inner .panel-header .title,
+        > .panel > .panel-inner .body,
+        > .panel > .panel-inner .footer {
             display: none;
         }
     }

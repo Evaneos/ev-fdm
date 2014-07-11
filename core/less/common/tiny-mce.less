@@ -14,7 +14,6 @@
 .mce-toolbar .mce-btn:hover i { color: #333; }
 .mce-toolbar .mce-btn, .mce-toolbar .mce-btn.mce-disabled { background: none!important; filter: none!important; border: 0; -webkit-box-shadow: none!important; -moz-box-shadow: none!important; box-shadow: none!important; }
 .mce-toolbar .mce-btn.mce-disabled { opacity: .4!important; filter: alpha(opacity=40)!important; }
-.mce-toolbar .mce-btn.mce-active { background: #eee!important; }
 .mce-floatpanel { -webkit-box-shadow: 0 3px 7px rgba(0,0,0,.3); -moz-box-shadow: 0 3px 7px rgba(0,0,0,.3); box-shadow: 0 3px 7px rgba(0,0,0,.3); }
 .mce-btn { background: #f0f0f0; }
 .mce-btn:hover { background: #e9e9e9; }
@@ -49,6 +48,12 @@
       height: 100%;
     }
   }
+
+  .mce-toolbar {
+    .mce-btn.mce-active {
+      background: @gray-light !important;
+    }
+  }
 }
 
 .mce-panel {
@@ -58,4 +63,20 @@
 
 .mce-widget.mce-tooltip {
     display: none !important;
+}
+
+.mce-btn {
+  &:hover {
+    background-color: @gray-light !important;
+  }
+
+  .mce-ico {
+    &.mce-i-bold {
+      // .icon-warning;
+
+      &:before {
+        // content: "\e630";
+      }
+    }
+  }
 }

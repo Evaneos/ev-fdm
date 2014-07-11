@@ -1,19 +1,19 @@
 /**
- * Utils file contains useful mixins
+ * This file contains useful mixins
  */
 
 /**
  * Allows you to draw a sticker (a colorful circle).
  * This sticker can contains a stick inside.
  * Usage:
- *      .sticker-mixin(17px, @brand-warning, @brand-info);
+ *      .sticker-(17px, @brand-warning, @brand-info);
  *
  * OR
  *
  *      .state {
- *          .sticker-mixin;
+ *          .sticker;
  *           &-large {
- *              .sticker-mixin(17px);
+ *              .sticker(17px);
  *           }
  *
  *          &-engaged {
@@ -31,7 +31,7 @@
  *       <span class="icon icon-tick"></span>
  *    </div>
  */
-.sticker-mixin(@size: 14px, @color: @gray-light, @tick-color: white) {
+.sticker(@size: 14px, @color: @gray-light, @tick-color: white) {
     width: @size;
     height: @size;
     border-radius: @size/2;
@@ -46,8 +46,4 @@
         margin-left: @size/5;
         padding-top: 1px;
     }
-}
-
-.sticker {
-    .sticker-mixin();
 }
