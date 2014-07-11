@@ -1,8 +1,7 @@
 (function () {
 'use strict';
 angular.module('ev-upload')
-    .directive('evPictureUpload', ['NotificationsService', 'i18n', '$http', function (NotificationsService,
-            i18n, $http) {
+    .directive('evPictureUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {
 
 /*  ev-picture-upload
     =================
@@ -25,24 +24,24 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="pictureSuccess({picture: file})"' +
                 'class="ev-picture-upload" upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<h4>{{ "Glissez une photo ici pour l\'ajouter à la liste"  }}</h4>' +
+                    '<h4>{{ "Glissez une photo ici pour l\'ajouter à la liste" | i18n }}</h4>' +
                     '<button type="button" class="btn btn-default ev-upload-clickable">' +
-                        '{{ "Importer..."}}</button>' +
+                        '{{ "Importer | i18n"}}</button>' +
                     '<form novalidate name="flickr" ng-submit="flickr.$valid && uploadFlickrUrl(flickrUrl)" '+
                         'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
-                        '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\'}}" ' +
+                        '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
                             'ng-model="flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
                             'class="form-control" />' +
                         '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
                             '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
-                                '{{ "L\'url doit être une photo flickr" }}</p>' +
+                                '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
                         '</div>' +
                     '</form>' +
                 '</div>' +
                 '<div class="ev-picture-uploading" ng-show="uploading">' +
-                    '<h4> {{"Upload en cours"}} </h4>' +
+                    '<h4> {{"Upload en cours"| i18n}} </h4>' +
                     '<div class="spinner" ></div>' +
-                    '<p> {{upload.done}} / {{upload.total}} photo(s) uploadée(s) </p>' +
+                    '<p> {{upload.done}} / {{upload.total}} {{ "photo(s) uploadée(s)" | i18n }} </p>' +
                 '</div>' +
                 '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
             '</ev-upload>',
@@ -84,13 +83,13 @@ angular.module('ev-upload')
                         .then(
                             function success () {
                                 NotificationsService.addSuccess({
-                                    text: i18n('Les images ont été uploadées avec succès')
+                                    text: 'Les images ont été uploadées avec succès'
                                 });
                             },
                             function error () {
                                 NotificationsService.add({
                                     type: NotificationsService.type.WARNING,
-                                    text: i18n('Erreur lors de l\'upload d\'image')
+                                    text: 'Erreur lors de l\'upload d\'image'
                                 });
                             },
                             function onNotify (progress) {
