@@ -12,7 +12,6 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         return {
             template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
             restrict: 'AE',
-            replace: true,
             scope: {
                 coordinate: '=',
                 editable: '='
@@ -62,15 +61,6 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                     $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
                     $scope.markers.marker.draggable = edited;
                 });
-
-                // // // Leaflet fix for conflict with ui-view
-                // $scope.$watch("showMap", function (value) {
-                //     if (value === true) {
-                //         leafletData.getMap().then(function (map) {
-                //             map.invalidateSize();
-                //         });
-                //     }
-                // });
             }
         };
     }]);
