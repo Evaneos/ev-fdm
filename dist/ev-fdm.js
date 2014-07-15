@@ -3471,6 +3471,7 @@ angular.module('ev-upload')
                         )
                         .finally(function () {
                             $scope.uploading = false;
+                            $scope.flickrUrl = "";
                         });
                 };
             }
