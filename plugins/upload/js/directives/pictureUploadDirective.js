@@ -28,10 +28,10 @@ angular.module('ev-upload')
                     '<button type="button" class="btn btn-default ev-upload-clickable">' +
                         '{{ "Importer" | i18n}}</button>' +
                     '<form novalidate name="flickr" ' +
-                        'ng-submit="flickr.$valid && (uploadFlickrUrl(flickrUrl); flickrUrl=\'\';)" '+
+                        'ng-submit="uploadFlickrUrl(flickr)"'+
                         'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
                         '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
-                            'ng-model="flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
+                            'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
                             'class="form-control" />' +
                         '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
                             '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
@@ -57,17 +57,24 @@ angular.module('ev-upload')
             controller: function ($scope) {
 
                 $scope.uploading = false;
-                $scope.uploadFlickrUrl = function (flickrUrl) {
+                $scope.uploadFlickrUrl = function (flickrForm) {
                     /* Trailing the ends in order to have a https://www.flickr.com/photos/{user-id}/{photo-id} url
                         Warning: `.*` is greedy, so an address like:
                             https://www.flickr.com/photos/{user-id}/{photo-id}/blabla/1512
                         will not be parsed nicely
                      */
-                    flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/.exec(flickrUrl)[0];
+                    if (!flickrForm.$valid) { return; }
+                    var flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/ .exec($scope.flickrUrl)[0];
                     var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
-                    uploadPromise.success(function (response) {
-                        $scope.pictureSuccess({picture: response});
-                    });
+                    uploadPromise
+                        .success(function (response) {
+                            $scope.pictureSuccess({picture: response});
+                        })
+                        .success(function () {
+                            flickrForm.$setPristine();
+                            $scope.flickrUrl = "";
+                        });
+
                     $scope.newUpload(uploadPromise);
                     $scope.upload = {
                         done: 0,
