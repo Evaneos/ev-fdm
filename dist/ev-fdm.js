@@ -3400,7 +3400,8 @@ angular.module('ev-upload')
                     '<h4>{{ "Glissez une photo ici pour l\'ajouter à la liste" | i18n }}</h4>' +
                     '<button type="button" class="btn btn-default ev-upload-clickable">' +
                         '{{ "Importer" | i18n}}</button>' +
-                    '<form novalidate name="flickr" ng-submit="flickr.$valid && uploadFlickrUrl(flickrUrl)" '+
+                    '<form novalidate name="flickr" ' +
+                        'ng-submit="flickr.$valid && (uploadFlickrUrl(flickrUrl); flickrUrl=\'\';)" '+
                         'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
                         '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
                             'ng-model="flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
@@ -3471,7 +3472,6 @@ angular.module('ev-upload')
                         )
                         .finally(function () {
                             $scope.uploading = false;
-                            $scope.flickrUrl = "";
                         });
                 };
             }
@@ -3616,4 +3616,3 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-//# sourceMappingURL=ev-fdm.js.map
