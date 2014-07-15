@@ -11,14 +11,16 @@
   img.leaflet-marker-icon.leaflet-marker-draggable {
     cursor: pointer;
   }
+  width: 100%;
+  height: 300px;
+  margin-bottom: 20px;
+  left: -@panel-body-padding;
 }
 
-.modal-body, .panel-body {
-  .angular-leaflet-map {
-    left: -@panel-body-padding;
-    min-width: @panel-width + @panel-body-padding*2;
-    width: 100%;
-    height: 300px;
-    margin-bottom: 20px;
-  }
+.modal-body .angular-leaflet-map {
+    min-width: 520px + (@panel-body-padding * 2);
+}
+
+.panel-body .angular-leaflet-map {
+    min-width: @panel-width + (@panel-body-padding * 2);
 }
