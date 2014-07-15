@@ -1,3 +1,5 @@
+@import "variables.less";
+
 .panel-placeholder {
     height: 100%;
     float: left;
@@ -10,7 +12,7 @@
     > .panel {
         background: #FFF;
         height: 100%;
-        width: 450px;
+        width: @panel-width;
         border-left: 1px solid @gray-light;
         position: relative;
         left: auto!important;
@@ -69,7 +71,7 @@
              ********************************************************/
 
             .panel-body {
-                padding: 15px;
+                padding: @panel-body-padding;
                 &.nopadding {
                     padding: 0;
                 }
