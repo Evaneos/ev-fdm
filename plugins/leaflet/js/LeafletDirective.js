@@ -43,22 +43,38 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                 // Setting a marker in location
                 $scope.markers = {
                     marker: {
-                        lat: $scope.coordinate.latitude,
-                        lng: $scope.coordinate.longitude,
                         focus: true
                     }
                 };
-                $scope.$watch('markers.marker', function (marker) {
-                    $scope.coordinate.latitude = marker.lat;
-                    $scope.coordinate.longitude = marker.lng;
+                centerOnMarker();
+
+                // Double binding between coordinate and marker's position
+                $scope.$watch('coordinate.latitude', function (lat) {
+                    $scope.markers.marker.lat = $scope.coordinate.latitude;
+                    centerOnMarker();
+                });
+
+                $scope.$watch('coordinate.longitude', function (lng) {
+                    $scope.markers.marker.lng = $scope.coordinate.longitude;
+                    centerOnMarker();
+                });
+
+                $scope.$watch('markers.marker.lat', function (lat) {
+                    $scope.coordinate.latitude = lat;
+                });
+
+                $scope.$watch('markers.marker.lng', function (lng) {
+                    $scope.coordinate.longitude = lng;
                 });
 
                 // Setting map center
-                $scope.center = {
-                    lat: $scope.coordinate.latitude,
-                    lng: $scope.coordinate.longitude,
-                    zoom: 8
-                };
+                function centerOnMarker() {
+                    $scope.center = {
+                        lat: $scope.markers.marker.lat,
+                        lng: $scope.markers.marker.lng,
+                        zoom: 8
+                    };
+                }
 
                 $scope.$watch('editable', function () {
                     var edited = $scope.editable;
