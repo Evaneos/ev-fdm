@@ -11,6 +11,7 @@
   }
 }
 
+// If inside a panel
 .modal-body {
   .angular-leaflet-map {
     left: -10px;
@@ -19,3 +20,15 @@
     margin-bottom: 20px;
   }
 }
+
+// Changing cursor depending on edition mode
+.angular-leaflet-map {
+  img.leaflet-marker-icon {
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+  }
+  img.leaflet-marker-icon.leaflet-marker-draggable {
+    cursor: pointer;
+  }
+}
+
