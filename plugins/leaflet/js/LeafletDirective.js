@@ -48,6 +48,10 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         focus: true
                     }
                 };
+                $scope.$watch('markers.marker', function (marker) {
+                    $scope.coordinate.latitude = marker.lat;
+                    $scope.coordinate.longitude = marker.lng;
+                });
 
                 // Setting map center
                 $scope.center = {
