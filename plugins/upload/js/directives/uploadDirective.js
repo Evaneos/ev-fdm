@@ -61,7 +61,7 @@
                             $log.warn('No url provided to the upload zone');
                             return;
                         }
-                        if (dropzone != null) {
+                        if (dropzone !== null) {
                             dropzone.destroy();
                         }
                         dropzone = new Dropzone(elem[0], angular.extend(BASE_CONFIG, settings));
@@ -83,7 +83,7 @@
                             });
                         });
 
-                    });
+                    }, true);
 
                     // Create a new overall upload object
                     function startNewUpload($scope) {
