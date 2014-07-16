@@ -3428,7 +3428,9 @@ angular.module('ev-upload')
                 };
             },
             controller: function ($scope) {
-
+                $scope.$watch('url', function (url) {
+                    $scope.settings.url = url;
+                });
                 $scope.uploading = false;
                 $scope.uploadFlickrUrl = function (flickrForm) {
                     /* Trailing the ends in order to have a https://www.flickr.com/photos/{user-id}/{photo-id} url
@@ -3548,7 +3550,7 @@ angular.module('ev-upload')
                             $log.warn('No url provided to the upload zone');
                             return;
                         }
-                        if (dropzone != null) {
+                        if (dropzone !== null) {
                             dropzone.destroy();
                         }
                         dropzone = new Dropzone(elem[0], angular.extend(BASE_CONFIG, settings));
@@ -3570,7 +3572,7 @@ angular.module('ev-upload')
                             });
                         });
 
-                    });
+                    }, true);
 
                     // Create a new overall upload object
                     function startNewUpload($scope) {

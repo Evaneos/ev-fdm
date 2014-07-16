@@ -55,7 +55,9 @@ angular.module('ev-upload')
                 };
             },
             controller: function ($scope) {
-
+                $scope.$watch('url', function (url) {
+                    $scope.settings.url = url;
+                });
                 $scope.uploading = false;
                 $scope.uploadFlickrUrl = function (flickrForm) {
                     /* Trailing the ends in order to have a https://www.flickr.com/photos/{user-id}/{photo-id} url
