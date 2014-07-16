@@ -1,0 +1,71 @@
+
+.btn-group {
+  position: relative;
+  display: inline-block;
+  font-size: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+  margin-bottom: 5px;
+  padding: 5px;
+
+  select, button, .btn, a.btn {
+    width: auto;
+    height: 31px;
+    color: @gray-darker;
+    text-shadow:none;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 20px;
+    border: 1px @gray-light solid;
+    padding: 7px 15px 7px 15px;
+    margin: 0;
+    cursor: pointer;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-image: linear-gradient(        bottom, @gray-lighter 25%, #fff 61%);
+    background-image: -o-linear-gradient(     bottom, @gray-lighter 25%, #fff 61%);
+    background-image: -moz-linear-gradient(   bottom, @gray-lighter 25%, #fff 61%);
+    background-image: -ms-linear-gradient(    bottom, @gray-lighter 25%, #fff 61%);
+    background-image: -webkit-linear-gradient(bottom, @gray-lighter,     #fff);
+    background-color: @gray;
+    .caret {
+      position:relative;
+      backgroud-color:#fff;
+      border-top: 5px solid @gray-darker;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom:0px;
+      display: inline-block;
+      right:0;
+      margin-left:10px;
+      top:7px;
+    }
+    &.no-lcorners {
+      border-radius:0 3px 3px 0;
+    }
+    &:hover {
+      -webkit-box-shadow: inset 0px 0px 3px @gray-light;
+      -moz-box-shadow   : inset 0px 0px 3px @gray-light;
+      box-shadow: inset 0px 0px 3px @gray-light;
+      background-image: none;
+      background-color: #fff;
+    }
+    &.active, &.active:hover, &:active {
+      border: 1px @brand-secondary solid;
+      background-image:none;
+      -webkit-box-shadow: inset 0px 0px 7px @brand-secondary;
+      -moz-box-shadow   : inset 0px 0px 7px @brand-secondary;
+      box-shadow: inset 0px 0px 7px @brand-secondary;
+      background-color: @brand-warning-light;
+      color:#fff;
+      option {
+        color: @gray-darker;
+      }
+    }
+    &.select {
+      padding:5px;
+    }
+  }
+}
