@@ -1,11 +1,17 @@
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
         this.$get =function () {
-            return {languages: this.languages || []};
+            return {
+                availableLang: this.availableLang || [],
+                defaultLang: this.defaultLang
+            };
         };
 
-        this.setLanguages =function (languages) {
-            this.languages = languages;
+        this.setAvailableLang =function (availableLang) {
+            this.availableLang = availableLang;
+        };
+        this.setDefaultLang =function (defaultLang) {
+            this.defaultLang = defaultLang;
         };
     })
     .directive('evSelectLanguage', ['evSelectLanguage', function (cfg) {
@@ -13,7 +19,8 @@ angular.module('ev-fdm')
             template:
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
-                        '<button class="btn" ng-repeat="lang in languages" ng-class="{active: selectedLang===lang}"' +
+                        '<button class="btn" ng-repeat="lang in availableLang"'+
+                            'ng-class="{active: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
                         '</button>' +
@@ -24,7 +31,10 @@ angular.module('ev-fdm')
                 selectedLang: '=lang'
             },
             link: function($scope) {
-                $scope.languages = cfg.languages;
+                $scope.availableLang = cfg.availableLang;
+                if (!$scope.selectedLang) {
+                    $scope.selectedLang = cfg.defaultLang;
+                }
             }
         };
     }]);
