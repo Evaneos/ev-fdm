@@ -32,11 +32,10 @@ angular.module('ev-upload')
                     '<button type="button" class="btn btn-default ev-upload-clickable">' +
                         '{{ "Importer" | i18n}}</button>' +
                     '<form novalidate name="flickr" ' +
-                        'ng-submit="uploadFlickrUrl(flickr)"'+
                         'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
                         '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
                             'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
-                            'class="form-control" />' +
+                            'class="form-control" ng-change="uploadFlickrUrl(flickr)"/>' +
                         '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
                             '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
                                 '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
