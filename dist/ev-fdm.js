@@ -3331,7 +3331,7 @@ angular.module('ev-leaflet', ['leaflet-directive'])
             this.icons = icons;
         };
     })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', function (leafletData, evLeaflet) {
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
         return {
             template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
             restrict: 'AE',
@@ -3373,12 +3373,20 @@ angular.module('ev-leaflet', ['leaflet-directive'])
 
                 // Double binding between coordinate and marker's position
                 $scope.$watch('coordinate.latitude', function (lat) {
-                    $scope.markers.marker.lat = $scope.coordinate.latitude;
+                    if(isNaN(lat)) {
+                        lat = 0;
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+                    $scope.markers.marker.lat = lat;
                     centerOnMarker();
                 });
 
                 $scope.$watch('coordinate.longitude', function (lng) {
-                    $scope.markers.marker.lng = $scope.coordinate.longitude;
+                    if(isNaN(lng)) {
+                        lng = 0;
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+                    $scope.markers.marker.lng = lng;
                     centerOnMarker();
                 });
 
