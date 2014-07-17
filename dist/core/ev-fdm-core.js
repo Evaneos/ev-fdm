@@ -1038,7 +1038,7 @@ angular.module('ev-fdm')
             template:
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
-                        '<button class="btn" ng-repeat="lang in availableLang"'+
+                        '<button class="btn btn-lg btn-default" ng-repeat="lang in availableLang"'+
                             'ng-class="{active: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
