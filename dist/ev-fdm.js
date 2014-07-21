@@ -281,12 +281,13 @@ angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
             restrict: 'A',
+            scope: false,
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
                 this.activeElement;
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
-               
+
                 var self = this;
                 $scope.$watch(function() {
                     return activeElementGet($scope);
@@ -299,7 +300,7 @@ angular.module('ev-fdm')
                         if(activeElementSet) {
                             activeElementSet($scope, value);
                         }
-                        
+
                         this.activeElement = value;
                     }
                     else {
@@ -319,6 +320,7 @@ angular.module('ev-fdm')
     .directive('activable', function() {
         return {
             restrict: 'A',
+            scope: false,
             require: '^activableSet',
             link: function(scope, element, attr, ctrl) {
                 element.addClass('clickable');
@@ -1277,6 +1279,7 @@ angular.module('ev-fdm')
     .directive('sortableSet', function() {
         return {
             restrict: 'A',
+            scope: false,
             controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
                 var self = this;
                 this.reverseSort = false;
@@ -1309,7 +1312,7 @@ angular.module('ev-fdm')
                         this.reverseSort = false;
                         this.sortKey = key;
                     }
-                    
+
                     if(reverseSortSet) {
                         reverseSortSet($scope, this.reverseSort);
                     }
@@ -1327,6 +1330,7 @@ angular.module('ev-fdm')
     .directive('sortable', function() {
         return {
             restrict: 'A',
+            scope: false,
             require: '^sortableSet',
             link: function(scope, element, attr, ctrl) {
                 var key = attr.sortable;
@@ -1339,7 +1343,7 @@ angular.module('ev-fdm')
                 scope.$watch(function() { return ctrl.reverseSort;}, function() {
                     setClasses();
                 });
-                
+
                 element.on('click', function() {
                     scope.$apply(function() {
                         ctrl.sortBy(key);
@@ -1965,23 +1969,23 @@ module.factory('panelFactory', function() {
     var Panel = function(extensions) {
         this.blockers = [];
         _(this).extend(extensions);
-    }
+    };
     Panel.prototype.addBlocker = function(blocker) {
         this.blockers.push(blocker);
-    }
+    };
     Panel.prototype.removeBlocker = function(blocker) {
         this.blockers = _(this.blockers).without(blocker);
-    }
+    };
     Panel.prototype.isBlocked = function(silent) {
         return _(this.blockers).some(function(blocker) {
             return blocker(silent);
         });
-    }
+    };
     return {
         create: function(extensions) {
             return new Panel(extensions);
         }
-    }
+    };
 });
 
 module.factory('sidonieRegion', function() {
@@ -2001,7 +2005,9 @@ module.factory('sidonieRegion', function() {
     };
     Region.prototype.remove = function(instance) {
         var i = this.panels.indexOf(instance);
-        if (i > -1) this.panels.splice(i, 1);
+        if (i > -1) {
+            this.panels.splice(i, 1);
+        }
         return i;
     };
     Region.prototype.at = function(index) {
@@ -2045,30 +2051,37 @@ module.factory('sidonieRegion', function() {
         create: function(hasPush, methods) {
             var ChildClass = function(hasPush) {
                 return Region.call(this, hasPush);
-            }
+            };
             ChildClass.prototype = _({}).extend(Region.prototype, methods);
             return new ChildClass(hasPush);
         }
-    }
+    };
 });
 
-module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller', 'middleRegion', 'rightRegion', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, middleRegion, rightRegion, panelFactory) {
+module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'rightRegion', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, rightRegion, panelFactory) {
 
     // identifies all panels
     var currentId = 1;
 
-    var regions = {
-        middle: middleRegion,
-        right: rightRegion
+    var openingTypes = {
+        PUSH    : 1,       // Creates a new panel after the others
+        REPLACE : 2        // Replace the panel if it already exists, and dismiss its children
     };
+    var defaultOpeningType = openingTypes.PUSH;
 
-    function parseOptions(regionName, options) {
+    function parseOptions(options) {
         if (!options.template && !options.templateUrl && !options.content) {
-            throw new Error('Should define options.template or templateUrl or content')
+            throw new Error('Should define options.template or templateUrl or content');
         }
-        options.push = options.push || options.pushFrom;
+
+        if (!openingTypes[options.openingType]){
+            options.openingType = defaultOpeningType;
+        }
+        options.panelName = options.panelClass || '';
+
         options.panelClass = options.panelClass || '';
-        options.panelClass += ' ' + regionName;
+        options.panelClass += ' right';
+
         options.resolve = options.resolve || {};
         return options;
     }
@@ -2085,7 +2098,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
 
     function getResolvePromises(resolves) {
         var promises = [];
-        angular.forEach(resolves, function(value, key) {
+        angular.forEach(resolves, function(value) {
             if (angular.isFunction(value) || angular.isArray(value)) {
                 promises.push($q.when($injector.invoke(value)));
             }
@@ -2113,20 +2126,15 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             });
     }
 
-    function getRegion(name) {
-        if (_(regions).has(name)) {
-            return regions[name];
-        } else {
-            throw new Error('Unknown region ' + name);
-        }
-    }
-
     function dismissChildren(region, instance, reason) {
         var children = region.getChildren(instance);
         for (var i = children.length - 1; i >= 0; i--) {
             var child = children[i];
             var result = child.dismiss(reason);
-            if (!result) return false;
+            if (!result) {
+                return false;
+            }
+
         }
         return true;
     }
@@ -2140,14 +2148,17 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         var self = this;
         var resultDeferred = $q.defer();
         var openedDeferred = $q.defer();
-        
+
         var instance = panelFactory.create({
+            panelName : options.panelName,
             result: resultDeferred.promise,
             opened: openedDeferred.promise,
             close: function(result) {
                 if (!instance.isBlocked()) {
                     var notCancelled = dismissChildren(region, instance, 'parent closed');
-                    if (!notCancelled) return false;
+                    if (!notCancelled) {
+                        return false;
+                    }
                     region.close(instance, options);
                     region.remove(instance);
                     resultDeferred.resolve(result);
@@ -2158,7 +2169,9 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             dismiss: function(reason) {
                 if (!instance.isBlocked()) {
                     var notCancelled = dismissChildren(region, instance, 'parent dismissed');
-                    if (!notCancelled) return false;
+                    if (!notCancelled) {
+                      return false;
+                    }
                     region.close(instance, options);
                     region.remove(instance);
                     resultDeferred.reject(reason);
@@ -2167,10 +2180,10 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                 return false;
             }
         });
-        
+
         resolveAll(options)
             .then(function(contentAndLocals) {
-                
+
                 // create scope
                 var scope = (options.scope || $rootScope).$new();
                 scope.$close = instance.close;
@@ -2207,7 +2220,20 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         return instance;
     }
 
+    function getPanel (panelName){
+        var panel = rightRegion.panels.where({panelName:panelName});
+        if(panel) return _(panel).last();
+        return null;
+    }
+    function hasPanel (panelName){
+        return getPanel(panelName) != null;
+    }
+
+
     return {
+        OPENING_TYPE : openingTypes,
+        getPanel : getPanel,
+        hasPanel : hasPanel,
         /**
          * @param {String} regionName
          * @param {Mixed} options
@@ -2221,21 +2247,19 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
          *     (optional) {PanelInstance} pushFrom: if the region is push enabled, open
          *         a popup on top of that instance (and close existing children)
          */
-        open: function(regionName, options) {
+        open: function(options) {
+            options = parseOptions(options);
 
-            options = parseOptions(regionName, options);
-            var region = getRegion(regionName);
-            var last = region.last();
+            var last = rightRegion.last ();
             var instance;
 
             if (options.push && !options.pushFrom) {
                 options.pushFrom = last;
             }
-
             if (options.pushFrom && options.pushFrom != last) {
-                options.replace = region.getNext(options.pushFrom);
+                options.replace = rightRegion.getNext(options.pushFrom);
                 if (options.replace) {
-                    var result = dismissChildren(region, options.replace, 'parent replaced');
+                    var result = dismissChildren(rightRegion, options.replace, 'parent replaced');
                     // some child might have canceled the close
                     if (!result) {
                         return false;
@@ -2243,7 +2267,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                 }
             }
 
-            if (!(region.hasPush && options.push) && !region.isEmpty()) {
+            if (!(rightRegion.hasPush && options.push) && !rightRegion.isEmpty()) {
                 options.replace = last;
             }
 
@@ -2251,26 +2275,22 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                 return false;
             }
 
-            instance = createInstance(region, options);
+            instance = createInstance(rightRegion, options);
 
             // attach some variables to the instance
             instance.$$id = currentId++;
-            instance.$$region = regionName;
-            
-            region.push(instance);
+            instance.$$region = 'right';
+
+            rightRegion.push(instance);
             return instance;
         },
-        push: function(regionName, options) {
-            options.push = true;
-            return this.open(regionName, options);
-        },
         dismissAll: function(reason) {
-            _(regions).each(function(region) {
-                region.dismissAll(reason);
-            });
+            // _(regions).each(function(region) {
+                rightRegion.dismissAll(reason);
+            // });
         },
         dismissChildren: function(instance, reason) {
-            var region = regions[instance.$$region];
+            var region = rightRegion;
             return dismissChildren(region, instance, reason);
         }
     };
@@ -3137,8 +3157,8 @@ module.service('middleRegion', ['$compile', '$document', '$rootScope', 'sidonieR
 }]);
 var module = angular.module('ev-fdm');
 
-module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
-    
+module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
+
     var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
 
     function getBPMatching(width) {
@@ -3165,29 +3185,37 @@ module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
 
     return {
         restrict: 'A',
-        replace: true,
-        transclude: true,
-        templateUrl: 'panels/right-window.phtml',
+        scope: false,
+        // replace: true,
+        // transclude: true,
+        // templateUrl: 'panels/right-window.phtml',
         link: function(scope, element, attrs) {
+            var inner = element.find('.panel-inner');
+            debugger;
             element.resizable({
                 handles: "w",
                 resize: function(event, ui) {
-                    var bp = getBPMatching(ui.size.width);
+                    var bp = getBPMatching(inner.outerWidth());
                     applyBPAttribute(element, bp);
+                    $rootScope.$broadcast('panel-resized', element);
                 }
             });
+            $(window).on('resize', function(event) {
+                var bp = getBPMatching(inner.outerWidth());
+                applyBPAttribute(element, bp);
+            });
             scope.$on('animation-complete', function() {
-                var bp = getBPMatching(element.outerWidth());
+                var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
             });
             $timeout(function() {
-                var bp = getBPMatching(element.outerWidth());
+                var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
                 // focus a freshly-opened modal
                 element[0].focus();
             });
         }
-    }
+    };
 }]);
 
 module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
@@ -3206,7 +3234,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     function getStylesFromCache(instance, options) {
         var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
         if (savedWidth)
-            return 'style="width: ' + savedWidth + 'px;"';
+            return 'width: ' + savedWidth + 'px;';
         else
             return '';
     }
@@ -3256,6 +3284,21 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         stack(region.panels.size() - 1);
     }
 
+    function createPlaceholder(depth) {
+        var isMain = depth === 1;
+        return angular.element('<div ' +
+            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+            'style="z-index:' + (2000 + depth) + ';"></div>');
+    }
+
+    function createPanelView(instance, options) {
+        var inner = angular.element(options.content);
+        inner.attr('style', getStylesFromCache(instance, options));
+        inner.attr('right-panel-window', true);
+        options.scope.panelClass = options.panelClass;
+        return $compile(inner)(options.scope);
+    }
+
     var checkStackingThrottled = _(checkStacking).debounce(50);
 
     $(window).on('resize', function() {
@@ -3263,21 +3306,20 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     });
 
     var stylesCache = window.stylesCache = {};
+    var container = angular.element('.lisette-module-region.right');
+    var panelZero = container.find('.panel-zero');
 
     var region = sidonieRegion.create(true, {
         updateStacking: function() {
-            return $timeout(checkStackingThrottled);
+            // return $timeout(checkStackingThrottled);
         },
         open: function(instance, options) {
             instance.$$depth = region.panels.size();
-            var el = angular.element('<div class="panel-placeholder"></div>');
-            var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
-            inner.html(options.content);
-            options.scope.panelClass = options.panelClass;
-            inner = $compile(inner)(options.scope);
+            var el = createPlaceholder(instance.$$depth);
+            var inner = createPanelView(instance, options);
             el.html(inner);
             els[instance.$$id] = el;
-            $animate.enter(el, $('.lisette-module-region.right'), null, function() {
+            $animate.enter(el, container, panelZero, function() {
                 options.scope.$emit('animation-complete');
                 $rootScope.$broadcast('module-layout-changed');
                 region.updateStacking();
@@ -3293,10 +3335,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             if (typeof(els[fromInstance.$$id]) != 'undefined') {
                 var el = els[fromInstance.$$id];
                 toInstance.$$depth = region.panels.size() - 1;
-                var inner = angular.element('<div right-panel-window ' + getStylesFromCache(toInstance, options) + '></div>');
-                inner.html(options.content);
-                options.scope.panelClass = options.panelClass;
-                inner = $compile(inner)(options.scope);
+                var inner = createPanelView(toInstance, options);
                 el.html(inner);
                 els[toInstance.$$id] = el;
                 delete els[fromInstance.$$id];
@@ -3666,4 +3705,3 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-//# sourceMappingURL=ev-fdm.js.map

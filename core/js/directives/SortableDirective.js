@@ -4,6 +4,7 @@ angular.module('ev-fdm')
     .directive('sortableSet', function() {
         return {
             restrict: 'A',
+            scope: false,
             controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
                 var self = this;
                 this.reverseSort = false;
@@ -36,7 +37,7 @@ angular.module('ev-fdm')
                         this.reverseSort = false;
                         this.sortKey = key;
                     }
-                    
+
                     if(reverseSortSet) {
                         reverseSortSet($scope, this.reverseSort);
                     }
@@ -54,6 +55,7 @@ angular.module('ev-fdm')
     .directive('sortable', function() {
         return {
             restrict: 'A',
+            scope: false,
             require: '^sortableSet',
             link: function(scope, element, attr, ctrl) {
                 var key = attr.sortable;
@@ -66,7 +68,7 @@ angular.module('ev-fdm')
                 scope.$watch(function() { return ctrl.reverseSort;}, function() {
                     setClasses();
                 });
-                
+
                 element.on('click', function() {
                     scope.$apply(function() {
                         ctrl.sortBy(key);
