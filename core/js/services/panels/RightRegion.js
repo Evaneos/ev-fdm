@@ -1,7 +1,7 @@
 var module = angular.module('ev-fdm');
 
-module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
-    
+module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
+
     var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
 
     function getBPMatching(width) {
@@ -28,29 +28,36 @@ module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
 
     return {
         restrict: 'A',
-        replace: true,
-        transclude: true,
-        templateUrl: 'panels/right-window.phtml',
+        scope: false,
+        // replace: true,
+        // transclude: true,
+        // templateUrl: 'panels/right-window.phtml',
         link: function(scope, element, attrs) {
+            var inner = element.find('.panel-inner');
             element.resizable({
                 handles: "w",
                 resize: function(event, ui) {
-                    var bp = getBPMatching(ui.size.width);
+                    var bp = getBPMatching(inner.outerWidth());
                     applyBPAttribute(element, bp);
+                    $rootScope.$broadcast('panel-resized', element);
                 }
             });
+            $(window).on('resize', function(event) {
+                var bp = getBPMatching(inner.outerWidth());
+                applyBPAttribute(element, bp);
+            });
             scope.$on('animation-complete', function() {
-                var bp = getBPMatching(element.outerWidth());
+                var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
             });
             $timeout(function() {
-                var bp = getBPMatching(element.outerWidth());
+                var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
                 // focus a freshly-opened modal
                 element[0].focus();
             });
         }
-    }
+    };
 }]);
 
 module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
@@ -69,7 +76,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     function getStylesFromCache(instance, options) {
         var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
         if (savedWidth)
-            return 'style="width: ' + savedWidth + 'px;"';
+            return 'width: ' + savedWidth + 'px;';
         else
             return '';
     }
@@ -119,6 +126,21 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         stack(region.panels.size() - 1);
     }
 
+    function createPlaceholder(depth) {
+        var isMain = depth === 1;
+        return angular.element('<div ' +
+            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+            'style="z-index:' + (2000 + depth) + ';"></div>');
+    }
+
+    function createPanelView(instance, options) {
+        var inner = angular.element(options.content);
+        inner.attr('style', getStylesFromCache(instance, options));
+        inner.attr('right-panel-window', true);
+        options.scope.panelClass = options.panelClass;
+        return $compile(inner)(options.scope);
+    }
+
     var checkStackingThrottled = _(checkStacking).debounce(50);
 
     $(window).on('resize', function() {
@@ -126,21 +148,20 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     });
 
     var stylesCache = window.stylesCache = {};
+    var container = angular.element('.lisette-module-region.right');
+    var panelZero = container.find('.panel-zero');
 
     var region = sidonieRegion.create(true, {
         updateStacking: function() {
-            return $timeout(checkStackingThrottled);
+            // return $timeout(checkStackingThrottled);
         },
         open: function(instance, options) {
             instance.$$depth = region.panels.size();
-            var el = angular.element('<div class="panel-placeholder"></div>');
-            var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
-            inner.html(options.content);
-            options.scope.panelClass = options.panelClass;
-            inner = $compile(inner)(options.scope);
+            var el = createPlaceholder(instance.$$depth);
+            var inner = createPanelView(instance, options);
             el.html(inner);
             els[instance.$$id] = el;
-            $animate.enter(el, $('.lisette-module-region.right'), null, function() {
+            $animate.enter(el, container, panelZero, function() {
                 options.scope.$emit('animation-complete');
                 $rootScope.$broadcast('module-layout-changed');
                 region.updateStacking();
@@ -156,10 +177,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             if (typeof(els[fromInstance.$$id]) != 'undefined') {
                 var el = els[fromInstance.$$id];
                 toInstance.$$depth = region.panels.size() - 1;
-                var inner = angular.element('<div right-panel-window ' + getStylesFromCache(toInstance, options) + '></div>');
-                inner.html(options.content);
-                options.scope.panelClass = options.panelClass;
-                inner = $compile(inner)(options.scope);
+                var inner = createPanelView(toInstance, options);
                 el.html(inner);
                 els[toInstance.$$id] = el;
                 delete els[fromInstance.$$id];
