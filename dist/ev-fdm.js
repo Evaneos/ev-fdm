@@ -3331,7 +3331,7 @@ angular.module('ev-leaflet', ['leaflet-directive'])
             this.icons = icons;
         };
     })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', function (leafletData, evLeaflet) {
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
         return {
             template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
             restrict: 'AE',
@@ -3373,12 +3373,20 @@ angular.module('ev-leaflet', ['leaflet-directive'])
 
                 // Double binding between coordinate and marker's position
                 $scope.$watch('coordinate.latitude', function (lat) {
-                    $scope.markers.marker.lat = $scope.coordinate.latitude;
+                    if(isNaN(lat)) {
+                        lat = 0;
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+                    $scope.markers.marker.lat = lat;
                     centerOnMarker();
                 });
 
                 $scope.$watch('coordinate.longitude', function (lng) {
-                    $scope.markers.marker.lng = $scope.coordinate.longitude;
+                    if(isNaN(lng)) {
+                        lng = 0;
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+                    $scope.markers.marker.lng = lng;
                     centerOnMarker();
                 });
 
@@ -3438,23 +3446,30 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="pictureSuccess({picture: file})"' +
                 'class="ev-picture-upload" upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<h4>{{ "Glissez une photo ici pour l\'ajouter à la liste" | i18n }}</h4>' +
-                    '<button type="button" class="btn btn-default ev-upload-clickable">' +
-                        '{{ "Importer" | i18n}}</button>' +
-                    '<form novalidate name="flickr" ' +
-                        'ng-submit="uploadFlickrUrl(flickr)"'+
-                        'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
-                        '<input type="url" name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
-                            'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
-                            'class="form-control" />' +
-                        '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
-                            '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
-                                '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
-                        '</div>' +
-                    '</form>' +
+                    '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
+                    '<table style="width:100%"><tr><td style="width:114px">'+
+                            '<button type="button" class="btn ev-upload-clickable">' +
+                                '{{ "Importer..." | i18n}}' +
+                            '</button>' +
+                        '</td>'+
+                        '<td style="width:30px">'+
+                            '{{ "ou" | i18n }}' +
+                        '</td>'+
+                        '<td>'+
+                            '<form novalidate name="flickr" ' +
+                                'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
+                                '<input name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
+                                    'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
+                                    'class="form-control" ng-change="uploadFlickrUrl(flickr)"/>' +
+                                '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
+                                    '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
+                                        '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
+                                '</div>' +
+                            '</form>' +
+                        '</td></tr></table>'+
                 '</div>' +
                 '<div class="ev-picture-uploading" ng-show="uploading">' +
-                    '<h4> {{"Upload en cours"| i18n}} </h4>' +
+                    '<div class="ev-picture-upload-label"> {{"Upload en cours"| i18n}} </div>' +
                     '<div class="spinner"></div>' +
                     '<p> {{upload.done}} / {{upload.total}} {{ "photo(s) uploadée(s)" | i18n }} </p>' +
                 '</div>' +
@@ -3528,6 +3543,7 @@ angular.module('ev-upload')
         };
 }]);
 }) ();
+
 /* global Dropzone */
 ; (function (Dropzone) {
     'use strict';
@@ -3631,6 +3647,9 @@ angular.module('ev-upload')
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
+                        dropzone.on('error', function() {
+                            upload.hasFileErrored = true;
+                        });
 
                         dropzone.on('uploadprogress', function () {
                             progress.progress = 100 * getBytes('bytesSent') / getBytes('total');

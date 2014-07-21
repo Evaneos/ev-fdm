@@ -101,6 +101,9 @@
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
+                        dropzone.on('error', function() {
+                            upload.hasFileErrored = true;
+                        });
 
                         dropzone.on('uploadprogress', function () {
                             progress.progress = 100 * getBytes('bytesSent') / getBytes('total');

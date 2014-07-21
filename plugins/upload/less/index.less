@@ -4,47 +4,67 @@
 @import "common/thumbnails.less";
 
 .ev-picture-upload {
-  .pic-thumbnail;
-  padding: @padding-base-horizontal @padding-base-vertical;
-  color: @gray;
-  background-color: @gray-lighter;
+  margin-top: 10px;
+  padding: @padding-base-vertical @padding-base-horizontal;
+  color: @gray-light;
+  border: 2px dotted @gray-lighter;
+  background-image: url('../images/upload/picture.png');
+  background-repeat: no-repeat;
+  background-position: top right;
   text-align: center;
   position:relative;
-  h4, button {
-    margin-bottom: @line-height-computed !important;
+  min-width: 250px;
+  height: 100px;
+
+  @media (-webkit-min-device-pixel-ratio: 2),
+  (min-resolution: 192dpi) {
+    background-image: url('../images/upload/picture_2x.png');
+    background-size: 65px 50px;
   }
-  h4 {
-    line-height: @font-size-large;
+
+
+  .ev-picture-upload-label {
+    font-size: 24px;
+    line-height: 1.1;
+    margin: 10px 0;
   }
+
+  button {
+    background-color: @gray-lighter;
+  }
+
   .ev-picture-uploading {
     > * {
-      padding-bottom: @line-height-computed !important;
+      padding-bottom: @line-height-computed;
       margin-bottom: 0;
     }
 
     p {
-      position: absolute;
       padding: @padding-large-vertical;
-      bottom: 0;
-      left:0;
-      right:0;
       text-align: center
     }
 
     .spinner {
-      @size: 60px;
+      @size: 30px;
       &:extend(.icon-evaneos all);
       color: @gray-light;
-      margin: 0 !important;
-      padding: 0 !important;
+      margin: 0;
+      padding: 0;
       font-size: @size;
       content: '\e61d';
       .spin(2s);
+      opacity: 0.3;
+      margin-left: -40px;
+      margin-top: -40px;
+      font-size: 80px;
+      top: 50%;
+      left: 50%;
+      position: absolute;
     }
   }
 
   &.dz-drag-hover {
-    border: 2px dashed @gray;
+    border: 2px dotted @gray;
   }
 }
 
