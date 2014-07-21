@@ -3452,7 +3452,7 @@ angular.module('ev-upload')
                                 '{{ "Importer..." | i18n}}' +
                             '</button>' +
                         '</td>'+
-                        '<td style="width:30px">'+
+                        '<td style="width:30px´; line-height: 36px;">'+
                             '{{ "ou" | i18n }}' +
                         '</td>'+
                         '<td>'+
