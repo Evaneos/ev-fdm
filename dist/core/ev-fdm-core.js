@@ -40,8 +40,8 @@ commonModule.config(['RestangularProvider', function(restangularProvider) {
 // ATTACH TO MODULE
 // ----------------------------------------------------
 
-commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', 'uiSelect2Config', function($rootScope,
-        $state, $location, notificationsService, uiSelect2Config) {
+commonModule.run(['$rootScope', '$state', '$location', 'uiSelect2Config', function($rootScope,
+        $state, $location, uiSelect2Config) {
 
     // defaults for select2
     uiSelect2Config.minimumResultsForSearch = 7;
@@ -50,50 +50,6 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
 
     // language for the user OR navigator language OR english
     window.moment.lang([window.navigator.language, 'en']);
-
-    $rootScope.$on('$stateChangeStart', function(event, toState) {
-        $state.nextState = toState;
-        // not a tab changing
-        if (!$state.current.name || toState.name.indexOf($state.current.name) !== 0) {
-            $('body').addClass('state-resolving');
-        }
-    });
-
-    $rootScope.$on('$stateChangeSuccess', function() {
-        $('body').removeClass('state-resolving');
-    });
-
-    /**
-     * When there is an error on a state change
-     *
-     * In your state config you can add the following.
-     * This will allows the router to fallback to this state on error
-     * while displaying the specified message
-
-          fallback: {
-            state: 'list',
-            message: t('Unable to open this transaction!')
-          }
-     */
-    $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        $('body').removeClass('state-resolving');
-
-        var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
-
-        notificationsService.addError({
-            text: errorMessage
-        });
-
-        // Redirect to the fallback we defined in our state
-        if(toState && toState.fallback && toState.fallback.state) {
-          $state.go(toState.fallback.state);
-        }
-        // Or our default error page
-        // It's commented because ev-error is a template (in views) that doesn't seems to be loaded
-        // else {
-        //   $state.go('ev-error');
-        // }
-    });
 
     /*if (evaneos._frontData) {
         var scopeKeys = evaneos.frontData('__scopeKeys');
@@ -105,6 +61,300 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
 
 
 }]);
+
+angular.module('ev-fdm')
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+            var self = this;
+
+            /*
+                Properties
+             */
+            this.$scope = $scope;
+            this.elementName = elementName;
+            this.elements = elements;
+            this.defaultSortKey = defaultSortKey;
+            this.defaultReverseSort = defaultReverseSort;
+            this.sortKey = this.defaultSortKey;
+            this.reverseSort = this.defaultReverseSort;
+
+            this.updateScope();
+
+            /*
+                Pagination method that should be called from the template
+             */
+            this.$scope.changePage = function(newPage) {
+                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Sort method that should be called from the template
+             */
+            this.$scope.sortChanged = function() {
+                self.sortKey = self.$scope.sortKey;
+                self.reverseSort = self.$scope.reverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Display an item by changing route
+             */
+            this.$scope.toggleDetailView = function(element) {
+
+                if(!element) {
+                    $state.go(self.elementName);
+                    return;
+                }
+
+                var id = restangular.configuration.getIdFromElem(element);
+
+                if(!id || $stateParams.id === id) {
+                    $state.go(self.elementName);
+                }
+                else {
+                    $state.go(self.elementName + '.view', {id: id});
+                }
+            };
+
+            /*
+                Update the view when filter are changed in the SearchController
+             */
+            this.$scope.$on('common::filters.changed', function(event, filters) {
+                self.filters = filters;
+                self.sortKey = self.defaultSortKey;
+                self.defaultReverseSort = self.defaultReverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            /*
+                When returning to the list state remove the active element
+             */
+            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
+                if(toState.name === self.elementName) {
+                    self.$scope.activeElement = null;
+                }
+            });
+
+            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+        }
+
+        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
+            var self = this;
+            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                self.elements = elements;
+                self.updateScope();
+            });
+        };
+
+        ListController.prototype.updateScope = function () {
+            var self = this;
+
+            this.$scope[this.elementName] = this.elements;
+            this.$scope.currentPage = this.elements.pagination.current_page;
+            this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.sortKey = this.sortKey;
+            this.$scope.reverseSort = this.reverseSort;
+            this.$scope.selectedElements = [];
+            this.$scope.activeElement = null;
+
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if(elementId === $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
+        };
+
+        return ListController;
+
+    }]);
+
+'use strict';
+
+var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
+    $scope.notifications = NotificationsService.list;
+    
+    $scope.$watch(function() {
+        return NotificationsService.activeNotification;
+    }, function() {
+        $scope.activeNotification = NotificationsService.activeNotification;
+    });
+    
+    $scope.getClass = function (notification){
+        if (!notification) return '';
+        switch (notification.type){
+            case NotificationsService.type.ERROR:
+                return 'danger';
+            case NotificationsService.type.SUCCESS:
+                return 'success';
+            case NotificationsService.type.WARNING:
+                return 'warning';
+            case NotificationsService.type.INFO:
+                return 'info';
+            default:
+                return 'success';
+        }
+    };
+
+    $scope.remove = function(notification) {
+        NotificationsService.remove(notification);
+    };
+}];
+
+angular.module('ev-fdm')
+    .controller('NotificationsController', NotificationsController);
+angular.module('ev-fdm')
+    .factory('SearchController', ['$rootScope', function($rootScope) {
+
+        function SearchController($scope) {
+            var self = this;
+
+            this.$scope = $scope;
+            this.$scope.filters = {};
+
+            this.$scope.filtersChanged = function() {
+                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
+            };
+        };
+
+        return SearchController;
+    }]);
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            return {
+                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var res = [],
+                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination.current_page < resources.pagination.total_pages) {
+                                result.more = true;
+                            }
+
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+             };
+        };
+    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -826,14 +1076,18 @@ angular.module('ev-fdm')
 }());
 'use strict';
 
-angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($rootScope, $state) {
+angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService', '$state', function ($rootScope, notificationsService, $state) {
     return {
         restrict: 'E',
         link: function(scope, element, attrs) {
 
             $rootScope.$on('$stateChangeStart', function(event, toState) {
-                if (!$state.current.name || toState.name.indexOf($state.current.name) !== 0) {
-                    element.addClass('state-resolving');
+                // not a tab changing
+                var dotX = $state.current.name.indexOf('.'),
+                     stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
+
+                if (!stateName || toState.name.indexOf(stateName) !== 0) {
+                    $('body').addClass('state-resolving');
                 }
             });
 
@@ -841,12 +1095,36 @@ angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($r
                 element.removeClass('state-resolving');
             });
 
+            /**
+             * When there is an error on a state change
+             *
+             * In your state config you can add the following.
+             * This will allows the router to fallback to this state on error
+             * while displaying the specified message
+
+                  fallback: {
+                    state: 'list',
+                    message: t('Unable to open this transaction!')
+                  }
+             */
             $rootScope.$on('$stateChangeError', function() {
-                element.removeClass('state-resolving');
+                $('body').removeClass('state-resolving');
+
+                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+                notificationsService.addError({
+                    text: errorMessage
+                });
+
+                // Redirect to the fallback we defined in our state
+                if(toState && toState.fallback && toState.fallback.state) {
+                  $state.go(toState.fallback.state);
+                }
             });
         }
     };
 }]);
+
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
         this.$get =function () {
@@ -1250,129 +1528,6 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            return {
-                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var res = [],
-                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination.current_page < resources.pagination.total_pages) {
-                                result.more = true;
-                            }
-
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-             };
-        };
-    }]);
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -1586,176 +1741,6 @@ angular.module('ev-fdm')
         return function(val) {
             return $sce.trustAsHtml(val);
         };
-    }]);
-angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
-
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
-            var self = this;
-
-            /*
-                Properties
-             */
-            this.$scope = $scope;
-            this.elementName = elementName;
-            this.elements = elements;
-            this.defaultSortKey = defaultSortKey;
-            this.defaultReverseSort = defaultReverseSort;
-            this.sortKey = this.defaultSortKey;
-            this.reverseSort = this.defaultReverseSort;
-
-            this.updateScope();
-
-            /*
-                Pagination method that should be called from the template
-             */
-            this.$scope.changePage = function(newPage) {
-                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Sort method that should be called from the template
-             */
-            this.$scope.sortChanged = function() {
-                self.sortKey = self.$scope.sortKey;
-                self.reverseSort = self.$scope.reverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Display an item by changing route
-             */
-            this.$scope.toggleDetailView = function(element) {
-
-                if(!element) {
-                    $state.go(self.elementName);
-                    return;
-                }
-
-                var id = restangular.configuration.getIdFromElem(element);
-
-                if(!id || $stateParams.id === id) {
-                    $state.go(self.elementName);
-                }
-                else {
-                    $state.go(self.elementName + '.view', {id: id});
-                }
-            };
-
-            /*
-                Update the view when filter are changed in the SearchController
-             */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            /*
-                When returning to the list state remove the active element
-             */
-            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
-                if(toState.name === self.elementName) {
-                    self.$scope.activeElement = null;
-                }
-            });
-
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-        }
-
-        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
-        };
-
-        ListController.prototype.updateScope = function () {
-            var self = this;
-
-            this.$scope[this.elementName] = this.elements;
-            this.$scope.currentPage = this.elements.pagination.current_page;
-            this.$scope.pageCount = this.elements.pagination.total_pages;
-            this.$scope.sortKey = this.sortKey;
-            this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
-            this.$scope.activeElement = null;
-
-            if(angular.isDefined($state.params.id)) {
-                angular.forEach(this.elements, function(element) {
-                    var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
-                        self.$scope.activeElement = element;
-                    }
-                });
-            }
-        };
-
-        return ListController;
-
-    }]);
-
-'use strict';
-
-var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
-    $scope.notifications = NotificationsService.list;
-    
-    $scope.$watch(function() {
-        return NotificationsService.activeNotification;
-    }, function() {
-        $scope.activeNotification = NotificationsService.activeNotification;
-    });
-    
-    $scope.getClass = function (notification){
-        if (!notification) return '';
-        switch (notification.type){
-            case NotificationsService.type.ERROR:
-                return 'danger';
-            case NotificationsService.type.SUCCESS:
-                return 'success';
-            case NotificationsService.type.WARNING:
-                return 'warning';
-            case NotificationsService.type.INFO:
-                return 'info';
-            default:
-                return 'success';
-        }
-    };
-
-    $scope.remove = function(notification) {
-        NotificationsService.remove(notification);
-    };
-}];
-
-angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);
-angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
-        function SearchController($scope) {
-            var self = this;
-
-            this.$scope = $scope;
-            this.$scope.filters = {};
-
-            this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
-
-        return SearchController;
     }]);
 'use strict';
 
@@ -2972,57 +2957,6 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
-angular.module('ev-fdm')
-  .directive('disableValidation', function() {
-    return {
-      require: '^form',
-      restrict: 'A',
-      link: function(scope, element, attrs, form) {
-        var control;
-
-        scope.$watch(attrs.disableValidation, function(value) {
-          if (!control) {
-            control = form[element.attr("name")];
-          }
-          if (value === false) {
-            form.$addControl(control);
-            angular.forEach(control.$error, function(validity, validationToken) {
-              form.$setValidity(validationToken, !validity, control);
-            });
-          } else {
-            form.$removeControl(control);
-          }
-        });
-      }
-    };
-  });
-
-angular.module('ev-fdm')
-.directive('strictMin', function() {
-    return {
-        require: 'ngModel',
-        link: function(scope, elm, attrs, ctrl) {
-
-            function validator(viewValue) {
-                var testedValue = parseFloat(viewValue),
-                    min = parseFloat(attrs.strictMin);
-
-                if(testedValue > min ) {
-                    ctrl.$setValidity('strictMin', true);
-                    return viewValue;
-                }
-                else {
-                    ctrl.$setValidity('strictMin', false);
-                    return undefined;
-                }
-
-            };
-
-            ctrl.$parsers.unshift(validator);
-            ctrl.$formatters.push(validator);
-        }
-    }
-});
 var module = angular.module('ev-fdm');
 
 /**
@@ -3321,3 +3255,54 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     return region;
 
 }]);
+angular.module('ev-fdm')
+  .directive('disableValidation', function() {
+    return {
+      require: '^form',
+      restrict: 'A',
+      link: function(scope, element, attrs, form) {
+        var control;
+
+        scope.$watch(attrs.disableValidation, function(value) {
+          if (!control) {
+            control = form[element.attr("name")];
+          }
+          if (value === false) {
+            form.$addControl(control);
+            angular.forEach(control.$error, function(validity, validationToken) {
+              form.$setValidity(validationToken, !validity, control);
+            });
+          } else {
+            form.$removeControl(control);
+          }
+        });
+      }
+    };
+  });
+
+angular.module('ev-fdm')
+.directive('strictMin', function() {
+    return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+
+            function validator(viewValue) {
+                var testedValue = parseFloat(viewValue),
+                    min = parseFloat(attrs.strictMin);
+
+                if(testedValue > min ) {
+                    ctrl.$setValidity('strictMin', true);
+                    return viewValue;
+                }
+                else {
+                    ctrl.$setValidity('strictMin', false);
+                    return undefined;
+                }
+
+            };
+
+            ctrl.$parsers.unshift(validator);
+            ctrl.$formatters.push(validator);
+        }
+    }
+});
