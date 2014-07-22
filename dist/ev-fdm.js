@@ -3448,7 +3448,7 @@ angular.module('ev-upload')
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
                     '<table style="width:100%"><tr><td style="width:114px">'+
-                            '<button type="button" class="btn ev-upload-clickable">' +
+                            '<button type="button" class="btn btn-default ev-upload-clickable">' +
                                 '{{ "Importer..." | i18n}}' +
                             '</button>' +
                         '</td>'+
