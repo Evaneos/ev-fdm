@@ -52,8 +52,13 @@ module.factory('sidonieRegion', function() {
         return this.panels.each.apply(this.panels, arguments);
     };
     Region.prototype.dismissAll = function(reason) {
+        // dismiss all panels except the first one
+        var i = 0;
         this.each(function(instance) {
-            instance.dismiss(reason);
+            if(i !== 0) {
+                instance.dismiss(reason);
+            }
+            i++;
         });
     };
     Region.prototype.last = function() {
