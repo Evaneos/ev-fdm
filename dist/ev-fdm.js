@@ -105,176 +105,6 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
 
 
 }]);
-angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
-
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
-            var self = this;
-
-            /*
-                Properties
-             */
-            this.$scope = $scope;
-            this.elementName = elementName;
-            this.elements = elements;
-            this.defaultSortKey = defaultSortKey;
-            this.defaultReverseSort = defaultReverseSort;
-            this.sortKey = this.defaultSortKey;
-            this.reverseSort = this.defaultReverseSort;
-
-            this.updateScope();
-
-            /*
-                Pagination method that should be called from the template
-             */
-            this.$scope.changePage = function(newPage) {
-                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Sort method that should be called from the template
-             */
-            this.$scope.sortChanged = function() {
-                self.sortKey = self.$scope.sortKey;
-                self.reverseSort = self.$scope.reverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Display an item by changing route
-             */
-            this.$scope.toggleDetailView = function(element) {
-
-                if(!element) {
-                    $state.go(self.elementName);
-                    return;
-                }
-
-                var id = restangular.configuration.getIdFromElem(element);
-
-                if(!id || $stateParams.id === id) {
-                    $state.go(self.elementName);
-                }
-                else {
-                    $state.go(self.elementName + '.view', {id: id});
-                }
-            };
-
-            /*
-                Update the view when filter are changed in the SearchController
-             */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            /*
-                When returning to the list state remove the active element
-             */
-            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
-                if(toState.name === self.elementName) {
-                    self.$scope.activeElement = null;
-                }
-            });
-
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-        }
-
-        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
-        };
-
-        ListController.prototype.updateScope = function () {
-            var self = this;
-
-            this.$scope[this.elementName] = this.elements;
-            this.$scope.currentPage = this.elements.pagination.current_page;
-            this.$scope.pageCount = this.elements.pagination.total_pages;
-            this.$scope.sortKey = this.sortKey;
-            this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
-            this.$scope.activeElement = null;
-
-            if(angular.isDefined($state.params.id)) {
-                angular.forEach(this.elements, function(element) {
-                    var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
-                        self.$scope.activeElement = element;
-                    }
-                });
-            }
-        };
-
-        return ListController;
-
-    }]);
-
-'use strict';
-
-var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
-    $scope.notifications = NotificationsService.list;
-    
-    $scope.$watch(function() {
-        return NotificationsService.activeNotification;
-    }, function() {
-        $scope.activeNotification = NotificationsService.activeNotification;
-    });
-    
-    $scope.getClass = function (notification){
-        if (!notification) return '';
-        switch (notification.type){
-            case NotificationsService.type.ERROR:
-                return 'danger';
-            case NotificationsService.type.SUCCESS:
-                return 'success';
-            case NotificationsService.type.WARNING:
-                return 'warning';
-            case NotificationsService.type.INFO:
-                return 'info';
-            default:
-                return 'success';
-        }
-    };
-
-    $scope.remove = function(notification) {
-        NotificationsService.remove(notification);
-    };
-}];
-
-angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);
-angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
-        function SearchController($scope) {
-            var self = this;
-
-            this.$scope = $scope;
-            this.$scope.filters = {};
-
-            this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
-
-        return SearchController;
-    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -1420,6 +1250,129 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            return {
+                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var res = [],
+                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination.current_page < resources.pagination.total_pages) {
+                                result.more = true;
+                            }
+
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+             };
+        };
+    }]);
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -1633,6 +1586,176 @@ angular.module('ev-fdm')
         return function(val) {
             return $sce.trustAsHtml(val);
         };
+    }]);
+angular.module('ev-fdm')
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+            var self = this;
+
+            /*
+                Properties
+             */
+            this.$scope = $scope;
+            this.elementName = elementName;
+            this.elements = elements;
+            this.defaultSortKey = defaultSortKey;
+            this.defaultReverseSort = defaultReverseSort;
+            this.sortKey = this.defaultSortKey;
+            this.reverseSort = this.defaultReverseSort;
+
+            this.updateScope();
+
+            /*
+                Pagination method that should be called from the template
+             */
+            this.$scope.changePage = function(newPage) {
+                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Sort method that should be called from the template
+             */
+            this.$scope.sortChanged = function() {
+                self.sortKey = self.$scope.sortKey;
+                self.reverseSort = self.$scope.reverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Display an item by changing route
+             */
+            this.$scope.toggleDetailView = function(element) {
+
+                if(!element) {
+                    $state.go(self.elementName);
+                    return;
+                }
+
+                var id = restangular.configuration.getIdFromElem(element);
+
+                if(!id || $stateParams.id === id) {
+                    $state.go(self.elementName);
+                }
+                else {
+                    $state.go(self.elementName + '.view', {id: id});
+                }
+            };
+
+            /*
+                Update the view when filter are changed in the SearchController
+             */
+            this.$scope.$on('common::filters.changed', function(event, filters) {
+                self.filters = filters;
+                self.sortKey = self.defaultSortKey;
+                self.defaultReverseSort = self.defaultReverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            /*
+                When returning to the list state remove the active element
+             */
+            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
+                if(toState.name === self.elementName) {
+                    self.$scope.activeElement = null;
+                }
+            });
+
+            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+        }
+
+        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
+            var self = this;
+            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                self.elements = elements;
+                self.updateScope();
+            });
+        };
+
+        ListController.prototype.updateScope = function () {
+            var self = this;
+
+            this.$scope[this.elementName] = this.elements;
+            this.$scope.currentPage = this.elements.pagination.current_page;
+            this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.sortKey = this.sortKey;
+            this.$scope.reverseSort = this.reverseSort;
+            this.$scope.selectedElements = [];
+            this.$scope.activeElement = null;
+
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if(elementId === $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
+        };
+
+        return ListController;
+
+    }]);
+
+'use strict';
+
+var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
+    $scope.notifications = NotificationsService.list;
+    
+    $scope.$watch(function() {
+        return NotificationsService.activeNotification;
+    }, function() {
+        $scope.activeNotification = NotificationsService.activeNotification;
+    });
+    
+    $scope.getClass = function (notification){
+        if (!notification) return '';
+        switch (notification.type){
+            case NotificationsService.type.ERROR:
+                return 'danger';
+            case NotificationsService.type.SUCCESS:
+                return 'success';
+            case NotificationsService.type.WARNING:
+                return 'warning';
+            case NotificationsService.type.INFO:
+                return 'info';
+            default:
+                return 'success';
+        }
+    };
+
+    $scope.remove = function(notification) {
+        NotificationsService.remove(notification);
+    };
+}];
+
+angular.module('ev-fdm')
+    .controller('NotificationsController', NotificationsController);
+angular.module('ev-fdm')
+    .factory('SearchController', ['$rootScope', function($rootScope) {
+
+        function SearchController($scope) {
+            var self = this;
+
+            this.$scope = $scope;
+            this.$scope.filters = {};
+
+            this.$scope.filtersChanged = function() {
+                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
+            };
+        };
+
+        return SearchController;
     }]);
 'use strict';
 
@@ -2849,129 +2972,6 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            return {
-                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var res = [],
-                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination.current_page < resources.pagination.total_pages) {
-                                result.more = true;
-                            }
-
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-             };
-        };
-    }]);
 angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
@@ -3448,7 +3448,7 @@ angular.module('ev-upload')
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
                     '<table style="width:100%"><tr><td style="width:114px">'+
-                            '<button type="button" class="btn ev-upload-clickable">' +
+                            '<button type="button" class="btn btn-default ev-upload-clickable">' +
                                 '{{ "Importer..." | i18n}}' +
                             '</button>' +
                         '</td>'+
