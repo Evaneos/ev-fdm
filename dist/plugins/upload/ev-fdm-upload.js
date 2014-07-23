@@ -176,7 +176,6 @@ angular.module('ev-upload')
                     var progress = null;
 
                     var clickableZone = elem.find('.ev-upload-clickable')[0];
-                    console.log(clickableZone);
 
                     function getBytes (status) {
                         return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
