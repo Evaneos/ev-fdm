@@ -315,6 +315,8 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                 return false;
             }
 
+            // Contains the panel 'depth'
+            options.depth = rightRegion.panels.size();
             instance = createInstance(rightRegion, options);
 
             // attach some variables to the instance

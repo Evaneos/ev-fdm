@@ -127,7 +127,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     }
 
     function createPlaceholder(depth) {
-        var isMain = depth === 1;
+        var isMain = depth === 0;
         return angular.element('<div ' +
             'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
             'style="z-index:' + (2000 + depth) + ';"></div>');
@@ -155,7 +155,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             // return $timeout(checkStackingThrottled);
         },
         open: function(instance, options) {
-            instance.$$depth = region.panels.size();
+            instance.$$depth = options.depth;
             var el = createPlaceholder(instance.$$depth);
             var inner = createPanelView(instance, options);
             el.html(inner);
