@@ -1,46 +1,56 @@
 /**
- * Common Application
+ * Core Application
  */
 
 // Angular depedencies for this app
-var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
-        'ui.bootstrap.tooltip','ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap',
-        'restangular']);
+angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
+        'ui.bootstrap.tooltip', 'ui.bootstrap.popover', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model',
+        'ui.bootstrap', 'restangular'])
 
 
 // configure the loading bar to be displayed
 // just beneath the menu
-commonModule.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
+.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.parentSelector = '#lisette-menu';
-}]);
+}])
 
-commonModule.config(['$tooltipProvider', function($tooltipProvider) {
+.config(['$tooltipProvider', function($tooltipProvider) {
     $tooltipProvider.options({
         placement: 'bottom',
         popupDelay: 100
     });
-}]);
+    $tooltipProvider.setTriggers({
+        'mouseenter': 'mouseleave',
+        'click': 'click',
+        'focus': 'blur',
+        'never': 'mouseleave',
+
+        // Custom event, the tooltip appears when the element has the focus, and disappear when a key
+        // in pressed (or the element has blurred).
+        'focus-not-typing': 'blur-or-typing'
+    });
+}])
 
 /**
  * Define a default error state for our app
  */
-commonModule.config(['$stateProvider', function($stateProvider) {
+.config(['$stateProvider', function($stateProvider) {
     $stateProvider.state('ev-error', {
         templateUrl: 'ev-error.phtml'
     });
-}]);
+}])
 
-commonModule.config(['RestangularProvider', function(restangularProvider) {
+.config(['RestangularProvider', function(restangularProvider) {
 
-}]);
+}])
 
 
 // ----------------------------------------------------
 // ATTACH TO MODULE
 // ----------------------------------------------------
 
-commonModule.run(['$rootScope', '$state', '$location', 'uiSelect2Config', function($rootScope,
+.run(['$rootScope', '$state', '$location', 'uiSelect2Config', function($rootScope,
         $state, $location, uiSelect2Config) {
 
     // defaults for select2
@@ -50,15 +60,6 @@ commonModule.run(['$rootScope', '$state', '$location', 'uiSelect2Config', functi
 
     // language for the user OR navigator language OR english
     window.moment.lang([window.navigator.language, 'en']);
-
-    /*if (evaneos._frontData) {
-        var scopeKeys = evaneos.frontData('__scopeKeys');
-        _(scopeKeys).each(function(key) {
-            $rootScope[key] = evaneos.frontData(key);
-        });
-    }
-    */
-
 
 }]);
 
@@ -1405,6 +1406,27 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('popover', function () {
+        	return {
+        		restrict: 'A',
+				link: function ($scope, elem, attrs) {
+                    elem.bind('focus', function () {
+                        elem.triggerHandler('focus-not-typing');
+                    });
+					elem.bind('blur', function () {
+                        elem.triggerHandler('blur-or-typing');
+                    });
+                    elem.bind('keypress', function () {
+                        elem.triggerHandler('blur-or-typing');
+                    });
+				}
+        	};
+        });
+}) ();
+
 'use strict';
 
 function FilterServiceFactory($rootScope, $timeout) {
