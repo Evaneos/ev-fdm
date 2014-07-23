@@ -29,9 +29,9 @@ module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeo
     return {
         restrict: 'A',
         scope: false,
-        // replace: true,
-        // transclude: true,
-        // templateUrl: 'panels/right-window.phtml',
+        replace: true,
+        transclude: true,
+         templateUrl: 'panels/right-window.phtml',
         link: function(scope, element, attrs) {
             var inner = element.find('.panel-inner');
             element.resizable({
@@ -134,9 +134,8 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     }
 
     function createPanelView(instance, options) {
-        var inner = angular.element(options.content);
-        inner.attr('style', getStylesFromCache(instance, options));
-        inner.attr('right-panel-window', true);
+        var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
+        inner.html(options.content);
         options.scope.panelClass = options.panelClass;
         return $compile(inner)(options.scope);
     }
