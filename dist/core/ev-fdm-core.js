@@ -845,6 +845,32 @@ var module = angular.module('ev-fdm')
             }
     };
 }]);
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('popover', ['$timeout', function ($timeout) {
+        	return {
+        		restrict: 'A',
+				link: function ($scope, elem, attrs) {
+                    var showTimeout;
+                    elem.bind('focus', function () {
+                        elem.triggerHandler('focus-not-typing');
+                    });
+					elem.bind('blur', function () {
+                        elem.triggerHandler('blur-or-typing');
+                    });
+                    elem.bind('keypress', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                        showTimeout = $timeout(function () {
+                            elem.triggerHandler('focus-not-typing');
+                        }, 1000);
+                    });
+				}
+        	};
+        }]);
+}) ();
+
 /**
  * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
  * + Supports empty lists by displaying a message (promise-empty)
@@ -1406,27 +1432,6 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('popover', function () {
-        	return {
-        		restrict: 'A',
-				link: function ($scope, elem, attrs) {
-                    elem.bind('focus', function () {
-                        elem.triggerHandler('focus-not-typing');
-                    });
-					elem.bind('blur', function () {
-                        elem.triggerHandler('blur-or-typing');
-                    });
-                    elem.bind('keypress', function () {
-                        elem.triggerHandler('blur-or-typing');
-                    });
-				}
-        	};
-        });
-}) ();
-
 'use strict';
 
 function FilterServiceFactory($rootScope, $timeout) {
