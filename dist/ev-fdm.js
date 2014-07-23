@@ -234,129 +234,6 @@ angular.module('ev-fdm')
     }]);
 'use strict';
 
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            return {
-                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var res = [],
-                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination.current_page < resources.pagination.total_pages) {
-                                result.more = true;
-                            }
-
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-             };
-        };
-    }]);
-'use strict';
-
 angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
@@ -1528,6 +1405,129 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            return {
+                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var res = [],
+                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination.current_page < resources.pagination.total_pages) {
+                                result.more = true;
+                            }
+
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+             };
+        };
+    }]);
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -3306,6 +3306,101 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     return region;
 
 }]);
+angular.module('ev-leaflet', ['leaflet-directive'])
+    .provider('evLeaflet', function() {
+        this.$get =function () {
+            return {icons: this.icons};
+        };
+
+        this.setIcons =function (icons) {
+            this.icons = icons;
+        };
+    })
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
+        return {
+            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
+            restrict: 'AE',
+            scope: {
+                coordinate: '=',
+                editable: '='
+            },
+            controller:function ($scope) {
+
+                // Icons settings
+                var baseIcon = {
+                    iconSize:   [40, 40],
+                    shadowSize: [1, 1],
+                    iconAnchor: [1, 20]
+                };
+
+                var icons = evLeaflet.icons;
+
+                if ('default' in icons) {
+                    angular.extend(icons.default, baseIcon);
+                }
+                if ('draggable' in icons) {
+                    angular.extend(icons.draggable, baseIcon);
+                }
+
+
+                $scope.defaults = {
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false
+                };
+
+                // Setting a marker in location
+                $scope.markers = {
+                    marker: {
+                        focus: true
+                    }
+                };
+                centerOnMarker();
+
+                // Double binding between coordinate and marker's position
+                $scope.$watch('coordinate.latitude', function (lat) {
+                    if(isNaN(lat)) {
+                        lat = 0;
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+                    $scope.markers.marker.lat = lat;
+                    centerOnMarker();
+                });
+
+                $scope.$watch('coordinate.longitude', function (lng) {
+                    if(isNaN(lng)) {
+                        lng = 0;
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+                    $scope.markers.marker.lng = lng;
+                    centerOnMarker();
+                });
+
+                $scope.$watch('markers.marker.lat', function (lat) {
+                    $scope.coordinate.latitude = lat;
+                });
+
+                $scope.$watch('markers.marker.lng', function (lng) {
+                    $scope.coordinate.longitude = lng;
+                });
+
+                // Setting map center
+                function centerOnMarker() {
+                    $scope.center = {
+                        lat: $scope.markers.marker.lat,
+                        lng: $scope.markers.marker.lng,
+                        zoom: 8
+                    };
+                }
+
+                $scope.$watch('editable', function () {
+                    var edited = $scope.editable;
+                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
+                    $scope.markers.marker.draggable = edited;
+                });
+            }
+        };
+    }]);
+
 (function () {
     'use strict';
     angular.module('ev-upload', ['ev-fdm']);
@@ -3458,7 +3553,6 @@ angular.module('ev-upload')
     */
 
         var BASE_CONFIG = {
-            clickable: '.ev-upload-clickable',
             previewTemplate: false,
             previewsContainer: false,
             autoQueue: true,
@@ -3484,6 +3578,8 @@ angular.module('ev-upload')
                     var dropzone = null;
                     var progress = null;
 
+                    var clickableZone = elem.find('.ev-upload-clickable')[0];
+                    console.log(clickableZone);
 
                     function getBytes (status) {
                         return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
@@ -3500,7 +3596,8 @@ angular.module('ev-upload')
                         if (dropzone !== null) {
                             dropzone.destroy();
                         }
-                        dropzone = new Dropzone(elem[0], angular.extend(BASE_CONFIG, settings));
+                        settings = angular.extend(BASE_CONFIG, settings);
+                        dropzone = new Dropzone(elem[0], angular.extend({clickable: clickableZone}, settings));
                         // the promise for the whole upload
 
                         $scope.currentUpload = null;
@@ -3575,99 +3672,4 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-angular.module('ev-leaflet', ['leaflet-directive'])
-    .provider('evLeaflet', function() {
-        this.$get =function () {
-            return {icons: this.icons};
-        };
-
-        this.setIcons =function (icons) {
-            this.icons = icons;
-        };
-    })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
-        return {
-            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
-            restrict: 'AE',
-            scope: {
-                coordinate: '=',
-                editable: '='
-            },
-            controller:function ($scope) {
-
-                // Icons settings
-                var baseIcon = {
-                    iconSize:   [40, 40],
-                    shadowSize: [1, 1],
-                    iconAnchor: [1, 20]
-                };
-
-                var icons = evLeaflet.icons;
-
-                if ('default' in icons) {
-                    angular.extend(icons.default, baseIcon);
-                }
-                if ('draggable' in icons) {
-                    angular.extend(icons.draggable, baseIcon);
-                }
-
-
-                $scope.defaults = {
-                    scrollWheelZoom: false,
-                    doubleClickZoom: false
-                };
-
-                // Setting a marker in location
-                $scope.markers = {
-                    marker: {
-                        focus: true
-                    }
-                };
-                centerOnMarker();
-
-                // Double binding between coordinate and marker's position
-                $scope.$watch('coordinate.latitude', function (lat) {
-                    if(isNaN(lat)) {
-                        lat = 0;
-                        $log.warn('ev-leaflet: latitude is not a number');
-                    }
-                    $scope.markers.marker.lat = lat;
-                    centerOnMarker();
-                });
-
-                $scope.$watch('coordinate.longitude', function (lng) {
-                    if(isNaN(lng)) {
-                        lng = 0;
-                        $log.warn('ev-leaflet: longitude is not a number');
-                    }
-                    $scope.markers.marker.lng = lng;
-                    centerOnMarker();
-                });
-
-                $scope.$watch('markers.marker.lat', function (lat) {
-                    $scope.coordinate.latitude = lat;
-                });
-
-                $scope.$watch('markers.marker.lng', function (lng) {
-                    $scope.coordinate.longitude = lng;
-                });
-
-                // Setting map center
-                function centerOnMarker() {
-                    $scope.center = {
-                        lat: $scope.markers.marker.lat,
-                        lng: $scope.markers.marker.lng,
-                        zoom: 8
-                    };
-                }
-
-                $scope.$watch('editable', function () {
-                    var edited = $scope.editable;
-                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
-                    $scope.markers.marker.draggable = edited;
-                });
-            }
-        };
-    }]);
-
 //# sourceMappingURL=ev-fdm.js.map
