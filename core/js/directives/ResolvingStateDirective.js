@@ -31,7 +31,7 @@ angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService'
                     message: t('Unable to open this transaction!')
                   }
              */
-            $rootScope.$on('$stateChangeError', function() {
+            $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
                 $('body').removeClass('state-resolving');
 
                 var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
