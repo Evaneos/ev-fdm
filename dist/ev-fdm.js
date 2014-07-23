@@ -857,6 +857,7 @@ var module = angular.module('ev-fdm')
                         elem.triggerHandler('focus-not-typing');
                     });
 					elem.bind('blur', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
                         elem.triggerHandler('blur-or-typing');
                     });
                     elem.bind('keypress', function () {
