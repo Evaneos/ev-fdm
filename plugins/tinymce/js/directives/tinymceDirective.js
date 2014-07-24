@@ -1,4 +1,4 @@
-angular.module('ev-tinymce')
+angular.module('ev-tinymce', ['ui.tinymce'])
     .directive('evTinymce', [function () {
         return {
             template: '<textarea ui-tinymce="options" ng-model="model"></textarea>',
