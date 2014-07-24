@@ -29,6 +29,9 @@
     "angular-leaflet-directive": "~0.7.7",
 
 
-    "dropzone": "~3.10.2"
+    "dropzone": "~3.10.2",
+
+
+    "angular-ui-tinymce": "~0.0.5"
   }
 }
