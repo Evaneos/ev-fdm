@@ -74,7 +74,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     }
 
     function getStylesFromCache(instance, options) {
-        var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
+        var savedWidth = stylesCache[options.panelName];
         if (savedWidth)
             return 'width: ' + savedWidth + 'px;';
         else
@@ -134,7 +134,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     }
 
     function createPanelView(instance, options) {
-        var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
+        var inner = angular.element('<div right-panel-window style="' + getStylesFromCache(instance, options) + '"></div>');
         inner.html(options.content);
         options.scope.panelClass = options.panelClass;
         return $compile(inner)(options.scope);
@@ -166,7 +166,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 region.updateStacking();
             });
             el.on('resize', function(event, ui) {
-                stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
+                stylesCache[options.panelName] = ui.size.width;
                 region.updateStacking();
             });
             region.updateStacking();
@@ -175,7 +175,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         replace: function(fromInstance, toInstance, options) {
             if (typeof(els[fromInstance.$$id]) != 'undefined') {
                 var el = els[fromInstance.$$id];
-                toInstance.$$depth = region.panels.size() - 1;
+                toInstance.$$depth = options.depth - 1;
                 var inner = createPanelView(toInstance, options);
                 el.html(inner);
                 els[toInstance.$$id] = el;
