@@ -3541,7 +3541,7 @@ angular.module('ev-upload')
                             function error () {
                                 NotificationsService.add({
                                     type: NotificationsService.type.WARNING,
-                                    text: 'Erreur lors de l\'upload d\'image'
+                                    text: 'Certaines images n\'ont pas pu être uploadées.'
                                 });
                             },
                             function onNotify (progress) {
