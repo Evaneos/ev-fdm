@@ -1,3 +1,8 @@
+(function () {
+    'use strict';
+    angular.module('ev-tinymce', ['ui.tinymce']);
+}) ();
+
 angular.module('ev-tinymce')
     .directive('evTinymce', [function () {
         return {
