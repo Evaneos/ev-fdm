@@ -3452,7 +3452,7 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                 options: '=',
                 model: '=ngModel'
             },
-            controller: function ($scope) {
+            controller: ['$scope', function($scope) {
                 var options = {
                     menubar: false,
                     statusbar: false,
@@ -3466,7 +3466,7 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                 }
 
                 $scope.options = options;
-            }
+            }]
         };
     }]);
 
