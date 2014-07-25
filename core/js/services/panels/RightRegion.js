@@ -75,10 +75,11 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
 
     function getStylesFromCache(instance, options) {
         var savedWidth = stylesCache[options.panelName];
-        if (savedWidth)
+        if (savedWidth) {
             return 'width: ' + savedWidth + 'px;';
-        else
-            return '';
+        }
+
+        return '';
     }
 
     function stack(fromInstanceIndex) {
@@ -99,15 +100,20 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
 
     function checkStacking() {
         var maxWidth = $(window).innerWidth() - 100;
+
         for (var i = 0; i < region.panels.size(); i++) {
             var j = 0;
             var totalWidth = _(region.panels).reduce(function(memo, instance) {
-                if (j++ < i)
+                if (j++ < i){
                     return memo + STACKED_WIDTH;
-                else {
+                } else {
                     var el = getEl(instance);
-                    if (!el) return memo;
-                    if (instance.$$stacked) return memo + instance.$$actualWidth;
+                    if (!el) {
+                        return memo;
+                    }
+                    if (instance.$$stacked) {
+                        return memo + instance.$$actualWidth;
+                    }
                     var width = el.outerWidth();
                     if (width < 50) {
                         // most probably before animation has finished landing
@@ -140,10 +146,50 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         return $compile(inner)(options.scope);
     }
 
+    /**
+     * Whenever a layout is changed
+     */
+    function updateLayout() {
+        updateMainPanelWidth();
+    }
+
+    /**
+     * Update the main panel width based on other panels sizes
+     */
+    function updateMainPanelWidth() {
+        var windowWidth = $(window).innerWidth();
+
+        // We calculate the panels width (expect the main one)
+        var panels = _(region.panels).toArray().slice(1);
+        var panelsWidth = _(panels).reduce(function(memo, instance) {
+
+            var el = getEl(instance);
+            if (!el) {
+                return memo;
+            }
+            if (instance.$$stacked) {
+                return memo + instance.$$actualWidth;
+            }
+            var width = el.outerWidth();
+            if (width < 50) {
+                // most probably before animation has finished landing
+                // we neeed to anticipate a final w
+                return memo + 300;
+            } else {
+                return memo + width;
+            }
+        }, 0);
+
+        var mainPanel = _(region.panels).first();
+        var mainPanelElement = getEl(mainPanel);
+        var mainPanelWidth = windowWidth - panelsWidth;
+        mainPanelElement.innerWidth(mainPanelWidth + 'px');
+    }
+
     var checkStackingThrottled = _(checkStacking).debounce(50);
 
     $(window).on('resize', function() {
-        region.updateStacking();
+        region.updateLayout();
     });
 
     var stylesCache = window.stylesCache = {};
@@ -151,8 +197,9 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     var panelZero = container.find('.panel-zero');
 
     var region = sidonieRegion.create(true, {
-        updateStacking: function() {
+        updateLayout: function() {
             // return $timeout(checkStackingThrottled);
+            updateLayout();
         },
         open: function(instance, options) {
             instance.$$depth = options.depth;
@@ -163,13 +210,13 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             $animate.enter(el, container, panelZero, function() {
                 options.scope.$emit('animation-complete');
                 $rootScope.$broadcast('module-layout-changed');
-                region.updateStacking();
+                region.updateLayout();
             });
             el.on('resize', function(event, ui) {
                 stylesCache[options.panelName] = ui.size.width;
-                region.updateStacking();
+                region.updateLayout();
             });
-            region.updateStacking();
+            region.updateLayout();
             return instance;
         },
         replace: function(fromInstance, toInstance, options) {
@@ -180,7 +227,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 el.html(inner);
                 els[toInstance.$$id] = el;
                 delete els[fromInstance.$$id];
-                region.updateStacking();
+                region.updateLayout();
                 return toInstance;
             } else {
                 return region.open(toInstance, options);
@@ -191,9 +238,9 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 var el = els[instance.$$id];
                 $animate.leave(el, function() {
                     delete els[instance.$$id];
-                    region.updateStacking();
+                    region.updateLayout();
                 });
-                region.updateStacking();
+                region.updateLayout();
             }
         }
     });
