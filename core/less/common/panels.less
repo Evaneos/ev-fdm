@@ -11,17 +11,21 @@
             display: none;
         }
 
-        > .panel .table-container {
-             // position: absolute;
-             top: 0;
-             left: 0;
-             right: 0;
-             bottom: 0;
-             overflow-y: auto;
-             overflow-x: hidden;
+        > .panel {
 
-            // TODO change this hardcoded value
-             left: 266px;
+            > .panel-inner {
+                border-left: none;
+            }
+
+            .table-container {
+                 position: absolute;
+                 top: 0;
+                 left: 0;
+                 right: 0;
+                 bottom: 0;
+                 overflow-y: auto;
+                 overflow-x: hidden;
+            }
         }
     }
 
@@ -49,6 +53,11 @@
             border-right: 7px solid @gray-lighter;
             overflow-x: hidden;
             overflow-y: hidden;
+
+            // ui-view
+            > div {
+                height: 100%;
+            }
 
             /*********************************************************
              * HEADER
