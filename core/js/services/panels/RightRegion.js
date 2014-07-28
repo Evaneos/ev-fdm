@@ -2,7 +2,7 @@ var module = angular.module('ev-fdm');
 
 module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
 
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
+    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000 ];
 
     function getBPMatching(width) {
         var breakp, index;

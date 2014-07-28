@@ -103,20 +103,37 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
     // identifies all panels
     var currentId = 1;
 
-    var openingTypes = {
-        PUSH    : 1,       // Creates a new panel after the others
-        REPLACE : 2        // Replace the panel if it already exists, and dismiss its children
-    };
-    var defaultOpeningType = openingTypes.PUSH;
-
     function parseOptions(options) {
         if (!options.template && !options.templateUrl && !options.content) {
             throw new Error('Should define options.template or templateUrl or content');
         }
 
-        if (!openingTypes[options.openingType]){
-            options.openingType = defaultOpeningType;
+        // Retrieve the last panel
+        var last = rightRegion.last();
+
+        /**
+         * Parse the opening options (replace or pushFrom)
+         */
+        if(options.replace) {
+            if(angular.isString(options.replace)) {
+                options.replace = getPanel(options.replace);
+            } else if(options.replace === true) {
+                options.replace = last;
+            }
+        } else if (options.pushFrom) {
+            if(angular.isString(options.pushFrom)) {
+                options.pushFrom = getPanel(options.pushFrom);
+            }
+
+            if(options.pushFrom !== null && options.pushFrom != last) {
+                options.replace = rightRegion.getNext(options.pushFrom);
+            }
         }
+
+        if(!options.replace && !options.pushFrom) {
+            options.pushFrom = last;
+        }
+
         options.panelName = options.panelClass || '';
 
         options.panelClass = options.panelClass || '';
@@ -261,9 +278,11 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
     }
 
     function getPanel (panelName){
-        var panel = rightRegion.panels.where({panelName:panelName});
-        if(panel) return _(panel).last();
-        return null;
+        var panel = rightRegion.panels.find(function(_panel) {
+            return _panel.panelName === panelName;
+        });
+
+        return panel || null;
     }
     function hasPanel (panelName){
         return getPanel(panelName) != null;
@@ -271,48 +290,40 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
 
 
     return {
-        OPENING_TYPE : openingTypes,
         getPanel : getPanel,
         hasPanel : hasPanel,
         /**
-         * @param {String} regionName
-         * @param {Mixed} options
-         *     {Mixed} template / templateUrl / content
-         *     (optional) {String} controller
-         *     (optional) {Mixed} scope
-         *     (optional) {Object} resolve
-         *     (optional) {String} panelClass
-         *     (optional) {Boolean} push: if the region is push enabled, open
-         *         a popup on top of the latest one
-         *     (optional) {PanelInstance} pushFrom: if the region is push enabled, open
-         *         a popup on top of that instance (and close existing children)
+         * @param {Object} options
+         *        - {Mixed} template / templateUrl / content
+         *        - (optional) {String} controller
+         *        - (optional) {Mixed} scope
+         *        - (optional) {Object} resolve
+         *        - (optional) {String} panelClass
+         *        - (optional) {Mixed} pushFrom :
+         *                            + {String} : the panel name
+         *                            + {Object} : the panel instance
+         *        - (optional) {Mixed} replaceAt :
+         *                            + {String} : the panel name
+         *                            + {Object} : the panel instance
+         *                            + {Boolean}: if true replace the last panel
+         *
+         * @return {Object} The panel instance or null if something wrong occured
          */
         open: function(options) {
             options = parseOptions(options);
 
-            var last = rightRegion.last ();
             var instance;
 
-            if (options.push && !options.pushFrom) {
-                options.pushFrom = last;
-            }
-            if (options.pushFrom && options.pushFrom != last) {
-                options.replace = rightRegion.getNext(options.pushFrom);
-                if (options.replace) {
-                    var result = dismissChildren(rightRegion, options.replace, 'parent replaced');
-                    // some child might have canceled the close
-                    if (!result) {
-                        return false;
-                    }
+            if (options.replace) {
+                var result = dismissChildren(rightRegion, options.replace, 'parent replaced');
+                // some child might have canceled the close
+                if (!result) {
+                    return null;
                 }
             }
 
-            if (!(rightRegion.hasPush && options.push) && !rightRegion.isEmpty()) {
-                options.replace = last;
-            }
-
             if (options.replace && options.replace.isBlocked()) {
-                return false;
+                return null;
             }
 
             // Contains the panel 'depth'
