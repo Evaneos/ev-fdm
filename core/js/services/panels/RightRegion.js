@@ -66,7 +66,8 @@ module.directive('rightPanelWindow', [ '$timeout', '$rootScope', 'rightRegion', 
 
 module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
 
-    var STACKED_WIDTH = 15;
+    var STACKED_WIDTH = 75;
+    var MAIN_PANEL_MIN_WIDTH = 600;
     var els = {};
 
     function getEl(instance) {
@@ -86,24 +87,40 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         return '';
     }
 
-    function stack(fromInstanceIndex) {
-        for (var i = 0; i < region.panels.size(); i++) {
-            var shouldStack = (i < fromInstanceIndex);
-            var instance = region.at(i);
+    /**
+     * Stack/unstack all panels from a given instance index
+     * Example:
+     *     index: 2, then the panels 0,1 and 2 will be stacked
+     * @param  {int} instanceIndex index
+     */
+    function stackPanelsFrom(instanceIndex, shouldStack) {
+        var panelsSize = region.panels.size();
+
+        if(instanceIndex > panelsSize) {
+            return false;
+        }
+
+        for (; instanceIndex >= 0; instanceIndex--) {
+            var instance = region.at(instanceIndex);
             var el = getEl(instance);
-            if (instance.$$stacked && !shouldStack) {
+            if (!shouldStack) {
                 delete instance.$$actualWidth;
                 $animate.removeClass(el, 'stacked');
-            } else if (!instance.$$stacked && shouldStack) {
+            } else if (shouldStack) {
                 instance.$$actualWidth = getEl(instance).outerWidth();
                 $animate.addClass(el, 'stacked');
             }
             instance.$$stacked = shouldStack;
         }
+
+        return true;
     }
 
+    /**
+     * Check if there is some panels to stack
+     */
     function checkStacking() {
-        var maxWidth = $(window).innerWidth() - 100;
+        var maxWidth = $(window).innerWidth();
 
         for (var i = 0; i < region.panels.size(); i++) {
             var j = 0;
@@ -119,21 +136,21 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                         return memo + instance.$$actualWidth;
                     }
                     var width = el.outerWidth();
-                    if (width < 50) {
-                        // most probably before animation has finished landing
-                        // we neeed to anticipate a final w
-                        return memo + 300;
-                    } else {
+                    // if (width < 50) {
+                    //     // most probably before animation has finished landing
+                    //     // we neeed to anticipate a final w
+                    //     return memo + 300;
+                    // } else {
                         return memo + width;
-                    }
+                    // }
                 }
             }, 0);
-            if (totalWidth < maxWidth) {
-                return stack(i);
+            if (totalWidth > maxWidth) {
+                return stackPanelsFrom(i, true);
             }
         }
         // stack all
-        stack(region.panels.size() - 1);
+        // stackPanelsFrom(region.panels.size() - 1);
     }
 
     function createPlaceholder(depth) {
@@ -189,7 +206,12 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         var mainPanelElement = getEl(mainPanel);
         var mainPanelWidth = windowWidth - panelsWidth;
         if(mainPanelElement !== null) {
-            mainPanelElement.innerWidth(mainPanelWidth + 'px');
+            if(mainPanelWidth < MAIN_PANEL_MIN_WIDTH) {
+                stackPanelsFrom(0, true);
+            } else {
+                stackPanelsFrom(0, false);
+                mainPanelElement.innerWidth(mainPanelWidth + 'px');
+            }
         }
     }
 
