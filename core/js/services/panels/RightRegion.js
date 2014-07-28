@@ -1,6 +1,6 @@
 var module = angular.module('ev-fdm');
 
-module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
+module.directive('rightPanelWindow', [ '$timeout', '$rootScope', 'rightRegion', function($timeout, $rootScope, rightRegion) {
 
     var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000 ];
 
@@ -39,20 +39,24 @@ module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeo
                 resize: function(event, ui) {
                     var bp = getBPMatching(inner.outerWidth());
                     applyBPAttribute(element, bp);
+                    rightRegion.updateLayout();
                     $rootScope.$broadcast('panel-resized', element);
                 }
             });
             $(window).on('resize', function(event) {
                 var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
+                rightRegion.updateLayout();
             });
             scope.$on('animation-complete', function() {
                 var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
+                rightRegion.updateLayout();
             });
             $timeout(function() {
                 var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
+                rightRegion.updateLayout();
                 // focus a freshly-opened modal
                 element[0].focus();
             });
@@ -171,19 +175,21 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 return memo + instance.$$actualWidth;
             }
             var width = el.outerWidth();
-            if (width < 50) {
-                // most probably before animation has finished landing
-                // we neeed to anticipate a final w
-                return memo + 300;
-            } else {
+            // if (width < 50) {
+            //     // most probably before animation has finished landing
+            //     // we neeed to anticipate a final w
+            //     return memo + 300;
+            // } else {
                 return memo + width;
-            }
+            // }
         }, 0);
 
         var mainPanel = _(region.panels).first();
         var mainPanelElement = getEl(mainPanel);
         var mainPanelWidth = windowWidth - panelsWidth;
-        mainPanelElement.innerWidth(mainPanelWidth + 'px');
+        if(mainPanelElement !== null) {
+            mainPanelElement.innerWidth(mainPanelWidth + 'px');
+        }
     }
 
     var checkStackingThrottled = _(checkStacking).debounce(50);
@@ -199,7 +205,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     var region = sidonieRegion.create(true, {
         updateLayout: function() {
             // return $timeout(checkStackingThrottled);
-            updateLayout();
+            _(updateLayout()).debounce(50);
         },
         open: function(instance, options) {
             instance.$$depth = options.depth;
@@ -216,7 +222,6 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 stylesCache[options.panelName] = ui.size.width;
                 region.updateLayout();
             });
-            region.updateLayout();
             return instance;
         },
         replace: function(fromInstance, toInstance, options) {
@@ -227,7 +232,6 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 el.html(inner);
                 els[toInstance.$$id] = el;
                 delete els[fromInstance.$$id];
-                region.updateLayout();
                 return toInstance;
             } else {
                 return region.open(toInstance, options);
@@ -240,7 +244,6 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                     delete els[instance.$$id];
                     region.updateLayout();
                 });
-                region.updateLayout();
             }
         }
     });
