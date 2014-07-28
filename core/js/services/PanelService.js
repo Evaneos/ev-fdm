@@ -134,9 +134,9 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             options.pushFrom = last;
         }
 
-        options.panelName = options.panelClass || '';
+        options.panelName = options.panelName || '';
 
-        options.panelClass = options.panelClass || '';
+        options.panelClass = options.panelName || '';
         options.panelClass += ' right';
 
         options.resolve = options.resolve || {};
@@ -298,7 +298,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
          *        - (optional) {String} controller
          *        - (optional) {Mixed} scope
          *        - (optional) {Object} resolve
-         *        - (optional) {String} panelClass
+         *        - (optional) {String} panelName
          *        - (optional) {Mixed} pushFrom :
          *                            + {String} : the panel name
          *                            + {Object} : the panel instance
