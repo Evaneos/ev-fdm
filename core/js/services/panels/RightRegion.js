@@ -155,6 +155,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
      */
     function updateLayout() {
         updateMainPanelWidth();
+        $rootScope.$broadcast('module-layout-changed');
     }
 
     /**
@@ -215,7 +216,6 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             els[instance.$$id] = el;
             $animate.enter(el, container, panelZero, function() {
                 options.scope.$emit('animation-complete');
-                $rootScope.$broadcast('module-layout-changed');
                 region.updateLayout();
             });
             el.on('resize', function(event, ui) {
