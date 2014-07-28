@@ -205,7 +205,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
 
     var region = sidonieRegion.create(true, {
         updateLayout: function() {
-            // return $timeout(checkStackingThrottled);
+            $timeout(checkStackingThrottled);
             _(updateLayout()).debounce(50);
         },
         open: function(instance, options) {

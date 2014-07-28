@@ -59,6 +59,10 @@
                 height: 100%;
             }
 
+            .panel-stacked-section {
+                display: none;
+            }
+
             /*********************************************************
              * HEADER
              ********************************************************/
@@ -167,12 +171,31 @@
      ********************************************************/
 
     &.stacked {
-        // important to override size set by jq ui
-        max-width: 15px;
-        > .panel > .panel-inner .panel-header .title,
-        > .panel > .panel-inner .body,
-        > .panel > .panel-inner .footer {
-            display: none;
+        // Hide the whole panel
+        max-width: 75px;
+        > .panel > .panel-inner > div {
+            > .panel-header,
+            > .panel-body,
+            > .panel-footer {
+                display: none;
+            }
+        }
+
+        // Display only the panel-stacked section
+
+        > .panel > .panel-inner > div {
+            background-color: @gray-light;
+            .panel-stacked-section {
+                display: table;
+                height: 100%;
+                .rotate(-90deg);
+
+                .panel-stacked-title {
+                    display: table-cell;
+                    vertical-align: middle;
+                    text-transform: uppercase;
+                }
+            }
         }
     }
 
