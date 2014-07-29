@@ -335,7 +335,6 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             instance.$$region = 'right';
 
             rightRegion.push(instance);
-            rightRegion.updateLayout();
             return instance;
         },
         dismissAll: function(reason) {

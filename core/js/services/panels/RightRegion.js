@@ -46,17 +46,14 @@ module.directive('rightPanelWindow', [ '$timeout', '$rootScope', 'rightRegion', 
             $(window).on('resize', function(event) {
                 var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
-                rightRegion.updateLayout();
             });
             scope.$on('animation-complete', function() {
                 var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
-                rightRegion.updateLayout();
             });
             $timeout(function() {
                 var bp = getBPMatching(inner.outerWidth());
                 applyBPAttribute(element, bp);
-                rightRegion.updateLayout();
                 // focus a freshly-opened modal
                 element[0].focus();
             });
@@ -68,16 +65,19 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
 
     var STACKED_WIDTH = 75;
     var MAIN_PANEL_MIN_WIDTH = 600;
-    var els = {};
+    var elements = {};
 
-    function getEl(instance) {
-        if (els[instance.$$id]) {
-            return els[instance.$$id];
+    function getElement(instance) {
+        if (elements[instance.$$id]) {
+            return elements[instance.$$id];
         } else {
             return null;
         }
     }
 
+    /**
+     * Return the panels sizes (if the user resized them)
+     */
     function getStylesFromCache(instance, options) {
         var savedWidth = stylesCache[options.panelName];
         if (savedWidth) {
@@ -88,30 +88,50 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     }
 
     /**
-     * Stack/unstack all panels from a given instance index
-     * Example:
-     *     index: 2, then the panels 0,1 and 2 will be stacked
-     * @param  {int} instanceIndex index
+     * Create a panel container in the DOM
      */
-    function stackPanelsFrom(instanceIndex, shouldStack) {
-        var panelsSize = region.panels.size();
+    function createPlaceholder(depth) {
+        var isMain = depth === 0;
+        return angular.element('<div ' +
+            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+            'style="z-index:' + (2000 + depth) + ';"></div>');
+    }
 
-        if(instanceIndex > panelsSize) {
+    /**
+     * Create a panel view section
+     */
+    function createPanelView(instance, options) {
+        var inner = angular.element('<div right-panel-window style="' + getStylesFromCache(instance, options) + '"></div>');
+        inner.html(options.content);
+        options.scope.panelClass = options.panelClass;
+        return $compile(inner)(options.scope);
+    }
+
+    /**
+     * Stack/unstack a panel
+     * @param  {Object}  panel the panel we want to stack unstack
+     * @param  {Boolean} shouldStack either it should stack/unstack
+     */
+    function changeStackPanelState(panel, shouldStack) {
+
+        if(!panel) {
             return false;
         }
 
-        for (; instanceIndex >= 0; instanceIndex--) {
-            var instance = region.at(instanceIndex);
-            var el = getEl(instance);
-            if (!shouldStack) {
-                delete instance.$$actualWidth;
-                $animate.removeClass(el, 'stacked');
-            } else if (shouldStack) {
-                instance.$$actualWidth = getEl(instance).outerWidth();
-                $animate.addClass(el, 'stacked');
-            }
-            instance.$$stacked = shouldStack;
+        var element = getElement(panel);
+
+        if(!element) {
+            return false;
         }
+
+        if (!shouldStack) {
+            delete panel.$$actualWidth;
+            $animate.removeClass(element, 'stacked');
+        } else if (shouldStack) {
+            panel.$$actualWidth = getElement(panel).outerWidth();
+            $animate.addClass(element, 'stacked');
+        }
+        panel.$$stacked = shouldStack;
 
         return true;
     }
@@ -121,14 +141,14 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
      */
     function checkStacking() {
         var maxWidth = $(window).innerWidth();
-
+        // var panels = _(region.panels).toArray().slice(1);
         for (var i = 0; i < region.panels.size(); i++) {
             var j = 0;
             var totalWidth = _(region.panels).reduce(function(memo, instance) {
                 if (j++ < i){
                     return memo + STACKED_WIDTH;
                 } else {
-                    var el = getEl(instance);
+                    var el = getElement(instance);
                     if (!el) {
                         return memo;
                     }
@@ -146,33 +166,22 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 }
             }, 0);
             if (totalWidth > maxWidth) {
-                return stackPanelsFrom(i, true);
+                changeStackPanelState(region.at(i), true);
+            } else if (totalWidth < maxWidth) {
+                changeStackPanelState(region.at(i), false);
             }
         }
         // stack all
-        // stackPanelsFrom(region.panels.size() - 1);
-    }
-
-    function createPlaceholder(depth) {
-        var isMain = depth === 0;
-        return angular.element('<div ' +
-            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
-            'style="z-index:' + (2000 + depth) + ';"></div>');
-    }
-
-    function createPanelView(instance, options) {
-        var inner = angular.element('<div right-panel-window style="' + getStylesFromCache(instance, options) + '"></div>');
-        inner.html(options.content);
-        options.scope.panelClass = options.panelClass;
-        return $compile(inner)(options.scope);
+        // changeStackPanelState(region.panels.size() - 1);
     }
 
     /**
      * Whenever a layout is changed
      */
     function updateLayout() {
+        checkStacking();
         updateMainPanelWidth();
-        $rootScope.$broadcast('module-layout-changed');
+        $timeout(function() { $rootScope.$broadcast('module-layout-changed'); }, 250);
     }
 
     /**
@@ -180,12 +189,18 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
      */
     function updateMainPanelWidth() {
         var windowWidth = $(window).innerWidth();
+        var mainPanel = _(region.panels).first();
+        var mainPanelElement = getElement(mainPanel);
+
+        if(mainPanelElement === null) {
+            return;
+        }
 
         // We calculate the panels width (expect the main one)
         var panels = _(region.panels).toArray().slice(1);
         var panelsWidth = _(panels).reduce(function(memo, instance) {
 
-            var el = getEl(instance);
+            var el = getElement(instance);
             if (!el) {
                 return memo;
             }
@@ -202,20 +217,14 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             // }
         }, 0);
 
-        var mainPanel = _(region.panels).first();
-        var mainPanelElement = getEl(mainPanel);
         var mainPanelWidth = windowWidth - panelsWidth;
-        if(mainPanelElement !== null) {
-            if(mainPanelWidth < MAIN_PANEL_MIN_WIDTH) {
-                stackPanelsFrom(0, true);
-            } else {
-                stackPanelsFrom(0, false);
-                mainPanelElement.innerWidth(mainPanelWidth + 'px');
-            }
+        if(mainPanelWidth < MAIN_PANEL_MIN_WIDTH) {
+            changeStackPanelState(region.at(0), true);
+        } else {
+            changeStackPanelState(region.at(0), false);
+            mainPanelElement.innerWidth(mainPanelWidth + 'px');
         }
     }
-
-    var checkStackingThrottled = _(checkStacking).debounce(50);
 
     $(window).on('resize', function() {
         region.updateLayout();
@@ -227,7 +236,6 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
 
     var region = sidonieRegion.create(true, {
         updateLayout: function() {
-            $timeout(checkStackingThrottled);
             _(updateLayout()).debounce(50);
         },
         open: function(instance, options) {
@@ -235,9 +243,10 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             var el = createPlaceholder(instance.$$depth);
             var inner = createPanelView(instance, options);
             el.html(inner);
-            els[instance.$$id] = el;
+            elements[instance.$$id] = el;
             $animate.enter(el, container, panelZero, function() {
                 options.scope.$emit('animation-complete');
+                $rootScope.$broadcast('module-layout-changed');
                 region.updateLayout();
             });
             el.on('resize', function(event, ui) {
@@ -247,23 +256,23 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             return instance;
         },
         replace: function(fromInstance, toInstance, options) {
-            if (typeof(els[fromInstance.$$id]) != 'undefined') {
-                var el = els[fromInstance.$$id];
+            if (typeof(elements[fromInstance.$$id]) != 'undefined') {
+                var el = elements[fromInstance.$$id];
                 toInstance.$$depth = options.depth - 1;
                 var inner = createPanelView(toInstance, options);
                 el.html(inner);
-                els[toInstance.$$id] = el;
-                delete els[fromInstance.$$id];
+                elements[toInstance.$$id] = el;
+                delete elements[fromInstance.$$id];
                 return toInstance;
             } else {
                 return region.open(toInstance, options);
             }
         },
         close: function(instance) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                var el = els[instance.$$id];
+            if (typeof(elements[instance.$$id]) != 'undefined') {
+                var el = elements[instance.$$id];
                 $animate.leave(el, function() {
-                    delete els[instance.$$id];
+                    delete elements[instance.$$id];
                     region.updateLayout();
                 });
             }
@@ -271,5 +280,4 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
     });
 
     return region;
-
 }]);

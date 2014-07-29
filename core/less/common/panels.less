@@ -1,3 +1,5 @@
+@panel-stacked-size: 75px;
+
 .panel-placeholder {
     height: 100%;
     float: right;
@@ -172,7 +174,7 @@
 
     &.stacked {
         // Hide the whole panel
-        max-width: 75px;
+        max-width: @panel-stacked-size;
         > .panel > .panel-inner > div {
             > .panel-header,
             > .panel-body,
@@ -194,6 +196,7 @@
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
+                    max-width: @panel-stacked-size;
                 }
             }
         }

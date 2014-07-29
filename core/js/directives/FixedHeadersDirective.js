@@ -27,7 +27,7 @@ angular.module('ev-fdm')
                 $(this).css('width', $td.outerWidth()).show();
                 $(this).css('maxWidth', $td.outerWidth()).show();
             } else {
-                $(this).hide();
+                // $(this).hide();
             }
             currentChildIndex++;
         })
