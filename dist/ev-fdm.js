@@ -489,7 +489,45 @@ module.directive('evFilters', function() {
         templateUrl: 'filters.phtml'
     };
 });
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evFixedHeader', function () {
+            return {
+                link: function($scope, $element, $attrs) {
 
+                    var header = $element.find('>.ev-header');
+                    var body   = $element.find('>.ev-body');
+                    body.css({'overflow-y': 'auto'});
+                    var refreshDimensions = function() {
+                        body.hide();
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
+
+                        body.show();
+                        body.height(bodyHeight);
+
+                        if ($attrs.refreshIdentifier) {
+                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
+                        }
+                    };
+
+
+                    $scope.$watch(function() {
+                        return $element.height() + header.outerHeight(true);
+                    }, refreshDimensions);
+
+                    $(window).bind('resize', refreshDimensions);
+
+                    if ($attrs.refreshOn) {
+                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
+                    }
+
+                }
+            };
+        });
+}) ();
+
+// @TODO: DELETE //
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
@@ -498,7 +536,7 @@ angular.module('ev-fdm')
         var $firstTr = $table.find('tbody > tr').first();
 
         // no header to resize
-        if (!$headers.length) return;
+        if (!$headers.length) { return; }
 
         // uniform size for every header
         if (!$firstTr.length) {
@@ -521,7 +559,7 @@ angular.module('ev-fdm')
                 $(this).hide();
             }
             currentChildIndex++;
-        })
+        });
     }
 
     function _timeoutSync($table) {
@@ -532,7 +570,7 @@ angular.module('ev-fdm')
 
     function _uniformSize($headers, width) {
         var $tds = $headers.find('th');
-        if (!$tds.length) return;
+        if (!$tds.length) { return; }
         $tds.each(function() {
             $(this).css('width', (width/$tds.length) + 'px');
         });
@@ -563,7 +601,7 @@ angular.module('ev-fdm')
             // wait for end of digest then sync headers
             _timeoutSync($table);
         }
-    }
+    };
 
 }]);
 'use strict';
@@ -589,6 +627,45 @@ angular.module('ev-fdm')
         }
     }
 }]);
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evFullHeightBody', function () {
+            return {
+                link: function($scope, $element, $attrs) {
+                    $element.addClass('ev-full-height');
+
+                    var header = $element.find('>.ev-full-height-body-header');
+                    var body   = $element.find('>.ev-full-height-body');
+
+                    var refreshDimensions = function() {
+                        body.hide();
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
+
+                        body.show();
+                        body.height(bodyHeight);
+
+                        if ($attrs.refreshIdentifier) {
+                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
+                        }
+                    };
+
+
+                    $scope.$watch(function() {
+                        return $element.height() + header.outerHeight(true);
+                    }, refreshDimensions);
+
+                    $(window).bind('resize', refreshDimensions);
+
+                    if ($attrs.refreshOn) {
+                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
+                    }
+
+                }
+            };
+        });
+}) ();
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -1389,6 +1466,90 @@ angular.module('ev-fdm')
             }
         }
     });
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evTab', function () {
+            return {
+                restrict: 'E',
+                transclude: true,
+                scope: {},
+                controller: function($scope, $element) {
+                    var panes = $scope.panes = [];
+
+                    $scope.select = function(pane) {
+                        angular.forEach(panes, function(pane) {
+                            pane.selected = false;
+                        });
+                        pane.selected = true;
+                    };
+
+                    this.addPane = function(pane) {
+                        if (panes.length === 0) { $scope.select(pane); }
+                        panes.push(pane);
+                    };
+
+                    this.selectPrevious = function() {
+                        var selected = $scope.selectedIndex();
+                        $scope.select(panes[selected - 1]);
+                    };
+
+                    this.selectNext = function() {
+                        var selected = $scope.selectedIndex();
+                        $scope.select(panes[selected + 1]);
+                    };
+
+                    $scope.selectedIndex = function() {
+                        for (var i = 0; i < panes.length; i++) {
+                            var pane = panes[i];
+
+                            if (pane.selected) {
+                                return i;
+                            }
+                        }
+                    };
+                },
+                template:
+                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
+                        '<ul class="nav nav-tabs ev-header">' +
+                            '<li ng-repeat="pane in panes" ng-class="{active:pane.selected}" '+
+                                'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
+                                '<a href="" ng-click="select(pane)"> ' +
+                                    '<span ng-if="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-if="!pane.tabIcon">{{pane.tabTitle}}</span>'+
+                                '</a>' +
+                            '</li>' +
+                        '</ul>' +
+                        '<div class="tab-content ev-body" ng-transclude></div>' +
+                    '</div>',
+                replace: true
+            };
+        })
+        .directive('evPane', function() {
+            return {
+                require: '^evTab',
+                restrict: 'E',
+                transclude: true,
+                scope: { tabTitle: '@', tabIcon: '@' },
+                link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+                    tabsCtrl.addPane(scope);
+
+                    transcludeFn(function(clone, transcludedScope) {
+                        transcludedScope.$selectNext     = tabsCtrl.selectNext;
+                        transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
+
+                        element.find('.transclude').append(clone);
+                    });
+                },
+                template:
+                    '<div class="tab-pane" ng-class="{active: selected}">' +
+                        '<div class="section transclude"></div>' +
+                    '</div>',
+                replace: true
+            };
+        });
+}) ();
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -3753,3 +3914,4 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
+//# sourceMappingURL=ev-fdm.js.map

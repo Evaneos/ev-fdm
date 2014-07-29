@@ -1,0 +1,70 @@
+@import "../variables.less";
+
+.ev-panel-tab {
+  background-color: @gray-lighter;
+  padding: 0 5px;
+
+  .nav-tabs {
+    // border-bottom: 5px solid @body-bg;
+    border: none;
+    >li {
+      &.active {
+        >a,
+        >a:hover,
+        >a:focus {
+          color: @gray-darker;
+          border: none;
+        }
+      }
+
+      >a:hover {
+        color: @gray-dark;
+        border: none;
+        margin-bottom: 0;
+      }
+
+      >a {
+        color: @gray;
+        font-size: 1.5em;
+        padding: 5px 15px;
+        text-align: center;
+        border: none;
+
+        span {
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  .tab-pane {
+    > .section:first-child {
+      padding-top: 5px;
+    }
+
+    .modal-body {
+      background-color: @body-bg;
+    }
+
+    &.active {
+      display: block;
+    }
+  }
+}
+
+.ev-panel-tab .nav-tabs {
+  text-transform: uppercase;
+
+  div {
+    margin: 10px 0;
+  }
+
+  a {
+    color: @gray-dark;
+
+    &:hover {
+      text-decoration: none;
+      color: @gray-darker;
+    }
+  }
+}
