@@ -2628,7 +2628,7 @@ angular.module('ev-fdm')
             this.restangular = restangular;
             this.resourceName = resourceName;
             this.defaultEmbed = defaultEmbed || [];
-        };
+        }
 
         RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
             var sortDir = reverseSort ? 'DESC' : 'ASC';
@@ -2716,6 +2716,19 @@ angular.module('ev-fdm')
             }
 
             return element.put(parameters);
+        };
+
+        RestangularStorage.prototype.create = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return this.restangular.all(this.resourceName).post(element, parameters);
         };
 
 
