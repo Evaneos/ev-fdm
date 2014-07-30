@@ -172,7 +172,7 @@ angular.module('ev-fdm')
             if(angular.isDefined($state.params.id)) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
+                    if(elementId == $state.params.id) {
                         self.$scope.activeElement = element;
                     }
                 });
@@ -240,7 +240,6 @@ angular.module('ev-fdm')
         return {
             restrict: 'A',
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
-                this.activeElement;
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
@@ -287,7 +286,8 @@ angular.module('ev-fdm')
                       currentElement = newCurrentElement;
                     });
 
-                    scope.$watch(function() { return ctrl.activeElement; }, function(newActiveElement, oldActiveElement) {
+                    scope.$watch(function() { return ctrl.activeElement; },
+                     function(newActiveElement, oldActiveElement) {
                         if(newActiveElement && currentElement === newActiveElement) {
                             element.addClass('active');
                         }
@@ -304,7 +304,7 @@ angular.module('ev-fdm')
                         }
                     });
                 }
-            }
+            };
         }]);
 'use strict';
 
@@ -1901,6 +1901,17 @@ angular.module('ev-fdm')
             return res;
         };
     });
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -3879,3 +3890,4 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
+//# sourceMappingURL=ev-fdm.js.map
