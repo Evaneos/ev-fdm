@@ -5,7 +5,6 @@ angular.module('ev-fdm')
         return {
             restrict: 'A',
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
-                this.activeElement;
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
@@ -39,31 +38,36 @@ angular.module('ev-fdm')
             }]
         };
     })
-    .directive('activable', function() {
-        return {
-            restrict: 'A',
-            require: '^activableSet',
-            link: function(scope, element, attr, ctrl) {
-                element.addClass('clickable');
+    .directive('activable', ['$parse', function($parse) {
+            return {
+                restrict: 'A',
+                require: '^activableSet',
+                link: function(scope, element, attr, ctrl) {
+                    element.addClass('clickable');
+                    var elementGetter = $parse(attr.activable),
+                        currentElement = elementGetter(scope);
 
-                var currentElement = scope[attr.activable];
+                    scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
+                      currentElement = newCurrentElement;
+                    });
 
-                scope.$watch(function() { return ctrl.activeElement; }, function(newActiveElement, oldActiveElement) {
-                    if(newActiveElement && currentElement === newActiveElement) {
-                        element.addClass('active');
-                    }
-                    else {
-                        element.removeClass('active');
-                    }
-                });
+                    scope.$watch(function() { return ctrl.activeElement; },
+                     function(newActiveElement, oldActiveElement) {
+                        if(newActiveElement && currentElement === newActiveElement) {
+                            element.addClass('active');
+                        }
+                        else {
+                            element.removeClass('active');
+                        }
+                    });
 
-                element.on('click', function(event) {
-                    if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
-                        scope.$apply(function() {
-                            ctrl.toggleActive(currentElement);
-                        });
-                    }
-                });
-            }
-        }
-    });
+                    element.on('click', function(event) {
+                        if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
+                            scope.$apply(function() {
+                                ctrl.toggleActive(currentElement);
+                            });
+                        }
+                    });
+                }
+            };
+        }]);
