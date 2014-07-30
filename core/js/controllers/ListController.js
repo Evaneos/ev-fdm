@@ -107,7 +107,7 @@ angular.module('ev-fdm')
             if(angular.isDefined($state.params.id)) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
+                    if(elementId == $state.params.id) {
                         self.$scope.activeElement = element;
                     }
                 });
