@@ -26,6 +26,12 @@ module.directive('rightPanelWindow', [ '$timeout', '$rootScope', 'rightRegion', 
         element.attr('data-breakpoint', attributeValue);
     }
 
+    function updateBreakpoints(element) {
+        var inner = element.find('.panel-inner');
+        var bp = getBPMatching(inner.outerWidth());
+        applyBPAttribute(element, bp);
+    }
+
     return {
         restrict: 'A',
         scope: false,
@@ -33,27 +39,33 @@ module.directive('rightPanelWindow', [ '$timeout', '$rootScope', 'rightRegion', 
         transclude: true,
          templateUrl: 'panels/right-window.phtml',
         link: function(scope, element, attrs) {
-            var inner = element.find('.panel-inner');
+            /**
+             * Listener to update the breakpoints properties
+             */
             element.resizable({
                 handles: "w",
                 resize: function(event, ui) {
-                    var bp = getBPMatching(inner.outerWidth());
-                    applyBPAttribute(element, bp);
+                    updateBreakpoints(element);
                     rightRegion.updateLayout();
                     $rootScope.$broadcast('panel-resized', element);
                 }
             });
             $(window).on('resize', function(event) {
-                var bp = getBPMatching(inner.outerWidth());
-                applyBPAttribute(element, bp);
+                updateBreakpoints(element);
             });
             scope.$on('animation-complete', function() {
-                var bp = getBPMatching(inner.outerWidth());
-                applyBPAttribute(element, bp);
+                updateBreakpoints(element);
             });
+            // Specific case if it's the main panel.
+            // Whenever an update on the layout is trigger, we recalculate his breakpoints
+            var isMainPanel = element.parent().hasClass('panel-main');
+            if(isMainPanel) {
+                $rootScope.$on('module-layout-changed', function() {
+                    updateBreakpoints(element);
+                });
+            }
             $timeout(function() {
-                var bp = getBPMatching(inner.outerWidth());
-                applyBPAttribute(element, bp);
+                updateBreakpoints(element);
                 // focus a freshly-opened modal
                 element[0].focus();
             });
