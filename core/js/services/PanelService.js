@@ -25,7 +25,7 @@ module.factory('panelFactory', function() {
 
 module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'panelManager', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, panelManager, panelFactory) {
 
-    // identifies all panels
+    // Identifies all panels
     var currentId = 1;
 
     function parseOptions(options) {
@@ -108,19 +108,6 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             });
     }
 
-    function dismissChildren(panelManager, instance, reason) {
-        var children = panelManager.getChildren(instance);
-        for (var i = children.length - 1; i >= 0; i--) {
-            var child = children[i];
-            var result = child.dismiss(reason);
-            if (!result) {
-                return false;
-            }
-
-        }
-        return true;
-    }
-
     /**
      * Resolves everything needed to the view (templates, locals)
      * + creates the controller, scope
@@ -137,7 +124,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             opened: openedDeferred.promise,
             close: function(result) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(panelManager, instance, 'parent closed');
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent closed');
                     if (!notCancelled) {
                         return false;
                     }
@@ -150,7 +137,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             },
             dismiss: function(reason) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(panelManager, instance, 'parent dismissed');
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent dismissed');
                     if (!notCancelled) {
                       return false;
                     }
@@ -202,70 +189,81 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         return instance;
     }
 
-    function getPanel (panelName){
+    /**
+     * Get a panel instance via his name
+     */
+    function getPanel(panelName) {
         var panel = panelManager.panels.find(function(_panel) {
             return _panel.panelName === panelName;
         });
 
         return panel || null;
     }
-    function hasPanel (panelName){
+
+    /**
+     * Return a boolean if either the panel exist or not
+     */
+    function hasPanel(panelName) {
         return getPanel(panelName) != null;
     }
 
+    /**
+     * @param {Object} options
+     *        - {Mixed} template / templateUrl / content
+     *        - (optional) {String} controller
+     *        - (optional) {Mixed} scope
+     *        - (optional) {Object} resolve
+     *        - (optional) {String} panelName
+     *        - (optional) {Mixed} pushFrom :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *        - (optional) {Mixed} replaceAt :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *                            + {Boolean}: if true replace the last panel
+     *
+     * @return {Object} The panel instance or null if something wrong occured
+     */
+    function open(options) {
+        options = parseOptions(options);
 
-    return {
-        getPanel : getPanel,
-        hasPanel : hasPanel,
-        /**
-         * @param {Object} options
-         *        - {Mixed} template / templateUrl / content
-         *        - (optional) {String} controller
-         *        - (optional) {Mixed} scope
-         *        - (optional) {Object} resolve
-         *        - (optional) {String} panelName
-         *        - (optional) {Mixed} pushFrom :
-         *                            + {String} : the panel name
-         *                            + {Object} : the panel instance
-         *        - (optional) {Mixed} replaceAt :
-         *                            + {String} : the panel name
-         *                            + {Object} : the panel instance
-         *                            + {Boolean}: if true replace the last panel
-         *
-         * @return {Object} The panel instance or null if something wrong occured
-         */
-        open: function(options) {
-            options = parseOptions(options);
+        var instance;
 
-            var instance;
-
-            if (options.replace) {
-                var result = dismissChildren(panelManager, options.replace, 'parent replaced');
-                // some child might have canceled the close
-                if (!result) {
-                    return null;
-                }
-            }
-
-            if (options.replace && options.replace.isBlocked()) {
+        if (options.replace) {
+            var result = panelManager.dismissChildren(options.replace, 'parent replaced');
+            // some child might have canceled the close
+            if (!result) {
                 return null;
             }
+        }
 
-            // Contains the panel 'depth'
-            options.depth = panelManager.panels.size();
-            instance = createInstance(panelManager, options);
+        if (options.replace && options.replace.isBlocked()) {
+            return null;
+        }
 
-            // attach some variables to the instance
-            instance.$$id = currentId++;
+        // Contains the panel 'depth'
+        options.depth = panelManager.panels.size();
+        instance = createInstance(panelManager, options);
 
-            panelManager.push(instance);
-            return instance;
-        },
+        // Attach some variables to the instance
+        instance.$$id = currentId++;
+
+        panelManager.push(instance);
+
+        return instance;
+    }
+
+    var panelService = {
+        getPanel : getPanel,
+        hasPanel : hasPanel,
+        open: open,
         dismissAll: function(reason) {
             panelManager.dismissAll(reason);
         },
         dismissChildren: function(instance, reason) {
-            return dismissChildren(panelManager, instance, reason);
+            return panelManager.dismissChildren(instance, reason);
         }
     };
+
+    return panelService;
 }]);
