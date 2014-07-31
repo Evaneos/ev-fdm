@@ -105,176 +105,6 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
 
 
 }]);
-angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
-
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
-            var self = this;
-
-            /*
-                Properties
-             */
-            this.$scope = $scope;
-            this.elementName = elementName;
-            this.elements = elements;
-            this.defaultSortKey = defaultSortKey;
-            this.defaultReverseSort = defaultReverseSort;
-            this.sortKey = this.defaultSortKey;
-            this.reverseSort = this.defaultReverseSort;
-
-            this.updateScope();
-
-            /*
-                Pagination method that should be called from the template
-             */
-            this.$scope.changePage = function(newPage) {
-                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Sort method that should be called from the template
-             */
-            this.$scope.sortChanged = function() {
-                self.sortKey = self.$scope.sortKey;
-                self.reverseSort = self.$scope.reverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Display an item by changing route
-             */
-            this.$scope.toggleDetailView = function(element) {
-
-                if(!element) {
-                    $state.go(self.elementName);
-                    return;
-                }
-
-                var id = restangular.configuration.getIdFromElem(element);
-
-                if(!id || $stateParams.id === id) {
-                    $state.go(self.elementName);
-                }
-                else {
-                    $state.go(self.elementName + '.view', {id: id});
-                }
-            };
-
-            /*
-                Update the view when filter are changed in the SearchController
-             */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            /*
-                When returning to the list state remove the active element
-             */
-            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
-                if(toState.name === self.elementName) {
-                    self.$scope.activeElement = null;
-                }
-            });
-
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-        }
-
-        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
-        };
-
-        ListController.prototype.updateScope = function () {
-            var self = this;
-
-            this.$scope[this.elementName] = this.elements;
-            this.$scope.currentPage = this.elements.pagination.current_page;
-            this.$scope.pageCount = this.elements.pagination.total_pages;
-            this.$scope.sortKey = this.sortKey;
-            this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
-            this.$scope.activeElement = null;
-
-            if(angular.isDefined($state.params.id)) {
-                angular.forEach(this.elements, function(element) {
-                    var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
-                        self.$scope.activeElement = element;
-                    }
-                });
-            }
-        };
-
-        return ListController;
-
-    }]);
-
-'use strict';
-
-var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
-    $scope.notifications = NotificationsService.list;
-    
-    $scope.$watch(function() {
-        return NotificationsService.activeNotification;
-    }, function() {
-        $scope.activeNotification = NotificationsService.activeNotification;
-    });
-    
-    $scope.getClass = function (notification){
-        if (!notification) return '';
-        switch (notification.type){
-            case NotificationsService.type.ERROR:
-                return 'danger';
-            case NotificationsService.type.SUCCESS:
-                return 'success';
-            case NotificationsService.type.WARNING:
-                return 'warning';
-            case NotificationsService.type.INFO:
-                return 'info';
-            default:
-                return 'success';
-        }
-    };
-
-    $scope.remove = function(notification) {
-        NotificationsService.remove(notification);
-    };
-}];
-
-angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);
-angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
-        function SearchController($scope) {
-            var self = this;
-
-            this.$scope = $scope;
-            this.$scope.filters = {};
-
-            this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
-
-        return SearchController;
-    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -562,7 +392,7 @@ angular.module('ev-fdm')
                 $(this).css('width', $td.outerWidth()).show();
                 $(this).css('maxWidth', $td.outerWidth()).show();
             } else {
-                $(this).hide();
+                // $(this).hide();
             }
             currentChildIndex++;
         })
@@ -887,6 +717,82 @@ var module = angular.module('ev-fdm')
                     scope.generateButtons ();
                 });
             }
+    };
+}]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager', function($timeout, $rootScope, panelManager) {
+
+    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
+
+    function getBPMatching(width) {
+        var breakp, index;
+        for (index = 0; index < BREAKS.length; index++) {
+            if (width < BREAKS[index]) {
+                breakp = BREAKS[index];
+                break;
+            }
+        }
+        if (breakp) return index;
+        else return -1;
+    }
+
+    function applyBPAttribute(element, breakpIndex) {
+        var attributeValue = '';
+        if (breakpIndex == -1) {
+            attributeValue = 'max';
+        } else {
+            attributeValue = BREAKS[breakpIndex];
+        }
+        element.attr('data-breakpoint', attributeValue);
+    }
+
+    function updateBreakpoints(element) {
+        var inner = element.find('.panel-inner');
+        var bp = getBPMatching(inner.outerWidth());
+        applyBPAttribute(element, bp);
+    }
+
+    return {
+        restrict: 'A',
+        scope: false,
+        replace: true,
+        transclude: true,
+        templateUrl: 'panels/panel-skeleton.phtml',
+        link: function(scope, element, attrs) {
+            /**
+             * Listener to update the breakpoints properties
+             */
+            element.resizable({
+                handles: "w",
+                resize: function(event, ui) {
+                    updateBreakpoints(element);
+                    panelManager.updateLayout();
+                    $rootScope.$broadcast('panel-resized', element);
+                }
+            });
+            $(window).on('resize', function(event) {
+                updateBreakpoints(element);
+            });
+            scope.$on('animation-complete', function() {
+                updateBreakpoints(element);
+            });
+            // Specific case if it's the main panel.
+            // Whenever an update on the layout is trigger, we recalculate his breakpoints
+            var isMainPanel = element.parent().hasClass('panel-main');
+            if(isMainPanel) {
+                $rootScope.$on('module-layout-changed', function() {
+                    updateBreakpoints(element);
+                });
+            }
+            $timeout(function() {
+                updateBreakpoints(element);
+                // focus a freshly-opened modal
+                element[0].focus();
+            });
+        }
     };
 }]);
 /**
@@ -1424,6 +1330,176 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+angular.module('ev-fdm')
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+            var self = this;
+
+            /*
+                Properties
+             */
+            this.$scope = $scope;
+            this.elementName = elementName;
+            this.elements = elements;
+            this.defaultSortKey = defaultSortKey;
+            this.defaultReverseSort = defaultReverseSort;
+            this.sortKey = this.defaultSortKey;
+            this.reverseSort = this.defaultReverseSort;
+
+            this.updateScope();
+
+            /*
+                Pagination method that should be called from the template
+             */
+            this.$scope.changePage = function(newPage) {
+                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Sort method that should be called from the template
+             */
+            this.$scope.sortChanged = function() {
+                self.sortKey = self.$scope.sortKey;
+                self.reverseSort = self.$scope.reverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Display an item by changing route
+             */
+            this.$scope.toggleDetailView = function(element) {
+
+                if(!element) {
+                    $state.go(self.elementName);
+                    return;
+                }
+
+                var id = restangular.configuration.getIdFromElem(element);
+
+                if(!id || $stateParams.id === id) {
+                    $state.go(self.elementName);
+                }
+                else {
+                    $state.go(self.elementName + '.view', {id: id});
+                }
+            };
+
+            /*
+                Update the view when filter are changed in the SearchController
+             */
+            this.$scope.$on('common::filters.changed', function(event, filters) {
+                self.filters = filters;
+                self.sortKey = self.defaultSortKey;
+                self.defaultReverseSort = self.defaultReverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            /*
+                When returning to the list state remove the active element
+             */
+            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
+                if(toState.name === self.elementName) {
+                    self.$scope.activeElement = null;
+                }
+            });
+
+            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+        }
+
+        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
+            var self = this;
+            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                self.elements = elements;
+                self.updateScope();
+            });
+        };
+
+        ListController.prototype.updateScope = function () {
+            var self = this;
+
+            this.$scope[this.elementName] = this.elements;
+            this.$scope.currentPage = this.elements.pagination.current_page;
+            this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.sortKey = this.sortKey;
+            this.$scope.reverseSort = this.reverseSort;
+            this.$scope.selectedElements = [];
+            this.$scope.activeElement = null;
+
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if(elementId === $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
+        };
+
+        return ListController;
+
+    }]);
+
+'use strict';
+
+var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
+    $scope.notifications = NotificationsService.list;
+    
+    $scope.$watch(function() {
+        return NotificationsService.activeNotification;
+    }, function() {
+        $scope.activeNotification = NotificationsService.activeNotification;
+    });
+    
+    $scope.getClass = function (notification){
+        if (!notification) return '';
+        switch (notification.type){
+            case NotificationsService.type.ERROR:
+                return 'danger';
+            case NotificationsService.type.SUCCESS:
+                return 'success';
+            case NotificationsService.type.WARNING:
+                return 'warning';
+            case NotificationsService.type.INFO:
+                return 'info';
+            default:
+                return 'success';
+        }
+    };
+
+    $scope.remove = function(notification) {
+        NotificationsService.remove(notification);
+    };
+}];
+
+angular.module('ev-fdm')
+    .controller('NotificationsController', NotificationsController);
+angular.module('ev-fdm')
+    .factory('SearchController', ['$rootScope', function($rootScope) {
+
+        function SearchController($scope) {
+            var self = this;
+
+            this.$scope = $scope;
+            this.$scope.filters = {};
+
+            this.$scope.filtersChanged = function() {
+                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
+            };
+        };
+
+        return SearchController;
+    }]);
 'use strict';
 
 function FilterServiceFactory($rootScope, $timeout) {
@@ -1988,98 +2064,45 @@ module.factory('panelFactory', function() {
     };
 });
 
-module.factory('sidonieRegion', function() {
-    function shouldBeOverriden(name) {
-        return function() {
-            throw new Error('Method ' + name + ' should be overriden');
-        };
-    }
-    var Region = function(hasPush) {
-        this.hasPush = hasPush;
-        this.panels = _([]);
-    };
-    Region.prototype.open = shouldBeOverriden('open');
-    Region.prototype.close = shouldBeOverriden('close');
-    Region.prototype.push = function(instance) {
-        this.panels.push(instance);
-    };
-    Region.prototype.remove = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            this.panels.splice(i, 1);
-        }
-        return i;
-    };
-    Region.prototype.at = function(index) {
-        return this.panels._wrapped[index];
-    };
-    Region.prototype.each = function() {
-        return this.panels.each.apply(this.panels, arguments);
-    };
-    Region.prototype.dismissAll = function(reason) {
-        this.each(function(instance) {
-            instance.dismiss(reason);
-        });
-    };
-    Region.prototype.last = function() {
-        return this.panels.last();
-    };
-    Region.prototype.getNext = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i < this.panels.size() - 1) {
-            return this.at(i + 1);
-        } else {
-            return null;
-        }
-    };
-    Region.prototype.getChildren = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            return this.panels.slice(i + 1);
-        } else {
-            return [];
-        }
-    };
-    Region.prototype.size = function() {
-        return this.panels.size();
-    };
-    Region.prototype.isEmpty = function() {
-        return this.panels.size() === 0;
-    };
+module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'panelManager', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, panelManager, panelFactory) {
 
-    return {
-        create: function(hasPush, methods) {
-            var ChildClass = function(hasPush) {
-                return Region.call(this, hasPush);
-            };
-            ChildClass.prototype = _({}).extend(Region.prototype, methods);
-            return new ChildClass(hasPush);
-        }
-    };
-});
-
-module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'rightRegion', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, rightRegion, panelFactory) {
-
-    // identifies all panels
+    // Identifies all panels
     var currentId = 1;
-
-    var openingTypes = {
-        PUSH    : 1,       // Creates a new panel after the others
-        REPLACE : 2        // Replace the panel if it already exists, and dismiss its children
-    };
-    var defaultOpeningType = openingTypes.PUSH;
 
     function parseOptions(options) {
         if (!options.template && !options.templateUrl && !options.content) {
             throw new Error('Should define options.template or templateUrl or content');
         }
 
-        if (!openingTypes[options.openingType]){
-            options.openingType = defaultOpeningType;
-        }
-        options.panelName = options.panelClass || '';
+        // Retrieve the last panel
+        var last = panelManager.last();
 
-        options.panelClass = options.panelClass || '';
+        /**
+         * Parse the opening options (replace or pushFrom)
+         */
+        if(options.replace) {
+            if(angular.isString(options.replace)) {
+                options.replace = getPanel(options.replace);
+            } else if(options.replace === true) {
+                options.replace = last;
+            }
+        } else if (options.pushFrom) {
+            if(angular.isString(options.pushFrom)) {
+                options.pushFrom = getPanel(options.pushFrom);
+            }
+
+            if(options.pushFrom !== null && options.pushFrom != last) {
+                options.replace = panelManager.getNext(options.pushFrom);
+            }
+        }
+
+        if(!options.replace && !options.pushFrom) {
+            options.pushFrom = last;
+        }
+
+        options.panelName = options.panelName || '';
+
+        options.panelClass = options.panelName || '';
         options.panelClass += ' right';
 
         options.resolve = options.resolve || {};
@@ -2126,25 +2149,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             });
     }
 
-    function dismissChildren(region, instance, reason) {
-        var children = region.getChildren(instance);
-        for (var i = children.length - 1; i >= 0; i--) {
-            var child = children[i];
-            var result = child.dismiss(reason);
-            if (!result) {
-                return false;
-            }
-
-        }
-        return true;
-    }
-
     /**
      * Resolves everything needed to the view (templates, locals)
      * + creates the controller, scope
      * + finally creates the view
      */
-    function createInstance(region, options, done) {
+    function createInstance(panelManager, options, done) {
         var self = this;
         var resultDeferred = $q.defer();
         var openedDeferred = $q.defer();
@@ -2155,12 +2165,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             opened: openedDeferred.promise,
             close: function(result) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent closed');
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent closed');
                     if (!notCancelled) {
                         return false;
                     }
-                    region.close(instance, options);
-                    region.remove(instance);
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.resolve(result);
                     return true;
                 }
@@ -2168,12 +2178,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             },
             dismiss: function(reason) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent dismissed');
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent dismissed');
                     if (!notCancelled) {
                       return false;
                     }
-                    region.close(instance, options);
-                    region.remove(instance);
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.reject(reason);
                     return true;
                 }
@@ -2198,17 +2208,17 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                     controller = $controller(options.controller, locals);
                 }
 
-                // add variables required by regions
+                // add variables required by panelManager
                 options.scope = scope;
                 options.deferred = resultDeferred;
                 options.content = contentAndLocals.content;
 
                 // finally open the view
                 if (options.replace) {
-                    region.replace(options.replace, instance, options);
-                    region.remove(options.replace, options);
+                    panelManager.replace(options.replace, instance, options);
+                    panelManager.remove(options.replace, options);
                 } else {
-                    region.open(instance, options);
+                    panelManager.open(instance, options);
                 }
             })
             .then(function() {
@@ -2220,81 +2230,577 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         return instance;
     }
 
-    function getPanel (panelName){
-        var panel = rightRegion.panels.where({panelName:panelName});
-        if(panel) return _(panel).last();
-        return null;
+    /**
+     * Get a panel instance via his name
+     */
+    function getPanel(panelName) {
+        var panel = panelManager.panels.find(function(_panel) {
+            return _panel.panelName === panelName;
+        });
+
+        return panel || null;
     }
-    function hasPanel (panelName){
+
+    /**
+     * Return a boolean if either the panel exist or not
+     */
+    function hasPanel(panelName) {
         return getPanel(panelName) != null;
     }
 
+    /**
+     * @param {Object} options
+     *        - {Mixed} template / templateUrl / content
+     *        - (optional) {String} controller
+     *        - (optional) {Mixed} scope
+     *        - (optional) {Object} resolve
+     *        - (optional) {String} panelName
+     *        - (optional) {Mixed} pushFrom :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *        - (optional) {Mixed} replaceAt :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *                            + {Boolean}: if true replace the last panel
+     *
+     * @return {Object} The panel instance or null if something wrong occured
+     */
+    function open(options) {
+        options = parseOptions(options);
 
-    return {
-        OPENING_TYPE : openingTypes,
+        var instance;
+
+        if (options.replace) {
+            var result = panelManager.dismissChildren(options.replace, 'parent replaced');
+            // some child might have canceled the close
+            if (!result) {
+                return null;
+            }
+        }
+
+        if (options.replace && options.replace.isBlocked()) {
+            return null;
+        }
+
+        // Contains the panel 'depth'
+        options.depth = panelManager.panels.size();
+        instance = createInstance(panelManager, options);
+
+        // Attach some variables to the instance
+        instance.$$id = currentId++;
+
+        panelManager.push(instance);
+
+        return instance;
+    }
+
+    var panelService = {
         getPanel : getPanel,
         hasPanel : hasPanel,
-        /**
-         * @param {String} regionName
-         * @param {Mixed} options
-         *     {Mixed} template / templateUrl / content
-         *     (optional) {String} controller
-         *     (optional) {Mixed} scope
-         *     (optional) {Object} resolve
-         *     (optional) {String} panelClass
-         *     (optional) {Boolean} push: if the region is push enabled, open
-         *         a popup on top of the latest one
-         *     (optional) {PanelInstance} pushFrom: if the region is push enabled, open
-         *         a popup on top of that instance (and close existing children)
-         */
-        open: function(options) {
-            options = parseOptions(options);
-
-            var last = rightRegion.last ();
-            var instance;
-
-            if (options.push && !options.pushFrom) {
-                options.pushFrom = last;
-            }
-            if (options.pushFrom && options.pushFrom != last) {
-                options.replace = rightRegion.getNext(options.pushFrom);
-                if (options.replace) {
-                    var result = dismissChildren(rightRegion, options.replace, 'parent replaced');
-                    // some child might have canceled the close
-                    if (!result) {
-                        return false;
-                    }
-                }
-            }
-
-            if (!(rightRegion.hasPush && options.push) && !rightRegion.isEmpty()) {
-                options.replace = last;
-            }
-
-            if (options.replace && options.replace.isBlocked()) {
-                return false;
-            }
-
-            instance = createInstance(rightRegion, options);
-
-            // attach some variables to the instance
-            instance.$$id = currentId++;
-            instance.$$region = 'right';
-
-            rightRegion.push(instance);
-            return instance;
-        },
+        open: open,
         dismissAll: function(reason) {
-            // _(regions).each(function(region) {
-                rightRegion.dismissAll(reason);
-            // });
+            panelManager.dismissAll(reason);
         },
         dismissChildren: function(instance, reason) {
-            var region = rightRegion;
-            return dismissChildren(region, instance, reason);
+            return panelManager.dismissChildren(instance, reason);
         }
     };
+
+    return panelService;
 }]);
+// WORK IN PROGRESS
+
+// var module = angular.module('ev-fdm');
+
+// module.factory('Panel', function() {
+
+//     var Panel = function(extensions) {
+//         this.blockers = [];
+//         _(this).extend(extensions);
+//     };
+
+//     Panel.prototype.addBlocker = function(blocker) {
+//         this.blockers.push(blocker);
+//     };
+
+//     Panel.prototype.removeBlocker = function(blocker) {
+//         this.blockers = _(this.blockers).without(blocker);
+//     };
+
+//     Panel.prototype.isBlocked = function(silent) {
+//         return _(this.blockers).some(function(blocker) {
+//             return blocker(silent);
+//         });
+//     };
+
+//     return Panel;
+// });
+
+// module.service('PanelServiceUI', [ '$rootScope', '$compile', '$animate', '$timeout', function($rootScope, $compile, $animate, $timeout) {
+
+//     var STACKED_WIDTH = 15;
+//     var els = {};
+
+//     var Region = function() {
+//         this.updateStacking = function() {
+//             // return $timeout(checkStackingThrottled);
+//         };
+
+//         this.open = function(instance, options) {
+//             instance.$$depth = region.panels.size();
+//             var el = createPlaceholder(instance.$$depth);
+//             var inner = createPanelView(instance, options);
+//             el.html(inner);
+//             els[instance.$$id] = el;
+//             $animate.enter(el, container, panelZero, function() {
+//                 options.scope.$emit('animation-complete');
+//                 $rootScope.$broadcast('module-layout-changed');
+//                 region.updateStacking();
+//             });
+//             el.on('resize', function(event, ui) {
+//                 stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
+//                 region.updateStacking();
+//             });
+//             region.updateStacking();
+//             return instance;
+//         };
+
+//         this.replace = function(fromInstance, toInstance, options) {
+//             if (typeof(els[fromInstance.$$id]) != 'undefined') {
+//                 var el = els[fromInstance.$$id];
+//                 toInstance.$$depth = region.panels.size() - 1;
+//                 var inner = createPanelView(toInstance, options);
+//                 el.html(inner);
+//                 els[toInstance.$$id] = el;
+//                 delete els[fromInstance.$$id];
+//                 region.updateStacking();
+//                 return toInstance;
+//             } else {
+//                 return region.open(toInstance, options);
+//             }
+//         };
+
+//         this.close = function(instance) {
+//             if (typeof(els[instance.$$id]) != 'undefined') {
+//                 var el = els[instance.$$id];
+//                 $animate.leave(el, function() {
+//                     delete els[instance.$$id];
+//                     region.updateStacking();
+//                 });
+//                 region.updateStacking();
+//             }
+//         };
+
+//         this.remove = function(instance) {
+//             // TODO
+
+//             // var i = this.panels.indexOf(instance);
+//             // if (i > -1) {
+//             //     this.panels.splice(i, 1);
+//             // }
+//             // return i;
+//         };
+//     };
+
+//     var region = new Region();
+
+//     function getEl(instance) {
+//         if (els[instance.$$id]) {
+//             return els[instance.$$id];
+//         } else {
+//             return null;
+//         }
+//     }
+
+//     function getStylesFromCache(instance, options) {
+//         var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
+//         if (savedWidth) {
+//             return 'width: ' + savedWidth + 'px;';
+//         } else {
+//             return '';
+//         }
+//     }
+
+//     function stack(fromInstanceIndex) {
+//         for (var i = 0; i < region.panels.size(); i++) {
+//             var shouldStack = (i < fromInstanceIndex);
+//             var instance = region.at(i);
+//             var el = getEl(instance);
+//             if (instance.$$stacked && !shouldStack) {
+//                 delete instance.$$actualWidth;
+//                 $animate.removeClass(el, 'stacked');
+//             } else if (!instance.$$stacked && shouldStack) {
+//                 instance.$$actualWidth = getEl(instance).outerWidth();
+//                 $animate.addClass(el, 'stacked');
+//             }
+//             instance.$$stacked = shouldStack;
+//         }
+//     }
+
+//     function checkStacking() {
+//         var maxWidth = $(window).innerWidth() - 100;
+//         for (var i = 0; i < region.panels.size(); i++) {
+//             var j = 0;
+//             var totalWidth = _(region.panels).reduce(function(memo, instance) {
+//                 if (j++ < i) {
+//                     return memo + STACKED_WIDTH;
+//                 } else {
+//                     var el = getEl(instance);
+//                     if (!el) { return memo; }
+//                     if (instance.$$stacked) { return memo + instance.$$actualWidth; }
+//                     var width = el.outerWidth();
+//                     if (width < 50) {
+//                         // most probably before animation has finished landing
+//                         // we neeed to anticipate a final w
+//                         return memo + 300;
+//                     } else {
+//                         return memo + width;
+//                     }
+//                 }
+//             }, 0);
+//             if (totalWidth < maxWidth) {
+//                 return stack(i);
+//             }
+//         }
+//         // stack all
+//         stack(region.panels.size() - 1);
+//     }
+
+//     function createPlaceholder(depth) {
+//         var isMain = depth === 1;
+//         return angular.element('<div ' +
+//             'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+//             'style="z-index:' + (2000 + depth) + ';"></div>');
+//     }
+
+//     function createPanelView(instance, options) {
+//         var inner = angular.element(options.content);
+//         inner.attr('style', getStylesFromCache(instance, options));
+//         inner.attr('right-panel-window', true);
+//         options.scope.panelClass = options.panelClass;
+//         return $compile(inner)(options.scope);
+//     }
+
+//     var checkStackingThrottled = _(checkStacking).debounce(50);
+
+//     $(window).on('resize', function() {
+//         region.updateStacking();
+//     });
+
+//     var stylesCache = window.stylesCache = {};
+//     var container = angular.element('.lisette-module-region.right');
+//     var panelZero = container.find('.panel-zero');
+
+
+//     return region;
+// }]);
+
+// module.service('PanelService', ['$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'PanelServiceUI', 'Panel',
+//                         function($rootScope, $http, $templateCache, $q, $injector, $controller, panelServiceUI, Panel) {
+
+//     var panels = [];
+
+//     var openingTypes = {
+//         PUSH    : 1,       // Creates a new panel after the others
+//         REPLACE : 2        // Replace the panel if it already exists, and dismiss its children
+//     };
+//     var defaultOpeningType = openingTypes.PUSH;
+//     var STACKED_WIDTH = 15;
+
+//     /**
+//      * HELPERS
+//      */
+
+//     /**
+//      * Get a panel with his name
+//      * @param  {String} panelName the panel name
+//      * @return {Object}           either the panel or null
+//      */
+//     function getPanel(panelName) {
+//         var panel = _(this.panels).where({
+//             panelName: panelName
+//         });
+
+//         if(panel) {
+//             return _(panel).last();
+//         }
+
+//         return null;
+//     }
+
+//     /**
+//      * Return true if we have this panel, false otherwise
+//      * @param  {String}  panelName the panel name
+//      * @return {Boolean}           if we have this panel or not
+//      */
+//     function hasPanel(panelName) {
+//         return getPanel(panelName) !== null;
+//     }
+
+//     function _isEmpty() {
+//         return panels.length === 0;
+//     }
+
+//     function _remove(panel) {
+//         var i = panels.indexOf(panel);
+//         if (i > -1) {
+//             panels.splice(i, 1);
+//         }
+
+//         return i;
+//     }
+
+//     function _each() {
+//         return this.panels.each.apply(this.panels, arguments);
+//     }
+
+//     function _getNextPanel(panel) {
+//         var i = panels.indexOf(panel);
+//         if (i < panels.length - 1) {
+//             return panels[i + 1];
+//         } else {
+//             return null;
+//         }
+//     }
+
+//     function _getNextPanels(panel) {
+//         var i = panels.indexOf(panel);
+//         if (i > -1 && i < panels.length - 1) {
+//             return panels.slice(i + 1)
+//         } else {
+//             return [];
+//         }
+//     }
+
+//     /**
+//      * Helper to parse the options
+//      * @param  {Object} options the options(todo list them)
+//      * @return {Object}         the options formatted
+//      */
+//     function _parseOptions(options) {
+//         if (!options.template && !options.templateUrl && !options.content) {
+//             throw new Error('Should define options.template or templateUrl or content');
+//         }
+
+//         if (!openingTypes[options.openingType]){
+//             options.openingType = defaultOpeningType;
+//         }
+//         options.panelName = options.panelClass || '';
+
+//         options.panelClass = options.panelClass || '';
+//         options.panelClass += ' right';
+
+//         options.resolve = options.resolve || {};
+
+//         // We generate our id
+//         options.$$id = panels.length + 1;
+
+//         return options;
+//     }
+
+//     function getTemplatePromise(options) {
+//         return options.content ? $q.when(options.content) :
+//             options.template ? $q.when(options.template) :
+//             $http.get(options.templateUrl, {
+//                 cache: $templateCache
+//             }).then(function(result) {
+//                 return result.data;
+//             });
+//     }
+
+//     function getResolvePromises(resolves) {
+//         var promises = [];
+//         angular.forEach(resolves, function(value) {
+//             if (angular.isFunction(value) || angular.isArray(value)) {
+//                 promises.push($q.when($injector.invoke(value)));
+//             }
+//         });
+//         return promises;
+//     }
+
+//     function getPromises(options) {
+//         return [getTemplatePromise(options)].concat(getResolvePromises(options.resolve));
+//     }
+
+//     function resolveAll(options) {
+//         return $q.all(getPromises(options))
+//             .then(function(contentAndLocals) {
+//                 // variables injected in the controller
+//                 var locals = {};
+//                 var i = 1;
+//                 angular.forEach(options.resolve, function(value, key) {
+//                     locals[key] = contentAndLocals[i++];
+//                 });
+//                 return {
+//                     content: contentAndLocals[0],
+//                     locals: locals
+//                 };
+//             });
+//     }
+
+//     /**
+//      * Resolves everything needed to the view (templates, locals)
+//      * + creates the controller, scope
+//      * + finally creates the view
+//      */
+//     function createInstance(region, options, done) {
+//         var resultDeferred = $q.defer();
+//         var openedDeferred = $q.defer();
+
+//         var instance = new Panel({
+//             panelName : options.panelName,
+//             result: resultDeferred.promise,
+//             opened: openedDeferred.promise,
+//             close: function(result) {
+//                 if (!instance.isBlocked()) {
+//                     var notCancelled = dismissChildren(instance, 'parent closed');
+//                     if (!notCancelled) {
+//                         return false;
+//                     }
+
+//                     region.close(instance, options);
+//                     region.remove(instance);
+
+//                     resultDeferred.resolve(result);
+//                     return true;
+//                 }
+//                 return false;
+//             },
+//             dismiss: function(reason) {
+//                 if (!instance.isBlocked()) {
+//                     var notCancelled = dismissChildren(instance, 'parent dismissed');
+//                     if (!notCancelled) {
+//                       return false;
+//                     }
+//                     region.close(instance, options);
+//                     region.remove(instance);
+
+//                     resultDeferred.reject(reason);
+
+//                     return true;
+//                 }
+//                 return false;
+//             }
+//         });
+
+//         resolveAll(options)
+//             .then(function(contentAndLocals) {
+
+//                 // create scope
+//                 var scope = (options.scope || $rootScope).$new();
+//                 scope.$close = instance.close;
+//                 scope.$dismiss = instance.dismiss;
+
+//                 // fires the controller
+//                 var controller;
+//                 if (options.controller) {
+//                     var locals = contentAndLocals.locals;
+//                     locals.$scope = scope;
+//                     locals.$instance = instance;
+//                     controller = $controller(options.controller, locals);
+//                 }
+
+//                 // add variables required by regions
+//                 options.scope = scope;
+//                 options.deferred = resultDeferred;
+//                 options.content = contentAndLocals.content;
+
+//                 // finally open the view
+//                 if (options.replace) {
+//                     region.replace(options.replace, instance, options);
+//                     region.remove(options.replace, options);
+//                 } else {
+//                     region.open(instance, options);
+//                 }
+//             })
+//             .then(function() {
+//                 openedDeferred.resolve(true);
+//             }, function() {
+//                 openedDeferred.resolve(false);
+//             });
+
+//         return instance;
+//     }
+
+//     function dismissChildrens(panel, reason) {
+//         var childrens = _getNextPanels(panel);
+//         var i = childrens.length -1;
+
+//         for (; i >= 0; i--) {
+//             var child  = childrens[i];
+//             var result = child.dismiss(reason);
+//             if (!result) {
+//                 return false;
+//             }
+
+//         }
+
+//         return true;
+//     }
+
+//     /**
+//      * Dismiss all panels except the first one (the main list)
+//      */
+//     function dismissAll(reason) {
+//         if(panels.length >= 2) {
+//             dismissChildrens(panels[1], reason);
+//         }
+//     }
+
+//     /**
+//      * Open a new panel
+//      */
+//     function open(options) {
+//         options = _parseOptions(options);
+//         var  lastPanel = _(panels).last();
+
+//         if (options.push && !options.pushFrom) {
+//             options.pushFrom = lastPanel;
+//         }
+
+//         if (options.pushFrom && options.pushFrom != lastPanel) {
+//             options.replace = _getNextPanel(options.pushFrom);
+//             if (options.replace) {
+//                 var result = _dismissChildrens(options.replace, 'parent replaced');
+//                 // some child might have canceled the close
+//                 if (!result) {
+//                     return false;
+//                 }
+//             }
+//         }
+
+//         if (!options.push && !_isEmpty()) {
+//             options.replace = lastPanel;
+//         }
+
+//         if (options.replace && options.replace.isBlocked()) {
+//             return false;
+//         }
+
+//         var panel = createInstance(panelServiceUI, options);
+//         panels.push(panel);
+
+//         return panel;
+//     }
+
+
+
+//     /**
+//      * Our panel service.
+//      * @type {Object}
+//      */
+//     var PanelService = {
+//         panels: panels,
+//         openingTypes: openingTypes,
+//         getPanel: getPanel,
+//         hasPanel: hasPanel,
+//         open: open,
+//         dismissChildrens: dismissChildrens,
+//         dismissAll: dismissAll
+//     };
+
+//     return PanelService;
+// }]);
 var module = angular.module('ev-fdm');
 
 var SidonieModalService = function($modal, $animate, $log) {
@@ -3045,317 +3551,318 @@ angular.module('ev-fdm')
 });
 var module = angular.module('ev-fdm');
 
-/**
- * Taken from Angular-UI > $modal
- * A helper directive for the $modal service. It creates a backdrop element.
- */
-module.directive('middlePanelBackdrop', ['$timeout', 
-    function($timeout) {
-        return {
-            restrict: 'EA',
-            replace: true,
-            template: '<div class="modal-backdrop fade" ng-class="{in: animate}" ng-style="{\'z-index\': 1040 + index*10}"></div>',
-            link: function(scope, element) {
-                scope.animate = false;
-                //trigger CSS transitions
-                $timeout(function() {
-                    scope.animate = true;
-                });
-            }
+module.factory('PanelManagerFactory', function() {
+    function shouldBeOverriden(name) {
+        return function() {
+            throw new Error('Method ' + name + ' should be overriden');
         };
     }
-]);
-
-/**
- * Taken from Angular-UI > $modal
- */
-module.directive('middlePanelWindow', ['$timeout', 'middleRegion',
-    function($timeout, middleRegion) {
-        return {
-            restrict: 'EA',
-            scope: {
-                index: '@'
-            },
-            replace: true,
-            transclude: true,
-            templateUrl: 'panels/middle-window.phtml',
-            link: function(scope, element, attrs) {
-                $timeout(function() {
-                    // trigger CSS transitions
-                    scope.animate = true;
-                    // focus a freshly-opened modal
-                    element[0].focus();
-                });
-                scope.close = function(evt) {
-                    if (evt.target === evt.currentTarget) {
-                        evt.preventDefault();
-                        evt.stopPropagation();
-                        middleRegion.dismissAll();
-                    }
-                };
+    var PanelManager = function() {
+        this.panels = _([]);
+    };
+    PanelManager.prototype.open = shouldBeOverriden('open');
+    PanelManager.prototype.close = shouldBeOverriden('close');
+    PanelManager.prototype.push = function(instance) {
+        this.panels.push(instance);
+    };
+    PanelManager.prototype.remove = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            this.panels.splice(i, 1);
+        }
+        return i;
+    };
+    PanelManager.prototype.at = function(index) {
+        return this.panels._wrapped[index];
+    };
+    PanelManager.prototype.each = function() {
+        return this.panels.each.apply(this.panels, arguments);
+    };
+    PanelManager.prototype.dismissAll = function(reason) {
+        // dismiss all panels except the first one
+        var i = 0;
+        this.each(function(instance) {
+            if(i !== 0) {
+                instance.dismiss(reason);
             }
-        };
-    }
-]);
-
-module.service('middleRegion', ['$compile', '$document', '$rootScope', 'sidonieRegion', function($compile, $document, $rootScope, sidonieRegion) {
-
-    var els = {};
-    var body = $document.find('body').eq(0);
-
-    var region = sidonieRegion.create(false, {
-
-        open: function(instance, options) {
-
-            // create backdrop element
-            var backdropjqLiteEl, backdropDomEl;
-            backdropjqLiteEl = angular.element('<div middle-panel-backdrop></div>');
-            backdropDomEl = $compile(backdropjqLiteEl)($rootScope.$new(true));
-            body.append(backdropDomEl);
-            
-            // create window
-            var angularDomEl = angular.element('<div middle-panel-window></div>');
-            angularDomEl.addClass(options.panelClass);
-            angularDomEl.html(options.content);
-            // dom el
-            var modalDomEl = $compile(angularDomEl)(options.scope);
-            body.append(modalDomEl);
-
-            els[instance.$$id] = {
-                window: modalDomEl,
-                backdrop: backdropDomEl
-            }
-
-            return instance;
-        },
-
-        replace: function(fromInstance, toInstance, options) {
-            throw new Error('Not implemented');
-        },
-
-        close: function(instance, result) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                els[instance.$$id].window.remove();
-                els[instance.$$id].backdrop.remove();
-                delete els[instance.$$id];
+            i++;
+        });
+    };
+    PanelManager.prototype.dismissChildren = function(instance, reason) {
+        var children = this.getChildren(instance);
+        for (var i = children.length - 1; i >= 0; i--) {
+            var child = children[i];
+            var result = child.dismiss(reason);
+            if (!result) {
+                return false;
             }
         }
-    });
 
-    $document.bind('keydown', function(evt) {
-        if (evt.which === 27) {
-            var instance = region.last();
-            if (instance) {
-                $rootScope.$apply(function() {
-                    instance.dismiss('escape');
-                });
-            }
-        }
-    });
-
-    return region;
-}]);
-var module = angular.module('ev-fdm');
-
-module.directive('rightPanelWindow', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
-
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
-    }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
+        return true;
+    };
+    PanelManager.prototype.last = function() {
+        return this.panels.last();
+    };
+    PanelManager.prototype.getNext = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i < this.panels.size() - 1) {
+            return this.at(i + 1);
         } else {
-            attributeValue = BREAKS[breakpIndex];
-        }
-        element.attr('data-breakpoint', attributeValue);
-    }
-
-    return {
-        restrict: 'A',
-        scope: false,
-        // replace: true,
-        // transclude: true,
-        // templateUrl: 'panels/right-window.phtml',
-        link: function(scope, element, attrs) {
-            var inner = element.find('.panel-inner');
-            element.resizable({
-                handles: "w",
-                resize: function(event, ui) {
-                    var bp = getBPMatching(inner.outerWidth());
-                    applyBPAttribute(element, bp);
-                    $rootScope.$broadcast('panel-resized', element);
-                }
-            });
-            $(window).on('resize', function(event) {
-                var bp = getBPMatching(inner.outerWidth());
-                applyBPAttribute(element, bp);
-            });
-            scope.$on('animation-complete', function() {
-                var bp = getBPMatching(inner.outerWidth());
-                applyBPAttribute(element, bp);
-            });
-            $timeout(function() {
-                var bp = getBPMatching(inner.outerWidth());
-                applyBPAttribute(element, bp);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
+            return null;
         }
     };
-}]);
+    PanelManager.prototype.getChildren = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            return this.panels.slice(i + 1);
+        } else {
+            return [];
+        }
+    };
+    PanelManager.prototype.size = function() {
+        return this.panels.size();
+    };
+    PanelManager.prototype.isEmpty = function() {
+        return this.panels.size() === 0;
+    };
 
-module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
+    return {
+        create: function(methods) {
+            var ChildClass = function() {
+                return PanelManager.call(this);
+            };
+            ChildClass.prototype = _({}).extend(PanelManager.prototype, methods);
+            return new ChildClass();
+        }
+    };
+});
 
-    var STACKED_WIDTH = 15;
-    var els = {};
+module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory) {
 
-    function getEl(instance) {
-        if (els[instance.$$id]) {
-            return els[instance.$$id];
+    var STACKED_WIDTH = 75;
+    var MAIN_PANEL_MIN_WIDTH = 600;
+    var elements = {};
+
+    var stylesCache = window.stylesCache = {};
+    var container = angular.element('.panels-container');
+    var panelZero = container.find('.panel-zero');
+
+    var panelManager = PanelManagerFactory.create({
+        updateLayout: function() {
+            _(updateLayout()).debounce(50);
+        },
+        open: function(instance, options) {
+            instance.$$depth = options.depth;
+            var el = createPlaceholder(instance.$$depth);
+            var inner = createPanelView(instance, options);
+            el.html(inner);
+            elements[instance.$$id] = el;
+            $animate.enter(el, container, panelZero, function() {
+                options.scope.$emit('animation-complete');
+                $rootScope.$broadcast('module-layout-changed');
+                panelManager.updateLayout();
+            });
+            el.on('resize', function(event, ui) {
+                stylesCache[options.panelName] = ui.size.width;
+                panelManager.updateLayout();
+            });
+            return instance;
+        },
+        replace: function(fromInstance, toInstance, options) {
+            if (typeof(elements[fromInstance.$$id]) != 'undefined') {
+                var el = elements[fromInstance.$$id];
+                toInstance.$$depth = options.depth - 1;
+                var inner = createPanelView(toInstance, options);
+                el.html(inner);
+                elements[toInstance.$$id] = el;
+                delete elements[fromInstance.$$id];
+                return toInstance;
+            } else {
+                return panelManager.open(toInstance, options);
+            }
+        },
+        close: function(instance) {
+            if (typeof(elements[instance.$$id]) != 'undefined') {
+                var el = elements[instance.$$id];
+                $animate.leave(el, function() {
+                    delete elements[instance.$$id];
+                    panelManager.updateLayout();
+                });
+            }
+        }
+    });
+
+    function getElement(instance) {
+        if (elements[instance.$$id]) {
+            return elements[instance.$$id];
         } else {
             return null;
         }
     }
 
+    /**
+     * Return the panels sizes (if the user resized them)
+     */
     function getStylesFromCache(instance, options) {
-        var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
-        if (savedWidth)
+        var savedWidth = stylesCache[options.panelName];
+        if (savedWidth) {
             return 'width: ' + savedWidth + 'px;';
-        else
-            return '';
-    }
-
-    function stack(fromInstanceIndex) {
-        for (var i = 0; i < region.panels.size(); i++) {
-            var shouldStack = (i < fromInstanceIndex);
-            var instance = region.at(i);
-            var el = getEl(instance);
-            if (instance.$$stacked && !shouldStack) {
-                delete instance.$$actualWidth;
-                $animate.removeClass(el, 'stacked');
-            } else if (!instance.$$stacked && shouldStack) {
-                instance.$$actualWidth = getEl(instance).outerWidth();
-                $animate.addClass(el, 'stacked');
-            }
-            instance.$$stacked = shouldStack;
         }
+
+        return '';
     }
 
-    function checkStacking() {
-        var maxWidth = $(window).innerWidth() - 100;
-        for (var i = 0; i < region.panels.size(); i++) {
-            var j = 0;
-            var totalWidth = _(region.panels).reduce(function(memo, instance) {
-                if (j++ < i)
-                    return memo + STACKED_WIDTH;
-                else {
-                    var el = getEl(instance);
-                    if (!el) return memo;
-                    if (instance.$$stacked) return memo + instance.$$actualWidth;
-                    var width = el.outerWidth();
-                    if (width < 50) {
-                        // most probably before animation has finished landing
-                        // we neeed to anticipate a final w
-                        return memo + 300;
-                    } else {
-                        return memo + width;
-                    }
-                }
-            }, 0);
-            if (totalWidth < maxWidth) {
-                return stack(i);
-            }
-        }
-        // stack all
-        stack(region.panels.size() - 1);
-    }
-
+    /**
+     * Create a panel container in the DOM
+     */
     function createPlaceholder(depth) {
-        var isMain = depth === 1;
+        var isMain = depth === 0;
         return angular.element('<div ' +
             'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
             'style="z-index:' + (2000 + depth) + ';"></div>');
     }
 
+    /**
+     * Create a panel view section
+     */
     function createPanelView(instance, options) {
-        var inner = angular.element(options.content);
-        inner.attr('style', getStylesFromCache(instance, options));
-        inner.attr('right-panel-window', true);
+        var inner = angular.element('<div ev-panel-breakpoints style="' + getStylesFromCache(instance, options) + '"></div>');
+        inner.html(options.content);
         options.scope.panelClass = options.panelClass;
         return $compile(inner)(options.scope);
     }
 
-    var checkStackingThrottled = _(checkStacking).debounce(50);
+    /**
+     * Stack/unstack a panel
+     * @param  {Object}  panel the panel we want to stack unstack
+     * @param  {Boolean} shouldStack either it should stack/unstack
+     */
+    function changeStackPanelState(panel, shouldStack) {
 
-    $(window).on('resize', function() {
-        region.updateStacking();
-    });
+        if(!panel) {
+            return false;
+        }
 
-    var stylesCache = window.stylesCache = {};
-    var container = angular.element('.lisette-module-region.right');
-    var panelZero = container.find('.panel-zero');
+        var element = getElement(panel);
 
-    var region = sidonieRegion.create(true, {
-        updateStacking: function() {
-            // return $timeout(checkStackingThrottled);
-        },
-        open: function(instance, options) {
-            instance.$$depth = region.panels.size();
-            var el = createPlaceholder(instance.$$depth);
-            var inner = createPanelView(instance, options);
-            el.html(inner);
-            els[instance.$$id] = el;
-            $animate.enter(el, container, panelZero, function() {
-                options.scope.$emit('animation-complete');
-                $rootScope.$broadcast('module-layout-changed');
-                region.updateStacking();
-            });
-            el.on('resize', function(event, ui) {
-                stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
-                region.updateStacking();
-            });
-            region.updateStacking();
-            return instance;
-        },
-        replace: function(fromInstance, toInstance, options) {
-            if (typeof(els[fromInstance.$$id]) != 'undefined') {
-                var el = els[fromInstance.$$id];
-                toInstance.$$depth = region.panels.size() - 1;
-                var inner = createPanelView(toInstance, options);
-                el.html(inner);
-                els[toInstance.$$id] = el;
-                delete els[fromInstance.$$id];
-                region.updateStacking();
-                return toInstance;
-            } else {
-                return region.open(toInstance, options);
-            }
-        },
-        close: function(instance) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                var el = els[instance.$$id];
-                $animate.leave(el, function() {
-                    delete els[instance.$$id];
-                    region.updateStacking();
-                });
-                region.updateStacking();
+        if(!element) {
+            return false;
+        }
+
+        if (!shouldStack) {
+            delete panel.$$actualWidth;
+            $animate.removeClass(element, 'stacked');
+        } else if (shouldStack) {
+            panel.$$actualWidth = getElement(panel).outerWidth();
+            $animate.addClass(element, 'stacked');
+        }
+        panel.$$stacked = shouldStack;
+
+        return true;
+    }
+
+    /**
+     * Check if there is some panels to stack
+     */
+    function checkStacking() {
+        /**
+         * If the main panel isn't stacked, there is no need to do
+         * tese verifications.
+         */
+        var mainPanel = panelManager.panels.first();
+        if(mainPanel && !mainPanel.$$stacked) {
+            return;
+        }
+
+        var maxWidth = $(window).innerWidth();
+        // var panels = _(panelManager.panels).toArray().slice(1);
+        for (var i = 0; i < panelManager.panels.size(); i++) {
+            var j = 0;
+            var totalWidth = _(panelManager.panels).reduce(function(memo, instance) {
+                if (j++ < i){
+                    return memo + STACKED_WIDTH;
+                } else {
+                    var el = getElement(instance);
+                    if (!el) {
+                        return memo;
+                    }
+                    if (instance.$$stacked) {
+                        return memo + instance.$$actualWidth;
+                    }
+                    var width = el.outerWidth();
+                    // if (width < 50) {
+                    //     // most probably before animation has finished landing
+                    //     // we neeed to anticipate a final w
+                    //     return memo + 300;
+                    // } else {
+                        return memo + width;
+                    // }
+                }
+            }, 0);
+            if (totalWidth > maxWidth) {
+                changeStackPanelState(panelManager.at(i), true);
+            } else if (totalWidth < maxWidth) {
+                changeStackPanelState(panelManager.at(i), false);
             }
         }
+        // stack all
+        // changeStackPanelState(panelManager.panels.size() - 1);
+    }
+
+    /**
+     * Whenever a layout is changed
+     */
+    function updateLayout() {
+        checkStacking();
+        updateMainPanelWidth();
+        $timeout(function() { $rootScope.$broadcast('module-layout-changed'); }, 250);
+    }
+
+    /**
+     * Update the main panel width based on other panels sizes
+     */
+    function updateMainPanelWidth() {
+        var windowWidth      = $(window).innerWidth();
+        var mainPanel        = _(panelManager.panels).first();
+        var mainPanelElement = getElement(mainPanel);
+
+        if(mainPanelElement === null) {
+            return;
+        }
+
+        // We calculate the panels width (expect the main one)
+        var panels      = _(panelManager.panels).toArray().slice(1);
+        var panelsWidth = _(panels).reduce(function(memo, instance) {
+
+            var el = getElement(instance);
+            if (!el) {
+                return memo;
+            }
+            if (instance.$$stacked) {
+                return memo + instance.$$actualWidth;
+            }
+            var width = el.outerWidth();
+            // if (width < 50) {
+            //     // most probably before animation has finished landing
+            //     // we neeed to anticipate a final w
+            //     return memo + 300;
+            // } else {
+                return memo + width;
+            // }
+        }, 0);
+
+        var mainPanelWidth = windowWidth - panelsWidth;
+        if(mainPanelWidth < MAIN_PANEL_MIN_WIDTH) {
+            changeStackPanelState(panelManager.at(0), true);
+        } else {
+            changeStackPanelState(panelManager.at(0), false);
+            mainPanelElement.innerWidth(mainPanelWidth + 'px');
+        }
+    }
+
+    $(window).on('resize', function() {
+        panelManager.updateLayout();
     });
 
-    return region;
-
+    return panelManager;
 }]);
