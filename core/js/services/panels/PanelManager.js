@@ -1,79 +1,81 @@
 var module = angular.module('ev-fdm');
 
-module.directive('rightPanelWindow', [ '$timeout', '$rootScope', 'rightRegion', function($timeout, $rootScope, rightRegion) {
-
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
+module.factory('PanelManagerAbstract', function() {
+    function shouldBeOverriden(name) {
+        return function() {
+            throw new Error('Method ' + name + ' should be overriden');
+        };
     }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
+    var PanelManager = function(hasPush) {
+        this.hasPush = hasPush;
+        this.panels = _([]);
+    };
+    PanelManager.prototype.open = shouldBeOverriden('open');
+    PanelManager.prototype.close = shouldBeOverriden('close');
+    PanelManager.prototype.push = function(instance) {
+        this.panels.push(instance);
+    };
+    PanelManager.prototype.remove = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            this.panels.splice(i, 1);
+        }
+        return i;
+    };
+    PanelManager.prototype.at = function(index) {
+        return this.panels._wrapped[index];
+    };
+    PanelManager.prototype.each = function() {
+        return this.panels.each.apply(this.panels, arguments);
+    };
+    PanelManager.prototype.dismissAll = function(reason) {
+        // dismiss all panels except the first one
+        var i = 0;
+        this.each(function(instance) {
+            if(i !== 0) {
+                instance.dismiss(reason);
+            }
+            i++;
+        });
+    };
+    PanelManager.prototype.last = function() {
+        return this.panels.last();
+    };
+    PanelManager.prototype.getNext = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i < this.panels.size() - 1) {
+            return this.at(i + 1);
         } else {
-            attributeValue = BREAKS[breakpIndex];
-        }
-        element.attr('data-breakpoint', attributeValue);
-    }
-
-    function updateBreakpoints(element) {
-        var inner = element.find('.panel-inner');
-        var bp = getBPMatching(inner.outerWidth());
-        applyBPAttribute(element, bp);
-    }
-
-    return {
-        restrict: 'A',
-        scope: false,
-        replace: true,
-        transclude: true,
-         templateUrl: 'panels/right-window.phtml',
-        link: function(scope, element, attrs) {
-            /**
-             * Listener to update the breakpoints properties
-             */
-            element.resizable({
-                handles: "w",
-                resize: function(event, ui) {
-                    updateBreakpoints(element);
-                    rightRegion.updateLayout();
-                    $rootScope.$broadcast('panel-resized', element);
-                }
-            });
-            $(window).on('resize', function(event) {
-                updateBreakpoints(element);
-            });
-            scope.$on('animation-complete', function() {
-                updateBreakpoints(element);
-            });
-            // Specific case if it's the main panel.
-            // Whenever an update on the layout is trigger, we recalculate his breakpoints
-            var isMainPanel = element.parent().hasClass('panel-main');
-            if(isMainPanel) {
-                $rootScope.$on('module-layout-changed', function() {
-                    updateBreakpoints(element);
-                });
-            }
-            $timeout(function() {
-                updateBreakpoints(element);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
+            return null;
         }
     };
-}]);
+    PanelManager.prototype.getChildren = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            return this.panels.slice(i + 1);
+        } else {
+            return [];
+        }
+    };
+    PanelManager.prototype.size = function() {
+        return this.panels.size();
+    };
+    PanelManager.prototype.isEmpty = function() {
+        return this.panels.size() === 0;
+    };
 
-module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
+    return {
+        create: function(hasPush, methods) {
+            var ChildClass = function(hasPush) {
+                return PanelManager.call(this, hasPush);
+            };
+            ChildClass.prototype = _({}).extend(PanelManager.prototype, methods);
+            return new ChildClass(hasPush);
+        }
+    };
+});
+
+module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerAbstract', function($rootScope, $compile, $animate, $timeout, PanelManagerAbstract) {
 
     var STACKED_WIDTH = 75;
     var MAIN_PANEL_MIN_WIDTH = 600;
@@ -113,7 +115,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
      * Create a panel view section
      */
     function createPanelView(instance, options) {
-        var inner = angular.element('<div right-panel-window style="' + getStylesFromCache(instance, options) + '"></div>');
+        var inner = angular.element('<div ev-panel-breakpoints style="' + getStylesFromCache(instance, options) + '"></div>');
         inner.html(options.content);
         options.scope.panelClass = options.panelClass;
         return $compile(inner)(options.scope);
@@ -153,10 +155,10 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
      */
     function checkStacking() {
         var maxWidth = $(window).innerWidth();
-        // var panels = _(region.panels).toArray().slice(1);
-        for (var i = 0; i < region.panels.size(); i++) {
+        // var panels = _(panelManager.panels).toArray().slice(1);
+        for (var i = 0; i < panelManager.panels.size(); i++) {
             var j = 0;
-            var totalWidth = _(region.panels).reduce(function(memo, instance) {
+            var totalWidth = _(panelManager.panels).reduce(function(memo, instance) {
                 if (j++ < i){
                     return memo + STACKED_WIDTH;
                 } else {
@@ -178,13 +180,13 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 }
             }, 0);
             if (totalWidth > maxWidth) {
-                changeStackPanelState(region.at(i), true);
+                changeStackPanelState(panelManager.at(i), true);
             } else if (totalWidth < maxWidth) {
-                changeStackPanelState(region.at(i), false);
+                changeStackPanelState(panelManager.at(i), false);
             }
         }
         // stack all
-        // changeStackPanelState(region.panels.size() - 1);
+        // changeStackPanelState(panelManager.panels.size() - 1);
     }
 
     /**
@@ -201,7 +203,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
      */
     function updateMainPanelWidth() {
         var windowWidth = $(window).innerWidth();
-        var mainPanel = _(region.panels).first();
+        var mainPanel = _(panelManager.panels).first();
         var mainPanelElement = getElement(mainPanel);
 
         if(mainPanelElement === null) {
@@ -209,7 +211,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
         }
 
         // We calculate the panels width (expect the main one)
-        var panels = _(region.panels).toArray().slice(1);
+        var panels = _(panelManager.panels).toArray().slice(1);
         var panelsWidth = _(panels).reduce(function(memo, instance) {
 
             var el = getElement(instance);
@@ -231,22 +233,22 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
 
         var mainPanelWidth = windowWidth - panelsWidth;
         if(mainPanelWidth < MAIN_PANEL_MIN_WIDTH) {
-            changeStackPanelState(region.at(0), true);
+            changeStackPanelState(panelManager.at(0), true);
         } else {
-            changeStackPanelState(region.at(0), false);
+            changeStackPanelState(panelManager.at(0), false);
             mainPanelElement.innerWidth(mainPanelWidth + 'px');
         }
     }
 
     $(window).on('resize', function() {
-        region.updateLayout();
+        panelManager.updateLayout();
     });
 
     var stylesCache = window.stylesCache = {};
     var container = angular.element('.lisette-module-region.right');
     var panelZero = container.find('.panel-zero');
 
-    var region = sidonieRegion.create(true, {
+    var panelManager = PanelManagerAbstract.create(true, {
         updateLayout: function() {
             _(updateLayout()).debounce(50);
         },
@@ -259,11 +261,11 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
             $animate.enter(el, container, panelZero, function() {
                 options.scope.$emit('animation-complete');
                 $rootScope.$broadcast('module-layout-changed');
-                region.updateLayout();
+                panelManager.updateLayout();
             });
             el.on('resize', function(event, ui) {
                 stylesCache[options.panelName] = ui.size.width;
-                region.updateLayout();
+                panelManager.updateLayout();
             });
             return instance;
         },
@@ -277,7 +279,7 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 delete elements[fromInstance.$$id];
                 return toInstance;
             } else {
-                return region.open(toInstance, options);
+                return panelManager.open(toInstance, options);
             }
         },
         close: function(instance) {
@@ -285,11 +287,11 @@ module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout'
                 var el = elements[instance.$$id];
                 $animate.leave(el, function() {
                     delete elements[instance.$$id];
-                    region.updateLayout();
+                    panelManager.updateLayout();
                 });
             }
         }
     });
 
-    return region;
+    return panelManager;
 }]);

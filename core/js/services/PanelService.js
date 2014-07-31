@@ -23,82 +23,7 @@ module.factory('panelFactory', function() {
     };
 });
 
-module.factory('sidonieRegion', function() {
-    function shouldBeOverriden(name) {
-        return function() {
-            throw new Error('Method ' + name + ' should be overriden');
-        };
-    }
-    var Region = function(hasPush) {
-        this.hasPush = hasPush;
-        this.panels = _([]);
-    };
-    Region.prototype.open = shouldBeOverriden('open');
-    Region.prototype.close = shouldBeOverriden('close');
-    Region.prototype.push = function(instance) {
-        this.panels.push(instance);
-    };
-    Region.prototype.remove = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            this.panels.splice(i, 1);
-        }
-        return i;
-    };
-    Region.prototype.at = function(index) {
-        return this.panels._wrapped[index];
-    };
-    Region.prototype.each = function() {
-        return this.panels.each.apply(this.panels, arguments);
-    };
-    Region.prototype.dismissAll = function(reason) {
-        // dismiss all panels except the first one
-        var i = 0;
-        this.each(function(instance) {
-            if(i !== 0) {
-                instance.dismiss(reason);
-            }
-            i++;
-        });
-    };
-    Region.prototype.last = function() {
-        return this.panels.last();
-    };
-    Region.prototype.getNext = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i < this.panels.size() - 1) {
-            return this.at(i + 1);
-        } else {
-            return null;
-        }
-    };
-    Region.prototype.getChildren = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            return this.panels.slice(i + 1);
-        } else {
-            return [];
-        }
-    };
-    Region.prototype.size = function() {
-        return this.panels.size();
-    };
-    Region.prototype.isEmpty = function() {
-        return this.panels.size() === 0;
-    };
-
-    return {
-        create: function(hasPush, methods) {
-            var ChildClass = function(hasPush) {
-                return Region.call(this, hasPush);
-            };
-            ChildClass.prototype = _({}).extend(Region.prototype, methods);
-            return new ChildClass(hasPush);
-        }
-    };
-});
-
-module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'rightRegion', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, rightRegion, panelFactory) {
+module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'panelManager', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, panelManager, panelFactory) {
 
     // identifies all panels
     var currentId = 1;
@@ -109,7 +34,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         }
 
         // Retrieve the last panel
-        var last = rightRegion.last();
+        var last = panelManager.last();
 
         /**
          * Parse the opening options (replace or pushFrom)
@@ -126,7 +51,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             }
 
             if(options.pushFrom !== null && options.pushFrom != last) {
-                options.replace = rightRegion.getNext(options.pushFrom);
+                options.replace = panelManager.getNext(options.pushFrom);
             }
         }
 
@@ -183,8 +108,8 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             });
     }
 
-    function dismissChildren(region, instance, reason) {
-        var children = region.getChildren(instance);
+    function dismissChildren(panelManager, instance, reason) {
+        var children = panelManager.getChildren(instance);
         for (var i = children.length - 1; i >= 0; i--) {
             var child = children[i];
             var result = child.dismiss(reason);
@@ -201,7 +126,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
      * + creates the controller, scope
      * + finally creates the view
      */
-    function createInstance(region, options, done) {
+    function createInstance(panelManager, options, done) {
         var self = this;
         var resultDeferred = $q.defer();
         var openedDeferred = $q.defer();
@@ -212,12 +137,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             opened: openedDeferred.promise,
             close: function(result) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent closed');
+                    var notCancelled = dismissChildren(panelManager, instance, 'parent closed');
                     if (!notCancelled) {
                         return false;
                     }
-                    region.close(instance, options);
-                    region.remove(instance);
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.resolve(result);
                     return true;
                 }
@@ -225,12 +150,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             },
             dismiss: function(reason) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent dismissed');
+                    var notCancelled = dismissChildren(panelManager, instance, 'parent dismissed');
                     if (!notCancelled) {
                       return false;
                     }
-                    region.close(instance, options);
-                    region.remove(instance);
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.reject(reason);
                     return true;
                 }
@@ -255,17 +180,17 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                     controller = $controller(options.controller, locals);
                 }
 
-                // add variables required by regions
+                // add variables required by panelManager
                 options.scope = scope;
                 options.deferred = resultDeferred;
                 options.content = contentAndLocals.content;
 
                 // finally open the view
                 if (options.replace) {
-                    region.replace(options.replace, instance, options);
-                    region.remove(options.replace, options);
+                    panelManager.replace(options.replace, instance, options);
+                    panelManager.remove(options.replace, options);
                 } else {
-                    region.open(instance, options);
+                    panelManager.open(instance, options);
                 }
             })
             .then(function() {
@@ -278,7 +203,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
     }
 
     function getPanel (panelName){
-        var panel = rightRegion.panels.find(function(_panel) {
+        var panel = panelManager.panels.find(function(_panel) {
             return _panel.panelName === panelName;
         });
 
@@ -315,7 +240,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             var instance;
 
             if (options.replace) {
-                var result = dismissChildren(rightRegion, options.replace, 'parent replaced');
+                var result = dismissChildren(panelManager, options.replace, 'parent replaced');
                 // some child might have canceled the close
                 if (!result) {
                     return null;
@@ -327,24 +252,20 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             }
 
             // Contains the panel 'depth'
-            options.depth = rightRegion.panels.size();
-            instance = createInstance(rightRegion, options);
+            options.depth = panelManager.panels.size();
+            instance = createInstance(panelManager, options);
 
             // attach some variables to the instance
             instance.$$id = currentId++;
-            instance.$$region = 'right';
 
-            rightRegion.push(instance);
+            panelManager.push(instance);
             return instance;
         },
         dismissAll: function(reason) {
-            // _(regions).each(function(region) {
-                rightRegion.dismissAll(reason);
-            // });
+            panelManager.dismissAll(reason);
         },
         dismissChildren: function(instance, reason) {
-            var region = rightRegion;
-            return dismissChildren(region, instance, reason);
+            return dismissChildren(panelManager, instance, reason);
         }
     };
 }]);
