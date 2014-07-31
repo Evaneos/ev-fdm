@@ -1,4 +1,4 @@
-
+// @TODO: DELETE //
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
@@ -7,7 +7,7 @@ angular.module('ev-fdm')
         var $firstTr = $table.find('tbody > tr').first();
 
         // no header to resize
-        if (!$headers.length) return;
+        if (!$headers.length) { return; }
 
         // uniform size for every header
         if (!$firstTr.length) {
@@ -30,7 +30,7 @@ angular.module('ev-fdm')
                 // $(this).hide();
             }
             currentChildIndex++;
-        })
+        });
     }
 
     function _timeoutSync($table) {
@@ -41,7 +41,7 @@ angular.module('ev-fdm')
 
     function _uniformSize($headers, width) {
         var $tds = $headers.find('th');
-        if (!$tds.length) return;
+        if (!$tds.length) { return; }
         $tds.each(function() {
             $(this).css('width', (width/$tds.length) + 'px');
         });
@@ -72,6 +72,6 @@ angular.module('ev-fdm')
             // wait for end of digest then sync headers
             _timeoutSync($table);
         }
-    }
+    };
 
 }]);

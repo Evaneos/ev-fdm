@@ -39,7 +39,7 @@
 .progress-splashscreen {
     &:extend(.container-loading all);
     &:before {
-        background: #FFF !important;
+        background: #FFF;
     }
 }
 
@@ -51,7 +51,13 @@
     }
 }
 
+
+.ev-full-height {
+    height: 100%;
+}
+
 @import "icons.less";
+@import "icons-color.less";
 @import "trends.less";
 @import "table.less";
 @import "flags.less";
@@ -70,3 +76,4 @@
 @import "countriesflags.less";
 @import "buttongroup.less";
 @import "thumbnails.less";
+@import "panel-tabs.less";

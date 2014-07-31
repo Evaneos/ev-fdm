@@ -1,47 +1,57 @@
 /**
- * Common Application
+ * Core Application
  */
 
 // Angular depedencies for this app
-var commonModule = angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
-        'ui.bootstrap.tooltip','ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model', 'ui.bootstrap',
-        'restangular']);
+angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
+        'ui.bootstrap.tooltip', 'ui.bootstrap.popover', 'ui.select2', 'angularMoment', 'ngAnimate', 'checklist-model',
+        'ui.bootstrap', 'restangular'])
 
 
 // configure the loading bar to be displayed
 // just beneath the menu
-commonModule.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
+.config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.parentSelector = '#lisette-menu';
-}]);
+}])
 
-commonModule.config(['$tooltipProvider', function($tooltipProvider) {
+.config(['$tooltipProvider', function($tooltipProvider) {
     $tooltipProvider.options({
         placement: 'bottom',
         popupDelay: 100
     });
-}]);
+    $tooltipProvider.setTriggers({
+        'mouseenter': 'mouseleave',
+        'click': 'click',
+        'focus': 'blur',
+        'never': 'mouseleave',
+
+        // Custom event, the tooltip appears when the element has the focus, and disappear when a key
+        // in pressed (or the element has blurred).
+        'focus-not-typing': 'blur-or-typing'
+    });
+}])
 
 /**
  * Define a default error state for our app
  */
-commonModule.config(['$stateProvider', function($stateProvider) {
+.config(['$stateProvider', function($stateProvider) {
     $stateProvider.state('ev-error', {
         templateUrl: 'ev-error.phtml'
     });
-}]);
+}])
 
-commonModule.config(['RestangularProvider', function(restangularProvider) {
+.config(['RestangularProvider', function(restangularProvider) {
 
-}]);
+}])
 
 
 // ----------------------------------------------------
 // ATTACH TO MODULE
 // ----------------------------------------------------
 
-commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', 'uiSelect2Config', function($rootScope,
-        $state, $location, notificationsService, uiSelect2Config) {
+.run(['$rootScope', '$state', '$location', 'uiSelect2Config', function($rootScope,
+        $state, $location, uiSelect2Config) {
 
     // defaults for select2
     uiSelect2Config.minimumResultsForSearch = 7;
@@ -51,60 +61,186 @@ commonModule.run(['$rootScope', '$state', '$location', 'NotificationsService', '
     // language for the user OR navigator language OR english
     window.moment.lang([window.navigator.language, 'en']);
 
-    $rootScope.$on('$stateChangeStart', function(event, toState) {
-        $state.nextState = toState;
-        // not a tab changing
-        if (!$state.current.name || toState.name.indexOf($state.current.name) !== 0) {
-            $('body').addClass('state-resolving');
-        }
-    });
-
-    $rootScope.$on('$stateChangeSuccess', function() {
-        $('body').removeClass('state-resolving');
-    });
-
-    /**
-     * When there is an error on a state change
-     *
-     * In your state config you can add the following.
-     * This will allows the router to fallback to this state on error
-     * while displaying the specified message
-
-          fallback: {
-            state: 'list',
-            message: t('Unable to open this transaction!')
-          }
-     */
-    $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-        $('body').removeClass('state-resolving');
-
-        var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
-
-        notificationsService.addError({
-            text: errorMessage
-        });
-
-        // Redirect to the fallback we defined in our state
-        if(toState && toState.fallback && toState.fallback.state) {
-          $state.go(toState.fallback.state);
-        }
-        // Or our default error page
-        // It's commented because ev-error is a template (in views) that doesn't seems to be loaded
-        // else {
-        //   $state.go('ev-error');
-        // }
-    });
-
-    /*if (evaneos._frontData) {
-        var scopeKeys = evaneos.frontData('__scopeKeys');
-        _(scopeKeys).each(function(key) {
-            $rootScope[key] = evaneos.frontData(key);
-        });
-    }
-    */
-
-
 }]);
+
+angular.module('ev-fdm')
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+            var self = this;
+
+            /*
+                Properties
+             */
+            this.$scope = $scope;
+            this.elementName = elementName;
+            this.elements = elements;
+            this.defaultSortKey = defaultSortKey;
+            this.defaultReverseSort = defaultReverseSort;
+            this.sortKey = this.defaultSortKey;
+            this.reverseSort = this.defaultReverseSort;
+
+            this.updateScope();
+
+            /*
+                Pagination method that should be called from the template
+             */
+            this.$scope.changePage = function(newPage) {
+                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Sort method that should be called from the template
+             */
+            this.$scope.sortChanged = function() {
+                self.sortKey = self.$scope.sortKey;
+                self.reverseSort = self.$scope.reverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            };
+
+            /*
+                Display an item by changing route
+             */
+            this.$scope.toggleDetailView = function(element) {
+
+                if(!element) {
+                    $state.go(self.elementName);
+                    return;
+                }
+
+                var id = restangular.configuration.getIdFromElem(element);
+
+                if(!id || $stateParams.id === id) {
+                    $state.go(self.elementName);
+                }
+                else {
+                    $state.go(self.elementName + '.view', {id: id});
+                }
+            };
+
+            /*
+                Update the view when filter are changed in the SearchController
+             */
+            this.$scope.$on('common::filters.changed', function(event, filters) {
+                self.filters = filters;
+                self.sortKey = self.defaultSortKey;
+                self.defaultReverseSort = self.defaultReverseSort;
+                self.update(1, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            /*
+                When returning to the list state remove the active element
+             */
+            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
+                if(toState.name === self.elementName) {
+                  self.$scope.activeElement = null;
+                }
+                else if(toState.name === self.elementName + '.view') {
+                  self.setActiveElement();
+                }
+            });
+
+            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+
+            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
+            });
+        }
+
+        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
+            var self = this;
+            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                self.elements = elements;
+                self.updateScope();
+            });
+        };
+
+        ListController.prototype.updateScope = function () {
+            var self = this;
+
+            this.$scope[this.elementName] = this.elements;
+            this.$scope.currentPage = this.elements.pagination.current_page;
+            this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.sortKey = this.sortKey;
+            this.$scope.reverseSort = this.reverseSort;
+            this.$scope.selectedElements = [];
+            this.setActiveElement();
+        };
+
+        ListController.prototype.setActiveElement = function() {
+          var self = this;
+          this.$scope.activeElement = null;
+
+          if(angular.isDefined($state.params.id)) {
+            angular.forEach(this.elements, function(element) {
+              var elementId = restangular.configuration.getIdFromElem(element);
+              if(elementId == $state.params.id) {
+                self.$scope.activeElement = element;
+                }
+            });
+          }
+        };
+
+        return ListController;
+
+    }]);
+
+'use strict';
+
+var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
+    $scope.notifications = NotificationsService.list;
+    
+    $scope.$watch(function() {
+        return NotificationsService.activeNotification;
+    }, function() {
+        $scope.activeNotification = NotificationsService.activeNotification;
+    });
+    
+    $scope.getClass = function (notification){
+        if (!notification) return '';
+        switch (notification.type){
+            case NotificationsService.type.ERROR:
+                return 'danger';
+            case NotificationsService.type.SUCCESS:
+                return 'success';
+            case NotificationsService.type.WARNING:
+                return 'warning';
+            case NotificationsService.type.INFO:
+                return 'info';
+            default:
+                return 'success';
+        }
+    };
+
+    $scope.remove = function(notification) {
+        NotificationsService.remove(notification);
+    };
+}];
+
+angular.module('ev-fdm')
+    .controller('NotificationsController', NotificationsController);
+angular.module('ev-fdm')
+    .factory('SearchController', ['$rootScope', function($rootScope) {
+
+        function SearchController($scope) {
+            var self = this;
+
+            this.$scope = $scope;
+            this.$scope.filters = {};
+
+            this.$scope.filtersChanged = function() {
+                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
+            };
+        };
+
+        return SearchController;
+    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -113,7 +249,6 @@ angular.module('ev-fdm')
             restrict: 'A',
             scope: false,
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
-                this.activeElement;
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
@@ -147,35 +282,41 @@ angular.module('ev-fdm')
             }]
         };
     })
-    .directive('activable', function() {
-        return {
-            restrict: 'A',
-            scope: false,
-            require: '^activableSet',
-            link: function(scope, element, attr, ctrl) {
-                element.addClass('clickable');
+    .directive('activable', ['$parse', function($parse) {
+            return {
+                restrict: 'A',
+                require: '^activableSet',
+                link: function(scope, element, attr, ctrl) {
+                    element.addClass('clickable');
+                    var elementGetter = $parse(attr.activable),
+                        currentElement = elementGetter(scope);
 
-                var currentElement = scope[attr.activable];
 
-                scope.$watch(function() { return ctrl.activeElement; }, function(newActiveElement, oldActiveElement) {
-                    if(newActiveElement && currentElement === newActiveElement) {
-                        element.addClass('active');
-                    }
-                    else {
-                        element.removeClass('active');
-                    }
-                });
+                    scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
+                      currentElement = newCurrentElement;
+                    });
 
-                element.on('click', function(event) {
-                    if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
-                        scope.$apply(function() {
-                            ctrl.toggleActive(currentElement);
-                        });
-                    }
-                });
-            }
-        }
-    });
+                    scope.$watch(function() { return ctrl.activeElement; },
+                     function(newActiveElement, oldActiveElement) {
+                        if(newActiveElement && currentElement === newActiveElement) {
+                            element.addClass('active');
+                        }
+                        else {
+                            element.removeClass('active');
+                        }
+                    });
+
+                    element.on('click', function(event) {
+                        if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
+                            scope.$apply(function() {
+                                ctrl.toggleActive(currentElement);
+                            });
+                        }
+                    });
+                }
+            };
+        }]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -363,7 +504,45 @@ module.directive('evFilters', function() {
         templateUrl: 'filters.phtml'
     };
 });
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evFixedHeader', function () {
+            return {
+                link: function($scope, $element, $attrs) {
+                    $element.addClass('ev-full-height');
+                    var header = $element.find('>.ev-header');
+                    var body   = $element.find('>.ev-body');
+                    body.css({'overflow-y': 'auto'});
+                    var refreshDimensions = function() {
+                        body.hide();
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
 
+                        body.show();
+                        body.height(bodyHeight);
+
+                        if ($attrs.refreshIdentifier) {
+                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
+                        }
+                    };
+
+
+                    $scope.$watch(function() {
+                        return $element.height() + header.outerHeight(true);
+                    }, refreshDimensions);
+
+                    $(window).bind('resize', refreshDimensions);
+
+                    if ($attrs.refreshOn) {
+                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
+                    }
+
+                }
+            };
+        });
+}) ();
+
+// @TODO: DELETE //
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
@@ -372,7 +551,7 @@ angular.module('ev-fdm')
         var $firstTr = $table.find('tbody > tr').first();
 
         // no header to resize
-        if (!$headers.length) return;
+        if (!$headers.length) { return; }
 
         // uniform size for every header
         if (!$firstTr.length) {
@@ -395,7 +574,7 @@ angular.module('ev-fdm')
                 // $(this).hide();
             }
             currentChildIndex++;
-        })
+        });
     }
 
     function _timeoutSync($table) {
@@ -406,7 +585,7 @@ angular.module('ev-fdm')
 
     function _uniformSize($headers, width) {
         var $tds = $headers.find('th');
-        if (!$tds.length) return;
+        if (!$tds.length) { return; }
         $tds.each(function() {
             $(this).css('width', (width/$tds.length) + 'px');
         });
@@ -437,7 +616,7 @@ angular.module('ev-fdm')
             // wait for end of digest then sync headers
             _timeoutSync($table);
         }
-    }
+    };
 
 }]);
 'use strict';
@@ -795,6 +974,46 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
         }
     };
 }]);
+(function () {
+    'use strict';
+        // update popover template for binding unsafe html
+    angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
+        $templateCache.put("template/popover/popover.html",
+          "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
+          "  <div class=\"arrow\"></div>\n" +
+          "\n" +
+          "  <div class=\"popover-inner\">\n" +
+          "      <h3 class=\"popover-title\" ng-bind-html=\"title\" ng-show=\"title\"></h3>\n" +
+          "      <div class=\"popover-content\"ng-bind-html=\"content\"></div>\n" +
+          "  </div>\n" +
+          "</div>\n" +
+          "");
+    }]);
+    angular.module('ev-fdm')
+        .directive('popover', ['$timeout', function ($timeout) {
+        	return {
+        		restrict: 'A',
+				link: function ($scope, elem, attrs) {
+                    var showTimeout;
+                    elem.bind('focus', function () {
+                        elem.triggerHandler('focus-not-typing');
+                    });
+					elem.bind('blur', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                    });
+                    elem.bind('keypress', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                        showTimeout = $timeout(function () {
+                            elem.triggerHandler('focus-not-typing');
+                        }, 1000);
+                    });
+				}
+        	};
+        }]);
+}) ();
+
 /**
  * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
  * + Supports empty lists by displaying a message (promise-empty)
@@ -904,14 +1123,18 @@ angular.module('ev-fdm')
 }());
 'use strict';
 
-angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($rootScope, $state) {
+angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService', '$state', function ($rootScope, notificationsService, $state) {
     return {
         restrict: 'E',
         link: function(scope, element, attrs) {
 
             $rootScope.$on('$stateChangeStart', function(event, toState) {
-                if (!$state.current.name || toState.name.indexOf($state.current.name) !== 0) {
-                    element.addClass('state-resolving');
+                // not a tab changing
+                var dotX = $state.current.name.indexOf('.'),
+                     stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
+
+                if (!stateName || toState.name.indexOf(stateName) !== 0) {
+                    $('body').addClass('state-resolving');
                 }
             });
 
@@ -919,12 +1142,36 @@ angular.module('ev-fdm').directive('body', ['$rootScope', '$state', function ($r
                 element.removeClass('state-resolving');
             });
 
-            $rootScope.$on('$stateChangeError', function() {
-                element.removeClass('state-resolving');
+            /**
+             * When there is an error on a state change
+             *
+             * In your state config you can add the following.
+             * This will allows the router to fallback to this state on error
+             * while displaying the specified message
+
+                  fallback: {
+                    state: 'list',
+                    message: t('Unable to open this transaction!')
+                  }
+             */
+            $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
+                $('body').removeClass('state-resolving');
+
+                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+                notificationsService.addError({
+                    text: errorMessage
+                });
+
+                // Redirect to the fallback we defined in our state
+                if(toState && toState.fallback && toState.fallback.state) {
+                  $state.go(toState.fallback.state);
+                }
             });
         }
     };
 }]);
+
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
         this.$get =function () {
@@ -1117,42 +1364,48 @@ angular.module('ev-fdm')
         };
     }])
     .directive('selectable', ['$parse', function($parse) {
-        return {
-            restrict: 'A',
-            require: '^selectableSet',
-            link: function(scope, element, attr, ctrl) {
+      return {
+          restrict: 'A',
+          require: ['^selectableSet', '?ngModel'],
+          link: function(scope, element, attr, ctrls) {
 
-                var currentElementGetter = $parse(attr.selectable);
-                var currentElement = currentElementGetter(scope);
+              var currentElementGetter = $parse(attr.selectable);
+              var currentElement = currentElementGetter(scope);
 
-                ctrl.registerElement(currentElement);
+              var ctrl = ctrls[0],
+                  modelCtrl = ctrls[1];
 
-                scope.$on('$destroy', function() {
-                    ctrl.unregisterElement(currentElement);
-                });
+              ctrl.registerElement(currentElement);
 
-                scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
-                  scope.selected = ctrl.isElementSelected(currentElement);
-                });
+              scope.$on('$destroy', function() {
+                  ctrl.unregisterElement(currentElement);
+              });
 
-                element.on('click', function(event) {
-                    scope.$apply(function() {
-                        handleClick(event);
-                    });
-                });
-
-                function handleClick(event) {
-                    if (event.shiftKey) {
-                        ctrl.shiftedClick(currentElement, scope.$index);
-                    }
-                    else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
-                        ctrl.toggleSelection(currentElement, scope.$index);
-                    }
+              scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
+                scope.selected = ctrl.isElementSelected(currentElement);
+                if(modelCtrl) {
+                  modelCtrl.$setViewValue(scope.selected);
                 }
+              });
 
-            }
-        };
-    }])
+              element.on('click', function(event) {
+                  scope.$apply(function() {
+                      handleClick(event);
+                  });
+              });
+
+              function handleClick(event) {
+                  if (event.shiftKey) {
+                      ctrl.shiftedClick(currentElement, scope.$index);
+                  }
+                  else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
+                      ctrl.toggleSelection(currentElement, scope.$index);
+                  }
+              }
+
+          }
+      };
+  }])
     .directive('selectBox', function() {
         return {
             restrict: 'E',
@@ -1273,6 +1526,90 @@ angular.module('ev-fdm')
             }
         }
     });
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evTab', function () {
+            return {
+                restrict: 'E',
+                transclude: true,
+                scope: {},
+                controller: function($scope, $element) {
+                    var panes = $scope.panes = [];
+
+                    $scope.select = function(pane) {
+                        angular.forEach(panes, function(pane) {
+                            pane.selected = false;
+                        });
+                        pane.selected = true;
+                    };
+
+                    this.addPane = function(pane) {
+                        if (panes.length === 0) { $scope.select(pane); }
+                        panes.push(pane);
+                    };
+
+                    this.selectPrevious = function() {
+                        var selected = $scope.selectedIndex();
+                        $scope.select(panes[selected - 1]);
+                    };
+
+                    this.selectNext = function() {
+                        var selected = $scope.selectedIndex();
+                        $scope.select(panes[selected + 1]);
+                    };
+
+                    $scope.selectedIndex = function() {
+                        for (var i = 0; i < panes.length; i++) {
+                            var pane = panes[i];
+
+                            if (pane.selected) {
+                                return i;
+                            }
+                        }
+                    };
+                },
+                template:
+                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
+                        '<ul class="nav nav-tabs ev-header">' +
+                            '<li ng-repeat="pane in panes" ng-class="{active:pane.selected}" '+
+                                'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
+                                '<a href="" ng-click="select(pane)"> ' +
+                                    '<span ng-if="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-if="!pane.tabIcon">{{pane.tabTitle}}</span>'+
+                                '</a>' +
+                            '</li>' +
+                        '</ul>' +
+                        '<div class="tab-content ev-body" ng-transclude></div>' +
+                    '</div>',
+                replace: true
+            };
+        })
+        .directive('evPane', function() {
+            return {
+                require: '^evTab',
+                restrict: 'E',
+                transclude: true,
+                scope: { tabTitle: '@', tabIcon: '@' },
+                link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+                    tabsCtrl.addPane(scope);
+
+                    transcludeFn(function(clone, transcludedScope) {
+                        transcludedScope.$selectNext     = tabsCtrl.selectNext;
+                        transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
+
+                        element.find('.transclude').append(clone);
+                    });
+                },
+                template:
+                    '<div class="tab-pane" ng-class="{active: selected}">' +
+                        '<div class="section transclude"></div>' +
+                    '</div>',
+                replace: true
+            };
+        });
+}) ();
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -1330,176 +1667,6 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
-angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
-
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
-            var self = this;
-
-            /*
-                Properties
-             */
-            this.$scope = $scope;
-            this.elementName = elementName;
-            this.elements = elements;
-            this.defaultSortKey = defaultSortKey;
-            this.defaultReverseSort = defaultReverseSort;
-            this.sortKey = this.defaultSortKey;
-            this.reverseSort = this.defaultReverseSort;
-
-            this.updateScope();
-
-            /*
-                Pagination method that should be called from the template
-             */
-            this.$scope.changePage = function(newPage) {
-                self.update(newPage, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Sort method that should be called from the template
-             */
-            this.$scope.sortChanged = function() {
-                self.sortKey = self.$scope.sortKey;
-                self.reverseSort = self.$scope.reverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            };
-
-            /*
-                Display an item by changing route
-             */
-            this.$scope.toggleDetailView = function(element) {
-
-                if(!element) {
-                    $state.go(self.elementName);
-                    return;
-                }
-
-                var id = restangular.configuration.getIdFromElem(element);
-
-                if(!id || $stateParams.id === id) {
-                    $state.go(self.elementName);
-                }
-                else {
-                    $state.go(self.elementName + '.view', {id: id});
-                }
-            };
-
-            /*
-                Update the view when filter are changed in the SearchController
-             */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            /*
-                When returning to the list state remove the active element
-             */
-            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
-                if(toState.name === self.elementName) {
-                    self.$scope.activeElement = null;
-                }
-            });
-
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
-                self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
-            });
-        }
-
-        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
-        };
-
-        ListController.prototype.updateScope = function () {
-            var self = this;
-
-            this.$scope[this.elementName] = this.elements;
-            this.$scope.currentPage = this.elements.pagination.current_page;
-            this.$scope.pageCount = this.elements.pagination.total_pages;
-            this.$scope.sortKey = this.sortKey;
-            this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
-            this.$scope.activeElement = null;
-
-            if(angular.isDefined($state.params.id)) {
-                angular.forEach(this.elements, function(element) {
-                    var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
-                        self.$scope.activeElement = element;
-                    }
-                });
-            }
-        };
-
-        return ListController;
-
-    }]);
-
-'use strict';
-
-var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
-    $scope.notifications = NotificationsService.list;
-    
-    $scope.$watch(function() {
-        return NotificationsService.activeNotification;
-    }, function() {
-        $scope.activeNotification = NotificationsService.activeNotification;
-    });
-    
-    $scope.getClass = function (notification){
-        if (!notification) return '';
-        switch (notification.type){
-            case NotificationsService.type.ERROR:
-                return 'danger';
-            case NotificationsService.type.SUCCESS:
-                return 'success';
-            case NotificationsService.type.WARNING:
-                return 'warning';
-            case NotificationsService.type.INFO:
-                return 'info';
-            default:
-                return 'success';
-        }
-    };
-
-    $scope.remove = function(notification) {
-        NotificationsService.remove(notification);
-    };
-}];
-
-angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);
-angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
-        function SearchController($scope) {
-            var self = this;
-
-            this.$scope = $scope;
-            this.$scope.filters = {};
-
-            this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
-
-        return SearchController;
-    }]);
 'use strict';
 
 function FilterServiceFactory($rootScope, $timeout) {
@@ -1829,6 +1996,17 @@ angular.module('ev-fdm')
             return res;
         };
     });
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -3128,7 +3306,7 @@ angular.module('ev-fdm')
             this.restangular = restangular;
             this.resourceName = resourceName;
             this.defaultEmbed = defaultEmbed || [];
-        };
+        }
 
         RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
             var sortDir = reverseSort ? 'DESC' : 'ASC';
@@ -3216,6 +3394,19 @@ angular.module('ev-fdm')
             }
 
             return element.put(parameters);
+        };
+
+        RestangularStorage.prototype.create = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return this.restangular.all(this.resourceName).post(element, parameters);
         };
 
 

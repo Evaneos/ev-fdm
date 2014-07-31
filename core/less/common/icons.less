@@ -1,10 +1,10 @@
 @font-face {
     font-family: 'icomoon';
-    src:url('@{path-fonts}/icomoon/sidonie.eot?2014-06-30-1530');
-    src:url('@{path-fonts}/icomoon/sidonie.eot?#iefix2014-06-30-1530') format('embedded-opentype'),
-      url('@{path-fonts}/icomoon/sidonie.woff?2014-06-30-1530') format('woff'),
-      url('@{path-fonts}/icomoon/sidonie.ttf?2014-06-30-1530') format('truetype'),
-      url('@{path-fonts}/icomoon/sidonie.svg?2014-06-30-1530#sidonie') format('svg');
+    src:url('@{path-fonts}/icomoon/sidonie.eot?2014-07-29-1756');
+    src:url('@{path-fonts}/icomoon/sidonie.eot?#iefix2014-07-29-1756') format('embedded-opentype'),
+      url('@{path-fonts}/icomoon/sidonie.woff?2014-07-29-1756') format('woff'),
+      url('@{path-fonts}/icomoon/sidonie.ttf?2014-07-29-1756') format('truetype'),
+      url('@{path-fonts}/icomoon/sidonie.svg?2014-07-29-1756#sidonie') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -15,7 +15,7 @@
 @media screen and (-webkit-min-device-pixel-ratio:0) {
     @font-face {
         font-family: 'icomoon';
-        src: url('@{path-fonts}/icomoon/sidonie.svg?2014-06-30-1530#sidonie') format('svg');
+        src: url('@{path-fonts}/icomoon/sidonie.svg?2014-07-29-1756#sidonie') format('svg');
     }
 }
 
@@ -196,6 +196,7 @@ you can use the generic selector below, but it's slower:
 .icon-triangle_up:before {
     content: "\e60e";
 }
+.select2-container .select2-choice .select2-arrow b:before,
 .icon-triangle_down:before {
     content: "\e60f";
 }
@@ -289,7 +290,8 @@ you can use the generic selector below, but it's slower:
 .icon-article:before {
     content: "\e639";
 }
-.icon-arrow-up:before {
+.icon-arrow-up:before,
+.trend.up i:before {
     content: "\e63a";
 }
 .icon-arrow-right:before {
@@ -298,7 +300,8 @@ you can use the generic selector below, but it's slower:
 .icon-arrow-left:before {
     content: "\e63c";
 }
-.icon-arrow-down:before {
+.icon-arrow-down:before,
+.trend.down i:before {
     content: "\e63d";
 }
 .icon-agences-locales:before {

@@ -22,7 +22,6 @@
     */
 
         var BASE_CONFIG = {
-            clickable: '.ev-upload-clickable',
             previewTemplate: false,
             previewsContainer: false,
             autoQueue: true,
@@ -48,6 +47,7 @@
                     var dropzone = null;
                     var progress = null;
 
+                    var clickableZone = elem.find('.ev-upload-clickable')[0];
 
                     function getBytes (status) {
                         return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
@@ -64,7 +64,8 @@
                         if (dropzone !== null) {
                             dropzone.destroy();
                         }
-                        dropzone = new Dropzone(elem[0], angular.extend(BASE_CONFIG, settings));
+                        settings = angular.extend(BASE_CONFIG, settings);
+                        dropzone = new Dropzone(elem[0], angular.extend({clickable: clickableZone}, settings));
                         // the promise for the whole upload
 
                         $scope.currentUpload = null;
@@ -101,6 +102,9 @@
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
+                        dropzone.on('error', function() {
+                            upload.hasFileErrored = true;
+                        });
 
                         dropzone.on('uploadprogress', function () {
                             progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
