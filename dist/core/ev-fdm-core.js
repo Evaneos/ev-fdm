@@ -133,7 +133,10 @@ angular.module('ev-fdm')
              */
             this.$scope.$on('$stateChangeSuccess', function(event, toState) {
                 if(toState.name === self.elementName) {
-                    self.$scope.activeElement = null;
+                  self.$scope.activeElement = null;
+                }
+                else if(toState.name === self.elementName + '.view') {
+                  self.setActiveElement();
                 }
             });
 
@@ -167,16 +170,22 @@ angular.module('ev-fdm')
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
             this.$scope.selectedElements = [];
-            this.$scope.activeElement = null;
+            this.setActiveElement();
+        };
 
-            if(angular.isDefined($state.params.id)) {
-                angular.forEach(this.elements, function(element) {
-                    var elementId = restangular.configuration.getIdFromElem(element);
-                    if(elementId === $state.params.id) {
-                        self.$scope.activeElement = element;
-                    }
-                });
-            }
+        ListController.prototype.setActiveElement = function() {
+          var self = this;
+
+          this.$scope.activeElement = null;
+
+          if(angular.isDefined($state.params.id)) {
+              angular.forEach(this.elements, function(element) {
+                  var elementId = restangular.configuration.getIdFromElem(element);
+                  if(elementId === $state.params.id) {
+                      self.$scope.activeElement = element;
+                  }
+              });
+          }
         };
 
         return ListController;
@@ -240,7 +249,6 @@ angular.module('ev-fdm')
         return {
             restrict: 'A',
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
-                this.activeElement;
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
@@ -287,7 +295,8 @@ angular.module('ev-fdm')
                       currentElement = newCurrentElement;
                     });
 
-                    scope.$watch(function() { return ctrl.activeElement; }, function(newActiveElement, oldActiveElement) {
+                    scope.$watch(function() { return ctrl.activeElement; },
+                     function(newActiveElement, oldActiveElement) {
                         if(newActiveElement && currentElement === newActiveElement) {
                             element.addClass('active');
                         }
@@ -304,7 +313,7 @@ angular.module('ev-fdm')
                         }
                     });
                 }
-            }
+            };
         }]);
 'use strict';
 
