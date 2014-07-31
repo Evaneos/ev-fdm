@@ -175,16 +175,15 @@ angular.module('ev-fdm')
 
         ListController.prototype.setActiveElement = function() {
           var self = this;
-
           this.$scope.activeElement = null;
 
           if(angular.isDefined($state.params.id)) {
-              angular.forEach(this.elements, function(element) {
-                  var elementId = restangular.configuration.getIdFromElem(element);
-                  if(elementId === $state.params.id) {
-                      self.$scope.activeElement = element;
-                  }
-              });
+            angular.forEach(this.elements, function(element) {
+              var elementId = restangular.configuration.getIdFromElem(element);
+              if(elementId == $state.params.id) {
+                self.$scope.activeElement = element;
+                }
+            });
           }
         };
 
@@ -1910,6 +1909,17 @@ angular.module('ev-fdm')
             return res;
         };
     });
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
 'use strict';
 
 angular.module('ev-fdm')
