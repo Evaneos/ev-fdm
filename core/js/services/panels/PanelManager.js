@@ -102,6 +102,11 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
         },
         open: function(instance, options) {
             instance.$$depth = options.depth;
+            var isMain = options.depth === 0;
+            if(isMain) {
+                instance.isMain = true;
+            }
+
             var el = createPlaceholder(instance.$$depth);
             var inner = createPanelView(instance, options);
             el.html(inner);
@@ -219,7 +224,7 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
          * tese verifications.
          */
         var mainPanel = panelManager.panels.first();
-        if(mainPanel && !mainPanel.$$stacked) {
+        if(!mainPanel || (mainPanel && !mainPanel.$$stacked)) {
             return;
         }
 
@@ -272,7 +277,7 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
      */
     function updateMainPanelWidth() {
         var windowWidth      = $(window).innerWidth();
-        var mainPanel        = _(panelManager.panels).first();
+        var mainPanel = panelManager.panels.first();
         var mainPanelElement = getElement(mainPanel);
 
         if(mainPanelElement === null) {

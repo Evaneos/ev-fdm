@@ -24,6 +24,10 @@ function MenuManagerProvider() {
     }
 
     function selectTab(tab) {
+        if(!tab) {
+            return;
+        }
+
         if(self.activeTab) {
             self.lastTab = self.activeTab;
             self.activeTab.active = false;
@@ -34,7 +38,7 @@ function MenuManagerProvider() {
     }
 
     this.$get = ['$rootScope', '$state', function($rootScope, $state) {
-        
+
         // Handle first page load
         $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
             if (fromState.name === '') {
