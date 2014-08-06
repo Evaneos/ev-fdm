@@ -436,6 +436,10 @@ function MenuManagerProvider() {
     }
 
     function selectTab(tab) {
+        if(!tab) {
+            return;
+        }
+
         if(self.activeTab) {
             self.lastTab = self.activeTab;
             self.activeTab.active = false;
@@ -446,7 +450,7 @@ function MenuManagerProvider() {
     }
 
     this.$get = ['$rootScope', '$state', function($rootScope, $state) {
-        
+
         // Handle first page load
         $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
             if (fromState.name === '') {
@@ -2306,6 +2310,8 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
     var currentId = 1;
 
     function parseOptions(options) {
+        options = options || {};
+
         if (!options.template && !options.templateUrl && !options.content) {
             throw new Error('Should define options.template or templateUrl or content');
         }
@@ -2318,7 +2324,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
          */
         if(options.replace) {
             if(angular.isString(options.replace)) {
-                options.replace = getPanel(options.replace);
+                //We can use 'panel-main' as a special panel name
+                if(options.replace === 'panel-main') {
+                    options.replace = getMainPanel();
+                } else {
+                    options.replace = getPanel(options.replace);
+                }
             } else if(options.replace === true) {
                 options.replace = last;
             }
@@ -2390,7 +2401,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
      * + creates the controller, scope
      * + finally creates the view
      */
-    function createInstance(panelManager, options, done) {
+    function createInstance(options, done) {
         var self = this;
         var resultDeferred = $q.defer();
         var openedDeferred = $q.defer();
@@ -2478,6 +2489,18 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
     }
 
     /**
+     * Get the main panel instance
+     */
+    function getMainPanel() {
+        var mainPanel = panelManager.panels.first();
+        // var mainPanel = panelManager.panels.find(function(_panel) {
+        //     return _panel.isMain === true;
+        // });
+
+        return mainPanel || null;
+    }
+
+    /**
      * Return a boolean if either the panel exist or not
      */
     function hasPanel(panelName) {
@@ -2520,7 +2543,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
 
         // Contains the panel 'depth'
         options.depth = panelManager.panels.size();
-        instance = createInstance(panelManager, options);
+        instance = createInstance(options);
 
         // Attach some variables to the instance
         instance.$$id = currentId++;
@@ -3902,6 +3925,11 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
         },
         open: function(instance, options) {
             instance.$$depth = options.depth;
+            var isMain = options.depth === 0;
+            if(isMain) {
+                instance.isMain = true;
+            }
+
             var el = createPlaceholder(instance.$$depth);
             var inner = createPanelView(instance, options);
             el.html(inner);
@@ -4019,7 +4047,7 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
          * tese verifications.
          */
         var mainPanel = panelManager.panels.first();
-        if(mainPanel && !mainPanel.$$stacked) {
+        if(!mainPanel || (mainPanel && !mainPanel.$$stacked)) {
             return;
         }
 
@@ -4072,7 +4100,7 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
      */
     function updateMainPanelWidth() {
         var windowWidth      = $(window).innerWidth();
-        var mainPanel        = _(panelManager.panels).first();
+        var mainPanel = panelManager.panels.first();
         var mainPanelElement = getElement(mainPanel);
 
         if(mainPanelElement === null) {
