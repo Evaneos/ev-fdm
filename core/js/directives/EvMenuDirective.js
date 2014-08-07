@@ -10,7 +10,7 @@ function MenuManagerProvider() {
     this.addTab = function(tab) {
         this.tabs.push(tab);
         return this;
-    }
+    };
 
     function findTab(stateName) {
         var res = null;
@@ -18,12 +18,15 @@ function MenuManagerProvider() {
             if(stateName === tab.state) {
                 res = tab;
             }
-        })
+        });
 
         return res;
     }
 
     function selectTab(tab) {
+        tab = tab || {};
+        tab = findTab(tab.state);
+
         if(!tab) {
             return;
         }
@@ -57,7 +60,7 @@ function MenuManagerProvider() {
         return {
             tabs: self.tabs,
             selectTab: selectTab
-        }
+        };
     }];
 }
 
@@ -70,8 +73,13 @@ function EvMenuDirective(menuManager) {
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
                     '</ul>',
-        controller: [ '$scope', '$state', function($scope, $state) {
+        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
             $scope.tabs = menuManager.tabs;
+
+            if($rootScope['evmenu-state']) {
+                menuManager.selectTab($rootScope['evmenu-state']);
+            }
+
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);

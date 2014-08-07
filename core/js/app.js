@@ -57,6 +57,14 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
     uiSelect2Config.minimumResultsForSearch = 7;
     uiSelect2Config.allowClear = true;
 
+    // On the first loading state, we set this value
+    // It used by the ev-menu directive which is loaded asynchronously
+    // and can't listen to this event on the first load.
+    $rootScope.$on('$stateChangeStart', function(event, toState) {
+        toState.state = toState.name;
+        $rootScope['evmenu-state'] = toState;
+    });
+
 
     // language for the user OR navigator language OR english
     window.moment.lang([window.navigator.language, 'en']);

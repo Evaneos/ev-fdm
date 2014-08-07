@@ -57,6 +57,14 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
     uiSelect2Config.minimumResultsForSearch = 7;
     uiSelect2Config.allowClear = true;
 
+    // On the first loading state, we set this value
+    // It used by the ev-menu directive which is loaded asynchronously
+    // and can't listen to this event on the first load.
+    $rootScope.$on('$stateChangeStart', function(event, toState) {
+        toState.state = toState.name;
+        $rootScope['evmenu-state'] = toState;
+    });
+
 
     // language for the user OR navigator language OR english
     window.moment.lang([window.navigator.language, 'en']);
@@ -422,7 +430,7 @@ function MenuManagerProvider() {
     this.addTab = function(tab) {
         this.tabs.push(tab);
         return this;
-    }
+    };
 
     function findTab(stateName) {
         var res = null;
@@ -430,12 +438,15 @@ function MenuManagerProvider() {
             if(stateName === tab.state) {
                 res = tab;
             }
-        })
+        });
 
         return res;
     }
 
     function selectTab(tab) {
+        tab = tab || {};
+        tab = findTab(tab.state);
+
         if(!tab) {
             return;
         }
@@ -469,7 +480,7 @@ function MenuManagerProvider() {
         return {
             tabs: self.tabs,
             selectTab: selectTab
-        }
+        };
     }];
 }
 
@@ -482,8 +493,13 @@ function EvMenuDirective(menuManager) {
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
                     '</ul>',
-        controller: [ '$scope', '$state', function($scope, $state) {
+        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
             $scope.tabs = menuManager.tabs;
+
+            if($rootScope['evmenu-state']) {
+                menuManager.selectTab($rootScope['evmenu-state']);
+            }
+
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);
