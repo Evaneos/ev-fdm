@@ -1753,19 +1753,20 @@ function FilterServiceFactory($rootScope, $timeout) {
 angular.module('ev-fdm')
     .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
 
+/* jshint sub: true */
 angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
-        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
             var oldQueryTerm = '',
                 filterTextTimeout;
 
-            return {
-                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
                 allowClear: true,
                 query: function(query) {
-                    var res = [],
-                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
 
                         oldQueryTerm = query.term;
 
@@ -1788,10 +1789,19 @@ angular.module('ev-fdm')
                             };
 
                             if(resources.pagination &&
-                                resources.pagination.current_page < resources.pagination.total_pages) {
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
                                 result.more = true;
                             }
-
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
                             query.callback(result);
                         });
 
@@ -1807,7 +1817,8 @@ angular.module('ev-fdm')
                 initSelection: function() {
                     return {};
                 }
-             };
+            };
+            return config;
         };
     }]);
 
@@ -4251,34 +4262,6 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                     $scope.markers.marker.draggable = edited;
                 });
             }
-        };
-    }]);
-
-angular.module('ev-tinymce', ['ui.tinymce'])
-    .directive('evTinymce', [function () {
-        return {
-            template: '<textarea ui-tinymce="options" ng-model="model"></textarea>',
-            restrict: 'AE',
-            require: '^ngModel',
-            scope: {
-                options: '=',
-                model: '=ngModel'
-            },
-            controller: ['$scope', function($scope) {
-                var options = {
-                    menubar: false,
-                    statusbar: false,
-                    resize: false,
-                    toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-                    theme: 'modern'
-                };
-
-                if (undefined !== $scope.options) {
-                    angular.extend(options, $scope.options);
-                }
-
-                $scope.options = options;
-            }]
         };
     }]);
 

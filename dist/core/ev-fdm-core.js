@@ -1753,19 +1753,20 @@ function FilterServiceFactory($rootScope, $timeout) {
 angular.module('ev-fdm')
     .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
 
+/* jshint sub: true */
 angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
-        return function(dataProvider, formatter, resultModifier, minimumInputLength) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
             var oldQueryTerm = '',
                 filterTextTimeout;
 
-            return {
-                minimumInputLength: angular.isDefined(minimumInputLength) && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
                 allowClear: true,
                 query: function(query) {
-                    var res = [],
-                        timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
 
                         oldQueryTerm = query.term;
 
@@ -1788,10 +1789,19 @@ angular.module('ev-fdm')
                             };
 
                             if(resources.pagination &&
-                                resources.pagination.current_page < resources.pagination.total_pages) {
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
                                 result.more = true;
                             }
-
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
                             query.callback(result);
                         });
 
@@ -1807,7 +1817,8 @@ angular.module('ev-fdm')
                 initSelection: function() {
                     return {};
                 }
-             };
+            };
+            return config;
         };
     }]);
 
