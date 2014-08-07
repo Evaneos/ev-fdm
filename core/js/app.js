@@ -61,7 +61,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
     // It used by the ev-menu directive which is loaded asynchronously
     // and can't listen to this event on the first load.
     $rootScope.$on('$stateChangeStart', function(event, toState) {
-        toState.state = toState.name;
+        toState.state = toState.name.split('.')[0];
         $rootScope['evmenu-state'] = toState;
     });
 
