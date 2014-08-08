@@ -7,6 +7,8 @@
     // border-bottom: 5px solid @body-bg;
     border: none;
     >li {
+      position: relative;
+      top: -1px;
       &.active {
         >a,
         >a:hover,
@@ -15,10 +17,8 @@
           border: none;
         }
       }
-
       >a:hover {
         color: @gray-dark;
-        border: none;
         margin-bottom: 0;
       }
 
