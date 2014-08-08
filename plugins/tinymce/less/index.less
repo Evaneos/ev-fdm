@@ -1,0 +1,79 @@
+
+/**
+ * Custom
+ */
+
+@import "Iframe.less";
+@import "FlowLayout.less";
+@import "Mixins.less";
+@import "Reset.less";
+@import "StackLayout.less";
+@import "Scrollable.less";
+@import "TinyMCE.less";
+@import "ToolTip.less";
+@import "Icons.less";
+@import "Variables.less";
+@import "../../../core/less/overrides/bootstrap/buttons.less";
+@import "../../../core/less/variables.less";
+
+
+/* Icons */
+
+@font-face {
+  font-family: 'tinymce';
+  src:url('@{path-fonts}/tinymce/tinymce.eot');
+  src:url('@{path-fonts}/tinymce/tinymce.eot?#iefix') format('embedded-opentype'),
+    url('@{path-fonts}/tinymce/tinymce.woff') format('woff'),
+    url('@{path-fonts}/tinymce/tinymce.ttf') format('truetype'),
+    url('@{path-fonts}/tinymce/tinymce.svg#tinymce') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'tinymce-small';
+  src:url('@{path-fonts}/tinymce/tinymce-small.eot');
+  src:url('@{path-fonts}/tinymce/tinymce-small.eot?#iefix') format('embedded-opentype'),
+    url('@{path-fonts}/tinymce/tinymce-small.woff') format('woff'),
+    url('@{path-fonts}/tinymce/tinymce-small.ttf') format('truetype'),
+    url('@{path-fonts}/tinymce/tinymce-small.svg#tinymce') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+.mce-tinymce {
+  height: 100% ;
+  margin-bottom: 50px;
+
+  .mce-container-body.mce-stack-layout {
+    position: relative;
+    height: 100%;
+
+    .mce-container.mce-panel.mce-first.mce-stack-layout-item {
+      position: absolute;
+      top: 100%;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+
+    .mce-edit-area {
+      height: 100%;
+    }
+  }
+
+  .mce-btn {
+    &:extend(.btn);
+    &:extend(.btn-default);
+    border: none;
+    &.mce-active {
+      background-color: @gray-lighter;
+    }
+    &:not(.mce-active):hover {
+      background-color: transparent;
+    }
+  }
+
+}
+
