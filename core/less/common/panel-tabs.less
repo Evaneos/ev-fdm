@@ -2,12 +2,13 @@
 
 .ev-panel-tab {
   background-color: @gray-lighter;
-  padding: 0 5px;
 
   .nav-tabs {
     // border-bottom: 5px solid @body-bg;
     border: none;
     >li {
+      position: relative;
+      top: -1px;
       &.active {
         >a,
         >a:hover,
@@ -16,10 +17,8 @@
           border: none;
         }
       }
-
       >a:hover {
         color: @gray-dark;
-        border: none;
         margin-bottom: 0;
       }
 
@@ -38,6 +37,9 @@
   }
 
   .tab-pane {
+    padding-top: 5px;
+    background-color: @body-bg;
+
     .modal-body {
       background-color: @body-bg;
     }

@@ -1456,6 +1456,7 @@ angular.module('ev-fdm')
                 controller: function($scope, $element) {
                     var panes = $scope.panes = [];
 
+
                     $scope.select = function(pane) {
                         angular.forEach(panes, function(pane) {
                             pane.selected = false;
@@ -1463,19 +1464,34 @@ angular.module('ev-fdm')
                         pane.selected = true;
                     };
 
+
                     this.addPane = function(pane) {
                         if (panes.length === 0) { $scope.select(pane); }
                         panes.push(pane);
                     };
 
-                    this.selectPrevious = function() {
-                        var selected = $scope.selectedIndex();
-                        $scope.select(panes[selected - 1]);
+                    var selectFuture = function (panes) {
+                        var futurePane;
+                        panes.some(function (pane) {
+                            var isSelected = $scope.isShowed(pane);
+                            if (isSelected) {
+                                futurePane = pane;
+                            }
+                            return isSelected;
+                        });
+                       return futurePane;
                     };
 
                     this.selectNext = function() {
-                        var selected = $scope.selectedIndex();
-                        $scope.select(panes[selected + 1]);
+                        var selectedIndex = $scope.selectedIndex();
+                        var nextPanes = panes.slice(selectedIndex + 1);
+                        $scope.select(selectFuture(nextPanes) || panes[selectedIndex]);
+                    };
+
+                    this.selectPrevious = function() {
+                        var selectedIndex = $scope.selectedIndex();
+                        var previousPanes = panes.slice(0, selectedIndex).reverse();
+                        $scope.select(selectFuture(previousPanes) || panes[selectedIndex]);
                     };
 
                     $scope.selectedIndex = function() {
@@ -1487,15 +1503,20 @@ angular.module('ev-fdm')
                             }
                         }
                     };
+
+                    $scope.isShowed = function (pane) {
+                        return pane.tabShow == null || !!pane.tabShow;
+                    };
                 },
                 template:
                     '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
                         '<ul class="nav nav-tabs ev-header">' +
-                            '<li ng-repeat="pane in panes" ng-class="{active:pane.selected}" '+
+                            '<li ng-repeat="pane in panes | filter:isShowed" ' +
+                                'ng-class="{active:pane.selected}" '+
                                 'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
-                                '<a href="" ng-click="select(pane)"> ' +
-                                    '<span ng-if="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
-                                    '<span ng-if="!pane.tabIcon">{{pane.tabTitle}}</span>'+
+                                '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
+                                    '<span ng-show="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
                                 '</a>' +
                             '</li>' +
                         '</ul>' +
@@ -1509,10 +1530,14 @@ angular.module('ev-fdm')
                 require: '^evTab',
                 restrict: 'E',
                 transclude: true,
-                scope: { tabTitle: '@', tabIcon: '@' },
+                scope: {
+                    tabTitle: '@',
+                    tabIcon: '@',
+                    tabClick: '&',
+                    tabShow: '='
+                },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
                     tabsCtrl.addPane(scope);
-
                     transcludeFn(function(clone, transcludedScope) {
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
                         transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
@@ -1528,7 +1553,10 @@ angular.module('ev-fdm')
             };
         });
 }) ();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 12687e496ea861ad3bd5b6b408c8c97efdda96b7
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -1645,6 +1673,7 @@ function FilterServiceFactory($rootScope, $timeout) {
             })
         }
     }
+<<<<<<< HEAD
 
     return new FilterService();
 }
@@ -1701,6 +1730,64 @@ angular.module('ev-fdm')
                                     result.results.unshift(value);
                                 }
                             }
+=======
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+>>>>>>> 12687e496ea861ad3bd5b6b408c8c97efdda96b7
                             query.callback(result);
                         });
 
@@ -3620,27 +3707,30 @@ angular.module('ev-leaflet', ['leaflet-directive'])
 angular.module('ev-tinymce', ['ui.tinymce'])
     .directive('evTinymce', [function () {
         return {
-            template: '<textarea ui-tinymce="options" ng-model="model"></textarea>',
+            template: '<textarea ui-tinymce="tinymceFinalOptions"></textarea>',
             restrict: 'AE',
-            require: '^ngModel',
-            scope: {
-                options: '=',
-                model: '=ngModel'
-            },
+            replace: true,
             controller: ['$scope', function($scope) {
-                var options = {
+                var defaultOptions = {
                     menubar: false,
                     statusbar: false,
                     resize: false,
                     toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-                    theme: 'modern'
+                    'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
+                    skin: false,
+                    'verify_html': true,
+                    'convert_fonts_to_spans': true,
+
+                    // We choose to have a restrictive approach here.
+                    // The aim is to output the cleanest html possible.
+                    // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
+                    'valid_elements':
+                        'strong,em' +
+                        'span[!style<text-decoration: underline;],' +
+                        '@[style<text-align: right;?text-align: left;?text-align: center;],' +
+                        'p,!div,ul,li'
                 };
-
-                if (undefined !== $scope.options) {
-                    angular.extend(options, $scope.options);
-                }
-
-                $scope.options = options;
+                $scope.tinymceFinalOptions = angular.extend({}, defaultOptions, $scope.tinymceOptions);
             }]
         };
     }]);

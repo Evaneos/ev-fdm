@@ -1456,6 +1456,7 @@ angular.module('ev-fdm')
                 controller: function($scope, $element) {
                     var panes = $scope.panes = [];
 
+
                     $scope.select = function(pane) {
                         angular.forEach(panes, function(pane) {
                             pane.selected = false;
@@ -1463,19 +1464,34 @@ angular.module('ev-fdm')
                         pane.selected = true;
                     };
 
+
                     this.addPane = function(pane) {
                         if (panes.length === 0) { $scope.select(pane); }
                         panes.push(pane);
                     };
 
-                    this.selectPrevious = function() {
-                        var selected = $scope.selectedIndex();
-                        $scope.select(panes[selected - 1]);
+                    var selectFuture = function (panes) {
+                        var futurePane;
+                        panes.some(function (pane) {
+                            var isSelected = $scope.isShowed(pane);
+                            if (isSelected) {
+                                futurePane = pane;
+                            }
+                            return isSelected;
+                        });
+                       return futurePane;
                     };
 
                     this.selectNext = function() {
-                        var selected = $scope.selectedIndex();
-                        $scope.select(panes[selected + 1]);
+                        var selectedIndex = $scope.selectedIndex();
+                        var nextPanes = panes.slice(selectedIndex + 1);
+                        $scope.select(selectFuture(nextPanes) || panes[selectedIndex]);
+                    };
+
+                    this.selectPrevious = function() {
+                        var selectedIndex = $scope.selectedIndex();
+                        var previousPanes = panes.slice(0, selectedIndex).reverse();
+                        $scope.select(selectFuture(previousPanes) || panes[selectedIndex]);
                     };
 
                     $scope.selectedIndex = function() {
@@ -1487,15 +1503,20 @@ angular.module('ev-fdm')
                             }
                         }
                     };
+
+                    $scope.isShowed = function (pane) {
+                        return pane.tabShow == null || !!pane.tabShow;
+                    };
                 },
                 template:
                     '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
                         '<ul class="nav nav-tabs ev-header">' +
-                            '<li ng-repeat="pane in panes" ng-class="{active:pane.selected}" '+
+                            '<li ng-repeat="pane in panes | filter:isShowed" ' +
+                                'ng-class="{active:pane.selected}" '+
                                 'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
-                                '<a href="" ng-click="select(pane)"> ' +
-                                    '<span ng-if="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
-                                    '<span ng-if="!pane.tabIcon">{{pane.tabTitle}}</span>'+
+                                '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
+                                    '<span ng-show="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
                                 '</a>' +
                             '</li>' +
                         '</ul>' +
@@ -1509,10 +1530,14 @@ angular.module('ev-fdm')
                 require: '^evTab',
                 restrict: 'E',
                 transclude: true,
-                scope: { tabTitle: '@', tabIcon: '@' },
+                scope: {
+                    tabTitle: '@',
+                    tabIcon: '@',
+                    tabClick: '&',
+                    tabShow: '='
+                },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
                     tabsCtrl.addPane(scope);
-
                     transcludeFn(function(clone, transcludedScope) {
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
                         transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
@@ -1528,7 +1553,10 @@ angular.module('ev-fdm')
             };
         });
 }) ();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 12687e496ea861ad3bd5b6b408c8c97efdda96b7
 'use strict';
 
 var module = angular.module('ev-fdm');
