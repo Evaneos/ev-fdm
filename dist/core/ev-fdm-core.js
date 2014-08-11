@@ -2940,7 +2940,7 @@ angular.module('ev-fdm')
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
             }
 
-            element.save(parameters);
+            return element.save(parameters);
         };
 
         RestangularStorage.prototype.getNew = function() {
