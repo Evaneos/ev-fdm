@@ -2925,6 +2925,27 @@ angular.module('ev-fdm')
             return this.restangular.all(this.resourceName).post(element, parameters);
         };
 
+        RestangularStorage.prototype.delete = function(element) {
+            return element.remove();
+        };
+
+        RestangularStorage.prototype.save = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            element.save(parameters);
+        };
+
+        RestangularStorage.prototype.getNew = function() {
+            return this.restangular.one(this.resourceName);
+        };
+
 
         return RestangularStorage;
     }]);
