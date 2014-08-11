@@ -511,12 +511,20 @@ module.directive('evFilters', function() {
                     var header = $element.find('>.ev-header');
                     var body   = $element.find('>.ev-body');
                     body.css({'overflow-y': 'auto'});
+
+                    // Compute and return the height available for the element's body
+                    var getBodyHeight = function() {
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
+                        // This allows us to remove the padding/etc.. from the measurement
+                        bodyHeight -= body.innerHeight() - body.height();
+
+                        return bodyHeight;
+                    };
+
                     var refreshDimensions = function() {
                         body.hide();
-                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
-
+                        body.height(getBodyHeight());
                         body.show();
-                        body.height(bodyHeight);
 
                         if ($attrs.refreshIdentifier) {
                             $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
@@ -525,7 +533,7 @@ module.directive('evFilters', function() {
 
 
                     $scope.$watch(function() {
-                        return $element.height() + header.outerHeight(true);
+                        return getBodyHeight();
                     }, refreshDimensions);
 
                     $(window).bind('resize', refreshDimensions);
@@ -1553,10 +1561,6 @@ angular.module('ev-fdm')
             };
         });
 }) ();
-<<<<<<< HEAD
-
-=======
->>>>>>> 12687e496ea861ad3bd5b6b408c8c97efdda96b7
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -1673,7 +1677,6 @@ function FilterServiceFactory($rootScope, $timeout) {
             })
         }
     }
-<<<<<<< HEAD
 
     return new FilterService();
 }
@@ -1730,64 +1733,6 @@ angular.module('ev-fdm')
                                     result.results.unshift(value);
                                 }
                             }
-=======
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
->>>>>>> 12687e496ea861ad3bd5b6b408c8c97efdda96b7
                             query.callback(result);
                         });
 
@@ -4005,4 +3950,3 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-//# sourceMappingURL=ev-fdm.js.map
