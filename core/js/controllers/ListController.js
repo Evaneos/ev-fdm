@@ -37,20 +37,7 @@ angular.module('ev-fdm')
                 Display an item by changing route
              */
             this.$scope.toggleDetailView = function(element) {
-
-                if(!element) {
-                    $state.go(self.elementName);
-                    return;
-                }
-
-                var id = restangular.configuration.getIdFromElem(element);
-
-                if(!id || $stateParams.id === id) {
-                    $state.go(self.elementName);
-                }
-                else {
-                    $state.go(self.elementName + '.view', {id: id});
-                }
+                self.toggleView('view', element);
             };
 
             /*
@@ -97,8 +84,6 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.updateScope = function () {
-            var self = this;
-
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
@@ -120,6 +105,22 @@ angular.module('ev-fdm')
                 }
             });
           }
+        };
+
+        ListController.prototype.toggleView = function(view, element) {
+            if(!element) {
+                $state.go(this.elementName);
+                return;
+            }
+
+            var id = restangular.configuration.getIdFromElem(element);
+
+            if(!id || $stateParams.id === id) {
+                $state.go(this.elementName);
+            }
+            else {
+                $state.go(this.elementName + '.' + view, {id: id});
+            }
         };
 
         return ListController;
