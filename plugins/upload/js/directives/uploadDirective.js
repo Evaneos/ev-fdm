@@ -103,8 +103,10 @@
                         dropzone.on('sending', function (file) {
                             if ($scope.currentUpload === null) {
                             	var deferred = $q.defer();
-                            	filesPromises[file.fullPath] = deferred;
-                            	$scope.fileAdded({dropzoneFile: file, promise: deferred.promise});
+                            	filesPromises[file.name] = deferred;
+                            	$scope.$apply(function($scope) {
+                            		$scope.fileAdded({dropzoneFile: file, promise: deferred.promise});
+                            	});
                             	
                             	$scope.$apply(startNewUpload);
                             }
@@ -112,13 +114,13 @@
                         
                         dropzone.on('uploadprogress', function (file, progress) {
                         	$scope.$apply(function ($scope) {
-                            	filesPromises[file.fullPath].notify(progress);
+                            	filesPromises[file.name].notify(progress);
                             });
                         });
 
                         dropzone.on('success', function (file, response) {
                             $scope.$apply(function ($scope) {
-                            	filesPromises[file.fullPath].resolve({file: response});
+                            	filesPromises[file.name].resolve({file: response});
                             	
                                 $scope.fileSuccess({file: response});
                             });
@@ -126,13 +128,15 @@
                         
                         dropzone.on('error', function (file, response) {
                             $scope.$apply(function ($scope) {
-                            	filesPromises[file.fullPath].reject({errorMessage: response});
+                            	filesPromises[file.name].reject({errorMessage: response});
                             });
                         });
                         
                         dropzone.on('complete', function (file) {
-                        	progress.done += 1;
-                        	delete filesPromises[file.fullPath];
+                        	if(!angular.isDefined(progress)){
+                        		progress.done += 1;
+                        	}
+                        	delete filesPromises[file.name];
                         });
 
                     }, true);
