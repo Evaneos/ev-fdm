@@ -3,3 +3,7 @@ demo/node_modules/*
 node_modules/*
 bower_components
 .idea
+
+# eclipse ide
+.project
+.settings
