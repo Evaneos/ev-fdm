@@ -8,12 +8,20 @@
                     var header = $element.find('>.ev-header');
                     var body   = $element.find('>.ev-body');
                     body.css({'overflow-y': 'auto'});
+
+                    // Compute and return the height available for the element's body
+                    var getBodyHeight = function() {
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
+                        // This allows us to remove the padding/etc.. from the measurement
+                        bodyHeight -= body.innerHeight() - body.height();
+
+                        return bodyHeight;
+                    };
+
                     var refreshDimensions = function() {
                         body.hide();
-                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
-
+                        body.height(getBodyHeight());
                         body.show();
-                        body.height(bodyHeight);
 
                         if ($attrs.refreshIdentifier) {
                             $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
@@ -22,7 +30,7 @@
 
 
                     $scope.$watch(function() {
-                        return $element.height() + header.outerHeight(true);
+                        return getBodyHeight();
                     }, refreshDimensions);
 
                     $(window).bind('resize', refreshDimensions);

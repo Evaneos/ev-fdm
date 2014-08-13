@@ -110,20 +110,7 @@ angular.module('ev-fdm')
                 Display an item by changing route
              */
             this.$scope.toggleDetailView = function(element) {
-
-                if(!element) {
-                    $state.go(self.elementName);
-                    return;
-                }
-
-                var id = restangular.configuration.getIdFromElem(element);
-
-                if(!id || $stateParams.id === id) {
-                    $state.go(self.elementName);
-                }
-                else {
-                    $state.go(self.elementName + '.view', {id: id});
-                }
+                self.toggleView('view', element);
             };
 
             /*
@@ -193,6 +180,22 @@ angular.module('ev-fdm')
                 }
             });
           }
+        };
+
+        ListController.prototype.toggleView = function(view, element) {
+            if(!element) {
+                $state.go(this.elementName);
+                return;
+            }
+
+            var id = restangular.configuration.getIdFromElem(element);
+
+            if(!id || $stateParams.id === id) {
+                $state.go(this.elementName);
+            }
+            else {
+                $state.go(this.elementName + '.' + view, {id: id});
+            }
         };
 
         return ListController;
@@ -534,12 +537,20 @@ module.directive('evFilters', function() {
                     var header = $element.find('>.ev-header');
                     var body   = $element.find('>.ev-body');
                     body.css({'overflow-y': 'auto'});
+
+                    // Compute and return the height available for the element's body
+                    var getBodyHeight = function() {
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
+                        // This allows us to remove the padding/etc.. from the measurement
+                        bodyHeight -= body.innerHeight() - body.height();
+
+                        return bodyHeight;
+                    };
+
                     var refreshDimensions = function() {
                         body.hide();
-                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
-
+                        body.height(getBodyHeight());
                         body.show();
-                        body.height(bodyHeight);
 
                         if ($attrs.refreshIdentifier) {
                             $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
@@ -548,7 +559,7 @@ module.directive('evFilters', function() {
 
 
                     $scope.$watch(function() {
-                        return $element.height() + header.outerHeight(true);
+                        return getBodyHeight();
                     }, refreshDimensions);
 
                     $(window).bind('resize', refreshDimensions);
@@ -3539,6 +3550,27 @@ angular.module('ev-fdm')
             }
 
             return this.restangular.all(this.resourceName).post(element, parameters);
+        };
+
+        RestangularStorage.prototype.delete = function(element) {
+            return element.remove();
+        };
+
+        RestangularStorage.prototype.save = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.save(parameters);
+        };
+
+        RestangularStorage.prototype.getNew = function() {
+            return this.restangular.one(this.resourceName);
         };
 
 
