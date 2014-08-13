@@ -57,7 +57,7 @@ angular.module('ev-fdm')
                 if(toState.name === self.elementName) {
                   self.$scope.activeElement = null;
                 }
-                else if(toState.name === self.elementName + '.view') {
+                else {
                   self.setActiveElement();
                 }
             });
