@@ -169,14 +169,12 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.setActiveElement = function() {
-            console.log('setActiveElement', $state.params.id);
           var self = this;
           this.$scope.activeElement = null;
 
           if(angular.isDefined($state.params.id)) {
             angular.forEach(this.elements, function(element) {
               var elementId = restangular.configuration.getIdFromElem(element);
-              console.log(elementId);
               if(elementId == $state.params.id) {
                 self.$scope.activeElement = element;
                 }
@@ -4624,4 +4622,3 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-//# sourceMappingURL=ev-fdm.js.map

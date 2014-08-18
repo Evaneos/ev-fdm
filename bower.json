@@ -32,6 +32,6 @@
     "dropzone": "~3.10.2",
 
 
-    "angular-ui-tinymce": "~0.0.5"
+    "angular-ui-tinymce": "~0.0.4"
   }
 }
