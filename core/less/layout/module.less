@@ -85,8 +85,22 @@
         .lisette-module-bottombar {
             left: @module-leftbar-width;
         }
-        .panel-placeholder.panel-main > .panel .table-container {
+        .panel .table-container {
             left: @module-leftbar-width;
+        }
+
+        [data-breakpoint='min'],
+        [data-breakpoint='100'],
+        [data-breakpoint='200'],
+        [data-breakpoint='300'],
+        [data-breakpoint='400'] {
+            .lisette-module-leftbar {
+              display: none;
+            }
+
+            &.panel .table-container {
+              left: 0;
+            }
         }
     }
 

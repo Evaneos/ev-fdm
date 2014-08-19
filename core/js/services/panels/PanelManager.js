@@ -89,7 +89,7 @@ module.factory('PanelManagerFactory', function() {
 module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory) {
 
     var STACKED_WIDTH = 75;
-    var MAIN_PANEL_MIN_WIDTH = 600;
+    var MAIN_PANEL_MIN_WIDTH = 75;
     var elements = {};
 
     var stylesCache = window.stylesCache = {};
@@ -98,9 +98,10 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
 
     var panelManager = PanelManagerFactory.create({
         updateLayout: function() {
-            _(updateLayout()).debounce(50);
+            updateLayout();
         },
         open: function(instance, options) {
+            instance.$$stacked = false;
             instance.$$depth = options.depth;
             var isMain = options.depth === 0;
             if(isMain) {
@@ -187,135 +188,189 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     }
 
     /**
-     * Stack/unstack a panel
-     * @param  {Object}  panel the panel we want to stack unstack
-     * @param  {Boolean} shouldStack either it should stack/unstack
-     */
-    function changeStackPanelState(panel, shouldStack) {
-
-        if(!panel) {
-            return false;
-        }
-
-        var element = getElement(panel);
-
-        if(!element) {
-            return false;
-        }
-
-        if (!shouldStack) {
-            delete panel.$$actualWidth;
-            $animate.removeClass(element, 'stacked');
-        } else if (shouldStack) {
-            panel.$$actualWidth = getElement(panel).outerWidth();
-            $animate.addClass(element, 'stacked');
-        }
-        panel.$$stacked = shouldStack;
-
-        return true;
-    }
-
-    /**
      * Check if there is some panels to stack
      */
     function checkStacking() {
-        /**
-         * If the main panel isn't stacked, there is no need to do
-         * tese verifications.
-         */
-        var mainPanel = panelManager.panels.first();
-        if(!mainPanel || (mainPanel && !mainPanel.$$stacked)) {
-            return;
-        }
 
-        var maxWidth = $(window).innerWidth();
-        // var panels = _(panelManager.panels).toArray().slice(1);
-        for (var i = 0; i < panelManager.panels.size(); i++) {
-            var j = 0;
-            var totalWidth = _(panelManager.panels).reduce(function(memo, instance) {
-                if (j++ < i){
-                    return memo + STACKED_WIDTH;
-                } else {
-                    var el = getElement(instance);
-                    if (!el) {
-                        return memo;
-                    }
-                    if (instance.$$stacked) {
-                        return memo + instance.$$actualWidth;
-                    }
-                    var width = el.outerWidth();
-                    // if (width < 50) {
-                    //     // most probably before animation has finished landing
-                    //     // we neeed to anticipate a final w
-                    //     return memo + 300;
-                    // } else {
-                        return memo + width;
-                    // }
-                }
-            }, 0);
-            if (totalWidth > maxWidth) {
-                changeStackPanelState(panelManager.at(i), true);
-            } else if (totalWidth < maxWidth) {
-                changeStackPanelState(panelManager.at(i), false);
-            }
-        }
+        var windowWidth = $(window).innerWidth();
+
+        var dataPanels = getDataFromPanels(panelManager.panels);
+        var newDataPanels = calculateStackingFromData(dataPanels, windowWidth);
+        resizeAndStackPanels(panelManager.panels, newDataPanels);
+
+
+
+        var panelStacked = false;
+        var firstStacked = -1;
+
         // stack all
         // changeStackPanelState(panelManager.panels.size() - 1);
+    }
+
+    function getDataFromPanels(panels) {
+        var data = [];
+        for (var i = 0; i < panels.size(); i++) {
+            var panel = panelManager.at(i);
+            var panelElement = getElement(panel);
+            data.push({
+                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
+                maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
+                stacked:  panel.$$stacked,
+                width:    panelElement.width(),
+                stackedWidth: STACKED_WIDTH
+            });
+        }
+        return data;
+    }
+
+    /**
+     * {
+            minWidth:
+            maxWidth:
+            stacked:
+            width:
+            stackedWidth:
+        }
+     * @param  array datas [description]
+     * @return array       [description]
+     */
+    function calculateStackingFromData(datas, width) {
+        _(datas).each(function(element) {
+            element.stacked = false;
+        });
+
+        console.log('yo');
+        console.table(datas);
+
+
+        function stackedDatas() {
+
+            for (var i = 0; i < datas.length; i++) {
+
+                var totalMinWidth = _(datas).reduce(function(memo, data) {
+
+                        if (data.stacked) {
+                            return memo + data.stackedWidth;
+                        }
+                        var width = data.minWidth;
+                        if(data.minWidth < data.stackedWidth) {
+                            width = data.stackedWidth + 1;
+                        }
+
+                        return memo + width;
+                }, 0);
+                if (totalMinWidth > width) {
+                    datas[i].stacked = true;
+                }
+            }
+        }
+
+        function updateSize() {
+            for (var i = 0; i < datas.length; i++) {
+                var data = datas[i];
+                if (data.width < data.minWidth) {
+                    data.width = data.minWidth;
+                }
+            }
+
+            var totalWidth = _(datas).reduce(function(memo, data) {
+                if (data.stacked) {
+                    return memo + data.stackedWidth;
+                }
+
+                return memo + data.width;
+            }, 0);
+
+            var delta = width - totalWidth;
+
+            for (var i = 0; i < datas.length; i++) {
+                var data  = datas[i];
+
+                if(data.stacked) {
+                    data.width = data.stackedWidth;
+                    continue;
+                }
+
+                // try to take all delta
+                var oldWidth = data.width;
+                var newWidth = data.width + delta;
+
+                // Check limit
+                if (data.minWidth > newWidth) {
+                    data.width = data.minWidth;
+                }
+
+                // Check limit
+                 else if (data.maxWidth !== 0 && data.maxWidth < newWidth) {
+                    data.width = maxWidth;
+                }
+
+                else {
+                    data.width = data.width + delta;
+                }
+
+                delta = delta - (data.width - oldWidth);
+
+                if(delta === 0) {
+                    break;
+                }
+            }
+
+            if (delta != 0) {
+                console.log('impossible to reach the size');
+            }
+
+
+        }
+        stackedDatas(datas);
+        updateSize(datas);
+
+        return datas;
+    }
+
+    function resizeAndStackPanels(panels, dataPanels) {
+        for (var i = 0; i < panels.size(); i++) {
+            var panel = panelManager.at(i);
+            var dataPanel = dataPanels[i];
+
+            var element = getElement(panel);
+
+            if(!element) {
+                console.log('no element for this panel)');
+                continue;
+            }
+
+            if (panel.$$stacked && !dataPanel.stacked) {
+                $animate.removeClass(element, 'stacked');
+            } else if (!panel.$$stacked && dataPanel.stacked) {
+                $animate.addClass(element, 'stacked');
+            }
+
+            panel.$$stacked = dataPanel.stacked;
+
+            element.children().first().width(dataPanel.width);
+
+        }
     }
 
     /**
      * Whenever a layout is changed
      */
+    var timerResize = null;
+
     function updateLayout() {
-        checkStacking();
-        updateMainPanelWidth();
-        $timeout(function() { $rootScope.$broadcast('module-layout-changed'); }, 250);
-    }
-
-    /**
-     * Update the main panel width based on other panels sizes
-     */
-    function updateMainPanelWidth() {
-        var windowWidth      = $(window).innerWidth();
-        var mainPanel = panelManager.panels.first();
-        var mainPanelElement = getElement(mainPanel);
-
-        if(mainPanelElement === null) {
-            return;
+        if(timerResize !== null) {
+            $timeout.cancel(timerResize);
         }
 
-        // We calculate the panels width (expect the main one)
-        var panels      = _(panelManager.panels).toArray().slice(1);
-        var panelsWidth = _(panels).reduce(function(memo, instance) {
-
-            var el = getElement(instance);
-            if (!el) {
-                return memo;
-            }
-            if (instance.$$stacked) {
-                return memo + instance.$$actualWidth;
-            }
-            var width = el.outerWidth();
-            // if (width < 50) {
-            //     // most probably before animation has finished landing
-            //     // we neeed to anticipate a final w
-            //     return memo + 300;
-            // } else {
-                return memo + width;
-            // }
-        }, 0);
-
-        var mainPanelWidth = windowWidth - panelsWidth;
-        if(mainPanelWidth < MAIN_PANEL_MIN_WIDTH) {
-            changeStackPanelState(panelManager.at(0), true);
-        } else {
-            changeStackPanelState(panelManager.at(0), false);
-            mainPanelElement.innerWidth(mainPanelWidth + 'px');
-        }
+        timerResize = $timeout(function() {
+            checkStacking();
+            $rootScope.$broadcast('module-layout-changed');
+        }, 100);
     }
 
     $(window).on('resize', function() {
-        panelManager.updateLayout();
+        panelManager.updateLayout()
     });
 
     return panelManager;
