@@ -51,13 +51,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
                     $rootScope.$broadcast('panel-resized', element);
                 }
             });
-            $(window).on('resize', function(event) {
-                updateBreakpoints(element);
-            });
-            scope.$on('animation-complete', function() {
-                updateBreakpoints(element);
-            });
-            $rootScope.$on('module-layout-changed', function() {
+            scope.$watch(function() { return element.width(); }, function(oldWidth, newWidth) {
                 updateBreakpoints(element);
             });
             $timeout(function() {

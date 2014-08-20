@@ -129,7 +129,6 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
             el.html(inner);
             elements[instance.$$id] = el;
             $animate.enter(el, container, panelZero, function() {
-                options.scope.$emit('animation-complete');
                 panelManager.updateLayout();
             });
             var timerResize = null;
