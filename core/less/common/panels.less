@@ -1,4 +1,3 @@
-@panel-stacked-size: 75px;
 
 .panel-placeholder {
     height: 100%;
@@ -45,9 +44,9 @@
     }
 
     > .panel {
-        background: #FFF;
+        background: @panel-bg;
         height: 100%;
-        border-left: 1px solid @gray-light;
+        border-left: 1px solid @panel-inner-border;
         position: relative;
         left: auto!important;
         // z-index: @zindex-modal;
@@ -69,7 +68,7 @@
               padding-bottom: 10px;
               cursor: pointer;
               > div {
-                border: 1px solid @gray-lighter;
+                border: 1px solid @panel-bg;
                 padding: 10px;
                 text-align: center;
                 border-radius: 4px;
@@ -115,8 +114,8 @@
 
         > .panel-inner {
             height: 100%;
-            border-left: 7px solid @gray-lighter;
-            border-right: 7px solid @gray-lighter;
+            border-left: 7px solid @panel-bg;
+            border-right: 7px solid @panel-bg;
             overflow-x: hidden;
             overflow-y: hidden;
 
@@ -134,7 +133,7 @@
              ********************************************************/
 
             .panel-header {
-                background: @gray-lighter;
+                background: @panel-bg;
                 padding: 9px 16px;
                 z-index: 2;
                 .panel-title {
@@ -198,7 +197,7 @@
 
             .panel-footer {
                 padding: 9px 16px;
-                background: @gray-lighter;
+                background: @panel-bg;
                 text-align: right;
                 position: absolute;
                 bottom: 0;
