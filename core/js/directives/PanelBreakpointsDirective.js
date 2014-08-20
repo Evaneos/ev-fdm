@@ -48,7 +48,6 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
                 handles: "w",
                 resize: function(event, ui) {
                     updateBreakpoints(element);
-                    panelManager.updateLayout();
                     $rootScope.$broadcast('panel-resized', element);
                 }
             });
@@ -58,14 +57,9 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
             scope.$on('animation-complete', function() {
                 updateBreakpoints(element);
             });
-            // Specific case if it's the main panel.
-            // Whenever an update on the layout is trigger, we recalculate his breakpoints
-            var isMainPanel = element.parent().hasClass('panel-main');
-            if(isMainPanel) {
-                $rootScope.$on('module-layout-changed', function() {
-                    updateBreakpoints(element);
-                });
-            }
+            $rootScope.$on('module-layout-changed', function() {
+                updateBreakpoints(element);
+            });
             $timeout(function() {
                 updateBreakpoints(element);
                 // focus a freshly-opened modal

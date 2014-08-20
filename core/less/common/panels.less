@@ -1,4 +1,3 @@
-
 .panel-placeholder {
     height: 100%;
     float: right;
@@ -31,7 +30,7 @@
     }
 
     // default size for all side panels
-    &:not(.panel-main) > .panel {
+    &:not(.panel-main) .panel {
         width: @panel-width;
     }
 
@@ -238,12 +237,19 @@
     &.stacked {
         // Hide the whole panel
         max-width: @panel-stacked-size;
-        > .panel > .panel-inner > div {
-            > .panel-header,
-            > .panel-body,
-            > .panel-footer {
-                display: none;
+        > .panel > .panel-inner {
+
+            > div {
+                > .panel-header,
+                > .panel-body,
+                > .panel-footer {
+                    display: none;
+                }
             }
+        }
+
+        .ui-resizable-handle {
+            display: none;
         }
 
         // Display only the panel-stacked section
@@ -252,16 +258,23 @@
             background-color: @gray-light;
             .panel-stacked-section {
                 display: table;
+                margin-left: 14px;
                 height: 100%;
+                width: 400px;
                 .rotate(-90deg);
+                transform-origin: 0 50%;
+                -webkit-transform-origin: 0 50%;
 
                 .panel-stacked-title {
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
-                    max-width: @panel-stacked-size;
                 }
             }
+        }
+
+        &.panel-main .panel-inner {
+            border-right: none;
         }
     }
 
