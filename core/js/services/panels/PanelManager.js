@@ -37,6 +37,23 @@ module.factory('PanelManagerFactory', function() {
             i++;
         });
     };
+
+    PanelManager.prototype.dismissChildrenId = function(rank) {
+        console.log(rank);
+        var children = this.panels.slice(rank);
+        console.log(children);
+        var reason = '';
+        for (var i = children.length - 1; i >= 0; i--) {
+            var child = children[i];
+            var result = child.dismiss(reason);
+            if (!result) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     PanelManager.prototype.dismissChildren = function(instance, reason) {
         var children = this.getChildren(instance);
         for (var i = children.length - 1; i >= 0; i--) {

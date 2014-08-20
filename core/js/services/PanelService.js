@@ -276,6 +276,12 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         getPanel : getPanel,
         hasPanel : hasPanel,
         open: open,
+        count: function() {
+            return panelManager.size();
+        },
+        dismissChildrenId: function(i) {
+            panelManager.dismissChildrenId(i);
+        },
         dismissAll: function(reason) {
             panelManager.dismissAll(reason);
         },
