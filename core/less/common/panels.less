@@ -7,7 +7,7 @@
     &.panel-main {
         float: none;
         display: block;
-        &.panel > .ui-resizable-handle {
+        .panel > .ui-resizable-handle {
             display: none;
         }
 
@@ -15,6 +15,10 @@
 
             > .panel-inner {
                 border-left: none;
+
+                .panel-body {
+                    position: relative;
+                }
             }
         }
     }
@@ -288,6 +292,15 @@
     &.stacked-add,
     &.stacked-remove.stacked-remove-active {
         max-width: 1000px;
+    }
+
+    .panel .has-header {
+        .lisette-module-searchbar > .inner {
+            bottom: @panel-header-height;
+        }
+        .lisette-module-bottombar {
+            bottom: @panel-header-height;
+        }
     }
 }
 

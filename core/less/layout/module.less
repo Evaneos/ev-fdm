@@ -73,6 +73,12 @@
         .panel-placeholder.panel-main > .panel .table-container {
             bottom: @module-bottombar-height;
         }
+
+        .panel-placeholder.panel-main > .panel .has-header {
+            .table-container {
+                bottom: @module-bottombar-height + @panel-header-height;
+            }
+        }
     }
 
     &.has-leftbar {
