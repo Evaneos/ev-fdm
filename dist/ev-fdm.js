@@ -976,7 +976,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
                     $rootScope.$broadcast('panel-resized', element);
                 }
             });
-            scope.$watch(function() { return element.width(); }, function(oldWidth, newWidth) {
+            $rootScope.$on('module-layout-changed', function() {
                 updateBreakpoints(element);
             });
             $timeout(function() {
@@ -4769,4 +4769,3 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-//# sourceMappingURL=ev-fdm.js.map
