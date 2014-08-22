@@ -11,14 +11,9 @@
             display: none;
         }
 
-        > .panel {
-
-            > .panel-inner {
-                border-left: none;
-
-                .panel-body {
-                    position: relative;
-                }
+        .panel .panel-inner {
+            .panel-body.has-header {
+                position: relative;
             }
         }
     }
@@ -117,6 +112,7 @@
 
         > .panel-inner {
             height: 100%;
+            border-bottom: 7px solid @panel-bg;
             border-left: 7px solid @panel-bg;
             border-right: 7px solid @panel-bg;
             overflow-x: hidden;
@@ -137,7 +133,7 @@
 
             .panel-header {
                 background: @panel-bg;
-                padding: 9px 16px;
+                padding: 9px 5px;
                 z-index: 2;
                 .panel-title {
                     font-size: 20px;
@@ -240,9 +236,13 @@
      ********************************************************/
 
     &.stacked {
+        border-left: 1px solid @gray-lighter;
+
         // Hide the whole panel
         max-width: @panel-stacked-size;
         > .panel > .panel-inner {
+
+            border: none;
 
             > div {
                 > .panel-header,
@@ -276,10 +276,6 @@
                     text-transform: uppercase;
                 }
             }
-        }
-
-        &.panel-main .panel-inner {
-            border-right: none;
         }
     }
 
