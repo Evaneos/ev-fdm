@@ -57,7 +57,7 @@ angular.module('ev-fdm')
                 if(toState.name === self.elementName) {
                   self.$scope.activeElement = null;
                 }
-                else if(toState.name === self.elementName + '.view') {
+                else {
                   self.setActiveElement();
                 }
             });
@@ -84,6 +84,8 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.updateScope = function () {
+            var self = this;
+
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;

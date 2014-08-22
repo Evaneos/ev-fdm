@@ -57,6 +57,14 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
     uiSelect2Config.minimumResultsForSearch = 7;
     uiSelect2Config.allowClear = true;
 
+    // On the first loading state, we set this value
+    // It used by the ev-menu directive which is loaded asynchronously
+    // and can't listen to this event on the first load.
+    $rootScope.$on('$stateChangeStart', function(event, toState) {
+        toState.state = toState.name.split('.')[0];
+        $rootScope['evmenu-state'] = toState;
+    });
+
 
     // language for the user OR navigator language OR english
     window.moment.lang([window.navigator.language, 'en']);
@@ -122,7 +130,7 @@ angular.module('ev-fdm')
                 if(toState.name === self.elementName) {
                   self.$scope.activeElement = null;
                 }
-                else if(toState.name === self.elementName + '.view') {
+                else {
                   self.setActiveElement();
                 }
             });
@@ -149,6 +157,8 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.updateScope = function () {
+            var self = this;
+
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
@@ -248,11 +258,12 @@ angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
             restrict: 'A',
+            scope: false,
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
-               
+
                 var self = this;
                 $scope.$watch(function() {
                     return activeElementGet($scope);
@@ -265,7 +276,7 @@ angular.module('ev-fdm')
                         if(activeElementSet) {
                             activeElementSet($scope, value);
                         }
-                        
+
                         this.activeElement = value;
                     }
                     else {
@@ -291,6 +302,7 @@ angular.module('ev-fdm')
                     var elementGetter = $parse(attr.activable),
                         currentElement = elementGetter(scope);
 
+
                     scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
                       currentElement = newCurrentElement;
                     });
@@ -315,6 +327,7 @@ angular.module('ev-fdm')
                 }
             };
         }]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -375,18 +388,12 @@ angular.module('ev-fdm')
     }
 });
 angular.module('ev-fdm')
-.directive('download', ['$http', '$location', '$document', function($http, $location, $document) {
-    var iframe = null;
+.directive('download', ['$http', '$location', '$document', 'DownloadService', function($http, $location, $document, downloadService) {
     return {
         link: function(scope, elm, attrs) {
             elm.on('click', function(event) {
                 $http.get(attrs.download).success(function(data) {
-                    if(!iframe) {
-                        iframe = $document[0].createElement('iframe');
-                        iframe.style.display = 'none';
-                        $document[0].body.appendChild(iframe);
-                    }
-                    iframe.src = data.url;
+                	downloadService.download(data.url);
                 });
             });
         }
@@ -420,7 +427,7 @@ function MenuManagerProvider() {
     this.addTab = function(tab) {
         this.tabs.push(tab);
         return this;
-    }
+    };
 
     function findTab(stateName) {
         var res = null;
@@ -428,12 +435,19 @@ function MenuManagerProvider() {
             if(stateName === tab.state) {
                 res = tab;
             }
-        })
+        });
 
         return res;
     }
 
     function selectTab(tab) {
+        tab = tab || {};
+        tab = findTab(tab.state);
+
+        if(!tab) {
+            return;
+        }
+
         if(self.activeTab) {
             self.lastTab = self.activeTab;
             self.activeTab.active = false;
@@ -444,7 +458,7 @@ function MenuManagerProvider() {
     }
 
     this.$get = ['$rootScope', '$state', function($rootScope, $state) {
-        
+
         // Handle first page load
         $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
             if (fromState.name === '') {
@@ -463,7 +477,7 @@ function MenuManagerProvider() {
         return {
             tabs: self.tabs,
             selectTab: selectTab
-        }
+        };
     }];
 }
 
@@ -476,8 +490,13 @@ function EvMenuDirective(menuManager) {
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
                     '</ul>',
-        controller: [ '$scope', '$state', function($scope, $state) {
+        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
             $scope.tabs = menuManager.tabs;
+
+            if($rootScope['evmenu-state']) {
+                menuManager.selectTab($rootScope['evmenu-state']);
+            }
+
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);
@@ -577,7 +596,7 @@ angular.module('ev-fdm')
                 $(this).css('width', $td.outerWidth()).show();
                 $(this).css('maxWidth', $td.outerWidth()).show();
             } else {
-                $(this).hide();
+                // $(this).hide();
             }
             currentChildIndex++;
         });
@@ -902,6 +921,70 @@ var module = angular.module('ev-fdm')
                     scope.generateButtons ();
                 });
             }
+    };
+}]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager', function($timeout, $rootScope, panelManager) {
+
+    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
+
+    function getBPMatching(width) {
+        var breakp, index;
+        for (index = 0; index < BREAKS.length; index++) {
+            if (width < BREAKS[index]) {
+                breakp = BREAKS[index];
+                break;
+            }
+        }
+        if (breakp) return index;
+        else return -1;
+    }
+
+    function applyBPAttribute(element, breakpIndex) {
+        var attributeValue = '';
+        if (breakpIndex == -1) {
+            attributeValue = 'max';
+        } else {
+            attributeValue = BREAKS[breakpIndex];
+        }
+        element.attr('data-breakpoint', attributeValue);
+    }
+
+    function updateBreakpoints(element) {
+        var inner = element.find('.panel-inner');
+        var bp = getBPMatching(inner.outerWidth());
+        applyBPAttribute(element, bp);
+    }
+
+    return {
+        restrict: 'A',
+        scope: false,
+        replace: true,
+        transclude: true,
+        templateUrl: 'panels/panel-skeleton.phtml',
+        link: function(scope, element, attrs) {
+            /**
+             * Listener to update the breakpoints properties
+             */
+            element.resizable({
+                handles: "w",
+                resize: function(event, ui) {
+                    updateBreakpoints(element);
+                    $rootScope.$broadcast('panel-resized', element);
+                }
+            });
+            $rootScope.$on('module-layout-changed', function() {
+                updateBreakpoints(element);
+            });
+            $timeout(function() {
+                updateBreakpoints(element);
+                // focus a freshly-opened modal
+                element[0].focus();
+            });
+        }
     };
 }]);
 (function () {
@@ -1368,6 +1451,7 @@ angular.module('ev-fdm')
     .directive('sortableSet', function() {
         return {
             restrict: 'A',
+            scope: false,
             controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
                 var self = this;
                 this.reverseSort = false;
@@ -1400,7 +1484,7 @@ angular.module('ev-fdm')
                         this.reverseSort = false;
                         this.sortKey = key;
                     }
-                    
+
                     if(reverseSortSet) {
                         reverseSortSet($scope, this.reverseSort);
                     }
@@ -1418,6 +1502,7 @@ angular.module('ev-fdm')
     .directive('sortable', function() {
         return {
             restrict: 'A',
+            scope: false,
             require: '^sortableSet',
             link: function(scope, element, attr, ctrl) {
                 var key = attr.sortable;
@@ -1430,7 +1515,7 @@ angular.module('ev-fdm')
                 scope.$watch(function() { return ctrl.reverseSort;}, function() {
                     setClasses();
                 });
-                
+
                 element.on('click', function() {
                     scope.$apply(function() {
                         ctrl.sortBy(key);
@@ -1962,6 +2047,9 @@ angular.module('ev-fdm')
 angular.module('ev-fdm')
      .filter('sum', ['$parse', function($parse) {
             return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
                 var getValue = $parse(key);
                 return objects.reduce(function(total, object) {
                     var value = getValue(object);
@@ -1970,6 +2058,7 @@ angular.module('ev-fdm')
                 }, 0);
             };
     }]);
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -1978,6 +2067,78 @@ angular.module('ev-fdm')
             return $sce.trustAsHtml(val);
         };
     }]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+/**
+ * Communication Service
+ * Manage the communication for our app
+ */
+module.service('communicationService', ['$rootScope', function($rootScope) {
+
+    var COMMUNICATION_KEY = 'evfdm-communication';
+
+    /**
+     * Emit an event
+     */
+    var emit = function(eventName, params) {
+        $rootScope.$emit(eventName, params);
+    };
+
+    /**
+     * Listen to an event
+     */
+    var on = function(eventName, callback) {
+        $rootScope.$on(eventName, callback);
+    };
+
+    /**
+     * Set a key/value
+     */
+    var set = function(key, value) {
+        if($rootScope[COMMUNICATION_KEY] === undefined) {
+            $rootScope[COMMUNICATION_KEY] = {};
+        }
+
+        $rootScope[COMMUNICATION_KEY][key] = value;
+    };
+
+    /**
+     * Get a value by key
+     */
+    var get = function(key) {
+        var result = null;
+        if($rootScope[COMMUNICATION_KEY] && $rootScope[COMMUNICATION_KEY][key] !== undefined) {
+            result = $rootScope[COMMUNICATION_KEY][key];
+        }
+
+        return result;
+    };
+
+    var communicationService = {
+        emit: emit,
+        on  : on,
+        set : set,
+        get : get
+    };
+
+    return communicationService;
+}]);
+angular.module('ev-fdm')
+.service('DownloadService', ['$document', function($document) {
+   var iframe = null;
+   return {
+       download: function(url) {
+           if(!iframe) {
+               iframe = $document[0].createElement('iframe');
+               iframe.style.display = 'none';
+               $document[0].body.appendChild(iframe);
+           }
+           iframe.src = url;
+       }
+   }
+}]);
 'use strict';
 
 // Map that stores the selected filters across pages
@@ -2186,110 +2347,73 @@ module.factory('panelFactory', function() {
     var Panel = function(extensions) {
         this.blockers = [];
         _(this).extend(extensions);
-    }
+    };
     Panel.prototype.addBlocker = function(blocker) {
         this.blockers.push(blocker);
-    }
+    };
     Panel.prototype.removeBlocker = function(blocker) {
         this.blockers = _(this.blockers).without(blocker);
-    }
+    };
     Panel.prototype.isBlocked = function(silent) {
         return _(this.blockers).some(function(blocker) {
             return blocker(silent);
         });
-    }
+    };
     return {
         create: function(extensions) {
             return new Panel(extensions);
         }
-    }
+    };
 });
 
-module.factory('sidonieRegion', function() {
-    function shouldBeOverriden(name) {
-        return function() {
-            throw new Error('Method ' + name + ' should be overriden');
-        };
-    }
-    var Region = function(hasPush) {
-        this.hasPush = hasPush;
-        this.panels = _([]);
-    };
-    Region.prototype.open = shouldBeOverriden('open');
-    Region.prototype.close = shouldBeOverriden('close');
-    Region.prototype.push = function(instance) {
-        this.panels.push(instance);
-    };
-    Region.prototype.remove = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) this.panels.splice(i, 1);
-        return i;
-    };
-    Region.prototype.at = function(index) {
-        return this.panels._wrapped[index];
-    };
-    Region.prototype.each = function() {
-        return this.panels.each.apply(this.panels, arguments);
-    };
-    Region.prototype.dismissAll = function(reason) {
-        this.each(function(instance) {
-            instance.dismiss(reason);
-        });
-    };
-    Region.prototype.last = function() {
-        return this.panels.last();
-    };
-    Region.prototype.getNext = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i < this.panels.size() - 1) {
-            return this.at(i + 1);
-        } else {
-            return null;
-        }
-    };
-    Region.prototype.getChildren = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            return this.panels.slice(i + 1);
-        } else {
-            return [];
-        }
-    };
-    Region.prototype.size = function() {
-        return this.panels.size();
-    };
-    Region.prototype.isEmpty = function() {
-        return this.panels.size() === 0;
-    };
+module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'panelManager', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, panelManager, panelFactory) {
 
-    return {
-        create: function(hasPush, methods) {
-            var ChildClass = function(hasPush) {
-                return Region.call(this, hasPush);
-            }
-            ChildClass.prototype = _({}).extend(Region.prototype, methods);
-            return new ChildClass(hasPush);
-        }
-    }
-});
-
-module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller', 'middleRegion', 'rightRegion', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, middleRegion, rightRegion, panelFactory) {
-
-    // identifies all panels
+    // Identifies all panels
     var currentId = 1;
 
-    var regions = {
-        middle: middleRegion,
-        right: rightRegion
-    };
+    function parseOptions(options) {
+        options = options || {};
 
-    function parseOptions(regionName, options) {
         if (!options.template && !options.templateUrl && !options.content) {
-            throw new Error('Should define options.template or templateUrl or content')
+            throw new Error('Should define options.template or templateUrl or content');
         }
-        options.push = options.push || options.pushFrom;
-        options.panelClass = options.panelClass || '';
-        options.panelClass += ' ' + regionName;
+
+        // Retrieve the last panel
+        var last = panelManager.last();
+
+        /**
+         * Parse the opening options (replace or pushFrom)
+         */
+        if(options.replace) {
+            if(angular.isString(options.replace)) {
+                //We can use 'panel-main' as a special panel name
+                if(options.replace === 'panel-main') {
+                    options.replace = getMainPanel();
+                } else {
+                    options.replace = getPanel(options.replace);
+                }
+            } else if(options.replace === true) {
+                options.replace = last;
+            }
+        } else if (options.pushFrom) {
+            if(angular.isString(options.pushFrom)) {
+                options.pushFrom = getPanel(options.pushFrom);
+            }
+
+            if(options.pushFrom !== null && options.pushFrom != last) {
+                options.replace = panelManager.getNext(options.pushFrom);
+            }
+        }
+
+        if(!options.replace && !options.pushFrom) {
+            options.pushFrom = last;
+        }
+
+        options.panelName = options.panelName || '';
+
+        options.panelClass = options.panelName || '';
+        options.panelClass += ' right';
+
         options.resolve = options.resolve || {};
         return options;
     }
@@ -2306,7 +2430,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
 
     function getResolvePromises(resolves) {
         var promises = [];
-        angular.forEach(resolves, function(value, key) {
+        angular.forEach(resolves, function(value) {
             if (angular.isFunction(value) || angular.isArray(value)) {
                 promises.push($q.when($injector.invoke(value)));
             }
@@ -2334,43 +2458,28 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             });
     }
 
-    function getRegion(name) {
-        if (_(regions).has(name)) {
-            return regions[name];
-        } else {
-            throw new Error('Unknown region ' + name);
-        }
-    }
-
-    function dismissChildren(region, instance, reason) {
-        var children = region.getChildren(instance);
-        for (var i = children.length - 1; i >= 0; i--) {
-            var child = children[i];
-            var result = child.dismiss(reason);
-            if (!result) return false;
-        }
-        return true;
-    }
-
     /**
      * Resolves everything needed to the view (templates, locals)
      * + creates the controller, scope
      * + finally creates the view
      */
-    function createInstance(region, options, done) {
+    function createInstance(options, done) {
         var self = this;
         var resultDeferred = $q.defer();
         var openedDeferred = $q.defer();
-        
+
         var instance = panelFactory.create({
+            panelName : options.panelName,
             result: resultDeferred.promise,
             opened: openedDeferred.promise,
             close: function(result) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent closed');
-                    if (!notCancelled) return false;
-                    region.close(instance, options);
-                    region.remove(instance);
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent closed');
+                    if (!notCancelled) {
+                        return false;
+                    }
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.resolve(result);
                     return true;
                 }
@@ -2378,20 +2487,22 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             },
             dismiss: function(reason) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent dismissed');
-                    if (!notCancelled) return false;
-                    region.close(instance, options);
-                    region.remove(instance);
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent dismissed');
+                    if (!notCancelled) {
+                      return false;
+                    }
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.reject(reason);
                     return true;
                 }
                 return false;
             }
         });
-        
+
         resolveAll(options)
             .then(function(contentAndLocals) {
-                
+
                 // create scope
                 var scope = (options.scope || $rootScope).$new();
                 scope.$close = instance.close;
@@ -2406,17 +2517,17 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                     controller = $controller(options.controller, locals);
                 }
 
-                // add variables required by regions
+                // add variables required by panelManager
                 options.scope = scope;
                 options.deferred = resultDeferred;
                 options.content = contentAndLocals.content;
 
                 // finally open the view
                 if (options.replace) {
-                    region.replace(options.replace, instance, options);
-                    region.remove(options.replace, options);
+                    panelManager.replace(options.replace, instance, options);
+                    panelManager.remove(options.replace, options);
                 } else {
-                    region.open(instance, options);
+                    panelManager.open(instance, options);
                 }
             })
             .then(function() {
@@ -2428,74 +2539,595 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         return instance;
     }
 
-    return {
-        /**
-         * @param {String} regionName
-         * @param {Mixed} options
-         *     {Mixed} template / templateUrl / content
-         *     (optional) {String} controller
-         *     (optional) {Mixed} scope
-         *     (optional) {Object} resolve
-         *     (optional) {String} panelClass
-         *     (optional) {Boolean} push: if the region is push enabled, open
-         *         a popup on top of the latest one
-         *     (optional) {PanelInstance} pushFrom: if the region is push enabled, open
-         *         a popup on top of that instance (and close existing children)
-         */
-        open: function(regionName, options) {
+    /**
+     * Get a panel instance via his name
+     */
+    function getPanel(panelName) {
+        var panel = panelManager.panels.find(function(_panel) {
+            return _panel.panelName === panelName;
+        });
 
-            options = parseOptions(regionName, options);
-            var region = getRegion(regionName);
-            var last = region.last();
-            var instance;
+        return panel || null;
+    }
 
-            if (options.push && !options.pushFrom) {
-                options.pushFrom = last;
+    /**
+     * Get the main panel instance
+     */
+    function getMainPanel() {
+        var mainPanel = panelManager.panels.first();
+        // var mainPanel = panelManager.panels.find(function(_panel) {
+        //     return _panel.isMain === true;
+        // });
+
+        return mainPanel || null;
+    }
+
+    /**
+     * Return a boolean if either the panel exist or not
+     */
+    function hasPanel(panelName) {
+        return getPanel(panelName) != null;
+    }
+
+    /**
+     * @param {Object} options
+     *        - {Mixed} template / templateUrl / content
+     *        - (optional) {String} controller
+     *        - (optional) {Mixed} scope
+     *        - (optional) {Object} resolve
+     *        - (optional) {String} panelName
+     *        - (optional) {Mixed} pushFrom :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *        - (optional) {Mixed} replaceAt :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *                            + {Boolean}: if true replace the last panel
+     *
+     * @return {Object} The panel instance or null if something wrong occured
+     */
+    function open(options) {
+        options = parseOptions(options);
+
+        var instance;
+
+        if (options.replace) {
+            var result = panelManager.dismissChildren(options.replace, 'parent replaced');
+            // some child might have canceled the close
+            if (!result) {
+                return null;
             }
+        }
 
-            if (options.pushFrom && options.pushFrom != last) {
-                options.replace = region.getNext(options.pushFrom);
-                if (options.replace) {
-                    var result = dismissChildren(region, options.replace, 'parent replaced');
-                    // some child might have canceled the close
-                    if (!result) {
-                        return false;
-                    }
-                }
-            }
+        if (options.replace && options.replace.isBlocked()) {
+            return null;
+        }
 
-            if (!(region.hasPush && options.push) && !region.isEmpty()) {
-                options.replace = last;
-            }
+        // Contains the panel 'depth'
+        options.depth = panelManager.panels.size();
+        instance = createInstance(options);
 
-            if (options.replace && options.replace.isBlocked()) {
-                return false;
-            }
+        // Attach some variables to the instance
+        instance.$$id = currentId++;
 
-            instance = createInstance(region, options);
+        panelManager.push(instance);
 
-            // attach some variables to the instance
-            instance.$$id = currentId++;
-            instance.$$region = regionName;
-            
-            region.push(instance);
-            return instance;
+        return instance;
+    }
+
+    var panelService = {
+        getPanel : getPanel,
+        hasPanel : hasPanel,
+        open: open,
+        count: function() {
+            return panelManager.size();
         },
-        push: function(regionName, options) {
-            options.push = true;
-            return this.open(regionName, options);
+        dismissChildrenId: function(i) {
+            panelManager.dismissChildrenId(i);
         },
         dismissAll: function(reason) {
-            _(regions).each(function(region) {
-                region.dismissAll(reason);
-            });
+            panelManager.dismissAll(reason);
         },
         dismissChildren: function(instance, reason) {
-            var region = regions[instance.$$region];
-            return dismissChildren(region, instance, reason);
+            return panelManager.dismissChildren(instance, reason);
         }
     };
+
+    return panelService;
 }]);
+// WORK IN PROGRESS
+
+// var module = angular.module('ev-fdm');
+
+// module.factory('Panel', function() {
+
+//     var Panel = function(extensions) {
+//         this.blockers = [];
+//         _(this).extend(extensions);
+//     };
+
+//     Panel.prototype.addBlocker = function(blocker) {
+//         this.blockers.push(blocker);
+//     };
+
+//     Panel.prototype.removeBlocker = function(blocker) {
+//         this.blockers = _(this.blockers).without(blocker);
+//     };
+
+//     Panel.prototype.isBlocked = function(silent) {
+//         return _(this.blockers).some(function(blocker) {
+//             return blocker(silent);
+//         });
+//     };
+
+//     return Panel;
+// });
+
+// module.service('PanelServiceUI', [ '$rootScope', '$compile', '$animate', '$timeout', function($rootScope, $compile, $animate, $timeout) {
+
+//     var STACKED_WIDTH = 15;
+//     var els = {};
+
+//     var Region = function() {
+//         this.updateStacking = function() {
+//             // return $timeout(checkStackingThrottled);
+//         };
+
+//         this.open = function(instance, options) {
+//             instance.$$depth = region.panels.size();
+//             var el = createPlaceholder(instance.$$depth);
+//             var inner = createPanelView(instance, options);
+//             el.html(inner);
+//             els[instance.$$id] = el;
+//             $animate.enter(el, container, panelZero, function() {
+//                 options.scope.$emit('animation-complete');
+//                 $rootScope.$broadcast('module-layout-changed');
+//                 region.updateStacking();
+//             });
+//             el.on('resize', function(event, ui) {
+//                 stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
+//                 region.updateStacking();
+//             });
+//             region.updateStacking();
+//             return instance;
+//         };
+
+//         this.replace = function(fromInstance, toInstance, options) {
+//             if (typeof(els[fromInstance.$$id]) != 'undefined') {
+//                 var el = els[fromInstance.$$id];
+//                 toInstance.$$depth = region.panels.size() - 1;
+//                 var inner = createPanelView(toInstance, options);
+//                 el.html(inner);
+//                 els[toInstance.$$id] = el;
+//                 delete els[fromInstance.$$id];
+//                 region.updateStacking();
+//                 return toInstance;
+//             } else {
+//                 return region.open(toInstance, options);
+//             }
+//         };
+
+//         this.close = function(instance) {
+//             if (typeof(els[instance.$$id]) != 'undefined') {
+//                 var el = els[instance.$$id];
+//                 $animate.leave(el, function() {
+//                     delete els[instance.$$id];
+//                     region.updateStacking();
+//                 });
+//                 region.updateStacking();
+//             }
+//         };
+
+//         this.remove = function(instance) {
+//             // TODO
+
+//             // var i = this.panels.indexOf(instance);
+//             // if (i > -1) {
+//             //     this.panels.splice(i, 1);
+//             // }
+//             // return i;
+//         };
+//     };
+
+//     var region = new Region();
+
+//     function getEl(instance) {
+//         if (els[instance.$$id]) {
+//             return els[instance.$$id];
+//         } else {
+//             return null;
+//         }
+//     }
+
+//     function getStylesFromCache(instance, options) {
+//         var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
+//         if (savedWidth) {
+//             return 'width: ' + savedWidth + 'px;';
+//         } else {
+//             return '';
+//         }
+//     }
+
+//     function stack(fromInstanceIndex) {
+//         for (var i = 0; i < region.panels.size(); i++) {
+//             var shouldStack = (i < fromInstanceIndex);
+//             var instance = region.at(i);
+//             var el = getEl(instance);
+//             if (instance.$$stacked && !shouldStack) {
+//                 delete instance.$$actualWidth;
+//                 $animate.removeClass(el, 'stacked');
+//             } else if (!instance.$$stacked && shouldStack) {
+//                 instance.$$actualWidth = getEl(instance).outerWidth();
+//                 $animate.addClass(el, 'stacked');
+//             }
+//             instance.$$stacked = shouldStack;
+//         }
+//     }
+
+//     function checkStacking() {
+//         var maxWidth = $(window).innerWidth() - 100;
+//         for (var i = 0; i < region.panels.size(); i++) {
+//             var j = 0;
+//             var totalWidth = _(region.panels).reduce(function(memo, instance) {
+//                 if (j++ < i) {
+//                     return memo + STACKED_WIDTH;
+//                 } else {
+//                     var el = getEl(instance);
+//                     if (!el) { return memo; }
+//                     if (instance.$$stacked) { return memo + instance.$$actualWidth; }
+//                     var width = el.outerWidth();
+//                     if (width < 50) {
+//                         // most probably before animation has finished landing
+//                         // we neeed to anticipate a final w
+//                         return memo + 300;
+//                     } else {
+//                         return memo + width;
+//                     }
+//                 }
+//             }, 0);
+//             if (totalWidth < maxWidth) {
+//                 return stack(i);
+//             }
+//         }
+//         // stack all
+//         stack(region.panels.size() - 1);
+//     }
+
+//     function createPlaceholder(depth) {
+//         var isMain = depth === 1;
+//         return angular.element('<div ' +
+//             'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+//             'style="z-index:' + (2000 + depth) + ';"></div>');
+//     }
+
+//     function createPanelView(instance, options) {
+//         var inner = angular.element(options.content);
+//         inner.attr('style', getStylesFromCache(instance, options));
+//         inner.attr('right-panel-window', true);
+//         options.scope.panelClass = options.panelClass;
+//         return $compile(inner)(options.scope);
+//     }
+
+//     var checkStackingThrottled = _(checkStacking).debounce(50);
+
+//     $(window).on('resize', function() {
+//         region.updateStacking();
+//     });
+
+//     var stylesCache = window.stylesCache = {};
+//     var container = angular.element('.lisette-module-region.right');
+//     var panelZero = container.find('.panel-zero');
+
+
+//     return region;
+// }]);
+
+// module.service('PanelService', ['$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'PanelServiceUI', 'Panel',
+//                         function($rootScope, $http, $templateCache, $q, $injector, $controller, panelServiceUI, Panel) {
+
+//     var panels = [];
+
+//     var openingTypes = {
+//         PUSH    : 1,       // Creates a new panel after the others
+//         REPLACE : 2        // Replace the panel if it already exists, and dismiss its children
+//     };
+//     var defaultOpeningType = openingTypes.PUSH;
+//     var STACKED_WIDTH = 15;
+
+//     /**
+//      * HELPERS
+//      */
+
+//     /**
+//      * Get a panel with his name
+//      * @param  {String} panelName the panel name
+//      * @return {Object}           either the panel or null
+//      */
+//     function getPanel(panelName) {
+//         var panel = _(this.panels).where({
+//             panelName: panelName
+//         });
+
+//         if(panel) {
+//             return _(panel).last();
+//         }
+
+//         return null;
+//     }
+
+//     /**
+//      * Return true if we have this panel, false otherwise
+//      * @param  {String}  panelName the panel name
+//      * @return {Boolean}           if we have this panel or not
+//      */
+//     function hasPanel(panelName) {
+//         return getPanel(panelName) !== null;
+//     }
+
+//     function _isEmpty() {
+//         return panels.length === 0;
+//     }
+
+//     function _remove(panel) {
+//         var i = panels.indexOf(panel);
+//         if (i > -1) {
+//             panels.splice(i, 1);
+//         }
+
+//         return i;
+//     }
+
+//     function _each() {
+//         return this.panels.each.apply(this.panels, arguments);
+//     }
+
+//     function _getNextPanel(panel) {
+//         var i = panels.indexOf(panel);
+//         if (i < panels.length - 1) {
+//             return panels[i + 1];
+//         } else {
+//             return null;
+//         }
+//     }
+
+//     function _getNextPanels(panel) {
+//         var i = panels.indexOf(panel);
+//         if (i > -1 && i < panels.length - 1) {
+//             return panels.slice(i + 1)
+//         } else {
+//             return [];
+//         }
+//     }
+
+//     /**
+//      * Helper to parse the options
+//      * @param  {Object} options the options(todo list them)
+//      * @return {Object}         the options formatted
+//      */
+//     function _parseOptions(options) {
+//         if (!options.template && !options.templateUrl && !options.content) {
+//             throw new Error('Should define options.template or templateUrl or content');
+//         }
+
+//         if (!openingTypes[options.openingType]){
+//             options.openingType = defaultOpeningType;
+//         }
+//         options.panelName = options.panelClass || '';
+
+//         options.panelClass = options.panelClass || '';
+//         options.panelClass += ' right';
+
+//         options.resolve = options.resolve || {};
+
+//         // We generate our id
+//         options.$$id = panels.length + 1;
+
+//         return options;
+//     }
+
+//     function getTemplatePromise(options) {
+//         return options.content ? $q.when(options.content) :
+//             options.template ? $q.when(options.template) :
+//             $http.get(options.templateUrl, {
+//                 cache: $templateCache
+//             }).then(function(result) {
+//                 return result.data;
+//             });
+//     }
+
+//     function getResolvePromises(resolves) {
+//         var promises = [];
+//         angular.forEach(resolves, function(value) {
+//             if (angular.isFunction(value) || angular.isArray(value)) {
+//                 promises.push($q.when($injector.invoke(value)));
+//             }
+//         });
+//         return promises;
+//     }
+
+//     function getPromises(options) {
+//         return [getTemplatePromise(options)].concat(getResolvePromises(options.resolve));
+//     }
+
+//     function resolveAll(options) {
+//         return $q.all(getPromises(options))
+//             .then(function(contentAndLocals) {
+//                 // variables injected in the controller
+//                 var locals = {};
+//                 var i = 1;
+//                 angular.forEach(options.resolve, function(value, key) {
+//                     locals[key] = contentAndLocals[i++];
+//                 });
+//                 return {
+//                     content: contentAndLocals[0],
+//                     locals: locals
+//                 };
+//             });
+//     }
+
+//     /**
+//      * Resolves everything needed to the view (templates, locals)
+//      * + creates the controller, scope
+//      * + finally creates the view
+//      */
+//     function createInstance(region, options, done) {
+//         var resultDeferred = $q.defer();
+//         var openedDeferred = $q.defer();
+
+//         var instance = new Panel({
+//             panelName : options.panelName,
+//             result: resultDeferred.promise,
+//             opened: openedDeferred.promise,
+//             close: function(result) {
+//                 if (!instance.isBlocked()) {
+//                     var notCancelled = dismissChildren(instance, 'parent closed');
+//                     if (!notCancelled) {
+//                         return false;
+//                     }
+
+//                     region.close(instance, options);
+//                     region.remove(instance);
+
+//                     resultDeferred.resolve(result);
+//                     return true;
+//                 }
+//                 return false;
+//             },
+//             dismiss: function(reason) {
+//                 if (!instance.isBlocked()) {
+//                     var notCancelled = dismissChildren(instance, 'parent dismissed');
+//                     if (!notCancelled) {
+//                       return false;
+//                     }
+//                     region.close(instance, options);
+//                     region.remove(instance);
+
+//                     resultDeferred.reject(reason);
+
+//                     return true;
+//                 }
+//                 return false;
+//             }
+//         });
+
+//         resolveAll(options)
+//             .then(function(contentAndLocals) {
+
+//                 // create scope
+//                 var scope = (options.scope || $rootScope).$new();
+//                 scope.$close = instance.close;
+//                 scope.$dismiss = instance.dismiss;
+
+//                 // fires the controller
+//                 var controller;
+//                 if (options.controller) {
+//                     var locals = contentAndLocals.locals;
+//                     locals.$scope = scope;
+//                     locals.$instance = instance;
+//                     controller = $controller(options.controller, locals);
+//                 }
+
+//                 // add variables required by regions
+//                 options.scope = scope;
+//                 options.deferred = resultDeferred;
+//                 options.content = contentAndLocals.content;
+
+//                 // finally open the view
+//                 if (options.replace) {
+//                     region.replace(options.replace, instance, options);
+//                     region.remove(options.replace, options);
+//                 } else {
+//                     region.open(instance, options);
+//                 }
+//             })
+//             .then(function() {
+//                 openedDeferred.resolve(true);
+//             }, function() {
+//                 openedDeferred.resolve(false);
+//             });
+
+//         return instance;
+//     }
+
+//     function dismissChildrens(panel, reason) {
+//         var childrens = _getNextPanels(panel);
+//         var i = childrens.length -1;
+
+//         for (; i >= 0; i--) {
+//             var child  = childrens[i];
+//             var result = child.dismiss(reason);
+//             if (!result) {
+//                 return false;
+//             }
+
+//         }
+
+//         return true;
+//     }
+
+//     /**
+//      * Dismiss all panels except the first one (the main list)
+//      */
+//     function dismissAll(reason) {
+//         if(panels.length >= 2) {
+//             dismissChildrens(panels[1], reason);
+//         }
+//     }
+
+//     /**
+//      * Open a new panel
+//      */
+//     function open(options) {
+//         options = _parseOptions(options);
+//         var  lastPanel = _(panels).last();
+
+//         if (options.push && !options.pushFrom) {
+//             options.pushFrom = lastPanel;
+//         }
+
+//         if (options.pushFrom && options.pushFrom != lastPanel) {
+//             options.replace = _getNextPanel(options.pushFrom);
+//             if (options.replace) {
+//                 var result = _dismissChildrens(options.replace, 'parent replaced');
+//                 // some child might have canceled the close
+//                 if (!result) {
+//                     return false;
+//                 }
+//             }
+//         }
+
+//         if (!options.push && !_isEmpty()) {
+//             options.replace = lastPanel;
+//         }
+
+//         if (options.replace && options.replace.isBlocked()) {
+//             return false;
+//         }
+
+//         var panel = createInstance(panelServiceUI, options);
+//         panels.push(panel);
+
+//         return panel;
+//     }
+
+
+
+//     /**
+//      * Our panel service.
+//      * @type {Object}
+//      */
+//     var PanelService = {
+//         panels: panels,
+//         openingTypes: openingTypes,
+//         getPanel: getPanel,
+//         hasPanel: hasPanel,
+//         open: open,
+//         dismissChildrens: dismissChildrens,
+//         dismissAll: dismissAll
+//     };
+
+//     return PanelService;
+// }]);
 var module = angular.module('ev-fdm');
 
 var SidonieModalService = function($modal, $animate, $log) {
@@ -3280,301 +3912,402 @@ angular.module('ev-fdm')
 });
 var module = angular.module('ev-fdm');
 
-/**
- * Taken from Angular-UI > $modal
- * A helper directive for the $modal service. It creates a backdrop element.
- */
-module.directive('middlePanelBackdrop', ['$timeout', 
-    function($timeout) {
-        return {
-            restrict: 'EA',
-            replace: true,
-            template: '<div class="modal-backdrop fade" ng-class="{in: animate}" ng-style="{\'z-index\': 1040 + index*10}"></div>',
-            link: function(scope, element) {
-                scope.animate = false;
-                //trigger CSS transitions
-                $timeout(function() {
-                    scope.animate = true;
-                });
-            }
+module.factory('PanelManagerFactory', function() {
+    function shouldBeOverriden(name) {
+        return function() {
+            throw new Error('Method ' + name + ' should be overriden');
         };
     }
-]);
-
-/**
- * Taken from Angular-UI > $modal
- */
-module.directive('middlePanelWindow', ['$timeout', 'middleRegion',
-    function($timeout, middleRegion) {
-        return {
-            restrict: 'EA',
-            scope: {
-                index: '@'
-            },
-            replace: true,
-            transclude: true,
-            templateUrl: 'panels/middle-window.phtml',
-            link: function(scope, element, attrs) {
-                $timeout(function() {
-                    // trigger CSS transitions
-                    scope.animate = true;
-                    // focus a freshly-opened modal
-                    element[0].focus();
-                });
-                scope.close = function(evt) {
-                    if (evt.target === evt.currentTarget) {
-                        evt.preventDefault();
-                        evt.stopPropagation();
-                        middleRegion.dismissAll();
-                    }
-                };
+    var PanelManager = function() {
+        this.panels = _([]);
+    };
+    PanelManager.prototype.open = shouldBeOverriden('open');
+    PanelManager.prototype.close = shouldBeOverriden('close');
+    PanelManager.prototype.push = function(instance) {
+        this.panels.push(instance);
+    };
+    PanelManager.prototype.remove = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            this.panels.splice(i, 1);
+        }
+        return i;
+    };
+    PanelManager.prototype.at = function(index) {
+        return this.panels._wrapped[index];
+    };
+    PanelManager.prototype.each = function() {
+        return this.panels.each.apply(this.panels, arguments);
+    };
+    PanelManager.prototype.dismissAll = function(reason) {
+        // dismiss all panels except the first one
+        var i = 0;
+        this.each(function(instance) {
+            if(i !== 0) {
+                instance.dismiss(reason);
             }
-        };
-    }
-]);
+            i++;
+        });
+    };
 
-module.service('middleRegion', ['$compile', '$document', '$rootScope', 'sidonieRegion', function($compile, $document, $rootScope, sidonieRegion) {
-
-    var els = {};
-    var body = $document.find('body').eq(0);
-
-    var region = sidonieRegion.create(false, {
-
-        open: function(instance, options) {
-
-            // create backdrop element
-            var backdropjqLiteEl, backdropDomEl;
-            backdropjqLiteEl = angular.element('<div middle-panel-backdrop></div>');
-            backdropDomEl = $compile(backdropjqLiteEl)($rootScope.$new(true));
-            body.append(backdropDomEl);
-            
-            // create window
-            var angularDomEl = angular.element('<div middle-panel-window></div>');
-            angularDomEl.addClass(options.panelClass);
-            angularDomEl.html(options.content);
-            // dom el
-            var modalDomEl = $compile(angularDomEl)(options.scope);
-            body.append(modalDomEl);
-
-            els[instance.$$id] = {
-                window: modalDomEl,
-                backdrop: backdropDomEl
-            }
-
-            return instance;
-        },
-
-        replace: function(fromInstance, toInstance, options) {
-            throw new Error('Not implemented');
-        },
-
-        close: function(instance, result) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                els[instance.$$id].window.remove();
-                els[instance.$$id].backdrop.remove();
-                delete els[instance.$$id];
+    PanelManager.prototype.dismissChildrenId = function(rank) {
+        console.log(rank);
+        var children = this.panels.slice(rank);
+        console.log(children);
+        var reason = '';
+        for (var i = children.length - 1; i >= 0; i--) {
+            var child = children[i];
+            var result = child.dismiss(reason);
+            if (!result) {
+                return false;
             }
         }
-    });
 
-    $document.bind('keydown', function(evt) {
-        if (evt.which === 27) {
-            var instance = region.last();
-            if (instance) {
-                $rootScope.$apply(function() {
-                    instance.dismiss('escape');
-                });
+        return true;
+    };
+
+    PanelManager.prototype.dismissChildren = function(instance, reason) {
+        var children = this.getChildren(instance);
+        for (var i = children.length - 1; i >= 0; i--) {
+            var child = children[i];
+            var result = child.dismiss(reason);
+            if (!result) {
+                return false;
             }
         }
-    });
 
-    return region;
-}]);
-var module = angular.module('ev-fdm');
-
-module.directive('rightPanelWindow', [ '$timeout', function($timeout) {
-    
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
-    }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
+        return true;
+    };
+    PanelManager.prototype.last = function() {
+        return this.panels.last();
+    };
+    PanelManager.prototype.getNext = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i < this.panels.size() - 1) {
+            return this.at(i + 1);
         } else {
-            attributeValue = BREAKS[breakpIndex];
+            return null;
         }
-        element.attr('data-breakpoint', attributeValue);
-    }
+    };
+    PanelManager.prototype.getChildren = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            return this.panels.slice(i + 1);
+        } else {
+            return [];
+        }
+    };
+    PanelManager.prototype.size = function() {
+        return this.panels.size();
+    };
+    PanelManager.prototype.isEmpty = function() {
+        return this.panels.size() === 0;
+    };
 
     return {
-        restrict: 'A',
-        replace: true,
-        transclude: true,
-        templateUrl: 'panels/right-window.phtml',
-        link: function(scope, element, attrs) {
-            element.resizable({
-                handles: "w",
-                resize: function(event, ui) {
-                    var bp = getBPMatching(ui.size.width);
-                    applyBPAttribute(element, bp);
-                }
-            });
-            scope.$on('animation-complete', function() {
-                var bp = getBPMatching(element.outerWidth());
-                applyBPAttribute(element, bp);
-            });
-            $timeout(function() {
-                var bp = getBPMatching(element.outerWidth());
-                applyBPAttribute(element, bp);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
+        create: function(methods) {
+            var ChildClass = function() {
+                return PanelManager.call(this);
+            };
+            ChildClass.prototype = _({}).extend(PanelManager.prototype, methods);
+            return new ChildClass();
         }
-    }
-}]);
+    };
+});
 
-module.service('rightRegion', [ '$rootScope', '$compile', '$animate', '$timeout', 'sidonieRegion', function($rootScope, $compile, $animate, $timeout, sidonieRegion) {
+module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory) {
 
-    var STACKED_WIDTH = 15;
-    var els = {};
+    var STACKED_WIDTH = 35;
+    var elements = {};
 
-    function getEl(instance) {
-        if (els[instance.$$id]) {
-            return els[instance.$$id];
+    var stylesCache = window.stylesCache = {};
+    var container = angular.element('.panels-container');
+    var panelZero = container.find('.panel-zero');
+
+    var panelManager = PanelManagerFactory.create({
+        updateLayout: function() {
+            updateLayout();
+        },
+        open: function(instance, options) {
+            instance.$$stacked = false;
+            instance.$$depth = options.depth;
+            var isMain = options.depth === 0;
+            if(isMain) {
+                instance.isMain = true;
+            }
+
+            var el = createPlaceholder(instance.$$depth);
+            var inner = createPanelView(instance, options);
+            el.html(inner);
+            elements[instance.$$id] = el;
+            $animate.enter(el, container, panelZero, function() {
+                panelManager.updateLayout();
+            });
+            var timerResize = null;
+            el.on('resize', function(event, ui) {
+                if(timerResize !== null) {
+                    $timeout.cancel(timerResize);
+                }
+                timerResize = $timeout(function() {
+                    stylesCache[options.panelName] = ui.size.width;
+                    panelManager.updateLayout();
+                }, 100);
+            });
+            return instance;
+        },
+        replace: function(fromInstance, toInstance, options) {
+            if (typeof(elements[fromInstance.$$id]) != 'undefined') {
+                var el = elements[fromInstance.$$id];
+                toInstance.$$depth = options.depth - 1;
+                var inner = createPanelView(toInstance, options);
+                el.html(inner);
+                elements[toInstance.$$id] = el;
+                delete elements[fromInstance.$$id];
+                return toInstance;
+            } else {
+                return panelManager.open(toInstance, options);
+            }
+        },
+        close: function(instance) {
+            if (typeof(elements[instance.$$id]) != 'undefined') {
+                var el = elements[instance.$$id];
+                $animate.leave(el, function() {
+                    delete elements[instance.$$id];
+                    panelManager.updateLayout();
+                });
+            }
+        }
+    });
+
+    function getElement(instance) {
+        if (elements[instance.$$id]) {
+            return elements[instance.$$id];
         } else {
             return null;
         }
     }
 
+    /**
+     * Return the panels sizes (if the user resized them)
+     */
     function getStylesFromCache(instance, options) {
-        var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
-        if (savedWidth)
-            return 'style="width: ' + savedWidth + 'px;"';
-        else
-            return '';
-    }
-
-    function stack(fromInstanceIndex) {
-        for (var i = 0; i < region.panels.size(); i++) {
-            var shouldStack = (i < fromInstanceIndex);
-            var instance = region.at(i);
-            var el = getEl(instance);
-            if (instance.$$stacked && !shouldStack) {
-                delete instance.$$actualWidth;
-                $animate.removeClass(el, 'stacked');
-            } else if (!instance.$$stacked && shouldStack) {
-                instance.$$actualWidth = getEl(instance).outerWidth();
-                $animate.addClass(el, 'stacked');
-            }
-            instance.$$stacked = shouldStack;
+        var savedWidth = stylesCache[options.panelName];
+        if (savedWidth) {
+            return 'width: ' + savedWidth + 'px;';
         }
+
+        return '';
     }
 
+    /**
+     * Create a panel container in the DOM
+     */
+    function createPlaceholder(depth) {
+        var isMain = depth === 0;
+        return angular.element('<div ' +
+            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+            'style="z-index:' + (2000 + depth) + ';"></div>');
+    }
+
+    /**
+     * Create a panel view section
+     */
+    function createPanelView(instance, options) {
+        var inner = angular.element('<div ev-panel-breakpoints style="' + getStylesFromCache(instance, options) + '"></div>');
+        inner.html(options.content);
+        options.scope.panelClass = options.panelClass;
+        return $compile(inner)(options.scope);
+    }
+
+    /**
+     * STACKING AND PANELS SIZE MANAGEMENT
+     */
+
+    /**
+     * Our main function for the stacking and panels management
+     */
     function checkStacking() {
-        var maxWidth = $(window).innerWidth() - 100;
-        for (var i = 0; i < region.panels.size(); i++) {
-            var j = 0;
-            var totalWidth = _(region.panels).reduce(function(memo, instance) {
-                if (j++ < i)
-                    return memo + STACKED_WIDTH;
-                else {
-                    var el = getEl(instance);
-                    if (!el) return memo;
-                    if (instance.$$stacked) return memo + instance.$$actualWidth;
-                    var width = el.outerWidth();
-                    if (width < 50) {
-                        // most probably before animation has finished landing
-                        // we neeed to anticipate a final w
-                        return memo + 300;
-                    } else {
-                        return memo + width;
-                    }
-                }
-            }, 0);
-            if (totalWidth < maxWidth) {
-                return stack(i);
-            }
-        }
-        // stack all
-        stack(region.panels.size() - 1);
+
+        var windowWidth = $(window).innerWidth();
+
+        var dataPanels = getDataFromPanels(panelManager.panels);
+        var newDataPanels = calculateStackingFromData(dataPanels, windowWidth);
+        resizeAndStackPanels(panelManager.panels, newDataPanels);
     }
 
-    var checkStackingThrottled = _(checkStacking).debounce(50);
-
-    $(window).on('resize', function() {
-        region.updateStacking();
-    });
-
-    var stylesCache = window.stylesCache = {};
-
-    var region = sidonieRegion.create(true, {
-        updateStacking: function() {
-            return $timeout(checkStackingThrottled);
-        },
-        open: function(instance, options) {
-            instance.$$depth = region.panels.size();
-            var el = angular.element('<div class="panel-placeholder"></div>');
-            var inner = angular.element('<div right-panel-window ' + getStylesFromCache(instance, options) + '></div>');
-            inner.html(options.content);
-            options.scope.panelClass = options.panelClass;
-            inner = $compile(inner)(options.scope);
-            el.html(inner);
-            els[instance.$$id] = el;
-            $animate.enter(el, $('.lisette-module-region.right'), null, function() {
-                options.scope.$emit('animation-complete');
-                $rootScope.$broadcast('module-layout-changed');
-                region.updateStacking();
+    /**
+     * Extract all useful panels informations
+     * The (min-/max-/stacked-)width and the stacked state
+     * @param  {Array} panels the panels
+     * @return {Array}        Array containing the extracted values
+     */
+    function getDataFromPanels(panels) {
+        var data = [];
+        for (var i = 0; i < panels.size(); i++) {
+            var panel = panelManager.at(i);
+            var panelElement = getElement(panel);
+            data.push({
+                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
+                maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
+                stacked:  panel.$$stacked,
+                width:    panelElement.width(),
+                stackedWidth: STACKED_WIDTH
             });
-            el.on('resize', function(event, ui) {
-                stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
-                region.updateStacking();
-            });
-            region.updateStacking();
-            return instance;
-        },
-        replace: function(fromInstance, toInstance, options) {
-            if (typeof(els[fromInstance.$$id]) != 'undefined') {
-                var el = els[fromInstance.$$id];
-                toInstance.$$depth = region.panels.size() - 1;
-                var inner = angular.element('<div right-panel-window ' + getStylesFromCache(toInstance, options) + '></div>');
-                inner.html(options.content);
-                options.scope.panelClass = options.panelClass;
-                inner = $compile(inner)(options.scope);
-                el.html(inner);
-                els[toInstance.$$id] = el;
-                delete els[fromInstance.$$id];
-                region.updateStacking();
-                return toInstance;
-            } else {
-                return region.open(toInstance, options);
-            }
-        },
-        close: function(instance) {
-            if (typeof(els[instance.$$id]) != 'undefined') {
-                var el = els[instance.$$id];
-                $animate.leave(el, function() {
-                    delete els[instance.$$id];
-                    region.updateStacking();
-                });
-                region.updateStacking();
+        }
+
+        return data;
+    }
+
+    /**
+     * Calculate datas from the dataPanels received accordingly to a max width
+     * @param  {Array}  datas Panels data
+     * @param  {Int}    limit limit width]
+     * @return {Array}  datas computed
+     */
+    function calculateStackingFromData(datas, limit) {
+        _(datas).each(function(element) {
+            element.stacked = false;
+        });
+
+        /**
+         * For each panels, test if he needs to be stacked
+         */
+        function stackedDatas() {
+
+            for (var i = 0; i < datas.length; i++) {
+
+                var totalMinWidth = _(datas).reduce(function(memo, data) {
+
+                        if (data.stacked) {
+                            return memo + data.stackedWidth;
+                        }
+                        var _width = data.minWidth;
+                        if(_width < data.stackedWidth) {
+                            _width = data.stackedWidth;
+                        }
+
+                        return memo + _width;
+                }, 0);
+                if (totalMinWidth > limit) {
+                    datas[i].stacked = true;
+                }
             }
         }
+
+        /**
+         * Update the size of each panels
+         */
+        function updateSize() {
+            var data = null;
+            var i = 0;
+            for (; i < datas.length; i++) {
+                data = datas[i];
+                if (data.width < data.minWidth) {
+                    data.width = data.minWidth;
+                }
+            }
+
+            var totalWidth = _(datas).reduce(function(memo, data) {
+                if (data.stacked) {
+                    return memo + data.stackedWidth;
+                }
+
+                return memo + data.width;
+            }, 0);
+
+            var delta = limit - totalWidth;
+
+            for (i = 0; i < datas.length; i++) {
+                data = datas[i];
+
+                if(data.stacked) {
+                    data.width = data.stackedWidth;
+                    continue;
+                }
+
+                // try to take all delta
+                var oldWidth = data.width;
+                var newWidth = data.width + delta;
+
+                // Check limit
+                if (data.minWidth > newWidth) {
+                    data.width = data.minWidth;
+                }
+
+                // Check limit
+                else if (data.maxWidth !== 0 && data.maxWidth < newWidth) {
+                    data.width = data.maxWidth;
+                } else {
+                    data.width = data.width + delta;
+                }
+
+                delta = delta - (data.width - oldWidth);
+
+                if(delta === 0) {
+                    break;
+                }
+            }
+
+            if (delta !== 0) {
+                console.log('impossible to reach the size');
+            }
+        }
+
+        stackedDatas(datas);
+        updateSize(datas);
+
+        return datas;
+    }
+
+    /**
+     * Apply our results to the panels
+     * @param  {Array} panels      the panels
+     * @param  {Array} dataPanels  the datas we want to apply
+     */
+    function resizeAndStackPanels(panels, dataPanels) {
+        for (var i = 0; i < panels.size(); i++) {
+            var panel = panelManager.at(i);
+            var dataPanel = dataPanels[i];
+
+            var element = getElement(panel);
+
+            if(!element) {
+                console.log('no element for this panel)');
+                continue;
+            }
+
+            if (panel.$$stacked && !dataPanel.stacked) {
+                $animate.removeClass(element, 'stacked');
+            } else if (!panel.$$stacked && dataPanel.stacked) {
+                $animate.addClass(element, 'stacked');
+            }
+
+            panel.$$stacked = dataPanel.stacked;
+
+            element.children().first().width(dataPanel.width);
+
+        }
+    }
+
+    /**
+     * Whenever a layout is changed
+     */
+    function updateLayout() {
+        checkStacking();
+        $rootScope.$broadcast('module-layout-changed');
+    }
+
+    var timerWindowResize = null;
+    $(window).on('resize', function() {
+        if(timerWindowResize !== null) {
+            $timeout.cancel(timerWindowResize);
+        }
+        timerWindowResize = $timeout(function() {
+            panelManager.updateLayout();
+        }, 100);
     });
 
-    return region;
-
+    return panelManager;
 }]);
 angular.module('ev-leaflet', ['leaflet-directive'])
     .provider('evLeaflet', function() {
@@ -3691,11 +4424,11 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                     // We choose to have a restrictive approach here.
                     // The aim is to output the cleanest html possible.
                     // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
-                    'valid_elements':
-                        'strong,em' +
-                        'span[!style<text-decoration: underline;],' +
-                        '@[style<text-align: right;?text-align: left;?text-align: center;],' +
-                        'p,!div,ul,li'
+                    // 'valid_elements':
+                    //     'strong,em' +
+                    //     'span[!style<text-decoration: underline;],' +
+                    //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
+                        // 'p,!div,ul,li'
                 };
                 $scope.tinymceFinalOptions = angular.extend({}, defaultOptions, $scope.tinymceOptions);
             }]
@@ -3840,11 +4573,20 @@ angular.module('ev-upload')
         =========
         Hi! I'm a directive used for uploading files.
 
-        You can give me two callback: `uploadStart` and `fileSuccess`
+        You can give me three callback: `uploadStart`, `fileSuccess` and `fileAdded`
+        - `uploadStart` will be called when a new multiple upload start (for instance, when the user dropped some files
+            on the dropzone). It will be call with an argument: the promise for the status of the whole upload.
         - `fileSuccess` will be called each time a file has successfully been uploaded, with the data returned by the
             server.
-        - `upload` will be called when a new multiple upload start (for instance, when the user dropped some files
-            on the dropzone). It will be call with an argument: the promise for the status of the whole upload.
+        - `fileAdded` will be called each time a file is added to the queue. It will be called with 2 arguments :
+            - dropzoneFile : the Dropzone file being uploaded
+            - promise : the promise associated with the file
+
+        Clickable Element : you can define a clickable element inside the directive with the
+                            class '.ev-upload-clickable'
+
+        Dropzone Element : you can define a clickable element inside the directive with the class '.ev-upload-dropzone'
+                           If the class is not present, it will use the root element.
 
         My inner heart is powered by Dropzone. You can pass any settings to it through my `settings` parameter.
         Consequently, you can do whatever you want. Be wise :)
@@ -3871,22 +4613,38 @@ angular.module('ev-upload')
                 scope: {
                     settings: '=',
                     uploadStart: '&upload',
-                    fileSuccess: '&'
+                    fileSuccess: '&',
+                    fileAdded: '&'
                 },
-                template: '<div class="ev-upload"><div class="dz-default dz-message" ng-transclude> </div></div>',
+                template: '<div class="ev-upload"><div ng-transclude> </div></div>',
                 link: function ($scope, elem, attrs) {
+
+                    $scope.fileSuccess = $scope.fileSuccess || function() {};
+                    $scope.fileAdded = $scope.fileAdded || function() {};
 
                     var dropzone = null;
                     var progress = null;
 
-                    var clickableZone = elem.find('.ev-upload-clickable')[0];
-
+                    var filesPromises = {};
                     function getBytes (status) {
                         return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
                             return bytes + file.upload[status];
                         }, 0);
                     }
 
+                    function getDropzoneElement() {
+                        var dz = elem.find('.ev-upload-dropzone');
+                        if (dz.length === 0) {
+                            dz = elem;
+                        }
+                        dz.addClass("dz-default");
+                        dz.addClass("dz-message");
+                        return dz[0];
+                    }
+
+                    function getClickableElement() {
+                        return elem.find('.ev-upload-clickable')[0];
+                    }
 
                     $scope.$watch('settings', function (settings) {
                         if (!settings.url) {
@@ -3897,23 +4655,77 @@ angular.module('ev-upload')
                             dropzone.destroy();
                         }
                         settings = angular.extend(BASE_CONFIG, settings);
-                        dropzone = new Dropzone(elem[0], angular.extend({clickable: clickableZone}, settings));
+                        dropzone = new Dropzone(
+                            getDropzoneElement(),
+                            angular.extend({clickable: getClickableElement()},settings)
+                        );
                         // the promise for the whole upload
 
                         $scope.currentUpload = null;
 
-                        // At the beginning of a new file upload.
-                        dropzone.on('sending', function (file) {
+                        // When a file is added to the queue
+                        dropzone.on('addedfile', function (file) {
                             if ($scope.currentUpload === null) {
-                                $scope.$apply(startNewUpload);
+                            	$scope.$apply(startNewUpload);
                             }
+                            var deferred = $q.defer();
+                            filesPromises[file.name] = deferred;
+                            $scope.$apply(function($scope) {
+                                $scope.fileAdded({dropzoneFile: file, promise: deferred.promise});
+                            });
+                        });
+
+                        dropzone.on('uploadprogress', function (file, progress) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.notify(progress);
+                            });
+                        });
+
+                        dropzone.on('uploadprogress', function (file, progress) {
+                        	$scope.$apply(function ($scope) {
+                            	filesPromises[file.fullPath].notify(progress);
+                            });
                         });
 
                         dropzone.on('success', function (file, response) {
-                            progress.done += 1;
+                            var deferred = filesPromises[file.name];
                             $scope.$apply(function ($scope) {
+                                deferred.resolve({file: response});
                                 $scope.fileSuccess({file: response});
                             });
+                        });
+
+                        dropzone.on('error', function (file, response) {
+                            $scope.$apply(function ($scope) {
+                            	filesPromises[file.fullPath].reject({errorMessage: response});
+                            });
+                        });
+
+                        dropzone.on('complete', function (file) {
+                        	progress.done += 1;
+                        	delete filesPromises[file.fullPath];
+                        });
+
+                        dropzone.on('error', function (file, response) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.reject({errorMessage: response});
+                            });
+                        });
+
+                        dropzone.on('canceled', function (file) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.reject({errorMessage: 'canceled'});
+                            });
+                        });
+
+                        dropzone.on('complete', function (file) {
+                            if(!angular.isDefined(progress)){
+                                progress.done += 1;
+                            }
+                            delete filesPromises[file.name];
                         });
 
                     }, true);
@@ -3924,9 +4736,9 @@ angular.module('ev-upload')
                             done: 0,
                         };
 
+                        // De-register all events
                         dropzone
-                            .off('totaluploadprogress')
-                            .off('queuecomplete')
+                            .off('uploadprogress')
                             .off('maxfilesexceeded');
 
                         // upload object, encapsulate the state of the current (multi file) upload
@@ -3934,7 +4746,7 @@ angular.module('ev-upload')
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
-                        dropzone.on('error', function() {
+                        dropzone.once('error', function() {
                             upload.hasFileErrored = true;
                         });
 
@@ -3943,7 +4755,8 @@ angular.module('ev-upload')
                             progress.total = dropzone.getAcceptedFiles().length;
                             upload.deferred.notify(progress);
                         });
-                        dropzone.on('queuecomplete', function () {
+
+                        dropzone.once('queuecomplete', function () {
                             $scope.$apply(function ($scope) {
                                 if (upload.hasFileErrored) {
                                     upload.deferred.reject('filehaserrored');

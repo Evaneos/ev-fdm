@@ -1,6 +1,5 @@
 {
   "name": "ev-fdm",
-  "version": "0.1.0",
   "homepage": "https://github.com/evaneos/pro.evaneos.com",
   "ignore": [
     "**/.*",
@@ -24,14 +23,16 @@
     "angular-ui-date": "~0.0.3",
     "underscore": "~1.5.1",
     "restangular": "~1.4.0",
-
-
     "angular-leaflet-directive": "~0.7.7",
-
-
-    "dropzone": "~3.10.2",
-
-
-    "angular-ui-tinymce": "0b2a007e6878e1a4599cc1fac57cf063bdc2f951"
-  }
+    "dropzone": "~3.10.2"
+  },
+  "_release": "72eab05d61",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "72eab05d6170584534d46d1f3fe86366883b3225"
+  },
+  "_source": "git@github.com:Evaneos/ev-fdm.git",
+  "_target": "*",
+  "_originalSource": "git@github.com:Evaneos/ev-fdm.git"
 }

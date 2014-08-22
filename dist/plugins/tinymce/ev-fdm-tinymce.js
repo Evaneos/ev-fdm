@@ -18,11 +18,11 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                     // We choose to have a restrictive approach here.
                     // The aim is to output the cleanest html possible.
                     // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
-                    'valid_elements':
-                        'strong,em' +
-                        'span[!style<text-decoration: underline;],' +
-                        '@[style<text-align: right;?text-align: left;?text-align: center;],' +
-                        'p,!div,ul,li'
+                    // 'valid_elements':
+                    //     'strong,em' +
+                    //     'span[!style<text-decoration: underline;],' +
+                    //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
+                        // 'p,!div,ul,li'
                 };
                 $scope.tinymceFinalOptions = angular.extend({}, defaultOptions, $scope.tinymceOptions);
             }]

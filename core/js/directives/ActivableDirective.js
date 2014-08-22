@@ -4,11 +4,12 @@ angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
             restrict: 'A',
+            scope: false,
             controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
 
                 var activeElementGet = $parse($attrs.activeElement),
                     activeElementSet = activeElementGet.assign;
-               
+
                 var self = this;
                 $scope.$watch(function() {
                     return activeElementGet($scope);
@@ -21,7 +22,7 @@ angular.module('ev-fdm')
                         if(activeElementSet) {
                             activeElementSet($scope, value);
                         }
-                        
+
                         this.activeElement = value;
                     }
                     else {
@@ -46,6 +47,7 @@ angular.module('ev-fdm')
                     element.addClass('clickable');
                     var elementGetter = $parse(attr.activable),
                         currentElement = elementGetter(scope);
+
 
                     scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
                       currentElement = newCurrentElement;

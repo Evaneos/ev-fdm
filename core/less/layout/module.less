@@ -9,16 +9,10 @@
  * All content must reside in the lisette-module-body area.
  */
 
-@module-min-width: @screen-tablet;
-
-// bar variables
-@module-bar-stacked: @layout-gutter;
-@module-tabs-height: (28px + @layout-gutter);
-@module-topbar-height: 50px;
-@module-topbar-height-size-big: 100px;
-@module-topbar-height-size-mini: 8px;
-@module-leftbar-width: 260px;
-@module-bottombar-height: 32px;
+/**
+ * Lisette-module-* are going to be removed/deprecated
+ * We keep them during the migration
+ */
 
 .module-panel-animations() {
     // removing animations for the time being, not necessary
@@ -76,6 +70,15 @@
         .lisette-module-body {
             bottom: @module-bottombar-height;
         }
+        .panel-placeholder.panel-main > .panel .table-container {
+            bottom: @module-bottombar-height;
+        }
+
+        .panel-placeholder.panel-main > .panel .has-header {
+            .table-container {
+                bottom: @module-bottombar-height + @panel-header-height;
+            }
+        }
     }
 
     &.has-leftbar {
@@ -87,6 +90,41 @@
         }
         .lisette-module-bottombar {
             left: @module-leftbar-width;
+        }
+        .panel .table-container {
+            left: @module-leftbar-width;
+        }
+
+        [data-breakpoint='min'],
+        [data-breakpoint='100'],
+        [data-breakpoint='200'],
+        [data-breakpoint='300'],
+        [data-breakpoint='400'],
+        [data-breakpoint='500'],
+        [data-breakpoint='600'],
+        [data-breakpoint='700'] {
+            .lisette-module-leftbar {
+              display: none;
+            }
+
+            &.panel .table-container {
+              left: 0;
+            }
+        }
+
+        &.has-bottombar {
+            [data-breakpoint='min'],
+            [data-breakpoint='100'],
+            [data-breakpoint='200'],
+            [data-breakpoint='300'],
+            [data-breakpoint='400'],
+            [data-breakpoint='500'],
+            [data-breakpoint='600'],
+            [data-breakpoint='700'] {
+                .lisette-module-bottombar {
+                    left: 0;
+                }
+            }
         }
     }
 
@@ -102,6 +140,18 @@
         }
         .lisette-module-topbar {
             top: @module-tabs-height;
+        }
+
+        .panel-placeholder.panel-main > .panel .table-container {
+            top: (@module-tabs-height + @module-topbar-height);
+        }
+
+        &.topbar-size-big .panel-placeholder.panel-main > .panel .table-container {
+            top: (@module-tabs-height + @module-topbar-height-size-big);
+        }
+
+        &.topbar-size-mini .panel-placeholder.panel-main > .panel .table-container {
+            top: (@module-tabs-height + @module-topbar-height-size-mini);
         }
     }
 
@@ -120,11 +170,12 @@
     }
 }
 
-.lisette-module-region.right {
+.panels-container {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
+    left: 0;
     z-index: @zindex-modal-background;
 }
 

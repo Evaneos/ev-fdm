@@ -14,14 +14,14 @@
         - `fileSuccess` will be called each time a file has successfully been uploaded, with the data returned by the
             server.
         - `fileAdded` will be called each time a file is added to the queue. It will be called with 2 arguments :
-        	- dropzoneFile : the Dropzone file being uploaded
-        	- promise : the promise associated with the file
+            - dropzoneFile : the Dropzone file being uploaded
+            - promise : the promise associated with the file
 
-		Clickable Element : you can define a clickable element inside the directive with the
-							class '.ev-upload-clickable'
-		
-		Dropzone Element : you can define a clickable element inside the directive with the class '.ev-upload-dropzone'
-						   If the class is not present, it will use the root element. 
+        Clickable Element : you can define a clickable element inside the directive with the
+                            class '.ev-upload-clickable'
+
+        Dropzone Element : you can define a clickable element inside the directive with the class '.ev-upload-dropzone'
+                           If the class is not present, it will use the root element.
 
         My inner heart is powered by Dropzone. You can pass any settings to it through my `settings` parameter.
         Consequently, you can do whatever you want. Be wise :)
@@ -54,14 +54,13 @@
                 template: '<div class="ev-upload"><div ng-transclude> </div></div>',
                 link: function ($scope, elem, attrs) {
 
-                	$scope.fileSuccess = $scope.fileSuccess || function() {};
-                	$scope.fileAdded = $scope.fileAdded || function() {};
-                	
+                    $scope.fileSuccess = $scope.fileSuccess || function() {};
+                    $scope.fileAdded = $scope.fileAdded || function() {};
+
                     var dropzone = null;
                     var progress = null;
 
                     var filesPromises = {};
-                    
                     function getBytes (status) {
                         return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
                             return bytes + file.upload[status];
@@ -69,19 +68,19 @@
                     }
 
                     function getDropzoneElement() {
-                    	var dz = elem.find('.ev-upload-dropzone');
-                    	if (dz.length === 0) {
-                    		dz = elem;
-                    	}
-                    	dz.addClass("dz-default");
-                    	dz.addClass("dz-message");
-                    	return dz[0];
+                        var dz = elem.find('.ev-upload-dropzone');
+                        if (dz.length === 0) {
+                            dz = elem;
+                        }
+                        dz.addClass("dz-default");
+                        dz.addClass("dz-message");
+                        return dz[0];
                     }
-                    
+
                     function getClickableElement() {
-                    	return elem.find('.ev-upload-clickable')[0];
-                    } 
-                    
+                        return elem.find('.ev-upload-clickable')[0];
+                    }
+
                     $scope.$watch('settings', function (settings) {
                         if (!settings.url) {
                             $log.warn('No url provided to the upload zone');
@@ -92,24 +91,32 @@
                         }
                         settings = angular.extend(BASE_CONFIG, settings);
                         dropzone = new Dropzone(
-                    		getDropzoneElement(),
-                    		angular.extend({clickable: getClickableElement()},settings)
-                		);
+                            getDropzoneElement(),
+                            angular.extend({clickable: getClickableElement()},settings)
+                        );
                         // the promise for the whole upload
 
                         $scope.currentUpload = null;
 
-                        // At the beginning of a new file upload.
-                        dropzone.on('sending', function (file) {
+                        // When a file is added to the queue
+                        dropzone.on('addedfile', function (file) {
                             if ($scope.currentUpload === null) {
-                            	var deferred = $q.defer();
-                            	filesPromises[file.fullPath] = deferred;
-                            	$scope.fileAdded({dropzoneFile: file, promise: deferred.promise});
-                            	
                             	$scope.$apply(startNewUpload);
                             }
+                            var deferred = $q.defer();
+                            filesPromises[file.name] = deferred;
+                            $scope.$apply(function($scope) {
+                                $scope.fileAdded({dropzoneFile: file, promise: deferred.promise});
+                            });
                         });
-                        
+
+                        dropzone.on('uploadprogress', function (file, progress) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.notify(progress);
+                            });
+                        });
+
                         dropzone.on('uploadprogress', function (file, progress) {
                         	$scope.$apply(function ($scope) {
                             	filesPromises[file.fullPath].notify(progress);
@@ -117,22 +124,43 @@
                         });
 
                         dropzone.on('success', function (file, response) {
+                            var deferred = filesPromises[file.name];
                             $scope.$apply(function ($scope) {
-                            	filesPromises[file.fullPath].resolve({file: response});
-                            	
+                                deferred.resolve({file: response});
                                 $scope.fileSuccess({file: response});
                             });
                         });
-                        
+
                         dropzone.on('error', function (file, response) {
                             $scope.$apply(function ($scope) {
                             	filesPromises[file.fullPath].reject({errorMessage: response});
                             });
                         });
-                        
+
                         dropzone.on('complete', function (file) {
                         	progress.done += 1;
                         	delete filesPromises[file.fullPath];
+                        });
+
+                        dropzone.on('error', function (file, response) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.reject({errorMessage: response});
+                            });
+                        });
+
+                        dropzone.on('canceled', function (file) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.reject({errorMessage: 'canceled'});
+                            });
+                        });
+
+                        dropzone.on('complete', function (file) {
+                            if(!angular.isDefined(progress)){
+                                progress.done += 1;
+                            }
+                            delete filesPromises[file.name];
                         });
 
                     }, true);
@@ -143,9 +171,9 @@
                             done: 0,
                         };
 
+                        // De-register all events
                         dropzone
-                            .off('totaluploadprogress')
-                            .off('queuecomplete')
+                            .off('uploadprogress')
                             .off('maxfilesexceeded');
 
                         // upload object, encapsulate the state of the current (multi file) upload
@@ -153,7 +181,7 @@
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
-                        dropzone.on('error', function() {
+                        dropzone.once('error', function() {
                             upload.hasFileErrored = true;
                         });
 
@@ -162,7 +190,8 @@
                             progress.total = dropzone.getAcceptedFiles().length;
                             upload.deferred.notify(progress);
                         });
-                        dropzone.on('queuecomplete', function () {
+
+                        dropzone.once('queuecomplete', function () {
                             $scope.$apply(function ($scope) {
                                 if (upload.hasFileErrored) {
                                     upload.deferred.reject('filehaserrored');

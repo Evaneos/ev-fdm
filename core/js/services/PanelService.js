@@ -4,110 +4,73 @@ module.factory('panelFactory', function() {
     var Panel = function(extensions) {
         this.blockers = [];
         _(this).extend(extensions);
-    }
+    };
     Panel.prototype.addBlocker = function(blocker) {
         this.blockers.push(blocker);
-    }
+    };
     Panel.prototype.removeBlocker = function(blocker) {
         this.blockers = _(this.blockers).without(blocker);
-    }
+    };
     Panel.prototype.isBlocked = function(silent) {
         return _(this.blockers).some(function(blocker) {
             return blocker(silent);
         });
-    }
+    };
     return {
         create: function(extensions) {
             return new Panel(extensions);
         }
-    }
+    };
 });
 
-module.factory('sidonieRegion', function() {
-    function shouldBeOverriden(name) {
-        return function() {
-            throw new Error('Method ' + name + ' should be overriden');
-        };
-    }
-    var Region = function(hasPush) {
-        this.hasPush = hasPush;
-        this.panels = _([]);
-    };
-    Region.prototype.open = shouldBeOverriden('open');
-    Region.prototype.close = shouldBeOverriden('close');
-    Region.prototype.push = function(instance) {
-        this.panels.push(instance);
-    };
-    Region.prototype.remove = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) this.panels.splice(i, 1);
-        return i;
-    };
-    Region.prototype.at = function(index) {
-        return this.panels._wrapped[index];
-    };
-    Region.prototype.each = function() {
-        return this.panels.each.apply(this.panels, arguments);
-    };
-    Region.prototype.dismissAll = function(reason) {
-        this.each(function(instance) {
-            instance.dismiss(reason);
-        });
-    };
-    Region.prototype.last = function() {
-        return this.panels.last();
-    };
-    Region.prototype.getNext = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i < this.panels.size() - 1) {
-            return this.at(i + 1);
-        } else {
-            return null;
-        }
-    };
-    Region.prototype.getChildren = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            return this.panels.slice(i + 1);
-        } else {
-            return [];
-        }
-    };
-    Region.prototype.size = function() {
-        return this.panels.size();
-    };
-    Region.prototype.isEmpty = function() {
-        return this.panels.size() === 0;
-    };
+module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'panelManager', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, panelManager, panelFactory) {
 
-    return {
-        create: function(hasPush, methods) {
-            var ChildClass = function(hasPush) {
-                return Region.call(this, hasPush);
-            }
-            ChildClass.prototype = _({}).extend(Region.prototype, methods);
-            return new ChildClass(hasPush);
-        }
-    }
-});
-
-module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller', 'middleRegion', 'rightRegion', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, middleRegion, rightRegion, panelFactory) {
-
-    // identifies all panels
+    // Identifies all panels
     var currentId = 1;
 
-    var regions = {
-        middle: middleRegion,
-        right: rightRegion
-    };
+    function parseOptions(options) {
+        options = options || {};
 
-    function parseOptions(regionName, options) {
         if (!options.template && !options.templateUrl && !options.content) {
-            throw new Error('Should define options.template or templateUrl or content')
+            throw new Error('Should define options.template or templateUrl or content');
         }
-        options.push = options.push || options.pushFrom;
-        options.panelClass = options.panelClass || '';
-        options.panelClass += ' ' + regionName;
+
+        // Retrieve the last panel
+        var last = panelManager.last();
+
+        /**
+         * Parse the opening options (replace or pushFrom)
+         */
+        if(options.replace) {
+            if(angular.isString(options.replace)) {
+                //We can use 'panel-main' as a special panel name
+                if(options.replace === 'panel-main') {
+                    options.replace = getMainPanel();
+                } else {
+                    options.replace = getPanel(options.replace);
+                }
+            } else if(options.replace === true) {
+                options.replace = last;
+            }
+        } else if (options.pushFrom) {
+            if(angular.isString(options.pushFrom)) {
+                options.pushFrom = getPanel(options.pushFrom);
+            }
+
+            if(options.pushFrom !== null && options.pushFrom != last) {
+                options.replace = panelManager.getNext(options.pushFrom);
+            }
+        }
+
+        if(!options.replace && !options.pushFrom) {
+            options.pushFrom = last;
+        }
+
+        options.panelName = options.panelName || '';
+
+        options.panelClass = options.panelName || '';
+        options.panelClass += ' right';
+
         options.resolve = options.resolve || {};
         return options;
     }
@@ -124,7 +87,7 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
 
     function getResolvePromises(resolves) {
         var promises = [];
-        angular.forEach(resolves, function(value, key) {
+        angular.forEach(resolves, function(value) {
             if (angular.isFunction(value) || angular.isArray(value)) {
                 promises.push($q.when($injector.invoke(value)));
             }
@@ -152,43 +115,28 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             });
     }
 
-    function getRegion(name) {
-        if (_(regions).has(name)) {
-            return regions[name];
-        } else {
-            throw new Error('Unknown region ' + name);
-        }
-    }
-
-    function dismissChildren(region, instance, reason) {
-        var children = region.getChildren(instance);
-        for (var i = children.length - 1; i >= 0; i--) {
-            var child = children[i];
-            var result = child.dismiss(reason);
-            if (!result) return false;
-        }
-        return true;
-    }
-
     /**
      * Resolves everything needed to the view (templates, locals)
      * + creates the controller, scope
      * + finally creates the view
      */
-    function createInstance(region, options, done) {
+    function createInstance(options, done) {
         var self = this;
         var resultDeferred = $q.defer();
         var openedDeferred = $q.defer();
-        
+
         var instance = panelFactory.create({
+            panelName : options.panelName,
             result: resultDeferred.promise,
             opened: openedDeferred.promise,
             close: function(result) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent closed');
-                    if (!notCancelled) return false;
-                    region.close(instance, options);
-                    region.remove(instance);
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent closed');
+                    if (!notCancelled) {
+                        return false;
+                    }
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.resolve(result);
                     return true;
                 }
@@ -196,20 +144,22 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
             },
             dismiss: function(reason) {
                 if (!instance.isBlocked()) {
-                    var notCancelled = dismissChildren(region, instance, 'parent dismissed');
-                    if (!notCancelled) return false;
-                    region.close(instance, options);
-                    region.remove(instance);
+                    var notCancelled = panelManager.dismissChildren(instance, 'parent dismissed');
+                    if (!notCancelled) {
+                      return false;
+                    }
+                    panelManager.close(instance, options);
+                    panelManager.remove(instance);
                     resultDeferred.reject(reason);
                     return true;
                 }
                 return false;
             }
         });
-        
+
         resolveAll(options)
             .then(function(contentAndLocals) {
-                
+
                 // create scope
                 var scope = (options.scope || $rootScope).$new();
                 scope.$close = instance.close;
@@ -224,17 +174,17 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
                     controller = $controller(options.controller, locals);
                 }
 
-                // add variables required by regions
+                // add variables required by panelManager
                 options.scope = scope;
                 options.deferred = resultDeferred;
                 options.content = contentAndLocals.content;
 
                 // finally open the view
                 if (options.replace) {
-                    region.replace(options.replace, instance, options);
-                    region.remove(options.replace, options);
+                    panelManager.replace(options.replace, instance, options);
+                    panelManager.remove(options.replace, options);
                 } else {
-                    region.open(instance, options);
+                    panelManager.open(instance, options);
                 }
             })
             .then(function() {
@@ -246,71 +196,99 @@ module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', 
         return instance;
     }
 
-    return {
-        /**
-         * @param {String} regionName
-         * @param {Mixed} options
-         *     {Mixed} template / templateUrl / content
-         *     (optional) {String} controller
-         *     (optional) {Mixed} scope
-         *     (optional) {Object} resolve
-         *     (optional) {String} panelClass
-         *     (optional) {Boolean} push: if the region is push enabled, open
-         *         a popup on top of the latest one
-         *     (optional) {PanelInstance} pushFrom: if the region is push enabled, open
-         *         a popup on top of that instance (and close existing children)
-         */
-        open: function(regionName, options) {
+    /**
+     * Get a panel instance via his name
+     */
+    function getPanel(panelName) {
+        var panel = panelManager.panels.find(function(_panel) {
+            return _panel.panelName === panelName;
+        });
 
-            options = parseOptions(regionName, options);
-            var region = getRegion(regionName);
-            var last = region.last();
-            var instance;
+        return panel || null;
+    }
 
-            if (options.push && !options.pushFrom) {
-                options.pushFrom = last;
+    /**
+     * Get the main panel instance
+     */
+    function getMainPanel() {
+        var mainPanel = panelManager.panels.first();
+        // var mainPanel = panelManager.panels.find(function(_panel) {
+        //     return _panel.isMain === true;
+        // });
+
+        return mainPanel || null;
+    }
+
+    /**
+     * Return a boolean if either the panel exist or not
+     */
+    function hasPanel(panelName) {
+        return getPanel(panelName) != null;
+    }
+
+    /**
+     * @param {Object} options
+     *        - {Mixed} template / templateUrl / content
+     *        - (optional) {String} controller
+     *        - (optional) {Mixed} scope
+     *        - (optional) {Object} resolve
+     *        - (optional) {String} panelName
+     *        - (optional) {Mixed} pushFrom :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *        - (optional) {Mixed} replaceAt :
+     *                            + {String} : the panel name
+     *                            + {Object} : the panel instance
+     *                            + {Boolean}: if true replace the last panel
+     *
+     * @return {Object} The panel instance or null if something wrong occured
+     */
+    function open(options) {
+        options = parseOptions(options);
+
+        var instance;
+
+        if (options.replace) {
+            var result = panelManager.dismissChildren(options.replace, 'parent replaced');
+            // some child might have canceled the close
+            if (!result) {
+                return null;
             }
+        }
 
-            if (options.pushFrom && options.pushFrom != last) {
-                options.replace = region.getNext(options.pushFrom);
-                if (options.replace) {
-                    var result = dismissChildren(region, options.replace, 'parent replaced');
-                    // some child might have canceled the close
-                    if (!result) {
-                        return false;
-                    }
-                }
-            }
+        if (options.replace && options.replace.isBlocked()) {
+            return null;
+        }
 
-            if (!(region.hasPush && options.push) && !region.isEmpty()) {
-                options.replace = last;
-            }
+        // Contains the panel 'depth'
+        options.depth = panelManager.panels.size();
+        instance = createInstance(options);
 
-            if (options.replace && options.replace.isBlocked()) {
-                return false;
-            }
+        // Attach some variables to the instance
+        instance.$$id = currentId++;
 
-            instance = createInstance(region, options);
+        panelManager.push(instance);
 
-            // attach some variables to the instance
-            instance.$$id = currentId++;
-            instance.$$region = regionName;
-            
-            region.push(instance);
-            return instance;
+        return instance;
+    }
+
+    var panelService = {
+        getPanel : getPanel,
+        hasPanel : hasPanel,
+        open: open,
+        count: function() {
+            return panelManager.size();
         },
-        push: function(regionName, options) {
-            options.push = true;
-            return this.open(regionName, options);
+        dismissChildrenId: function(i) {
+            panelManager.dismissChildrenId(i);
         },
         dismissAll: function(reason) {
-            _(regions).each(function(region) {
-                region.dismissAll(reason);
-            });
+            panelManager.dismissAll(reason);
         },
         dismissChildren: function(instance, reason) {
-            var region = regions[instance.$$region];
-            return dismissChildren(region, instance, reason);
+            return panelManager.dismissChildren(instance, reason);
         }
     };
+
+    return panelService;
 }]);
