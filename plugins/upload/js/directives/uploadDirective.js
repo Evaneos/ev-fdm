@@ -61,7 +61,6 @@
                     var progress = null;
 
                     var filesPromises = {};
-
                     function getBytes (status) {
                         return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
                             return bytes + file.upload[status];
@@ -102,7 +101,7 @@
                         // When a file is added to the queue
                         dropzone.on('addedfile', function (file) {
                             if ($scope.currentUpload === null) {
-                                $scope.$apply(startNewUpload);
+                            	$scope.$apply(startNewUpload);
                             }
                             var deferred = $q.defer();
                             filesPromises[file.name] = deferred;
@@ -118,12 +117,29 @@
                             });
                         });
 
+                        dropzone.on('uploadprogress', function (file, progress) {
+                        	$scope.$apply(function ($scope) {
+                            	filesPromises[file.fullPath].notify(progress);
+                            });
+                        });
+
                         dropzone.on('success', function (file, response) {
                             var deferred = filesPromises[file.name];
                             $scope.$apply(function ($scope) {
                                 deferred.resolve({file: response});
                                 $scope.fileSuccess({file: response});
                             });
+                        });
+
+                        dropzone.on('error', function (file, response) {
+                            $scope.$apply(function ($scope) {
+                            	filesPromises[file.fullPath].reject({errorMessage: response});
+                            });
+                        });
+
+                        dropzone.on('complete', function (file) {
+                        	progress.done += 1;
+                        	delete filesPromises[file.fullPath];
                         });
 
                         dropzone.on('error', function (file, response) {
