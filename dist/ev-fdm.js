@@ -254,140 +254,6 @@ angular.module('ev-fdm')
     }]);
 'use strict';
 
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
-'use strict';
-
 angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
@@ -1838,6 +1704,140 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -4404,13 +4404,30 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         };
     }]);
 
+/**
+ * Directive to override some settings in tinymce
+ * Usage:
+ * <ev-tinymce
+ *     max-chars="1000"                        -- maxChars this input accept (default: unlimited)
+ *     ng-model="message.body"                 -- ng-model
+ *     tinymce-options="tinymceOptions"        -- override default options with yours (object expected)
+ *  ></ev-tinymce>
+ */
 angular.module('ev-tinymce', ['ui.tinymce'])
     .directive('evTinymce', [function () {
         return {
-            template: '<textarea ui-tinymce="tinymceFinalOptions"></textarea>',
+            template: '<div class="tiny-mce-wrapper">' +
+                            '<textarea ui-tinymce="tinymceFinalOptions" ng-model="ngModel"></textarea>' +
+                            '<span class="max-chars-info">&nbsp;</span>' +
+                      '</div>',
             restrict: 'AE',
-            replace: true,
-            controller: ['$scope', function($scope) {
+            replace: false,
+            scope: {
+                ngModel: '=',
+                tinymceOptions: '='
+            },
+            controller: ['$scope', '$attrs', '$element', 'i18n', function($scope, $attrs, $element, i18n) {
+
                 var defaultOptions = {
                     menubar: false,
                     statusbar: false,
@@ -4428,9 +4445,87 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                     //     'strong,em' +
                     //     'span[!style<text-decoration: underline;],' +
                     //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
-                        // 'p,!div,ul,li'
+                    //     'p,!div,ul,li'
                 };
                 $scope.tinymceFinalOptions = angular.extend({}, defaultOptions, $scope.tinymceOptions);
+
+                /**
+                 * This part is used for the max-chars attibute.
+                 * It allows us to easily limit the number of characters typed in the editor
+                 */
+                $scope.tinymceFinalOptions.maxChars = $attrs.maxChars || $scope.tinymceFinalOptions.maxChars || null;
+                // We set the max char warning when the THRESHOLD is reached
+                // Here, it's 85% of max chars
+                var THRESHOLD = 85;
+
+                /**
+                 * Update the information area about the textEditor state (maxChars, ..)
+                 */
+                var updateInfo = function(currentChars, maxChars) {
+                    var maxCharInfosElm = $element.parent().find('.max-chars-info');
+                    maxCharInfosElm.text(currentChars + ' / ' + maxChars);
+
+                    var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
+                    var isMaxLimitReached  = currentChars >= maxChars;
+
+                    var warningClassName = 'max-chars-warning';
+                    var alertClassName   = 'max-chars-reached';
+                    if(isThresholdReached) {
+                        maxCharInfosElm.addClass(warningClassName);
+                    } else {
+                        maxCharInfosElm.removeClass(warningClassName);
+                    }
+
+                    if(isMaxLimitReached) {
+                            maxCharInfosElm.text(i18n('Nombre de caractères max atteint : ') + maxCharInfosElm.text());
+                            maxCharInfosElm.addClass(alertClassName);
+                    } else {
+                            maxCharInfosElm.removeClass(alertClassName);
+                    }
+                };
+
+                /**
+                 * Setup and listen to the editor events
+                 */
+                var setup = function(editor) {
+                    // If there is no maxChars options defined, we return
+                    if($scope.tinymceFinalOptions.maxChars === null) {
+                        return;
+                    }
+
+                    var currentText       = '';
+                    var currentTextLength = '';
+                    var oldText           = '';
+                    var maxChars          = $scope.tinymceFinalOptions.maxChars;
+
+                    editor.on('init', function(e) {
+                       $scope.$watch(function() { return editor.getContent(); }, function(newHtml, oldHtml) {
+                            currentText       = angular.element(newHtml).text();
+                            currentTextLength = currentText.length;
+                            oldText           = angular.element(oldHtml).text();
+
+                            /**
+                             * Specific case where the old and new text are both over the limit of max chars.
+                             * This case can occur on the first initilization, if data from DB are over the limit.
+                             * For now, we substring the content (but that break the html and everything..)
+                             */
+                            var isLimitAlert = (oldText.length > maxChars) && (currentTextLength > maxChars);
+                            if(isLimitAlert) {
+                                var shorterText = oldText.substring(0, maxChars);
+                                $scope.ngModel = shorterText;
+                                currentTextLength = shorterText.length;
+
+                            } else if(currentTextLength > maxChars) {
+                                $scope.ngModel    = oldHtml;
+                                currentTextLength = angular.element($scope.ngModel).text().length;
+                            }
+
+                            updateInfo(currentTextLength, maxChars);
+                        });
+                    });
+                };
+
+                $scope.tinymceFinalOptions.setup = setup;
             }]
         };
     }]);
