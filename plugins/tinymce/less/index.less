@@ -16,7 +16,6 @@
 @import "../../../core/less/overrides/bootstrap/buttons.less";
 @import "../../../core/less/variables.less";
 
-
 /* Icons */
 
 @font-face {
@@ -55,7 +54,6 @@
       bottom: 0;
       width: 100%;
       padding-top: 10px;
-      padding-bottom: 10px;
     }
 
     .mce-edit-area {
@@ -74,6 +72,27 @@
       background-color: transparent;
     }
   }
-
 }
 
+.tiny-mce-wrapper {
+  position: relative;
+
+  .max-chars-info {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin-right: 15px;
+    margin-bottom: 5px;
+
+    &.max-chars-warning {
+      color: @brand-warning;
+    }
+
+    &.max-chars-reached {
+      color: white;
+      background: @brand-danger;
+      padding: 3px;
+      border-radius: 3px;
+    }
+  }
+}
