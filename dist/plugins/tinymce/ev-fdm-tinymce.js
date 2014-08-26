@@ -20,7 +20,7 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                 ngModel: '=',
                 tinymceOptions: '='
             },
-            controller: ['$scope', '$attrs', '$element', 'i18n', function($scope, $attrs, $element, i18n) {
+            controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 
                 var defaultOptions = {
                     menubar: false,
@@ -71,7 +71,6 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                     }
 
                     if(isMaxLimitReached) {
-                            maxCharInfosElm.text(i18n('Nombre de caractères max atteint : ') + maxCharInfosElm.text());
                             maxCharInfosElm.addClass(alertClassName);
                     } else {
                             maxCharInfosElm.removeClass(alertClassName);
