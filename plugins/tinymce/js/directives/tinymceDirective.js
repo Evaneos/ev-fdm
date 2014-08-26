@@ -20,7 +20,7 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                 ngModel: '=',
                 tinymceOptions: '='
             },
-            controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
+            controller: ['$scope', '$attrs', '$element', 'i18n', function($scope, $attrs, $element, i18n) {
 
                 var defaultOptions = {
                     menubar: false,
@@ -55,24 +55,26 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                 /**
                  * Update the information area about the textEditor state (maxChars, ..)
                  */
-                var updateInfo = function(currentChars, maxChars, isMaxLimitReached) {
-                    var $maxCharInfos = $element.parent().find('.max-chars-info');
-                    $maxCharInfos.text(currentChars + ' / ' + maxChars);
+                var updateInfo = function(currentChars, maxChars) {
+                    var maxCharInfosElm = $element.parent().find('.max-chars-info');
+                    maxCharInfosElm.text(currentChars + ' / ' + maxChars);
 
                     var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
+                    var isMaxLimitReached  = currentChars >= maxChars;
 
                     var warningClassName = 'max-chars-warning';
                     var alertClassName   = 'max-chars-reached';
                     if(isThresholdReached) {
-                        $maxCharInfos.addClass(warningClassName);
+                        maxCharInfosElm.addClass(warningClassName);
                     } else {
-                        $maxCharInfos.removeClass(warningClassName);
+                        maxCharInfosElm.removeClass(warningClassName);
                     }
 
                     if(isMaxLimitReached) {
-                            $maxCharInfos.addClass(alertClassName);
+                            maxCharInfosElm.text(i18n('Nombre de caractères max atteint : ') + maxCharInfosElm.text());
+                            maxCharInfosElm.addClass(alertClassName);
                     } else {
-                            $maxCharInfos.removeClass(alertClassName);
+                            maxCharInfosElm.removeClass(alertClassName);
                     }
                 };
 
@@ -85,48 +87,38 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                         return;
                     }
 
-                    /**
-                     * On keydown we look if the number of chars is superior of the maxchars
-                     * If so, we prevent this event
-                     */
-                    editor.on('keydown', function(e) {
-                        // Keys that can be pressed even if the max size is reached,
-                        // otherwise they would have been prevented
-                        var silentKeys   = [8, 13, 16, 17, 18, 20, 33, 34, 35, 36, 37, 38, 39, 40, 46];
-                        var isSilentKeys = silentKeys.indexOf(e.keyCode) !== -1;
+                    var currentText       = '';
+                    var currentTextLength = '';
+                    var oldText           = '';
+                    var maxChars          = $scope.tinymceFinalOptions.maxChars;
 
-                        var currentChars = $(editor.getBody()).text().length;
-                        // Because we're on keydown
-                        if(!isSilentKeys) {
-                            currentChars += 1;
-                        }
-                        var maxChars = $scope.tinymceFinalOptions.maxChars;
+                    editor.on('init', function(e) {
+                       $scope.$watch(function() { return editor.getContent(); }, function(newHtml, oldHtml) {
+                            currentText       = angular.element(newHtml).text();
+                            currentTextLength = currentText.length;
+                            oldText           = angular.element(oldHtml).text();
 
-                        var isMaxLimitReached = currentChars > maxChars;
+                            /**
+                             * Specific case where the old and new text are both over the limit of max chars.
+                             * This case can occur on the first initilization, if data from DB are over the limit.
+                             * For now, we substring the content (but that break the html and everything..)
+                             */
+                            var isLimitAlert = (oldText.length > maxChars) && (currentTextLength > maxChars);
+                            if(isLimitAlert) {
+                                var shorterText = oldText.substring(0, maxChars);
+                                $scope.ngModel = shorterText;
+                                currentTextLength = shorterText.length;
 
-                        if(isSilentKeys) {
-                            return;
-                        }
+                            } else if(currentTextLength > maxChars) {
+                                $scope.ngModel    = oldHtml;
+                                currentTextLength = angular.element($scope.ngModel).text().length;
+                            }
 
-                        if (isMaxLimitReached) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return false;
-                        }
-                    });
-
-                    /**
-                     * On keyup, we count the number of chars in the editor and we update the
-                     * information section
-                     */
-                    editor.on('keyup', function(e) {
-                        var currentChars      = $(editor.getBody()).text().length;
-                        var maxChars          = $scope.tinymceFinalOptions.maxChars;
-                        var isMaxLimitReached = currentChars >= maxChars;
-
-                        updateInfo(currentChars, maxChars, isMaxLimitReached);
+                            updateInfo(currentTextLength, maxChars);
+                        });
                     });
                 };
+
                 $scope.tinymceFinalOptions.setup = setup;
             }]
         };
