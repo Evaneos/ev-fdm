@@ -1,0 +1,53 @@
+@import "../variables.less";
+
+/* .input-light removes all outline from input leaving just a light bottom border.
+
+ */
+.input-light {
+  border: none;
+  padding: 0;
+  padding-left: 5px;
+  margin: 0;
+  margin-left: -5px;
+  position: relative;
+  color: inherit;
+  background-color: transparent;
+  padding-right: 10px;
+  font-weight: inherit;
+  font-size: inherit;
+  border-radius: 0px;
+  border-bottom: @gray-light 1px solid;
+
+  .placeholder-style({
+    color: @gray-light;
+  });
+
+  &:hover, &:focus {
+    outline: none;
+    border-bottom: @gray-light 1px solid;
+  }
+
+  & ~ .input-group-addon {
+    border-color: transparent;
+    background-color: @body-bg;
+    padding: 0;
+  }
+}
+
+textarea, h5, h4, h3, h2, h1 {
+  &.input-light, & .input-light {
+    border: none;
+    &:hover, &:focus {
+      border: none;
+    }
+  }
+}
+
+
+
+.input-sm {
+  font-size: @font-size-small;
+  line-height: @line-height-base;
+  height: auto;
+}
+

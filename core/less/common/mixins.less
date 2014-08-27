@@ -47,3 +47,60 @@
         padding-top: 1px;
     }
 }
+
+/*
+ *  Mixin for cross-browser border radiuses
+ *
+ *  Usage:
+ *      .border-radiuses(<top-right>, <bottom-right>, <bottom-left>, <top-left>)
+ */
+.border-radiuses (@topright: 0, @bottomright: 0, @bottomleft: 0, @topleft: 0) {
+  -webkit-border-top-right-radius:    @topright;
+  -webkit-border-bottom-right-radius: @bottomright;
+  -webkit-border-bottom-left-radius:  @bottomleft;
+  -webkit-border-top-left-radius:     @topleft;
+
+  -moz-border-radius-topright:        @topright;
+  -moz-border-radius-bottomright:     @bottomright;
+  -moz-border-radius-bottomleft:      @bottomleft;
+  -moz-border-radius-topleft:         @topleft;
+
+  border-top-right-radius:            @topright;
+  border-bottom-right-radius:         @bottomright;
+  border-bottom-left-radius:          @bottomleft;
+  border-top-left-radius:             @topleft;
+
+  -moz-background-clip:    padding;
+  -webkit-background-clip: padding-box;
+  background-clip:         padding-box;
+}
+
+
+
+/*
+ *  Mixin for styling placeholder inside input (cross-browser)
+ *
+ *  Usage:
+ *      .my-input {
+ *          .placeholder-style({
+ *              color: red;
+ *              // Other rules here for placeholder
+ *          })
+ *      }
+ */
+.placeholder-style(@rules) {
+  &::-webkit-input-placeholder {
+    @rules();
+  }
+  &:-moz-placeholder {
+    opacity:  1;
+    @rules();
+  }
+  &::-moz-placeholder {
+    opacity:  1;
+    @rules();
+  }
+  &:-ms-input-placeholder {
+    @rules();
+  }
+}

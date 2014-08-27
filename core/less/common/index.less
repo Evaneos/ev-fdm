@@ -56,6 +56,52 @@
     height: 100%;
 }
 
+
+dl {
+  &.dl-big {
+    dt {
+      width: 180px;
+    }
+    dd {
+      margin-left: 200px;
+    }
+  }
+
+  &.dl-horizontal {
+    dt {
+      color: @gray;
+      font-weight: 500;
+      text-align: left;
+      &:after {
+        content: " :";
+      }
+    }
+  }
+}
+
+
+hr {
+  &.hr-strong {
+    border-top: 10px solid @panel-bg;
+    margin: 10px -10px;
+  }
+
+  &.hr-separator {
+    border-top: 2px solid @panel-bg;
+    margin: 10px -10px;
+  }
+
+  &.hr-last {
+    margin-bottom: 0px;
+  }
+}
+
+
+.section {
+  padding: 0 10px;
+}
+
+
 @import "icons.less";
 @import "icons-color.less";
 @import "trends.less";
@@ -76,3 +122,4 @@
 @import "buttongroup.less";
 @import "thumbnails.less";
 @import "panel-tabs.less";
+@import "input.less";
