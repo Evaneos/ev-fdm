@@ -39,9 +39,7 @@ module.factory('PanelManagerFactory', function() {
     };
 
     PanelManager.prototype.dismissChildrenId = function(rank) {
-        console.log(rank);
         var children = this.panels.slice(rank);
-        console.log(children);
         var reason = '';
         for (var i = children.length - 1; i >= 0; i--) {
             var child = children[i];
@@ -218,9 +216,17 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
 
         var windowWidth = $(window).innerWidth();
 
-        var dataPanels = getDataFromPanels(panelManager.panels);
+        var dataPanels    = getDataFromPanels(panelManager.panels);
         var newDataPanels = calculateStackingFromData(dataPanels, windowWidth);
-        resizeAndStackPanels(panelManager.panels, newDataPanels);
+
+        var isMobile = false;
+        var lastPanel = newDataPanels[newDataPanels.length -1];
+        if(lastPanel.stacked === true) {
+            lastPanel.stacked = false;
+            lastPanel.width = windowWidth;
+        }
+
+        resizeAndStackPanels(panelManager.panels, newDataPanels, isMobile);
     }
 
     /**
@@ -246,6 +252,69 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
         return data;
     }
 
+
+    function countMinStacked(datas, limit) {
+        var minStacked = 0;
+
+        for (var i = 0; i < datas.length; i++) {
+            var memo = 0;
+            var data = null;
+
+            for(var j = 0; j < datas.length; j++) {
+                data = datas[j];
+
+                if (j < i) {
+                    memo += data.stackedWidth;
+                    continue;
+                }
+
+                var _width = data.minWidth;
+                if(_width < data.stackedWidth) {
+                    _width = data.stackedWidth;
+                }
+
+                memo += _width;
+            }
+
+            if (memo > limit) {
+                minStacked++;
+            }
+        }
+
+        return minStacked;
+    }
+
+    function countMaxStacked(datas, limit) {
+        var maxStacked = datas.length;
+
+        for (var i = datas.length; i > 0; i--) {
+            var memo = 0;
+            var data = null;
+
+            for(var j = 0; j < datas.length; j++) {
+                data = datas[j];
+
+                if (j < i) {
+                    memo += data.stackedWidth;
+                    continue;
+                }
+
+                var _width = data.maxWidth;
+                if(_width < data.stackedWidth) {
+                    _width = data.stackedWidth;
+                }
+
+                memo += _width;
+            }
+
+            if (memo < limit) {
+                maxStacked--;
+            }
+        }
+
+        return maxStacked;
+    }
+
     /**
      * Calculate datas from the dataPanels received accordingly to a max width
      * @param  {Array}  datas Panels data
@@ -253,34 +322,32 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
      * @return {Array}  datas computed
      */
     function calculateStackingFromData(datas, limit) {
-        _(datas).each(function(element) {
-            element.stacked = false;
-        });
 
         /**
          * For each panels, test if he needs to be stacked
          */
         function stackedDatas() {
 
-            for (var i = 0; i < datas.length; i++) {
+            var minStacked = countMinStacked(datas, limit);
+            var maxStacked = countMaxStacked(datas, limit);
 
-                var totalMinWidth = _(datas).reduce(function(memo, data) {
+            _(datas).each(function(element) {
+                element.stacked = false;
+            });
 
-                        if (data.stacked) {
-                            return memo + data.stackedWidth;
-                        }
-                        var _width = data.minWidth;
-                        if(_width < data.stackedWidth) {
-                            _width = data.stackedWidth;
-                        }
+            var nbStacked = minStacked;
 
-                        return memo + _width;
-                }, 0);
-                if (totalMinWidth > limit) {
-                    datas[i].stacked = true;
-                }
+            if(((datas.length - minStacked) > 3) && datas.length - maxStacked <= 3) {
+                nbStacked = datas.length - 3;
             }
+
+            for(var i = 0; i < nbStacked; i++) {
+                datas[i].stacked = true;
+            }
+
+            return nbStacked;
         }
+
 
         /**
          * Update the size of each panels
@@ -337,22 +404,26 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
             }
 
             if (delta !== 0) {
-                console.log('impossible to reach the size');
+                return false;
             }
         }
 
-        stackedDatas(datas);
-        updateSize(datas);
+        var nbStacked = stackedDatas(datas);
+
+        if(nbStacked !== datas.length) {
+            updateSize(datas);
+        }
 
         return datas;
     }
 
     /**
      * Apply our results to the panels
-     * @param  {Array} panels      the panels
-     * @param  {Array} dataPanels  the datas we want to apply
+     * @param  {Array}   panels      the panels
+     * @param  {Array}   dataPanels  the datas we want to apply
+     * @param  {Boolean} isMobile    hide the stacked panels
      */
-    function resizeAndStackPanels(panels, dataPanels) {
+    function resizeAndStackPanels(panels, dataPanels, isMobile) {
         for (var i = 0; i < panels.size(); i++) {
             var panel = panelManager.at(i);
             var dataPanel = dataPanels[i];
@@ -366,8 +437,13 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
 
             if (panel.$$stacked && !dataPanel.stacked) {
                 $animate.removeClass(element, 'stacked');
+                $animate.removeClass(element, 'stacked-mobile');
             } else if (!panel.$$stacked && dataPanel.stacked) {
                 $animate.addClass(element, 'stacked');
+
+                if(isMobile) {
+                    $animate.addClass(element, 'stacked-mobile');
+                }
             }
 
             panel.$$stacked = dataPanel.stacked;
