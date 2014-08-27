@@ -1,21 +1,28 @@
 @import '../../variables.less';
 .label {
-	border-radius: 3px;	
-	text-transform: none;
-	font-size: 90%;
-	vertical-align: middle;
-	.close {
-		font-size: 140%;
-		margin-left: 5px;
-		color: @gray;
-		text-shadow: none;
-		opacity: 1;
-		float: none;
-        &:hover {
-            color: @gray-dark;
-        }
-    }
+  border-radius: 3px;
+  font-weight: inherit;
+  vertical-align: middle;
+  font-size: @font-size-small;
+  padding-top: .4em;
+  .close {
+    font-size: 140%;
+    margin-left: 5px;
+    text-shadow: none;
+    font-style: none;
+    opacity: 1;
+    float: none;
+    position: relative;
+    top: 2px;
+  }
 }
 .label-default {
-	color: @gray;
+  background-color: @gray-lighter;
+  color: @gray;
+  .close {
+    color: @gray;
+    &:hover {
+      color: @gray-dark;
+    }
+  }
 }

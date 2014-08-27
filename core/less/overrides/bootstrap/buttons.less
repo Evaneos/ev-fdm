@@ -88,8 +88,12 @@
     }
 }
 
+
 .btn-link {
-    border: none;
+  text-transform: none;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .dropdown {
@@ -105,4 +109,20 @@
 .dropdown-menu {
   cursor: pointer;
   border: 1px solid @gray-light;
+}
+
+// Grey light button without border nor underline
+.btn-light {
+  background-color: transparent;
+  margin: 0;
+  padding: 0 3px;
+  color: @gray;
+  border: none;
+  &:hover {
+    box-shadow: none;
+    color: @gray-dark;
+  }
+  .icon {
+    margin: 0;
+  }
 }
