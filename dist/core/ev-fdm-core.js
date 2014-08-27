@@ -527,7 +527,7 @@ module.directive('evFilters', function() {
         .directive('evFixedHeader', function () {
             return {
                 link: function($scope, $element, $attrs) {
-                    $element.addClass('ev-full-height');
+                    $element.addClass('full-height');
                     var header = $element.find('>.ev-header');
                     var body   = $element.find('>.ev-body');
                     body.css({'overflow-y': 'auto'});
