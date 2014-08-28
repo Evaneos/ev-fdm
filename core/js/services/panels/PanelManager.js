@@ -39,9 +39,7 @@ module.factory('PanelManagerFactory', function() {
     };
 
     PanelManager.prototype.dismissChildrenId = function(rank) {
-        console.log(rank);
         var children = this.panels.slice(rank);
-        console.log(children);
         var reason = '';
         for (var i = children.length - 1; i >= 0; i--) {
             var child = children[i];
@@ -103,9 +101,8 @@ module.factory('PanelManagerFactory', function() {
     };
 });
 
-module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory) {
+module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', 'PanelLayoutEngine', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory, panelLayoutEngine) {
 
-    var STACKED_WIDTH = 35;
     var elements = {};
 
     var stylesCache = window.stylesCache = {};
@@ -115,6 +112,13 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     var panelManager = PanelManagerFactory.create({
         updateLayout: function() {
             updateLayout();
+        },
+        getElement: function(instance) {
+            if (elements[instance.$$id]) {
+                return elements[instance.$$id];
+            } else {
+                return null;
+            }
         },
         open: function(instance, options) {
             instance.$$stacked = false;
@@ -167,14 +171,6 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
         }
     });
 
-    function getElement(instance) {
-        if (elements[instance.$$id]) {
-            return elements[instance.$$id];
-        } else {
-            return null;
-        }
-    }
-
     /**
      * Return the panels sizes (if the user resized them)
      */
@@ -208,180 +204,10 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     }
 
     /**
-     * STACKING AND PANELS SIZE MANAGEMENT
-     */
-
-    /**
-     * Our main function for the stacking and panels management
-     */
-    function checkStacking() {
-
-        var windowWidth = $(window).innerWidth();
-
-        var dataPanels = getDataFromPanels(panelManager.panels);
-        var newDataPanels = calculateStackingFromData(dataPanels, windowWidth);
-        resizeAndStackPanels(panelManager.panels, newDataPanels);
-    }
-
-    /**
-     * Extract all useful panels informations
-     * The (min-/max-/stacked-)width and the stacked state
-     * @param  {Array} panels the panels
-     * @return {Array}        Array containing the extracted values
-     */
-    function getDataFromPanels(panels) {
-        var data = [];
-        for (var i = 0; i < panels.size(); i++) {
-            var panel = panelManager.at(i);
-            var panelElement = getElement(panel);
-            data.push({
-                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
-                maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
-                stacked:  panel.$$stacked,
-                width:    panelElement.width(),
-                stackedWidth: STACKED_WIDTH
-            });
-        }
-
-        return data;
-    }
-
-    /**
-     * Calculate datas from the dataPanels received accordingly to a max width
-     * @param  {Array}  datas Panels data
-     * @param  {Int}    limit limit width]
-     * @return {Array}  datas computed
-     */
-    function calculateStackingFromData(datas, limit) {
-        _(datas).each(function(element) {
-            element.stacked = false;
-        });
-
-        /**
-         * For each panels, test if he needs to be stacked
-         */
-        function stackedDatas() {
-
-            for (var i = 0; i < datas.length; i++) {
-
-                var totalMinWidth = _(datas).reduce(function(memo, data) {
-
-                        if (data.stacked) {
-                            return memo + data.stackedWidth;
-                        }
-                        var _width = data.minWidth;
-                        if(_width < data.stackedWidth) {
-                            _width = data.stackedWidth;
-                        }
-
-                        return memo + _width;
-                }, 0);
-                if (totalMinWidth > limit) {
-                    datas[i].stacked = true;
-                }
-            }
-        }
-
-        /**
-         * Update the size of each panels
-         */
-        function updateSize() {
-            var data = null;
-            var i = 0;
-            for (; i < datas.length; i++) {
-                data = datas[i];
-                if (data.width < data.minWidth) {
-                    data.width = data.minWidth;
-                }
-            }
-
-            var totalWidth = _(datas).reduce(function(memo, data) {
-                if (data.stacked) {
-                    return memo + data.stackedWidth;
-                }
-
-                return memo + data.width;
-            }, 0);
-
-            var delta = limit - totalWidth;
-
-            for (i = 0; i < datas.length; i++) {
-                data = datas[i];
-
-                if(data.stacked) {
-                    data.width = data.stackedWidth;
-                    continue;
-                }
-
-                // try to take all delta
-                var oldWidth = data.width;
-                var newWidth = data.width + delta;
-
-                // Check limit
-                if (data.minWidth > newWidth) {
-                    data.width = data.minWidth;
-                }
-
-                // Check limit
-                else if (data.maxWidth !== 0 && data.maxWidth < newWidth) {
-                    data.width = data.maxWidth;
-                } else {
-                    data.width = data.width + delta;
-                }
-
-                delta = delta - (data.width - oldWidth);
-
-                if(delta === 0) {
-                    break;
-                }
-            }
-
-            if (delta !== 0) {
-                console.log('impossible to reach the size');
-            }
-        }
-
-        stackedDatas(datas);
-        updateSize(datas);
-
-        return datas;
-    }
-
-    /**
-     * Apply our results to the panels
-     * @param  {Array} panels      the panels
-     * @param  {Array} dataPanels  the datas we want to apply
-     */
-    function resizeAndStackPanels(panels, dataPanels) {
-        for (var i = 0; i < panels.size(); i++) {
-            var panel = panelManager.at(i);
-            var dataPanel = dataPanels[i];
-
-            var element = getElement(panel);
-
-            if(!element) {
-                console.log('no element for this panel)');
-                continue;
-            }
-
-            if (panel.$$stacked && !dataPanel.stacked) {
-                $animate.removeClass(element, 'stacked');
-            } else if (!panel.$$stacked && dataPanel.stacked) {
-                $animate.addClass(element, 'stacked');
-            }
-
-            panel.$$stacked = dataPanel.stacked;
-
-            element.children().first().width(dataPanel.width);
-
-        }
-    }
-
-    /**
      * Whenever a layout is changed
      */
     function updateLayout() {
-        checkStacking();
+        panelLayoutEngine.checkStacking(panelManager);
         $rootScope.$broadcast('module-layout-changed');
     }
 
