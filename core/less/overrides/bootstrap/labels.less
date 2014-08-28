@@ -1,4 +1,11 @@
 @import '../../variables.less';
+
+.label-light(@color: @brand-primary) {
+  background-color: transparent;
+  border: 1px solid @color;
+  color : @color;
+}
+
 .label {
   border-radius: 3px;
   font-weight: inherit;
@@ -15,14 +22,23 @@
     position: relative;
     top: 2px;
   }
-}
-.label-default {
-  background-color: @gray-lighter;
-  color: @gray;
-  .close {
+
+  &.label-default {
+    background-color: @gray-lighter;
     color: @gray;
-    &:hover {
-      color: @gray-dark;
+    .close {
+      color: @gray;
+      &:hover {
+        color: @gray-dark;
+      }
     }
+  }
+
+  &.label-light {
+    .label-light();
+  }
+
+  &.label-warning-light {
+    .label-light(@brand-warning-light);
   }
 }

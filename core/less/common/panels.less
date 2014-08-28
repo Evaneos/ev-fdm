@@ -31,6 +31,7 @@
     // default size for all side panels
     &:not(.panel-main) .panel {
         width: @panel-width;
+        min-width: @panel-min-width;
     }
 
     &.panel-zero {
@@ -133,7 +134,7 @@
 
             .panel-header {
                 background: @panel-bg;
-                padding: 9px 5px;
+                padding: 9px 0;
                 z-index: 2;
                 .panel-title {
                     font-size: 20px;
@@ -147,7 +148,16 @@
                         color: @gray;
                         font-size: 15px;
                     }
+
+                    input {
+                        width: 100%;
+                    }
                 }
+
+                .panel-action-bar {
+                    margin-top: 5px;
+                }
+
                 .close {
                     font-size: 32px;
                     color: @gray;
@@ -173,8 +183,10 @@
              ********************************************************/
 
             .panel-body {
-                padding: @panel-body-padding;
                 height: 100%;
+                position: relative;
+                padding: 15px;
+
                 &.nopadding {
                     padding: 0;
                 }
