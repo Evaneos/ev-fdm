@@ -164,14 +164,25 @@ plugins.forEach(function(name) {
     });
 });
 
+gulp.task('icon', function () {
+    minifyLess(['core/less/common/icons.less'], [], dest + '/css', 'icons-standalone');
+});
+
+gulp.task('watch-icon', function () {
+    gulp.watch(['core/less/common/icons.less'], ['icon']);
+});
+
 var tasks = plugins.map(function(name) { return 'plugin-' + name + '-less'; });
 tasks.unshift('core-less');
+tasks.unshift('icon');
 gulp.task('less-all', tasks, lessConcatCorePlugins);
 
 
+
 tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-less'; });
-tasks.unshift('less-all', 'watch-core-less');
+tasks.unshift('less-all', 'watch-core-less', 'watch-icon');
 gulp.task('watch-less', tasks);
+
 
 
 // ///////////////////////////////////////////////////
@@ -229,6 +240,6 @@ tasks.unshift('copy-all', 'watch-core-copy');
 gulp.task('watch-copy', tasks);
 
 
-
 gulp.task('default', ['js-all', 'less-all', 'copy-all']);
 gulp.task('watch', ['watch-copy', 'watch-less', 'watch-js']);
+
