@@ -78,13 +78,18 @@ dl {
 
 hr {
   &.hr-strong {
-    border-top: 10px solid @panel-bg;
-    margin: 10px -10px;
+    border-top: @panel-body-padding solid @panel-bg;
+    margin: @panel-body-padding -@panel-body-padding;
   }
 
   &.hr-separator {
     border-top: 2px solid @panel-bg;
-    margin: 10px -10px;
+    margin: @panel-body-padding -@panel-body-padding;
+  }
+
+  &.hr-light {
+    border-top: 1px solid @panel-bg;
+    margin: @panel-body-padding -@panel-body-padding;
   }
 
   &.hr-last {
@@ -94,7 +99,11 @@ hr {
 
 
 .section {
-  padding: 0 10px;
+  padding: 0 @panel-body-padding;
+  .row {
+    margin-left: -@panel-body-padding;
+    margin-right: -@panel-body-padding;
+  }
 }
 
 .full-height {
