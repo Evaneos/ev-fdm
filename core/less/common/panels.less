@@ -7,13 +7,18 @@
     &.panel-main {
         float: none;
         display: block;
-        .panel > .ui-resizable-handle {
-            display: none;
-        }
 
-        .panel .panel-inner {
-            .panel-body {
-                position: relative;
+        .panel {
+            min-width: @mainpanel-min-width;
+
+            > .ui-resizable-handle {
+                display: none;
+            }
+
+            .panel-inner {
+                .panel-body {
+                    position: relative;
+                }
             }
         }
     }
