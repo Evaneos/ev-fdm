@@ -107,6 +107,10 @@
               display: none;
             }
 
+            .lisette-module-topbar {
+                left: 0;
+            }
+
             &.panel .table-container {
               left: 0;
             }
@@ -152,17 +156,6 @@
 
         &.topbar-size-mini .panel-placeholder.panel-main > .panel .table-container {
             top: (@module-tabs-height + @module-topbar-height-size-mini);
-        }
-    }
-
-    @media (max-width: @screen-sm) {
-        .lisette-module-topbar,
-        &.has-leftbar .lisette-module-topbar,
-        .lisette-module-bottombar,
-        &.has-leftbar .lisette-module-bottombar,
-        .lisette-module-body,
-        &.has-leftbar .lisette-module-body {
-            left: @module-bar-stacked;
         }
     }
 }
