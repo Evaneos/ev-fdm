@@ -10,5 +10,5 @@ angular.module('ev-fdm')
            }
            iframe.src = url;
        }
-   }
+   };
 }]);
