@@ -2153,7 +2153,7 @@ angular.module('ev-fdm')
            }
            iframe.src = url;
        }
-   }
+   };
 }]);
 'use strict';
 
