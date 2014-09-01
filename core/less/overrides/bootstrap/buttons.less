@@ -88,6 +88,11 @@
     }
 }
 
+.btn-disabled {
+  &:extend(.btn[disabled] all);
+  pointer-events: all;
+  cursor: not-allowed;
+}
 
 .btn-link {
   text-transform: none;
