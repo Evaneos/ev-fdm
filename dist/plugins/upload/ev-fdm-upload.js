@@ -229,12 +229,18 @@ angular.module('ev-upload')
                         // When a file is added to the queue
                         dropzone.on('addedfile', function (file) {
                             if ($scope.currentUpload === null) {
-                            	$scope.$apply(startNewUpload);
+                                $scope.$apply(startNewUpload);
                             }
                             var deferred = $q.defer();
                             filesPromises[file.name] = deferred;
+                            var cancel = function () {
+                                dropzone.removeFile(file);
+                            };
                             $scope.$apply(function($scope) {
-                                $scope.fileAdded({dropzoneFile: file, promise: deferred.promise});
+                                $scope.fileAdded({
+                                    dropzoneFile: file,
+                                    promise: deferred.promise,
+                                    cancel: cancel});
                             });
                         });
 
@@ -246,8 +252,8 @@ angular.module('ev-upload')
                         });
 
                         dropzone.on('uploadprogress', function (file, progress) {
-                        	$scope.$apply(function ($scope) {
-                            	filesPromises[file.fullPath].notify(progress);
+                            $scope.$apply(function ($scope) {
+                                filesPromises[file.fullPath].notify(progress);
                             });
                         });
 
@@ -261,31 +267,19 @@ angular.module('ev-upload')
 
                         dropzone.on('error', function (file, response) {
                             $scope.$apply(function ($scope) {
-                            	filesPromises[file.fullPath].reject({errorMessage: response});
-                            });
-                        });
-
-                        dropzone.on('complete', function (file) {
-                        	progress.done += 1;
-                        	delete filesPromises[file.fullPath];
-                        });
-
-                        dropzone.on('error', function (file, response) {
-                            var deferred = filesPromises[file.name];
-                            $scope.$apply(function ($scope) {
-                                deferred.reject({errorMessage: response});
+                                filesPromises[file.fullPath].reject(response);
                             });
                         });
 
                         dropzone.on('canceled', function (file) {
                             var deferred = filesPromises[file.name];
                             $scope.$apply(function ($scope) {
-                                deferred.reject({errorMessage: 'canceled'});
+                                deferred.reject(settings.dictCanceledUpload || 'The upload has been canceled');
                             });
                         });
 
                         dropzone.on('complete', function (file) {
-                            if(!angular.isDefined(progress)){
+                            if(angular.isDefined(progress)){
                                 progress.done += 1;
                             }
                             delete filesPromises[file.name];
