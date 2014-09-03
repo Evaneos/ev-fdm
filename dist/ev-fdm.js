@@ -2062,6 +2062,16 @@ angular.module('ev-fdm')
     }]);
 
 angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
      .filter('sum', ['$parse', function($parse) {
             return function(objects, key) {
                 if (!angular.isDefined(objects)) {
