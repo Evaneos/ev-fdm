@@ -13,9 +13,10 @@
             on the dropzone). It will be call with an argument: the promise for the status of the whole upload.
         - `fileSuccess` will be called each time a file has successfully been uploaded, with the data returned by the
             server.
-        - `fileAdded` will be called each time a file is added to the queue. It will be called with 2 arguments :
+        - `fileAdded` will be called each time a file is added to the queue. It will be called with 3 arguments :
             - dropzoneFile : the Dropzone file being uploaded
             - promise : the promise associated with the file
+            - cancel : a function that can be called to cancel the upload of the file.
 
         Clickable Element : you can define a clickable element inside the directive with the
                             class '.ev-upload-clickable'
@@ -112,34 +113,27 @@
                                 $scope.fileAdded({
                                     dropzoneFile: file,
                                     promise: deferred.promise,
-                                    cancel: cancel});
-                            });
-                        });
-
-                        dropzone.on('uploadprogress', function (file, progress) {
-                            var deferred = filesPromises[file.name];
-                            $scope.$apply(function ($scope) {
-                                deferred.notify(progress);
+                                    cancel: cancel
+                                });
                             });
                         });
 
                         dropzone.on('uploadprogress', function (file, progress) {
                             $scope.$apply(function ($scope) {
-                                filesPromises[file.fullPath].notify(progress);
+                                filesPromises[file.name].notify(progress);
                             });
                         });
 
                         dropzone.on('success', function (file, response) {
-                            var deferred = filesPromises[file.name];
                             $scope.$apply(function ($scope) {
-                                deferred.resolve({file: response});
+                                filesPromises[file.name].resolve({file: response});
                                 $scope.fileSuccess({file: response});
                             });
                         });
 
                         dropzone.on('error', function (file, response) {
                             $scope.$apply(function ($scope) {
-                                filesPromises[file.fullPath].reject(response);
+                                filesPromises[file.name].reject(response);
                             });
                         });
 
@@ -154,7 +148,6 @@
                             if(angular.isDefined(progress)){
                                 progress.done += 1;
                             }
-                            delete filesPromises[file.name];
                         });
 
                     }, true);
@@ -165,9 +158,15 @@
                             done: 0,
                         };
 
+                        var computeOverallProgress = function () {
+                            progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
+                            progress.total = dropzone.getAcceptedFiles().length;
+                            upload.deferred.notify(progress);
+                        };
+
                         // De-register all events
                         dropzone
-                            .off('uploadprogress')
+                            .off('uploadprogress', computeOverallProgress)
                             .off('maxfilesexceeded');
 
                         // upload object, encapsulate the state of the current (multi file) upload
@@ -175,25 +174,30 @@
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
+                        computeOverallProgress();
+
                         dropzone.once('error', function() {
                             upload.hasFileErrored = true;
                         });
 
-                        dropzone.on('uploadprogress', function () {
-                            progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
-                            progress.total = dropzone.getAcceptedFiles().length;
-                            upload.deferred.notify(progress);
-                        });
 
-                        dropzone.once('queuecomplete', function () {
+                        dropzone.on('uploadprogress', computeOverallProgress);
+
+                        var computeComplete = function () {
                             $scope.$apply(function ($scope) {
+                                // If there are still files in the queue
+                                if (progress.progress !== 100) {
+                                    return;
+                                }
+                                dropzone.off('complete', computeComplete);
                                 if (upload.hasFileErrored) {
                                     upload.deferred.reject('filehaserrored');
                                 } else {
                                     upload.deferred.resolve();
                                 }
                             });
-                        });
+                        };
+                        dropzone.on('complete', computeComplete);
                         dropzone.on('maxfilesexceeded', function() {
                             upload.deferred.reject('maxfilesexceeded');
                         });
