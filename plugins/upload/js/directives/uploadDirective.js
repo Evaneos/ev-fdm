@@ -2,7 +2,7 @@
 ; (function (Dropzone) {
     'use strict';
     angular.module('ev-upload')
-        .directive('evUpload', ['$log', '$q', function ($log, $q) {
+        .directive('evUpload', ['$log', '$q', '$timeout', function ($log, $q, $timeout) {
 
     /*  ev-upload
         =========
@@ -156,6 +156,7 @@
                     function startNewUpload($scope) {
                         progress = {
                             done: 0,
+                            progress: 0
                         };
 
                         var computeOverallProgress = function () {
@@ -183,24 +184,34 @@
 
                         dropzone.on('uploadprogress', computeOverallProgress);
 
-                        var computeComplete = function () {
+                        var isUploadComplete = function () {
+                            return !dropzone.files.filter(function (file) {
+                                return file.status === Dropzone.QUEUED ||
+                                file.status === Dropzone.ADDED ||
+                                file.status === Dropzone.UPLOADING;
+                            }).length;
+                        };
+
+                        var stopIfComplete = function () {
                             $scope.$apply(function ($scope) {
-                                // If there are still files in the queue
-                                if (progress.progress !== 100) {
-                                    return;
-                                }
-                                dropzone.off('complete', computeComplete);
-                                if (upload.hasFileErrored) {
-                                    upload.deferred.reject('filehaserrored');
-                                } else {
-                                    upload.deferred.resolve();
-                                }
+                                $timeout(function () {
+                                    if ( !isUploadComplete() ) { return; }
+                                    dropzone.off('complete', stopIfComplete);
+                                    $timeout(function () {
+                                        if (upload.hasFileErrored) {
+                                            upload.deferred.reject('filehaserrored');
+                                        } else {
+                                            upload.deferred.resolve();
+                                        }
+                                    });
+                                });
                             });
                         };
-                        dropzone.on('complete', computeComplete);
+
                         dropzone.on('maxfilesexceeded', function() {
                             upload.deferred.reject('maxfilesexceeded');
                         });
+                        dropzone.on('complete', stopIfComplete);
 
                         $scope.currentUpload = upload.deferred.promise;
                         $scope.uploadStart({promise: upload.deferred.promise});
