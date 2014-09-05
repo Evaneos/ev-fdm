@@ -2,11 +2,12 @@ var module = angular.module('ev-fdm');
 
 module
     .service('PanelService', [
-        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope',
-        function($animate, $q, $http, $templateCache, $compile, $rootScope) {
+        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
+        function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
 
         var container = null,
-            panels    = {};
+            panels    = {},
+            stylesCache = window.stylesCache = {};
 
         /**
          * Panel options are:
@@ -27,28 +28,48 @@ module
 
             if (panels[options.name]) {
                 var panel        = panels[options.name];
-                panel.index      = options.index
-                var afterElement = getAfterElement(options.index);
+                panel.index      = options.index;
 
-                $animate.move(panel.element, container, afterElement);
+                var afterIndex   = findAfterElementIndex(options.index),
+                    afterElement = getAfterElement(afterIndex);
+
+                panel.element.css('z-index', 2000 + afterIndex);
+                $animate.move(panel.element, container, afterElement, function() {
+                    updateLayout();
+                });
 
                 return panels[options.name];
             }
 
-            var templatePromises = getTemplatePromise(options);
-
+            // We call it *THE BEAST*.
+            var element          = angular.element('<div class="panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(options.name, options) + '"   ><div class="panel right" ><div class="panel-inner"><div class="panel-content"></div></div></div></div>'),
+                templatePromises = getTemplatePromise(options);
             panels[options.name] = options;
-            var element          = angular.element('<div></div>');
             options.element      = element;
+            options.element.css('z-index', 2000 + options.index);
 
             return templatePromises.then(function(template) {
-                element.html(template);
+                element.find('.panel-content').html(template);
                 element          = $compile(element)($rootScope.$new());
                 options.element  = element;
-                var afterElement = getAfterElement(options.index);
+
+                var afterIndex   = findAfterElementIndex(options.index),
+                    afterElement = getAfterElement(afterIndex);
+
+                var timerResize = null;
+                element.on('resize', function(event, ui) {
+                    var self = this;
+                    if (timerResize) {
+                        $timeout.cancel(timerResize);
+                    }
+                    timerResize = $timeout(function() {
+                        stylesCache[options.panelName] = ui.size.width;
+                        updateLayout(self);
+                    }, 100);
+                });
 
                 $animate.enter(element, container, afterElement, function() {
-                    console.log("new element inserted")
+                    updateLayout();
                 });
 
                 return options;
@@ -64,7 +85,7 @@ module
             panels[name] = null;
 
             $animate.leave(element, function() {
-                console.log("remove element:" + name);
+                updateLayout();
             })
         };
 
@@ -77,6 +98,24 @@ module
             container = element;
         };
 
+        var timerWindowResize = null;
+        angular.element($window).on('resize', function() {
+            if(timerWindowResize !== null) {
+                $timeout.cancel(timerWindowResize);
+            }
+            timerWindowResize = $timeout(function() {
+                updateLayout()
+            }, 100);
+        });
+
+        function getStylesFromCache(name, options) {
+            var savedWidth = stylesCache[name];
+            if (savedWidth) {
+                return 'width: ' + savedWidth + 'px;';
+            }
+
+            return '';
+        }
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
@@ -88,11 +127,9 @@ module
             });
         }
 
-        function getAfterElement(index) {
-            var insertedPanels = angular.element(container).children();
-            var afterIndex     = index - 1;
-
-            console.log("insertedPanels", insertedPanels);
+        function findAfterElementIndex(index) {
+            var insertedPanels = angular.element(container).children(),
+                afterIndex     = index - 1;
 
             if (!index || index > insertedPanels.length) {
                 afterIndex = insertedPanels.length - 1;
@@ -101,9 +138,30 @@ module
                 afterIndex = 0;
             }
 
-            var domElement = insertedPanels[afterIndex];
+            return afterIndex;
+        }
+
+        function getAfterElement(afterIndex) {
+            var insertedPanels = angular.element(container).children(),
+                domElement     = insertedPanels[afterIndex];
 
             return domElement ? angular.element(domElement) : null;
+        }
+
+        function updateLayout(element) {
+            var panelElements = angular.element(container).children('.panel-placeholder');
+
+            if (element) {
+                for (var i = 0; i < panelElements.length; i++) {
+                    var current = panelElements[i];
+                    if (element == current) {
+                        panelElements.splice(i, 1);
+                        panelElements.push(element);
+                        break;
+                    }
+                }
+            }
+            panelLayoutEngine.checkStacking(panelElements);
         }
 
         return this;
@@ -113,7 +171,7 @@ module
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="panels row"><div></div></div>',
+            template: '<div class="panels panels-container lisette-module"><div></div></div>',
             link: function (scope, element, attrs) {
               panelService.registerContainer(element);
             }

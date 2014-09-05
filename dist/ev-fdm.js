@@ -254,6 +254,1458 @@ angular.module('ev-fdm')
     }]);
 'use strict';
 
+angular.module('ev-fdm')
+    .directive('activableSet', function() {
+        return {
+            restrict: 'A',
+            scope: false,
+            controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
+
+                var activeElementGet = $parse($attrs.activeElement),
+                    activeElementSet = activeElementGet.assign;
+
+                var self = this;
+                $scope.$watch(function() {
+                    return activeElementGet($scope);
+                }, function(newActiveElement) {
+                    self.activeElement = newActiveElement;
+                });
+
+               this.toggleActive = function(value) {
+                    if(value !== this.activeElement) {
+                        if(activeElementSet) {
+                            activeElementSet($scope, value);
+                        }
+
+                        this.activeElement = value;
+                    }
+                    else {
+                        if(activeElementSet) {
+                            activeElementSet($scope, null);
+                        }
+
+                        this.activeElement = undefined;
+                    }
+
+                    $scope.$eval($attrs.activeChange);
+               };
+
+            }]
+        };
+    })
+    .directive('activable', ['$parse', function($parse) {
+            return {
+                restrict: 'A',
+                require: '^activableSet',
+                link: function(scope, element, attr, ctrl) {
+                    element.addClass('clickable');
+                    var elementGetter = $parse(attr.activable),
+                        currentElement = elementGetter(scope);
+
+
+                    scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
+                      currentElement = newCurrentElement;
+                    });
+
+                    scope.$watch(function() { return ctrl.activeElement; },
+                     function(newActiveElement, oldActiveElement) {
+                        if(newActiveElement && currentElement === newActiveElement) {
+                            element.addClass('active');
+                        }
+                        else {
+                            element.removeClass('active');
+                        }
+                    });
+
+                    element.on('click', function(event) {
+                        if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
+                            scope.$apply(function() {
+                                ctrl.toggleActive(currentElement);
+                            });
+                        }
+                    });
+                }
+            };
+        }]);
+
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('clearable', [function() {
+
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function(scope, element, attr, ctrl) {
+
+            var clearButton = angular.element('<button class="clear" ng-click="clear()">×</button>');
+            element.after(clearButton);
+
+            clearButton.on('click', function() {
+                scope.$apply(function() {
+                    element.val(''); 
+                    ctrl.$setViewValue('');
+                });
+            });
+
+            scope.$watch(function() { return ctrl.$isEmpty(ctrl.$viewValue); }, function(isEmpty) {
+                if(isEmpty) {
+                    clearButton.hide();
+                }
+                else {
+                    clearButton.show();
+                }
+            });
+
+        }
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm')
+.directive('evDatepicker', function() {
+    return {
+        restrict: 'A',
+        require : 'ngModel',
+        link : function (scope, element, attrs, ngModelCtrl) {
+
+            var dateCanBeInTheFutur = attrs.futurAllowed !== 'false',
+                dateFormat = attrs.dateFormat || 'dd/mm/yy';
+
+            $(function(){
+                element.datepicker({
+                    dateFormat: dateFormat,
+                    maxDate: dateCanBeInTheFutur? null : 0,
+                    onSelect:function (date) {
+                        ngModelCtrl.$setViewValue(date);
+                        scope.$apply();
+                    }
+                });
+
+            });
+        }
+    }
+});
+angular.module('ev-fdm')
+.directive('download', ['$http', '$location', '$document', 'DownloadService', function($http, $location, $document, downloadService) {
+    return {
+        link: function(scope, elm, attrs) {
+            elm.on('click', function(event) {
+                $http.get(attrs.download).success(function(data) {
+                	downloadService.download(data.url);
+                });
+            });
+        }
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm')
+.directive('ngEnter', function() {
+    return function(scope, element, attrs) {
+        element.bind("keydown keypress", function(event) {
+            if(event.which === 13) {
+                scope.$apply(function(){
+                    scope.$eval(attrs.ngEnter);
+                });
+
+                event.preventDefault();
+            }
+        });
+    };
+});
+'use strict';
+
+function MenuManagerProvider() {
+
+    var self = this;
+    this.tabs = [];
+    this.activeTab = null;
+    this.lastTab = null;
+
+    this.addTab = function(tab) {
+        this.tabs.push(tab);
+        return this;
+    };
+
+    function findTab(stateName) {
+        var res = null;
+        angular.forEach(self.tabs, function(tab) {
+            if(stateName === tab.state) {
+                res = tab;
+            }
+        });
+
+        return res;
+    }
+
+    function selectTab(tab) {
+        tab = tab || {};
+        tab = findTab(tab.state);
+
+        if(!tab) {
+            return;
+        }
+
+        if(self.activeTab) {
+            self.lastTab = self.activeTab;
+            self.activeTab.active = false;
+        }
+
+        tab.active = true;
+        self.activeTab = tab;
+    }
+
+    this.$get = ['$rootScope', '$state', function($rootScope, $state) {
+
+        // Handle first page load
+        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
+            if (fromState.name === '') {
+                var toTab = findTab(toState.name);
+
+                if(toTab) {
+                    selectTab(toTab);
+                }
+            }
+        });
+
+        $rootScope.$on('$stateChangeError', function(event) {
+            selectTab(self.lastTab);
+        });
+
+        return {
+            tabs: self.tabs,
+            selectTab: selectTab
+        };
+    }];
+}
+
+function EvMenuDirective(menuManager) {
+    return {
+        restrict: 'E',
+        replace: true,
+        template:   '<ul class="lisette-module-tabs nav nav-tabs" ng-cloak>' +
+                        '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
+                            '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
+                        '</li>' +
+                    '</ul>',
+        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
+            $scope.tabs = menuManager.tabs;
+
+            if($rootScope['evmenu-state']) {
+                menuManager.selectTab($rootScope['evmenu-state']);
+            }
+
+            $scope.selectTab = function(tab) {
+                menuManager.selectTab(tab);
+                $state.go(tab.state);
+            }
+        }]
+    }
+
+};
+
+angular.module('ev-fdm')
+    .provider('menuManager', [MenuManagerProvider])
+    .directive('evMenu', ['menuManager', EvMenuDirective]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('evFilters', function() {
+    return {
+        restrict: 'E',
+        replace: true,
+        transclude: true,
+        templateUrl: 'filters.phtml'
+    };
+});
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evFixedHeader', function () {
+            return {
+                link: function($scope, $element, $attrs) {
+                    $element.addClass('full-height');
+                    var header = $element.find('>.ev-header');
+                    var body   = $element.find('>.ev-body');
+                    body.css({'overflow-y': 'auto'});
+                    header.css({'overflow-y': 'auto'});
+
+                    // Compute and return the height available for the element's body
+                    var getBodyHeight = function() {
+                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
+                        // This allows us to remove the padding/etc.. from the measurement
+                        bodyHeight -= body.outerHeight() - body.height();
+
+                        return bodyHeight;
+                    };
+
+                    var refreshDimensions = function() {
+                        body.hide();
+                        body.height(getBodyHeight());
+                        body.show();
+
+                        if ($attrs.refreshIdentifier) {
+                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
+                        }
+                    };
+
+
+                    $scope.$watch(function() {
+                        return getBodyHeight();
+                    }, refreshDimensions);
+
+                    $(window).bind('resize', refreshDimensions);
+
+                    if ($attrs.refreshOn) {
+                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
+                    }
+
+                }
+            };
+        });
+}) ();
+
+// @TODO: DELETE //
+angular.module('ev-fdm')
+    .directive('evFixedHeaders', ['$timeout', function ($timeout) {
+
+    function _sync($table) {
+        var $headers = $table.find('thead > tr');
+        var $firstTr = $table.find('tbody > tr').first();
+
+        // no header to resize
+        if (!$headers.length) { return; }
+
+        // uniform size for every header
+        if (!$firstTr.length) {
+            $headers.addClass('uniform');
+            _uniformSize($headers, $table.outerWidth());
+            return;
+        } else {
+            $headers.removeClass('uniform');
+        }
+
+        // compute size from first line sizing
+        var currentChildIndex = 0;
+        var $ths = $headers.find('th');
+        $ths.each(function() {
+            var $td = $firstTr.find('td:nth-child(' + (1 + currentChildIndex) + ')');
+            if ($td.is(':visible')) {
+                $(this).css('width', $td.outerWidth()).show();
+                $(this).css('maxWidth', $td.outerWidth()).show();
+            } else {
+                // $(this).hide();
+            }
+            currentChildIndex++;
+        });
+    }
+
+    function _timeoutSync($table) {
+        $timeout(function() {
+            _sync($table);
+        }, 0, false);
+    }
+
+    function _uniformSize($headers, width) {
+        var $tds = $headers.find('th');
+        if (!$tds.length) { return; }
+        $tds.each(function() {
+            $(this).css('width', (width/$tds.length) + 'px');
+        });
+    }
+
+    return {
+
+        restrict: 'A',
+        replace: false,
+
+        scope: {
+            rows: '='
+        },
+
+        link: function ($scope, element, attrs) {
+            var $table = $(element);
+            $table.addClass('fixed-headers');
+            $(window).on('resize', function() {
+                _sync($table);
+            });
+            $scope.$on('module-layout-changed', function() {
+                _sync($table);
+            });
+            // watch for raw data changes !
+            $scope.$watch('rows', function() {
+                _timeoutSync($table);
+            }, true);
+            // wait for end of digest then sync headers
+            _timeoutSync($table);
+        }
+    };
+
+}]);
+'use strict';
+
+var module = angular.module('ev-fdm')
+.directive('evFlag', function () {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            lang: '='
+        },
+        template: '<i class="icon icon-flag flag-{{lang}}"></i>'
+    };
+});
+angular.module('ev-fdm')
+.directive('focus', [function() {
+    return {
+        link: function(scope, elm, attrs, ctrl) {
+            scope.$evalAsync(function() {
+                elm[0].focus();
+            });
+        }
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('linkDisabled', function() {
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs) {
+                var oldNgClick = attrs.ngClick;
+                if (oldNgClick) {
+                    scope.$watch(attrs.linkDisabled, function (value, oldValue) {
+                        if (!! value) {
+                            element.unbind('click');
+                            element.attr('disabled', 'disabled');
+                        } else if (oldValue) {
+                            attrs.$set('ngClick', oldNgClick);
+                            element.bind('click', function () {
+                                scope.$apply(attrs.ngClick);
+                            });
+                            element.removeAttr('disabled');
+                        }
+                    });
+                }
+            }
+        };
+    });
+'use strict';
+
+var module = angular.module('ev-fdm')
+.directive('evLoadingDots', function () {
+    return {
+        restrict: 'E',
+        replace: true,
+        template: '<span class="loading-dots"><span></span><span></span><span></span></span>'
+    };
+});
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('evModule', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
+
+    var bars = {
+        tabs: {
+            versions: []
+        },
+        topbar: {
+            versions: [ 'size-mini', 'size-default', 'size-big' ]
+        },
+        leftbar: {
+            versions: []
+        },
+        bottombar: {
+            versions: []
+        }
+    };
+
+    /**
+     * Looks inside the module element for any module bar, and populates
+     * required classes for each bar on the module container
+     */
+    function updateBarClasses($moduleEl) {
+        return function() {
+            angular.forEach(bars, function(barConfig, barId) {
+                var $el = $moduleEl.find('.lisette-module-' + barId);
+                var hasClass = 'has-' + barId;
+                $moduleEl.removeClass(
+                    _(barConfig.versions)
+                        .map(function(versionId) {
+                            return barId + '-' + versionId
+                        })
+                        .join(' '));
+                if ($el.length) {
+                    $moduleEl.addClass(hasClass);
+                    angular.forEach(barConfig.versions, function(versionId) {
+                        if ($el.hasClass('version-' + versionId)) {
+                            $moduleEl.addClass(barId + '-' + versionId);
+                        }
+                    });
+                } else {
+                    $moduleEl.removeClass(hasClass);
+                }
+            });
+            $rootScope.$broadcast('module-layout-changed');
+        }
+    };
+
+    return {
+        restrict: 'A',
+        link: function($scope, element, attributes) {
+            element.addClass('lisette-module');
+            $scope.$on('$stateChangeSuccess', function() {
+                $timeout(updateBarClasses(element), 0);
+            });
+            $timeout(updateBarClasses(element), 0);
+        }
+    };
+}
+]);
+'use strict';
+
+angular.module('ev-fdm')
+.directive('evModuleHeader', ['$timeout', function ($timeout) {
+
+    var self = this;
+
+    function _sync($wrapper) {
+        var $header = $wrapper.find('.lisette-module-header');
+
+        // make sure the wrapper spans the right height
+        // even when the header is position fixed
+        $wrapper.height($header.height() - 1);
+
+        // declaring affix to bootstrap
+        // bs will watch the scroll for us and add the affix css class to $header
+        $header.affix({
+            offset: {
+                top: 1 //$('#lisette-menu').attr('data-offset-top')
+            }
+        });
+    }
+
+    return function($scope, element, attrs) {
+        var $wrapper = $(element);
+        $timeout(function() {
+            _sync($wrapper);
+        }, 0, false);
+        $(window).on('resize', function() {
+            _sync($wrapper);
+        });
+        $scope.$on('itemsLoaded', function() {
+            _sync($wrapper);
+        });
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('mouseFollower', ['$document', function ($document) {
+        return {
+            restrict: 'A',
+            link : function (scope, element, attr){
+                element = angular.element(element);
+                element.css('position', 'absolute');
+                element.css('z-index', 1500);
+
+                $document.on('mousemove', function(evt) {
+                    element.css({
+                        left:  evt.pageX,
+                        top:   evt.pageY
+                    });
+                });
+            }
+        }
+    }]);
+'use strict';
+
+var module = angular.module('ev-fdm')
+    .directive('evPagination', [function () {
+        var ELLIPSIS = '...';
+        return {
+            restrict: 'AE',
+            replace: true,
+            templateUrl: 'pagination.phtml',
+            scope: {
+                currPage:     '=',
+                nbPage:       '=',
+                onPageChange: '='
+            },
+
+            link : function (scope){
+                scope.paginationButtons = [];
+                scope.prevClass = '';
+                scope.nextClass = '';
+
+                if (!scope.currPage) scope.currPage = 1;
+                if (!scope.nbPage)   scope.nbPage   = 1;
+
+                scope.generateButtons = function () {
+                    var nbAround = 2; // We want to have this amount of links around the current page.
+
+                    scope.paginationButtons = [];
+                    // Add 1
+                    scope.paginationButtons.push ({value: 1, class:scope.currPage==1 ? 'active':'' });
+
+                    // Add the 3 dots
+                    if (scope.currPage-nbAround > 2) {
+                        scope.paginationButtons.push({ value: ELLIPSIS, class:'disabled' });
+                    }
+
+                    // add the surrounding page numbers
+                    for (var i = nbAround; i > 0; i--) {
+                        if (scope.currPage-i > 1) {
+                            scope.paginationButtons.push ({value: scope.currPage-i});
+                        }
+                    }
+
+                    // add the actual page
+                    if (scope.currPage != 1 && scope.currPage != scope.nbPage) {
+                        scope.paginationButtons.push ({ value: scope.currPage, class:'active' });
+                    }
+
+                    // add the surrounding page numbers
+                    for (var i = 1; i <= nbAround; i++) {
+                        if (scope.currPage+i < scope.nbPage) {
+                            scope.paginationButtons.push ({value: scope.currPage+i});
+                        }
+                    }
+
+                    // Add the 3 dots
+                    if (scope.currPage+nbAround < scope.nbPage-1){
+                        scope.paginationButtons.push ({ value: ELLIPSIS, class:'disabled' });
+                    }
+
+                    // Add final page number
+                    if (scope.nbPage > 1){
+                        scope.paginationButtons.push ({value: scope.nbPage,class:scope.currPage==scope.nbPage ? 'active':''});
+                    }
+                    // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
+                    // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
+                }
+
+                scope.previousPage = function (){
+                    if (scope.currPage > 1) {
+                        scope.currPage--;
+                        if(angular.isFunction(scope.onPageChange)) {
+                            scope.onPageChange(scope.currPage);
+                        }
+                    }
+
+                }
+
+                scope.changePage = function (value){
+                    if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
+                        scope.currPage = value;
+                        
+                        if(angular.isFunction(scope.onPageChange)) {
+                            scope.onPageChange(value);
+                        }
+                    }
+                }
+
+                scope.nextPage = function (){
+                    if (scope.currPage < scope.nbPage){
+                        scope.currPage++;
+                        
+                        if(angular.isFunction(scope.onPageChange)) {
+                            scope.onPageChange(scope.currPage);
+                        }
+                    }
+                }
+
+                scope.$watch('nbPage + currPage', function() {
+                    scope.generateButtons ();
+                });
+            }
+    };
+}]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
+
+    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
+
+    function getBPMatching(width) {
+        var breakp, index;
+        for (index = 0; index < BREAKS.length; index++) {
+            if (width < BREAKS[index]) {
+                breakp = BREAKS[index];
+                break;
+            }
+        }
+        if (breakp) return index;
+        else return -1;
+    }
+
+    function applyBPAttribute(element, breakpIndex) {
+        var attributeValue = '';
+        if (breakpIndex == -1) {
+            attributeValue = 'max';
+        } else {
+            attributeValue = BREAKS[breakpIndex];
+        }
+        element.attr('data-breakpoint', attributeValue);
+    }
+
+    function updateBreakpoints(element) {
+        var bp = getBPMatching(element.outerWidth());
+        applyBPAttribute(element, bp);
+    }
+
+    return {
+        restrict: 'A',
+        scope: false,
+        replace: true,
+        transclude: true,
+        template: '<div class="panel-inner" ng-transclude></div>',
+        link: function(scope, element, attrs) {
+            /**
+             * Listener to update the breakpoints properties
+             */
+            element.resizable({
+                handles: "w",
+                resize: function(event, ui) {
+                    updateBreakpoints(element);
+                }
+            });
+            $rootScope.$on('module-layout-changed', function() {
+                updateBreakpoints(element);
+            });
+            $timeout(function() {
+                updateBreakpoints(element);
+                // focus a freshly-opened modal
+                element[0].focus();
+            });
+        }
+    };
+}]);
+
+(function () {
+    'use strict';
+        // update popover template for binding unsafe html
+    angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
+        $templateCache.put("template/popover/popover.html",
+          "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
+          "  <div class=\"arrow\"></div>\n" +
+          "\n" +
+          "  <div class=\"popover-inner\">\n" +
+          "      <h3 class=\"popover-title\" ng-bind-html=\"title\" ng-show=\"title\"></h3>\n" +
+          "      <div class=\"popover-content\"ng-bind-html=\"content\"></div>\n" +
+          "  </div>\n" +
+          "</div>\n" +
+          "");
+    }]);
+    angular.module('ev-fdm')
+        .directive('popover', ['$timeout', function ($timeout) {
+        	return {
+        		restrict: 'A',
+				link: function ($scope, elem, attrs) {
+                    var showTimeout;
+                    elem.bind('focus', function () {
+                        elem.triggerHandler('focus-not-typing');
+                    });
+					elem.bind('blur', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                    });
+                    elem.bind('keypress', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                        showTimeout = $timeout(function () {
+                            elem.triggerHandler('focus-not-typing');
+                        }, 1000);
+                    });
+				}
+        	};
+        }]);
+}) ();
+
+/**
+ * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
+ * + Supports empty lists by displaying a message (promise-empty)
+ *
+ * Options :
+ * - emptyMessage (string) - display a message when promise resolves to empty array
+ * - promiseDefaultStyles (boolean, default true) - apply spinning evaneos logo when resolving
+ *
+ * Examples :
+ * <div promise="myPromise"
+ *     empty-message="No quote"
+ *     promise-default-styles="true">
+ *
+ */
+angular.module('ev-fdm')
+    .directive('promise', [function () {
+
+    function applyClass(classes, element) {
+        element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
+        element.addClass(classes);
+    }
+
+    return {
+
+        restrict: 'A',
+        replace: false,
+
+        controller: ['$scope', '$attrs', '$parse', '$element', function($scope, $attrs, $parse, $element) {
+            var promiseGetter = $parse($attrs.promise);
+            var emptyMessage = $attrs.emptyMessage;
+            var promiseDefaultStyles = ($attrs.promiseDefaultStyles !== 'false');
+            if (promiseDefaultStyles) {
+                applyClass('promise-default-styles', $element);
+            }
+            if (emptyMessage) {
+                $element.append('<div class="promise-empty-message">' + emptyMessage + '</div>');
+            }
+            $scope.$watch(function() {
+                return promiseGetter($scope);
+            }, function(promise) {
+                if (promise) {
+                    applyClass('promise-resolving', $element);
+                    promise.then(function(result) {
+                        // make sure we are dealing with arrays
+                        // otherwise (not a collection, we can't assume it's empty or non empty)
+                        if (emptyMessage && angular.isArray(result) && !result.length) {
+                            applyClass('promise-resolved promise-empty', $element);
+                        } else {
+                            applyClass('promise-resolved', $element);
+                        }
+
+                        return result;
+                    }, function() {
+                        applyClass('promise-rejected', $element);
+                    })
+                } else {
+                    applyClass('promise-resolved', $element);
+                }
+            });
+        }]
+    }
+
+}]);
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evPromiseProgress', [function () {
+
+    /*  ev-promise-progress
+        ===================
+        Hi! I'm a directive that link a progress bar to a promise.
+
+        Just give me a promise argument. I'll update automatically each time the `notify` callback is called. Of course
+        I assume that a percentage progress is given.
+
+        Beware! Each time the promise changes, and is replaced by a new one, I bind the progress bar to the new promise.
+        Without unbinding from the previous one. If it wasn't completed, it can leads to strange behavior (i.e. the
+        progress bar taking value from both at the same time, doing back and forth).
+    */
+            return {
+                restrict: 'A',
+                replace: true,
+                scope: {
+                    promise: '=evPromiseProgress',
+                },
+                template: '<div role="progressbar" class="ev-progress" aria-valuemin="0" aria-valuemax="100"' +
+                    'aria-valuenow="0"> <div class="ev-progress-overlay"></div> </div> ',
+                link: function ($scope, elem, attrs) {
+                    var progressBar = elem.find(angular.element(document.querySelector('.ev-progress-overlay')));
+                    progressBar.css({width: '0%'});
+                    $scope.$watch('promise', function (newPromise) {
+                        if (!newPromise || !newPromise.then) { return; }
+                        progressBar.css({width: '0%'});
+                        newPromise.then(null, null, function notify (progress) {
+                            if (typeof(progress) === 'object') {
+                                progress = progress.progress;
+                            }
+                            progressBar.css({width: progress + '%'});
+                        });
+                        newPromise.finally(function () {
+                            progressBar.css({width: '100%'});
+                        });
+                    });
+                }
+            };
+        }]);
+}());
+'use strict';
+
+angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService', '$state', function ($rootScope, notificationsService, $state) {
+    return {
+        restrict: 'E',
+        link: function(scope, element, attrs) {
+
+            $rootScope.$on('$stateChangeStart', function(event, toState) {
+                // not a tab changing
+                var dotX = $state.current.name.indexOf('.'),
+                     stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
+
+                if (!stateName || toState.name.indexOf(stateName) !== 0) {
+                    $('body').addClass('state-resolving');
+                }
+            });
+
+            $rootScope.$on('$stateChangeSuccess', function() {
+                element.removeClass('state-resolving');
+            });
+
+            /**
+             * When there is an error on a state change
+             *
+             * In your state config you can add the following.
+             * This will allows the router to fallback to this state on error
+             * while displaying the specified message
+
+                  fallback: {
+                    state: 'list',
+                    message: t('Unable to open this transaction!')
+                  }
+             */
+            $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
+                $('body').removeClass('state-resolving');
+
+                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+                notificationsService.addError({
+                    text: errorMessage
+                });
+
+                // Redirect to the fallback we defined in our state
+                if(toState && toState.fallback && toState.fallback.state) {
+                  $state.go(toState.fallback.state);
+                }
+            });
+        }
+    };
+}]);
+
+angular.module('ev-fdm')
+    .provider('evSelectLanguage', function() {
+        this.$get =function () {
+            return {
+                availableLang: this.availableLang || [],
+                defaultLang: this.defaultLang
+            };
+        };
+
+        this.setAvailableLang =function (availableLang) {
+            this.availableLang = availableLang;
+        };
+        this.setDefaultLang =function (defaultLang) {
+            this.defaultLang = defaultLang;
+        };
+    })
+    .directive('evSelectLanguage', ['evSelectLanguage', function (cfg) {
+        return {
+            template:
+                '<div class="ev-language-tabs">' +
+                    '<div class="btn-group">' +
+                        '<button class="btn btn-lg btn-default" ng-repeat="lang in availableLang"'+
+                            'ng-class="{active: selectedLang===lang}"' +
+                            'ng-click="$parent.selectedLang=lang">' +
+                            '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>',
+            restrict: 'AE',
+            scope: {
+                selectedLang: '=lang'
+            },
+            link: function($scope) {
+                $scope.availableLang = cfg.availableLang;
+                if (!$scope.selectedLang) {
+                    $scope.selectedLang = cfg.defaultLang;
+                }
+            }
+        };
+    }]);
+
+'use strict';
+/// This directive currently depend on ng-repeat $index for the
+///  shift selection. It would be great to remove this depency.
+angular.module('ev-fdm')
+    .directive('selectableSet', [function() {
+        return {
+            restrict: 'A',
+            controller: ['$scope', '$parse', '$element', '$attrs', '$document',
+            function($scope, $parse, $element, $attrs, $document) {
+                var self = this,
+                    shiftKey = 16;
+
+                var selectedElementsGet = $parse($attrs.selectedElements);
+
+                this.selectableElements = [];
+                this.selectedElement = [];
+
+                var lastClickedIndex,
+                    shiftSelectedElements = [];
+
+                $scope.$watch(function() {
+                    return selectedElementsGet($scope);
+                  },
+                  function() {
+                    self.selectedElements = angular.isArray(selectedElementsGet($scope))?
+                      selectedElementsGet($scope) : [];
+                  }
+                );
+
+                // Toggle a noselect class on the element when the shift key is pressed
+                // This allows us to disable selection overlay via css
+                $document.on('keydown', function(event) {
+                    if(event.keyCode === shiftKey) {
+                        $element.addClass('noselect');
+                    }
+                });
+
+                $document.on('keyup', function(event) {
+                    if(event.keyCode === shiftKey) {
+                        $element.removeClass('noselect');
+                    }
+                });
+
+                this.toggleSelection = function(element, index) {
+                    lastClickedIndex = index;
+                    shiftSelectedElements.length = 0;
+
+                    if(this.isElementSelected(element)) {
+                        unselectElement(element);
+                    }
+                    else {
+                        selectElement(element);
+                    }
+                };
+
+                this.toggleSelectAll = function() {
+
+                    if(this.selectedElements.length === this.selectableElements.length){
+                        this.selectedElements.length = 0;
+                    }
+                    else {
+                      angular.forEach(this.selectableElements, function(element) {
+                        if(!self.isElementSelected(element)) {
+                          selectElement(element);
+                          }
+                      });
+                    }
+                };
+
+                this.shiftedClick = function(element, index) {
+                    if(typeof lastClickedIndex !== undefined) {
+                        toggleRangeUpTo(lastClickedIndex, index);
+                    }
+                };
+
+                this.registerElement = function(element, directive) {
+                  this.selectableElements.push(element);
+                };
+
+                this.unregisterElement = function(element) {
+                  var index = this.selectableElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectableElements.splice(index, 1);
+                  }
+
+                  index = this.selectedElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectedElements.splice(index, 1);
+                  }
+                };
+
+                this.areAllElementSelected = function() {
+                  return this.selectedElements.length === this.selectableElements.length
+                     && this.selectedElements.length !== 0;
+                };
+
+                this.isElementSelected = function(element) {
+                    return self.selectedElements.indexOf(element) > -1;
+                };
+
+                function toggleRangeUpTo(firstIndex, lastIndex) {
+
+                    var lastElement = getElementAtIndex(lastIndex),
+                        min = Math.min(firstIndex, lastIndex),
+                        max = Math.max(firstIndex, lastIndex),
+                        element,
+                        i;
+
+                    angular.forEach(shiftSelectedElements, function(element, index) {
+                        unselectElement(element);
+                    });
+
+                    if(self.isElementSelected(lastElement)) {
+                        for(i = min; i <= max; i++) {
+                            element = getElementAtIndex(i);
+                            unselectElement(element);
+                        }
+
+                        lastClickedIndex = lastIndex;
+                        shiftSelectedElements.length = 0;
+                    }
+                    else {
+                        shiftSelectedElements.length = 0;
+                        for(i = min; i <= max; i++) {
+                            element = getElementAtIndex(i);
+                            selectElement(element);
+                            shiftSelectedElements.push(element);
+                        }
+                    }
+                }
+
+                function getElementAtIndex(index) {
+                    return self.selectableElements[index];
+                }
+
+                function selectElement(element) {
+                    if(!self.isElementSelected(element)) {
+                        self.selectedElements.push(element);
+                    }
+                }
+
+                function unselectElement(element) {
+                    var index = self.selectedElements.indexOf(element);
+                    if(index > -1) {
+                        self.selectedElements.splice(index, 1);
+                    }
+                }
+            }]
+        };
+    }])
+    .directive('selectable', ['$parse', function($parse) {
+      return {
+          restrict: 'A',
+          require: ['^selectableSet', '?ngModel'],
+          link: function(scope, element, attr, ctrls) {
+
+              var currentElementGetter = $parse(attr.selectable);
+              var currentElement = currentElementGetter(scope);
+
+              var ctrl = ctrls[0],
+                  modelCtrl = ctrls[1];
+
+              ctrl.registerElement(currentElement);
+
+              scope.$on('$destroy', function() {
+                  ctrl.unregisterElement(currentElement);
+              });
+
+              scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
+                scope.selected = ctrl.isElementSelected(currentElement);
+                if(modelCtrl) {
+                  modelCtrl.$setViewValue(scope.selected);
+                }
+              });
+
+              element.on('click', function(event) {
+                  scope.$apply(function() {
+                      handleClick(event);
+                  });
+              });
+
+              function handleClick(event) {
+                  if (event.shiftKey) {
+                      ctrl.shiftedClick(currentElement, scope.$index);
+                  }
+                  else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
+                      ctrl.toggleSelection(currentElement, scope.$index);
+                  }
+              }
+
+          }
+      };
+  }])
+    .directive('selectBox', function() {
+        return {
+            restrict: 'E',
+            require: '^selectable',
+            replace: true,
+            template: '<span class="checkbox" ng-class="{ active: selected }"></span>'
+        };
+    })
+    .directive('selectAll', function() {
+        return {
+            restrict: 'E',
+            require: '^selectableSet',
+            scope: true,
+            template: '<span class="checkbox" ng-class="{ active: allSelected }" ng-click="toggleSelectAll()"></span>',
+            link: function(scope, element, attr, ctrl) {
+
+                scope.toggleSelectAll = function () {
+                    ctrl.toggleSelectAll();
+                };
+
+                scope.$watchCollection(function() { return ctrl.areAllElementSelected(); }, function() {
+                    scope.allSelected = ctrl.areAllElementSelected();
+                });
+            }
+        };
+    });
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('sortableSet', function() {
+        return {
+            restrict: 'A',
+            scope: false,
+            controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
+                var self = this;
+                this.reverseSort = false;
+                this.sortKey = '';
+
+                $scope.reverseSort = $scope.reverseSort || false;
+
+                var reverseSortGet = $parse($attrs.reverseSort),
+                    reverseSortSet = reverseSortGet.assign,
+                    sortKeyGet = $parse($attrs.sortBy),
+                    sortKeySet = sortKeyGet.assign;
+
+                $scope.$watch(function() {
+                    return reverseSortGet($scope);
+                }, function(newReverseSort) {
+                    self.reverseSort = newReverseSort;
+                });
+
+                $scope.$watch(function() {
+                    return sortKeyGet($scope);
+                }, function(newSortKey) {
+                    self.sortKey = newSortKey;
+                });
+
+                this.sortBy = function(key) {
+                    if(key == this.sortKey) {
+                        this.reverseSort = !this.reverseSort;
+                    }
+                    else {
+                        this.reverseSort = false;
+                        this.sortKey = key;
+                    }
+
+                    if(reverseSortSet) {
+                        reverseSortSet($scope, this.reverseSort);
+                    }
+
+                    if(sortKeySet) {
+                        sortKeySet($scope, this.sortKey);
+                    }
+
+                    $scope.$eval($attrs.sortChange);
+                };
+
+            }]
+        };
+    })
+    .directive('sortable', function() {
+        return {
+            restrict: 'A',
+            scope: false,
+            require: '^sortableSet',
+            link: function(scope, element, attr, ctrl) {
+                var key = attr.sortable;
+                element.addClass('sortable sort');
+
+                scope.$watch(function() { return ctrl.sortKey;}, function() {
+                    setClasses();
+                });
+
+                scope.$watch(function() { return ctrl.reverseSort;}, function() {
+                    setClasses();
+                });
+
+                element.on('click', function() {
+                    scope.$apply(function() {
+                        ctrl.sortBy(key);
+                    });
+                });
+
+                function setClasses() {
+                    if(ctrl.sortKey === key){
+                        element.removeClass('no-sort');
+                        if(ctrl.reverseSort) {
+                            element.removeClass('sort-down').addClass('sort-up');
+                        }
+                        else {
+                            element.removeClass('sort-up').addClass('sort-down');
+                        }
+                    }
+                    else {
+                        element.removeClass('sort-up sort-down').addClass('no-sort');
+                    }
+                }
+            }
+        }
+    });
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evTab', function () {
+            return {
+                restrict: 'E',
+                transclude: true,
+                scope: {},
+                controller: function($scope, $element) {
+                    var panes = $scope.panes = [];
+
+
+                    $scope.select = function(pane) {
+                        angular.forEach(panes, function(pane) {
+                            pane.selected = false;
+                        });
+                        pane.selected = true;
+                    };
+
+
+                    this.addPane = function(pane) {
+                        if (panes.length === 0) { $scope.select(pane); }
+                        panes.push(pane);
+                    };
+
+                    var selectFuture = function (panes) {
+                        var futurePane;
+                        panes.some(function (pane) {
+                            var isSelected = $scope.isShowed(pane);
+                            if (isSelected) {
+                                futurePane = pane;
+                            }
+                            return isSelected;
+                        });
+                       return futurePane;
+                    };
+
+                    this.selectNext = function() {
+                        var selectedIndex = $scope.selectedIndex();
+                        var nextPanes = panes.slice(selectedIndex + 1);
+                        $scope.select(selectFuture(nextPanes) || panes[selectedIndex]);
+                    };
+
+                    this.selectPrevious = function() {
+                        var selectedIndex = $scope.selectedIndex();
+                        var previousPanes = panes.slice(0, selectedIndex).reverse();
+                        $scope.select(selectFuture(previousPanes) || panes[selectedIndex]);
+                    };
+
+                    $scope.selectedIndex = function() {
+                        for (var i = 0; i < panes.length; i++) {
+                            var pane = panes[i];
+
+                            if (pane.selected) {
+                                return i;
+                            }
+                        }
+                    };
+
+                    $scope.isShowed = function (pane) {
+                        return pane.tabShow == null || !!pane.tabShow;
+                    };
+                },
+                template:
+                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
+                        '<ul class="nav nav-tabs ev-header">' +
+                            '<li ng-repeat="pane in panes | filter:isShowed" ' +
+                                'ng-class="{active:pane.selected}" '+
+                                'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
+                                '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
+                                    '<span ng-show="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
+                                '</a>' +
+                            '</li>' +
+                        '</ul>' +
+                        '<div class="tab-content ev-body" ng-transclude></div>' +
+                    '</div>',
+                replace: true
+            };
+        })
+        .directive('evPane', function() {
+            return {
+                require: '^evTab',
+                restrict: 'E',
+                transclude: true,
+                scope: {
+                    tabTitle: '@',
+                    tabIcon: '@',
+                    tabClick: '&',
+                    tabShow: '='
+                },
+                link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+                    tabsCtrl.addPane(scope);
+                    transcludeFn(function(clone, transcludedScope) {
+                        transcludedScope.$selectNext     = tabsCtrl.selectNext;
+                        transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
+
+                        element.find('.transclude').append(clone);
+                    });
+                },
+                template:
+                    '<div class="tab-pane" ng-class="{active: selected}">' +
+                        '<div class="section transclude"></div>' +
+                    '</div>',
+                replace: true
+            };
+        });
+}) ();
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('throttle', ['$timeout', function($timeout) {
+
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        priority: 1,
+        link: function(scope, element, attr, ctrl) {
+
+            var originalSetViewValue = ctrl.$setViewValue,
+                originalViewListeners = angular.copy(ctrl.$viewChangeListeners);
+
+            ctrl.$viewChangeListeners = [];
+
+            var throttleGuard;
+            ctrl.$setViewValue = function(value) {
+                var callViewListeners = ctrl.$modelValue !== value;
+
+                originalSetViewValue.apply(ctrl, [value]);
+
+                if (callViewListeners) {
+                    if(throttleGuard) {
+                        $timeout.cancel(throttleGuard);
+                    }
+
+                    throttleGuard = $timeout(function() {
+                        angular.forEach(originalViewListeners, function(listener) {
+                            try {
+                                listener();
+                            } catch(e) {
+                                $exceptionHandler(e);
+                            }
+                        });
+                    }, 600);
+                }
+
+            };
+        }
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('evValue', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '=',
+                noValue: '@',
+            },
+            templateUrl: 'value.phtml'
+        };
+    });
+'use strict';
+
 function FilterServiceFactory($rootScope, $timeout) {
 
     function FilterService() {
@@ -919,11 +2371,12 @@ var module = angular.module('ev-fdm');
 
 module
     .service('PanelService', [
-        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope',
-        function($animate, $q, $http, $templateCache, $compile, $rootScope) {
+        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
+        function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
 
         var container = null,
-            panels    = {};
+            panels    = {},
+            stylesCache = window.stylesCache = {};
 
         /**
          * Panel options are:
@@ -942,31 +2395,50 @@ module
                 return;
             }
 
-            var panel = panels[options.name];
+            if (panels[options.name]) {
+                var panel        = panels[options.name];
+                panel.index      = options.index;
 
-            if (panel) {
-                panel.index      = options.index
-                var afterElement = getAfterElement(options.index);
+                var afterIndex   = findAfterElementIndex(options.index),
+                    afterElement = getAfterElement(afterIndex);
 
-                $animate.move(panel.element, container, afterElement);
+                panel.element.css('z-index', 2000 + afterIndex);
+                $animate.move(panel.element, container, afterElement, function() {
+                    updateLayout();
+                });
 
                 return panels[options.name];
             }
 
-            var templatePromises = getTemplatePromise(options);
-
+            // We call it *THE BEAST*.
+            var element          = angular.element('<div class="panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(options.name, options) + '"   ><div class="panel right" ><div class="panel-inner"><div class="panel-content"></div></div></div></div>'),
+                templatePromises = getTemplatePromise(options);
             panels[options.name] = options;
-            var element          = angular.element('<div></div>');
             options.element      = element;
+            options.element.css('z-index', 2000 + options.index);
 
             return templatePromises.then(function(template) {
-                element.html(template);
+                element.find('.panel-content').html(template);
                 element          = $compile(element)($rootScope.$new());
                 options.element  = element;
-                var afterElement = getAfterElement(options.index);
+
+                var afterIndex   = findAfterElementIndex(options.index),
+                    afterElement = getAfterElement(afterIndex);
+
+                var timerResize = null;
+                element.on('resize', function(event, ui) {
+                    var self = this;
+                    if (timerResize) {
+                        $timeout.cancel(timerResize);
+                    }
+                    timerResize = $timeout(function() {
+                        stylesCache[options.panelName] = ui.size.width;
+                        updateLayout(self);
+                    }, 100);
+                });
 
                 $animate.enter(element, container, afterElement, function() {
-                    console.log("new element inserted")
+                    updateLayout();
                 });
 
                 return options;
@@ -982,7 +2454,7 @@ module
             panels[name] = null;
 
             $animate.leave(element, function() {
-                console.log("remove element:" + name);
+                updateLayout();
             })
         };
 
@@ -995,6 +2467,24 @@ module
             container = element;
         };
 
+        var timerWindowResize = null;
+        angular.element($window).on('resize', function() {
+            if(timerWindowResize !== null) {
+                $timeout.cancel(timerWindowResize);
+            }
+            timerWindowResize = $timeout(function() {
+                updateLayout()
+            }, 100);
+        });
+
+        function getStylesFromCache(name, options) {
+            var savedWidth = stylesCache[name];
+            if (savedWidth) {
+                return 'width: ' + savedWidth + 'px;';
+            }
+
+            return '';
+        }
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
@@ -1006,11 +2496,9 @@ module
             });
         }
 
-        function getAfterElement(index) {
-            var insertedPanels = angular.element(container).children();
-            var afterIndex     = index - 1;
-
-            console.log("insertedPanels", insertedPanels);
+        function findAfterElementIndex(index) {
+            var insertedPanels = angular.element(container).children(),
+                afterIndex     = index - 1;
 
             if (!index || index > insertedPanels.length) {
                 afterIndex = insertedPanels.length - 1;
@@ -1019,9 +2507,30 @@ module
                 afterIndex = 0;
             }
 
-            var domElement = insertedPanels[afterIndex];
+            return afterIndex;
+        }
+
+        function getAfterElement(afterIndex) {
+            var insertedPanels = angular.element(container).children(),
+                domElement     = insertedPanels[afterIndex];
 
             return domElement ? angular.element(domElement) : null;
+        }
+
+        function updateLayout(element) {
+            var panelElements = angular.element(container).children('.panel-placeholder');
+
+            if (element) {
+                for (var i = 0; i < panelElements.length; i++) {
+                    var current = panelElements[i];
+                    if (element == current) {
+                        panelElements.splice(i, 1);
+                        panelElements.push(element);
+                        break;
+                    }
+                }
+            }
+            panelLayoutEngine.checkStacking(panelElements);
         }
 
         return this;
@@ -1031,7 +2540,7 @@ module
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="panels row"><div></div></div>',
+            template: '<div class="panels panels-container lisette-module"><div></div></div>',
             link: function (scope, element, attrs) {
               panelService.registerContainer(element);
             }
@@ -1769,1459 +3278,6 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('activableSet', function() {
-        return {
-            restrict: 'A',
-            scope: false,
-            controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
-
-                var activeElementGet = $parse($attrs.activeElement),
-                    activeElementSet = activeElementGet.assign;
-
-                var self = this;
-                $scope.$watch(function() {
-                    return activeElementGet($scope);
-                }, function(newActiveElement) {
-                    self.activeElement = newActiveElement;
-                });
-
-               this.toggleActive = function(value) {
-                    if(value !== this.activeElement) {
-                        if(activeElementSet) {
-                            activeElementSet($scope, value);
-                        }
-
-                        this.activeElement = value;
-                    }
-                    else {
-                        if(activeElementSet) {
-                            activeElementSet($scope, null);
-                        }
-
-                        this.activeElement = undefined;
-                    }
-
-                    $scope.$eval($attrs.activeChange);
-               };
-
-            }]
-        };
-    })
-    .directive('activable', ['$parse', function($parse) {
-            return {
-                restrict: 'A',
-                require: '^activableSet',
-                link: function(scope, element, attr, ctrl) {
-                    element.addClass('clickable');
-                    var elementGetter = $parse(attr.activable),
-                        currentElement = elementGetter(scope);
-
-
-                    scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
-                      currentElement = newCurrentElement;
-                    });
-
-                    scope.$watch(function() { return ctrl.activeElement; },
-                     function(newActiveElement, oldActiveElement) {
-                        if(newActiveElement && currentElement === newActiveElement) {
-                            element.addClass('active');
-                        }
-                        else {
-                            element.removeClass('active');
-                        }
-                    });
-
-                    element.on('click', function(event) {
-                        if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
-                            scope.$apply(function() {
-                                ctrl.toggleActive(currentElement);
-                            });
-                        }
-                    });
-                }
-            };
-        }]);
-
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('clearable', [function() {
-
-    return {
-        restrict: 'A',
-        require: 'ngModel',
-        link: function(scope, element, attr, ctrl) {
-
-            var clearButton = angular.element('<button class="clear" ng-click="clear()">×</button>');
-            element.after(clearButton);
-
-            clearButton.on('click', function() {
-                scope.$apply(function() {
-                    element.val(''); 
-                    ctrl.$setViewValue('');
-                });
-            });
-
-            scope.$watch(function() { return ctrl.$isEmpty(ctrl.$viewValue); }, function(isEmpty) {
-                if(isEmpty) {
-                    clearButton.hide();
-                }
-                else {
-                    clearButton.show();
-                }
-            });
-
-        }
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
-.directive('evDatepicker', function() {
-    return {
-        restrict: 'A',
-        require : 'ngModel',
-        link : function (scope, element, attrs, ngModelCtrl) {
-
-            var dateCanBeInTheFutur = attrs.futurAllowed !== 'false',
-                dateFormat = attrs.dateFormat || 'dd/mm/yy';
-
-            $(function(){
-                element.datepicker({
-                    dateFormat: dateFormat,
-                    maxDate: dateCanBeInTheFutur? null : 0,
-                    onSelect:function (date) {
-                        ngModelCtrl.$setViewValue(date);
-                        scope.$apply();
-                    }
-                });
-
-            });
-        }
-    }
-});
-angular.module('ev-fdm')
-.directive('download', ['$http', '$location', '$document', 'DownloadService', function($http, $location, $document, downloadService) {
-    return {
-        link: function(scope, elm, attrs) {
-            elm.on('click', function(event) {
-                $http.get(attrs.download).success(function(data) {
-                	downloadService.download(data.url);
-                });
-            });
-        }
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
-.directive('ngEnter', function() {
-    return function(scope, element, attrs) {
-        element.bind("keydown keypress", function(event) {
-            if(event.which === 13) {
-                scope.$apply(function(){
-                    scope.$eval(attrs.ngEnter);
-                });
-
-                event.preventDefault();
-            }
-        });
-    };
-});
-'use strict';
-
-function MenuManagerProvider() {
-
-    var self = this;
-    this.tabs = [];
-    this.activeTab = null;
-    this.lastTab = null;
-
-    this.addTab = function(tab) {
-        this.tabs.push(tab);
-        return this;
-    };
-
-    function findTab(stateName) {
-        var res = null;
-        angular.forEach(self.tabs, function(tab) {
-            if(stateName === tab.state) {
-                res = tab;
-            }
-        });
-
-        return res;
-    }
-
-    function selectTab(tab) {
-        tab = tab || {};
-        tab = findTab(tab.state);
-
-        if(!tab) {
-            return;
-        }
-
-        if(self.activeTab) {
-            self.lastTab = self.activeTab;
-            self.activeTab.active = false;
-        }
-
-        tab.active = true;
-        self.activeTab = tab;
-    }
-
-    this.$get = ['$rootScope', '$state', function($rootScope, $state) {
-
-        // Handle first page load
-        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
-            if (fromState.name === '') {
-                var toTab = findTab(toState.name);
-
-                if(toTab) {
-                    selectTab(toTab);
-                }
-            }
-        });
-
-        $rootScope.$on('$stateChangeError', function(event) {
-            selectTab(self.lastTab);
-        });
-
-        return {
-            tabs: self.tabs,
-            selectTab: selectTab
-        };
-    }];
-}
-
-function EvMenuDirective(menuManager) {
-    return {
-        restrict: 'E',
-        replace: true,
-        template:   '<ul class="lisette-module-tabs nav nav-tabs" ng-cloak>' +
-                        '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
-                            '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
-                        '</li>' +
-                    '</ul>',
-        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
-            $scope.tabs = menuManager.tabs;
-
-            if($rootScope['evmenu-state']) {
-                menuManager.selectTab($rootScope['evmenu-state']);
-            }
-
-            $scope.selectTab = function(tab) {
-                menuManager.selectTab(tab);
-                $state.go(tab.state);
-            }
-        }]
-    }
-
-};
-
-angular.module('ev-fdm')
-    .provider('menuManager', [MenuManagerProvider])
-    .directive('evMenu', ['menuManager', EvMenuDirective]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('evFilters', function() {
-    return {
-        restrict: 'E',
-        replace: true,
-        transclude: true,
-        templateUrl: 'filters.phtml'
-    };
-});
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evFixedHeader', function () {
-            return {
-                link: function($scope, $element, $attrs) {
-                    $element.addClass('full-height');
-                    var header = $element.find('>.ev-header');
-                    var body   = $element.find('>.ev-body');
-                    body.css({'overflow-y': 'auto'});
-                    header.css({'overflow-y': 'auto'});
-
-                    // Compute and return the height available for the element's body
-                    var getBodyHeight = function() {
-                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
-                        // This allows us to remove the padding/etc.. from the measurement
-                        bodyHeight -= body.outerHeight() - body.height();
-
-                        return bodyHeight;
-                    };
-
-                    var refreshDimensions = function() {
-                        body.hide();
-                        body.height(getBodyHeight());
-                        body.show();
-
-                        if ($attrs.refreshIdentifier) {
-                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
-                        }
-                    };
-
-
-                    $scope.$watch(function() {
-                        return getBodyHeight();
-                    }, refreshDimensions);
-
-                    $(window).bind('resize', refreshDimensions);
-
-                    if ($attrs.refreshOn) {
-                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
-                    }
-
-                }
-            };
-        });
-}) ();
-
-// @TODO: DELETE //
-angular.module('ev-fdm')
-    .directive('evFixedHeaders', ['$timeout', function ($timeout) {
-
-    function _sync($table) {
-        var $headers = $table.find('thead > tr');
-        var $firstTr = $table.find('tbody > tr').first();
-
-        // no header to resize
-        if (!$headers.length) { return; }
-
-        // uniform size for every header
-        if (!$firstTr.length) {
-            $headers.addClass('uniform');
-            _uniformSize($headers, $table.outerWidth());
-            return;
-        } else {
-            $headers.removeClass('uniform');
-        }
-
-        // compute size from first line sizing
-        var currentChildIndex = 0;
-        var $ths = $headers.find('th');
-        $ths.each(function() {
-            var $td = $firstTr.find('td:nth-child(' + (1 + currentChildIndex) + ')');
-            if ($td.is(':visible')) {
-                $(this).css('width', $td.outerWidth()).show();
-                $(this).css('maxWidth', $td.outerWidth()).show();
-            } else {
-                // $(this).hide();
-            }
-            currentChildIndex++;
-        });
-    }
-
-    function _timeoutSync($table) {
-        $timeout(function() {
-            _sync($table);
-        }, 0, false);
-    }
-
-    function _uniformSize($headers, width) {
-        var $tds = $headers.find('th');
-        if (!$tds.length) { return; }
-        $tds.each(function() {
-            $(this).css('width', (width/$tds.length) + 'px');
-        });
-    }
-
-    return {
-
-        restrict: 'A',
-        replace: false,
-
-        scope: {
-            rows: '='
-        },
-
-        link: function ($scope, element, attrs) {
-            var $table = $(element);
-            $table.addClass('fixed-headers');
-            $(window).on('resize', function() {
-                _sync($table);
-            });
-            $scope.$on('module-layout-changed', function() {
-                _sync($table);
-            });
-            // watch for raw data changes !
-            $scope.$watch('rows', function() {
-                _timeoutSync($table);
-            }, true);
-            // wait for end of digest then sync headers
-            _timeoutSync($table);
-        }
-    };
-
-}]);
-'use strict';
-
-var module = angular.module('ev-fdm')
-.directive('evFlag', function () {
-    return {
-        restrict: 'E',
-        replace: true,
-        scope: {
-            lang: '='
-        },
-        template: '<i class="icon icon-flag flag-{{lang}}"></i>'
-    };
-});
-angular.module('ev-fdm')
-.directive('focus', [function() {
-    return {
-        link: function(scope, elm, attrs, ctrl) {
-            scope.$evalAsync(function() {
-                elm[0].focus();
-            });
-        }
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('linkDisabled', function() {
-        return {
-            restrict: 'A',
-            link: function(scope, element, attrs) {
-                var oldNgClick = attrs.ngClick;
-                if (oldNgClick) {
-                    scope.$watch(attrs.linkDisabled, function (value, oldValue) {
-                        if (!! value) {
-                            element.unbind('click');
-                            element.attr('disabled', 'disabled');
-                        } else if (oldValue) {
-                            attrs.$set('ngClick', oldNgClick);
-                            element.bind('click', function () {
-                                scope.$apply(attrs.ngClick);
-                            });
-                            element.removeAttr('disabled');
-                        }
-                    });
-                }
-            }
-        };
-    });
-'use strict';
-
-var module = angular.module('ev-fdm')
-.directive('evLoadingDots', function () {
-    return {
-        restrict: 'E',
-        replace: true,
-        template: '<span class="loading-dots"><span></span><span></span><span></span></span>'
-    };
-});
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('evModule', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
-
-    var bars = {
-        tabs: {
-            versions: []
-        },
-        topbar: {
-            versions: [ 'size-mini', 'size-default', 'size-big' ]
-        },
-        leftbar: {
-            versions: []
-        },
-        bottombar: {
-            versions: []
-        }
-    };
-
-    /**
-     * Looks inside the module element for any module bar, and populates
-     * required classes for each bar on the module container
-     */
-    function updateBarClasses($moduleEl) {
-        return function() {
-            angular.forEach(bars, function(barConfig, barId) {
-                var $el = $moduleEl.find('.lisette-module-' + barId);
-                var hasClass = 'has-' + barId;
-                $moduleEl.removeClass(
-                    _(barConfig.versions)
-                        .map(function(versionId) {
-                            return barId + '-' + versionId
-                        })
-                        .join(' '));
-                if ($el.length) {
-                    $moduleEl.addClass(hasClass);
-                    angular.forEach(barConfig.versions, function(versionId) {
-                        if ($el.hasClass('version-' + versionId)) {
-                            $moduleEl.addClass(barId + '-' + versionId);
-                        }
-                    });
-                } else {
-                    $moduleEl.removeClass(hasClass);
-                }
-            });
-            $rootScope.$broadcast('module-layout-changed');
-        }
-    };
-
-    return {
-        restrict: 'A',
-        link: function($scope, element, attributes) {
-            element.addClass('lisette-module');
-            $scope.$on('$stateChangeSuccess', function() {
-                $timeout(updateBarClasses(element), 0);
-            });
-            $timeout(updateBarClasses(element), 0);
-        }
-    };
-}
-]);
-'use strict';
-
-angular.module('ev-fdm')
-.directive('evModuleHeader', ['$timeout', function ($timeout) {
-
-    var self = this;
-
-    function _sync($wrapper) {
-        var $header = $wrapper.find('.lisette-module-header');
-
-        // make sure the wrapper spans the right height
-        // even when the header is position fixed
-        $wrapper.height($header.height() - 1);
-
-        // declaring affix to bootstrap
-        // bs will watch the scroll for us and add the affix css class to $header
-        $header.affix({
-            offset: {
-                top: 1 //$('#lisette-menu').attr('data-offset-top')
-            }
-        });
-    }
-
-    return function($scope, element, attrs) {
-        var $wrapper = $(element);
-        $timeout(function() {
-            _sync($wrapper);
-        }, 0, false);
-        $(window).on('resize', function() {
-            _sync($wrapper);
-        });
-        $scope.$on('itemsLoaded', function() {
-            _sync($wrapper);
-        });
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('mouseFollower', ['$document', function ($document) {
-        return {
-            restrict: 'A',
-            link : function (scope, element, attr){
-                element = angular.element(element);
-                element.css('position', 'absolute');
-                element.css('z-index', 1500);
-
-                $document.on('mousemove', function(evt) {
-                    element.css({
-                        left:  evt.pageX,
-                        top:   evt.pageY
-                    });
-                });
-            }
-        }
-    }]);
-'use strict';
-
-var module = angular.module('ev-fdm')
-    .directive('evPagination', [function () {
-        var ELLIPSIS = '...';
-        return {
-            restrict: 'AE',
-            replace: true,
-            templateUrl: 'pagination.phtml',
-            scope: {
-                currPage:     '=',
-                nbPage:       '=',
-                onPageChange: '='
-            },
-
-            link : function (scope){
-                scope.paginationButtons = [];
-                scope.prevClass = '';
-                scope.nextClass = '';
-
-                if (!scope.currPage) scope.currPage = 1;
-                if (!scope.nbPage)   scope.nbPage   = 1;
-
-                scope.generateButtons = function () {
-                    var nbAround = 2; // We want to have this amount of links around the current page.
-
-                    scope.paginationButtons = [];
-                    // Add 1
-                    scope.paginationButtons.push ({value: 1, class:scope.currPage==1 ? 'active':'' });
-
-                    // Add the 3 dots
-                    if (scope.currPage-nbAround > 2) {
-                        scope.paginationButtons.push({ value: ELLIPSIS, class:'disabled' });
-                    }
-
-                    // add the surrounding page numbers
-                    for (var i = nbAround; i > 0; i--) {
-                        if (scope.currPage-i > 1) {
-                            scope.paginationButtons.push ({value: scope.currPage-i});
-                        }
-                    }
-
-                    // add the actual page
-                    if (scope.currPage != 1 && scope.currPage != scope.nbPage) {
-                        scope.paginationButtons.push ({ value: scope.currPage, class:'active' });
-                    }
-
-                    // add the surrounding page numbers
-                    for (var i = 1; i <= nbAround; i++) {
-                        if (scope.currPage+i < scope.nbPage) {
-                            scope.paginationButtons.push ({value: scope.currPage+i});
-                        }
-                    }
-
-                    // Add the 3 dots
-                    if (scope.currPage+nbAround < scope.nbPage-1){
-                        scope.paginationButtons.push ({ value: ELLIPSIS, class:'disabled' });
-                    }
-
-                    // Add final page number
-                    if (scope.nbPage > 1){
-                        scope.paginationButtons.push ({value: scope.nbPage,class:scope.currPage==scope.nbPage ? 'active':''});
-                    }
-                    // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
-                    // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
-                }
-
-                scope.previousPage = function (){
-                    if (scope.currPage > 1) {
-                        scope.currPage--;
-                        if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
-                        }
-                    }
-
-                }
-
-                scope.changePage = function (value){
-                    if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
-                        scope.currPage = value;
-                        
-                        if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(value);
-                        }
-                    }
-                }
-
-                scope.nextPage = function (){
-                    if (scope.currPage < scope.nbPage){
-                        scope.currPage++;
-                        
-                        if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
-                        }
-                    }
-                }
-
-                scope.$watch('nbPage + currPage', function() {
-                    scope.generateButtons ();
-                });
-            }
-    };
-}]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager', function($timeout, $rootScope, panelManager) {
-
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
-    }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
-        } else {
-            attributeValue = BREAKS[breakpIndex];
-        }
-        element.attr('data-breakpoint', attributeValue);
-    }
-
-    function updateBreakpoints(element) {
-        var inner = element.find('.panel-inner');
-        var bp = getBPMatching(inner.outerWidth());
-        applyBPAttribute(element, bp);
-    }
-
-    return {
-        restrict: 'A',
-        scope: false,
-        replace: true,
-        transclude: true,
-        templateUrl: 'panels/panel-skeleton.phtml',
-        link: function(scope, element, attrs) {
-            /**
-             * Listener to update the breakpoints properties
-             */
-            element.resizable({
-                handles: "w",
-                resize: function(event, ui) {
-                    updateBreakpoints(element);
-                    $rootScope.$broadcast('panel-resized', element);
-                }
-            });
-            $rootScope.$on('module-layout-changed', function() {
-                updateBreakpoints(element);
-            });
-            $timeout(function() {
-                updateBreakpoints(element);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
-        }
-    };
-}]);
-(function () {
-    'use strict';
-        // update popover template for binding unsafe html
-    angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
-        $templateCache.put("template/popover/popover.html",
-          "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
-          "  <div class=\"arrow\"></div>\n" +
-          "\n" +
-          "  <div class=\"popover-inner\">\n" +
-          "      <h3 class=\"popover-title\" ng-bind-html=\"title\" ng-show=\"title\"></h3>\n" +
-          "      <div class=\"popover-content\"ng-bind-html=\"content\"></div>\n" +
-          "  </div>\n" +
-          "</div>\n" +
-          "");
-    }]);
-    angular.module('ev-fdm')
-        .directive('popover', ['$timeout', function ($timeout) {
-        	return {
-        		restrict: 'A',
-				link: function ($scope, elem, attrs) {
-                    var showTimeout;
-                    elem.bind('focus', function () {
-                        elem.triggerHandler('focus-not-typing');
-                    });
-					elem.bind('blur', function () {
-                        if (showTimeout) {$timeout.cancel(showTimeout);}
-                        elem.triggerHandler('blur-or-typing');
-                    });
-                    elem.bind('keypress', function () {
-                        if (showTimeout) {$timeout.cancel(showTimeout);}
-                        elem.triggerHandler('blur-or-typing');
-                        showTimeout = $timeout(function () {
-                            elem.triggerHandler('focus-not-typing');
-                        }, 1000);
-                    });
-				}
-        	};
-        }]);
-}) ();
-
-/**
- * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
- * + Supports empty lists by displaying a message (promise-empty)
- *
- * Options :
- * - emptyMessage (string) - display a message when promise resolves to empty array
- * - promiseDefaultStyles (boolean, default true) - apply spinning evaneos logo when resolving
- *
- * Examples :
- * <div promise="myPromise"
- *     empty-message="No quote"
- *     promise-default-styles="true">
- *
- */
-angular.module('ev-fdm')
-    .directive('promise', [function () {
-
-    function applyClass(classes, element) {
-        element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
-        element.addClass(classes);
-    }
-
-    return {
-
-        restrict: 'A',
-        replace: false,
-
-        controller: ['$scope', '$attrs', '$parse', '$element', function($scope, $attrs, $parse, $element) {
-            var promiseGetter = $parse($attrs.promise);
-            var emptyMessage = $attrs.emptyMessage;
-            var promiseDefaultStyles = ($attrs.promiseDefaultStyles !== 'false');
-            if (promiseDefaultStyles) {
-                applyClass('promise-default-styles', $element);
-            }
-            if (emptyMessage) {
-                $element.append('<div class="promise-empty-message">' + emptyMessage + '</div>');
-            }
-            $scope.$watch(function() {
-                return promiseGetter($scope);
-            }, function(promise) {
-                if (promise) {
-                    applyClass('promise-resolving', $element);
-                    promise.then(function(result) {
-                        // make sure we are dealing with arrays
-                        // otherwise (not a collection, we can't assume it's empty or non empty)
-                        if (emptyMessage && angular.isArray(result) && !result.length) {
-                            applyClass('promise-resolved promise-empty', $element);
-                        } else {
-                            applyClass('promise-resolved', $element);
-                        }
-
-                        return result;
-                    }, function() {
-                        applyClass('promise-rejected', $element);
-                    })
-                } else {
-                    applyClass('promise-resolved', $element);
-                }
-            });
-        }]
-    }
-
-}]);
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evPromiseProgress', [function () {
-
-    /*  ev-promise-progress
-        ===================
-        Hi! I'm a directive that link a progress bar to a promise.
-
-        Just give me a promise argument. I'll update automatically each time the `notify` callback is called. Of course
-        I assume that a percentage progress is given.
-
-        Beware! Each time the promise changes, and is replaced by a new one, I bind the progress bar to the new promise.
-        Without unbinding from the previous one. If it wasn't completed, it can leads to strange behavior (i.e. the
-        progress bar taking value from both at the same time, doing back and forth).
-    */
-            return {
-                restrict: 'A',
-                replace: true,
-                scope: {
-                    promise: '=evPromiseProgress',
-                },
-                template: '<div role="progressbar" class="ev-progress" aria-valuemin="0" aria-valuemax="100"' +
-                    'aria-valuenow="0"> <div class="ev-progress-overlay"></div> </div> ',
-                link: function ($scope, elem, attrs) {
-                    var progressBar = elem.find(angular.element(document.querySelector('.ev-progress-overlay')));
-                    progressBar.css({width: '0%'});
-                    $scope.$watch('promise', function (newPromise) {
-                        if (!newPromise || !newPromise.then) { return; }
-                        progressBar.css({width: '0%'});
-                        newPromise.then(null, null, function notify (progress) {
-                            if (typeof(progress) === 'object') {
-                                progress = progress.progress;
-                            }
-                            progressBar.css({width: progress + '%'});
-                        });
-                        newPromise.finally(function () {
-                            progressBar.css({width: '100%'});
-                        });
-                    });
-                }
-            };
-        }]);
-}());
-'use strict';
-
-angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService', '$state', function ($rootScope, notificationsService, $state) {
-    return {
-        restrict: 'E',
-        link: function(scope, element, attrs) {
-
-            $rootScope.$on('$stateChangeStart', function(event, toState) {
-                // not a tab changing
-                var dotX = $state.current.name.indexOf('.'),
-                     stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
-
-                if (!stateName || toState.name.indexOf(stateName) !== 0) {
-                    $('body').addClass('state-resolving');
-                }
-            });
-
-            $rootScope.$on('$stateChangeSuccess', function() {
-                element.removeClass('state-resolving');
-            });
-
-            /**
-             * When there is an error on a state change
-             *
-             * In your state config you can add the following.
-             * This will allows the router to fallback to this state on error
-             * while displaying the specified message
-
-                  fallback: {
-                    state: 'list',
-                    message: t('Unable to open this transaction!')
-                  }
-             */
-            $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-                $('body').removeClass('state-resolving');
-
-                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
-
-                notificationsService.addError({
-                    text: errorMessage
-                });
-
-                // Redirect to the fallback we defined in our state
-                if(toState && toState.fallback && toState.fallback.state) {
-                  $state.go(toState.fallback.state);
-                }
-            });
-        }
-    };
-}]);
-
-angular.module('ev-fdm')
-    .provider('evSelectLanguage', function() {
-        this.$get =function () {
-            return {
-                availableLang: this.availableLang || [],
-                defaultLang: this.defaultLang
-            };
-        };
-
-        this.setAvailableLang =function (availableLang) {
-            this.availableLang = availableLang;
-        };
-        this.setDefaultLang =function (defaultLang) {
-            this.defaultLang = defaultLang;
-        };
-    })
-    .directive('evSelectLanguage', ['evSelectLanguage', function (cfg) {
-        return {
-            template:
-                '<div class="ev-language-tabs">' +
-                    '<div class="btn-group">' +
-                        '<button class="btn btn-lg btn-default" ng-repeat="lang in availableLang"'+
-                            'ng-class="{active: selectedLang===lang}"' +
-                            'ng-click="$parent.selectedLang=lang">' +
-                            '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
-                        '</button>' +
-                    '</div>' +
-                '</div>',
-            restrict: 'AE',
-            scope: {
-                selectedLang: '=lang'
-            },
-            link: function($scope) {
-                $scope.availableLang = cfg.availableLang;
-                if (!$scope.selectedLang) {
-                    $scope.selectedLang = cfg.defaultLang;
-                }
-            }
-        };
-    }]);
-
-'use strict';
-/// This directive currently depend on ng-repeat $index for the
-///  shift selection. It would be great to remove this depency.
-angular.module('ev-fdm')
-    .directive('selectableSet', [function() {
-        return {
-            restrict: 'A',
-            controller: ['$scope', '$parse', '$element', '$attrs', '$document',
-            function($scope, $parse, $element, $attrs, $document) {
-                var self = this,
-                    shiftKey = 16;
-
-                var selectedElementsGet = $parse($attrs.selectedElements);
-
-                this.selectableElements = [];
-                this.selectedElement = [];
-
-                var lastClickedIndex,
-                    shiftSelectedElements = [];
-
-                $scope.$watch(function() {
-                    return selectedElementsGet($scope);
-                  },
-                  function() {
-                    self.selectedElements = angular.isArray(selectedElementsGet($scope))?
-                      selectedElementsGet($scope) : [];
-                  }
-                );
-
-                // Toggle a noselect class on the element when the shift key is pressed
-                // This allows us to disable selection overlay via css
-                $document.on('keydown', function(event) {
-                    if(event.keyCode === shiftKey) {
-                        $element.addClass('noselect');
-                    }
-                });
-
-                $document.on('keyup', function(event) {
-                    if(event.keyCode === shiftKey) {
-                        $element.removeClass('noselect');
-                    }
-                });
-
-                this.toggleSelection = function(element, index) {
-                    lastClickedIndex = index;
-                    shiftSelectedElements.length = 0;
-
-                    if(this.isElementSelected(element)) {
-                        unselectElement(element);
-                    }
-                    else {
-                        selectElement(element);
-                    }
-                };
-
-                this.toggleSelectAll = function() {
-
-                    if(this.selectedElements.length === this.selectableElements.length){
-                        this.selectedElements.length = 0;
-                    }
-                    else {
-                      angular.forEach(this.selectableElements, function(element) {
-                        if(!self.isElementSelected(element)) {
-                          selectElement(element);
-                          }
-                      });
-                    }
-                };
-
-                this.shiftedClick = function(element, index) {
-                    if(typeof lastClickedIndex !== undefined) {
-                        toggleRangeUpTo(lastClickedIndex, index);
-                    }
-                };
-
-                this.registerElement = function(element, directive) {
-                  this.selectableElements.push(element);
-                };
-
-                this.unregisterElement = function(element) {
-                  var index = this.selectableElements.indexOf(element);
-                  if(index > -1) {
-                      this.selectableElements.splice(index, 1);
-                  }
-
-                  index = this.selectedElements.indexOf(element);
-                  if(index > -1) {
-                      this.selectedElements.splice(index, 1);
-                  }
-                };
-
-                this.areAllElementSelected = function() {
-                  return this.selectedElements.length === this.selectableElements.length
-                     && this.selectedElements.length !== 0;
-                };
-
-                this.isElementSelected = function(element) {
-                    return self.selectedElements.indexOf(element) > -1;
-                };
-
-                function toggleRangeUpTo(firstIndex, lastIndex) {
-
-                    var lastElement = getElementAtIndex(lastIndex),
-                        min = Math.min(firstIndex, lastIndex),
-                        max = Math.max(firstIndex, lastIndex),
-                        element,
-                        i;
-
-                    angular.forEach(shiftSelectedElements, function(element, index) {
-                        unselectElement(element);
-                    });
-
-                    if(self.isElementSelected(lastElement)) {
-                        for(i = min; i <= max; i++) {
-                            element = getElementAtIndex(i);
-                            unselectElement(element);
-                        }
-
-                        lastClickedIndex = lastIndex;
-                        shiftSelectedElements.length = 0;
-                    }
-                    else {
-                        shiftSelectedElements.length = 0;
-                        for(i = min; i <= max; i++) {
-                            element = getElementAtIndex(i);
-                            selectElement(element);
-                            shiftSelectedElements.push(element);
-                        }
-                    }
-                }
-
-                function getElementAtIndex(index) {
-                    return self.selectableElements[index];
-                }
-
-                function selectElement(element) {
-                    if(!self.isElementSelected(element)) {
-                        self.selectedElements.push(element);
-                    }
-                }
-
-                function unselectElement(element) {
-                    var index = self.selectedElements.indexOf(element);
-                    if(index > -1) {
-                        self.selectedElements.splice(index, 1);
-                    }
-                }
-            }]
-        };
-    }])
-    .directive('selectable', ['$parse', function($parse) {
-      return {
-          restrict: 'A',
-          require: ['^selectableSet', '?ngModel'],
-          link: function(scope, element, attr, ctrls) {
-
-              var currentElementGetter = $parse(attr.selectable);
-              var currentElement = currentElementGetter(scope);
-
-              var ctrl = ctrls[0],
-                  modelCtrl = ctrls[1];
-
-              ctrl.registerElement(currentElement);
-
-              scope.$on('$destroy', function() {
-                  ctrl.unregisterElement(currentElement);
-              });
-
-              scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
-                scope.selected = ctrl.isElementSelected(currentElement);
-                if(modelCtrl) {
-                  modelCtrl.$setViewValue(scope.selected);
-                }
-              });
-
-              element.on('click', function(event) {
-                  scope.$apply(function() {
-                      handleClick(event);
-                  });
-              });
-
-              function handleClick(event) {
-                  if (event.shiftKey) {
-                      ctrl.shiftedClick(currentElement, scope.$index);
-                  }
-                  else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
-                      ctrl.toggleSelection(currentElement, scope.$index);
-                  }
-              }
-
-          }
-      };
-  }])
-    .directive('selectBox', function() {
-        return {
-            restrict: 'E',
-            require: '^selectable',
-            replace: true,
-            template: '<span class="checkbox" ng-class="{ active: selected }"></span>'
-        };
-    })
-    .directive('selectAll', function() {
-        return {
-            restrict: 'E',
-            require: '^selectableSet',
-            scope: true,
-            template: '<span class="checkbox" ng-class="{ active: allSelected }" ng-click="toggleSelectAll()"></span>',
-            link: function(scope, element, attr, ctrl) {
-
-                scope.toggleSelectAll = function () {
-                    ctrl.toggleSelectAll();
-                };
-
-                scope.$watchCollection(function() { return ctrl.areAllElementSelected(); }, function() {
-                    scope.allSelected = ctrl.areAllElementSelected();
-                });
-            }
-        };
-    });
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('sortableSet', function() {
-        return {
-            restrict: 'A',
-            scope: false,
-            controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
-                var self = this;
-                this.reverseSort = false;
-                this.sortKey = '';
-
-                $scope.reverseSort = $scope.reverseSort || false;
-
-                var reverseSortGet = $parse($attrs.reverseSort),
-                    reverseSortSet = reverseSortGet.assign,
-                    sortKeyGet = $parse($attrs.sortBy),
-                    sortKeySet = sortKeyGet.assign;
-
-                $scope.$watch(function() {
-                    return reverseSortGet($scope);
-                }, function(newReverseSort) {
-                    self.reverseSort = newReverseSort;
-                });
-
-                $scope.$watch(function() {
-                    return sortKeyGet($scope);
-                }, function(newSortKey) {
-                    self.sortKey = newSortKey;
-                });
-
-                this.sortBy = function(key) {
-                    if(key == this.sortKey) {
-                        this.reverseSort = !this.reverseSort;
-                    }
-                    else {
-                        this.reverseSort = false;
-                        this.sortKey = key;
-                    }
-
-                    if(reverseSortSet) {
-                        reverseSortSet($scope, this.reverseSort);
-                    }
-
-                    if(sortKeySet) {
-                        sortKeySet($scope, this.sortKey);
-                    }
-
-                    $scope.$eval($attrs.sortChange);
-                };
-
-            }]
-        };
-    })
-    .directive('sortable', function() {
-        return {
-            restrict: 'A',
-            scope: false,
-            require: '^sortableSet',
-            link: function(scope, element, attr, ctrl) {
-                var key = attr.sortable;
-                element.addClass('sortable sort');
-
-                scope.$watch(function() { return ctrl.sortKey;}, function() {
-                    setClasses();
-                });
-
-                scope.$watch(function() { return ctrl.reverseSort;}, function() {
-                    setClasses();
-                });
-
-                element.on('click', function() {
-                    scope.$apply(function() {
-                        ctrl.sortBy(key);
-                    });
-                });
-
-                function setClasses() {
-                    if(ctrl.sortKey === key){
-                        element.removeClass('no-sort');
-                        if(ctrl.reverseSort) {
-                            element.removeClass('sort-down').addClass('sort-up');
-                        }
-                        else {
-                            element.removeClass('sort-up').addClass('sort-down');
-                        }
-                    }
-                    else {
-                        element.removeClass('sort-up sort-down').addClass('no-sort');
-                    }
-                }
-            }
-        }
-    });
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evTab', function () {
-            return {
-                restrict: 'E',
-                transclude: true,
-                scope: {},
-                controller: function($scope, $element) {
-                    var panes = $scope.panes = [];
-
-
-                    $scope.select = function(pane) {
-                        angular.forEach(panes, function(pane) {
-                            pane.selected = false;
-                        });
-                        pane.selected = true;
-                    };
-
-
-                    this.addPane = function(pane) {
-                        if (panes.length === 0) { $scope.select(pane); }
-                        panes.push(pane);
-                    };
-
-                    var selectFuture = function (panes) {
-                        var futurePane;
-                        panes.some(function (pane) {
-                            var isSelected = $scope.isShowed(pane);
-                            if (isSelected) {
-                                futurePane = pane;
-                            }
-                            return isSelected;
-                        });
-                       return futurePane;
-                    };
-
-                    this.selectNext = function() {
-                        var selectedIndex = $scope.selectedIndex();
-                        var nextPanes = panes.slice(selectedIndex + 1);
-                        $scope.select(selectFuture(nextPanes) || panes[selectedIndex]);
-                    };
-
-                    this.selectPrevious = function() {
-                        var selectedIndex = $scope.selectedIndex();
-                        var previousPanes = panes.slice(0, selectedIndex).reverse();
-                        $scope.select(selectFuture(previousPanes) || panes[selectedIndex]);
-                    };
-
-                    $scope.selectedIndex = function() {
-                        for (var i = 0; i < panes.length; i++) {
-                            var pane = panes[i];
-
-                            if (pane.selected) {
-                                return i;
-                            }
-                        }
-                    };
-
-                    $scope.isShowed = function (pane) {
-                        return pane.tabShow == null || !!pane.tabShow;
-                    };
-                },
-                template:
-                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
-                        '<ul class="nav nav-tabs ev-header">' +
-                            '<li ng-repeat="pane in panes | filter:isShowed" ' +
-                                'ng-class="{active:pane.selected}" '+
-                                'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
-                                '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
-                                    '<span ng-show="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
-                                    '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
-                                '</a>' +
-                            '</li>' +
-                        '</ul>' +
-                        '<div class="tab-content ev-body" ng-transclude></div>' +
-                    '</div>',
-                replace: true
-            };
-        })
-        .directive('evPane', function() {
-            return {
-                require: '^evTab',
-                restrict: 'E',
-                transclude: true,
-                scope: {
-                    tabTitle: '@',
-                    tabIcon: '@',
-                    tabClick: '&',
-                    tabShow: '='
-                },
-                link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
-                    tabsCtrl.addPane(scope);
-                    transcludeFn(function(clone, transcludedScope) {
-                        transcludedScope.$selectNext     = tabsCtrl.selectNext;
-                        transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
-
-                        element.find('.transclude').append(clone);
-                    });
-                },
-                template:
-                    '<div class="tab-pane" ng-class="{active: selected}">' +
-                        '<div class="section transclude"></div>' +
-                    '</div>',
-                replace: true
-            };
-        });
-}) ();
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('throttle', ['$timeout', function($timeout) {
-
-    return {
-        restrict: 'A',
-        require: 'ngModel',
-        priority: 1,
-        link: function(scope, element, attr, ctrl) {
-
-            var originalSetViewValue = ctrl.$setViewValue,
-                originalViewListeners = angular.copy(ctrl.$viewChangeListeners);
-
-            ctrl.$viewChangeListeners = [];
-
-            var throttleGuard;
-            ctrl.$setViewValue = function(value) {
-                var callViewListeners = ctrl.$modelValue !== value;
-
-                originalSetViewValue.apply(ctrl, [value]);
-
-                if (callViewListeners) {
-                    if(throttleGuard) {
-                        $timeout.cancel(throttleGuard);
-                    }
-
-                    throttleGuard = $timeout(function() {
-                        angular.forEach(originalViewListeners, function(listener) {
-                            try {
-                                listener();
-                            } catch(e) {
-                                $exceptionHandler(e);
-                            }
-                        });
-                    }, 600);
-                }
-
-            };
-        }
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('evValue', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                value: '=',
-                noValue: '@',
-            },
-            templateUrl: 'value.phtml'
-        };
-    });
 angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
@@ -3278,7 +3334,7 @@ var module = angular.module('ev-fdm');
 /**
  * STACKING AND PANELS SIZE MANAGEMENT
  */
-module.service('PanelLayoutEngine', ['$animate', function($animate) {
+module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
 
     var STACKED_WIDTH = 35;
 
@@ -3291,25 +3347,24 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * Extract all useful panels informations
      * The (min-/max-/stacked-)width and the stacked state
      * @param  {Array} panels the panels
-     * @param  {Object}  panelManager (we need a function from it.. TO refactor.)
      * @return {Array}        Array containing the extracted values
      */
-    function getDataFromPanels(panels, panelManager) {
+    function getDataFromPanels(panels) {
         var datas = [];
         var i = 0;
         var panelsLength = panels.size();
 
-        for (; i < panelsLength; i++) {
-            var panel = panels._wrapped[i]; // Dealing with a _ object, yeah..
-            var panelElement = panelManager.getElement(panel);
+        angular.forEach(panels, function(panelDom) {
+            var panelElement = angular.element(panelDom);
+
             datas.push({
-                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
+                minWidth: 600 || STACKED_WIDTH,
                 maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
-                stacked:  panel.$$stacked,
+                stacked:  panelElement.hasClass('stacked'),
                 width:    panelElement.width(),
                 stackedWidth: STACKED_WIDTH
             });
-        }
+        });
 
         return datas;
     }
@@ -3341,12 +3396,12 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
                     continue;
                 }
 
-                var _width = data.minWidth;
-                if(_width < data.stackedWidth) {
-                    _width = data.stackedWidth;
+                var width = data.minWidth;
+                if(width < data.stackedWidth) {
+                    width = data.stackedWidth;
                 }
 
-                totalMinWidth += _width;
+                totalMinWidth += width;
             }
 
             if (totalMinWidth > limit) {
@@ -3379,12 +3434,12 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
                     continue;
                 }
 
-                var _width = data.maxWidth;
-                if(_width < data.stackedWidth) {
-                    _width = data.stackedWidth;
+                var width = data.maxWidth;
+                if(width < data.stackedWidth) {
+                    width = data.stackedWidth;
                 }
 
-                totalMaxWidth += _width;
+                totalMaxWidth += width;
             }
 
             if (totalMaxWidth < limit) {
@@ -3399,11 +3454,10 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * For each panels, test if he needs to be stacked
      */
     function updateStackState(datas,limit) {
-
         var minStacked = countMinStacked(datas, limit);
         var maxStacked = countMaxStacked(datas, limit);
 
-        _(datas).each(function(element) {
+        angular.forEach(datas, function(element) {
             element.stacked = false;
         });
 
@@ -3412,7 +3466,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
         /**
          * Specific rule where, for more readability, we stack a panel.
          */
-        if(((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
+        if (((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
             nbStacked = datas.length - 3;
         }
 
@@ -3431,32 +3485,26 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * Update the size of each panels
      */
     function updateSize(datas, limit) {
-        var data = null;
+        var totalWidth = 0;
 
-        // Ensures the width aren't below the min
-        _(datas).each(function(data) {
-            if(data.width < data.minWidth) {
+        angular.forEach(datas, function(data) {
+            // Ensures the width aren't below the min
+            if (data.width < data.minWidth) {
                 data.width = data.minWidth;
             }
+
+            totalWidth += data.stacked ? data.stackedWidth : data.width;
         });
 
-        // Total width of all datas
-        var totalWidth = _(datas).reduce(function(memo, data) {
-            if(data.stacked) {
-                return memo + data.stackedWidth;
-            }
-
-            return memo + data.width;
-        }, 0);
-
         // Delta is the gap we have to reach the limit
-        var delta = limit - totalWidth;
-        var i = 0;
-        var datasLength = datas.length;
-        for (i = 0; i < datasLength; i++) {
+        var delta = limit - totalWidth,
+            datasLength = datas.length
+            data = null;
+
+        for (var i = 0; i < datasLength; i++) {
             data = datas[i];
 
-            if(data.stacked) {
+            if (data.stacked) {
                 data.width = data.stackedWidth;
                 continue;
             }
@@ -3480,7 +3528,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
             delta = delta - (data.width - oldWidth);
 
             // Break if there is no more delta
-            if(delta === 0) {
+            if (delta === 0) {
                 break;
             }
         }
@@ -3499,7 +3547,6 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * @return {Array}  datas computed
      */
     function calculateStackingFromData(datas, limit) {
-
         var result = updateStackState(datas, limit);
         datas      = result.datas;
 
@@ -3521,47 +3568,45 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * @param  {Array}   panels      the panels
      * @param  {Array}   dataPanels  the datas we want to apply
      * @param  {Int}     windowWidth the windowWidth
-     * @param  {Object}  panelManager (we need a function from it.. TO refactor.)
      */
-    function resizeAndStackPanels(panels, dataPanels, windowWidth, panelManager) {
+    function resizeAndStackPanels(panels, dataPanels, windowWidth) {
         // If we need to stack all the panels
         // We don't stack the last one, but we hide all the stacked panels
         var isMobile  = false;
         var lastPanel = dataPanels[dataPanels.length - 1];
-        if(lastPanel.stacked === true) {
+
+        if (lastPanel.stacked === true) {
             lastPanel.stacked = false;
             lastPanel.width = windowWidth;
             isMobile = true;
         }
 
-        var i = 0;
         var panelsSize = panels.size();
-        var panel, dataPanel, element = null;
-        for (; i < panelsSize; i++) {
-            panel = panels._wrapped[i]; // Dealing with a _ object, yeah..
-            dataPanel = dataPanels[i];
-            element = panelManager.getElement(panel);
+        var panel, element = null;
 
-            if(!element) {
+        angular.forEach(panels, function(domElement, i) {
+            var element   = angular.element(domElement),
+                dataPanel = dataPanels[i];
+
+            if (!element) {
                 console.log('no element for this panel)');
-                continue;
+                return;
             }
 
-            if (panel.$$stacked && !dataPanel.stacked) {
+            if (element.hasClass('stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'stacked');
                 $animate.removeClass(element, 'stacked-mobile');
-            } else if (!panel.$$stacked && dataPanel.stacked) {
+            } else if (!element.hasClass('stacked') && dataPanel.stacked) {
                 $animate.addClass(element, 'stacked');
 
-                if(isMobile) {
+                if (isMobile) {
                     $animate.addClass(element, 'stacked-mobile');
                 }
             }
 
-            panel.$$stacked = dataPanel.stacked;
-
-            element.children().first().width(dataPanel.width);
-        }
+            element.width(dataPanel.width + "px");
+            element.css("left", 0);
+        });
     }
 
     /**************************
@@ -3570,22 +3615,20 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
 
     /**
      * Check the stacking and so on
-     * The first args is panelManager because we need panels and a (stupid! to refactor) method from it..
      */
-    function checkStacking(panelManager) {
-
-        var panels = panelManager.panels;
-
-        var windowWidth   = $(window).innerWidth();
+    function checkStacking(panels) {
+        var windowWidth   = angular.element($window).innerWidth();
 
         // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels, panelManager);
+        var rawDataPanels = getDataFromPanels(panels);
 
         // #2 - We compute these new data with our specifics rules (agnostic algorithm)
         var dataPanels    = calculateStackingFromData(rawDataPanels, windowWidth);
 
         // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, windowWidth, panelManager);
+        resizeAndStackPanels(panels, dataPanels, windowWidth);
+
+        $rootScope.$broadcast('module-layout-changed');
     }
 
 
