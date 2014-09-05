@@ -131,7 +131,13 @@
                             });
                         });
 
-                        dropzone.on('error', function (file, response) {
+                        dropzone.on('error', function (file, response, xhr) {
+                            if (!response && xhr.status === 500) {
+                                response = settings.dictResponseError || 'Unexpected error during the upload';
+                            }
+                            if (response === 'Upload canceled.') {
+                                response = settings.dictCanceledUpload || 'The upload has been canceled';
+                            }
                             $scope.$apply(function ($scope) {
                                 filesPromises[file.name].reject(response);
                             });
