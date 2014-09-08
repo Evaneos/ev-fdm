@@ -971,6 +971,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
              */
             element.resizable({
                 handles: "w",
+                helper: "ui-resizable-helper",
                 resize: function(event, ui) {
                     updateBreakpoints(element);
                 }
@@ -2425,16 +2426,16 @@ module
                 var afterIndex   = findAfterElementIndex(options.index),
                     afterElement = getAfterElement(afterIndex);
 
-                var timerResize = null;
-                element.on('resize', function(event, ui) {
-                    var self = this;
-                    if (timerResize) {
-                        $timeout.cancel(timerResize);
-                    }
-                    timerResize = $timeout(function() {
-                        stylesCache[options.panelName] = ui.size.width;
-                        updateLayout(self);
-                    }, 100);
+                element.on('resizestop', function(event, ui) {
+                    // resizable plugin does an unwanted height resize
+                    // so we force height to its original value.
+                    var originalSize = ui.originalSize;
+                    $(this).height("auto");
+
+                    stylesCache[options.panelName] = ui.size.width;
+                    updateLayout(self);
+                }).on('resize', function(event, ui) {
+                    return false;
                 });
 
                 $animate.enter(element, container, afterElement, function() {
@@ -3358,7 +3359,7 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
             var panelElement = angular.element(panelDom);
 
             datas.push({
-                minWidth: 600 || STACKED_WIDTH,
+                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
                 maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
                 stacked:  panelElement.hasClass('stacked'),
                 width:    panelElement.width(),
@@ -3584,6 +3585,8 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
         var panelsSize = panels.size();
         var panel, element = null;
 
+        panels.css('left', 0).width(100);
+
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
                 dataPanel = dataPanels[i];
@@ -3605,7 +3608,6 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
             }
 
             element.width(dataPanel.width + "px");
-            element.css("left", 0);
         });
     }
 

@@ -56,16 +56,16 @@ module
                 var afterIndex   = findAfterElementIndex(options.index),
                     afterElement = getAfterElement(afterIndex);
 
-                var timerResize = null;
-                element.on('resize', function(event, ui) {
-                    var self = this;
-                    if (timerResize) {
-                        $timeout.cancel(timerResize);
-                    }
-                    timerResize = $timeout(function() {
-                        stylesCache[options.panelName] = ui.size.width;
-                        updateLayout(self);
-                    }, 100);
+                element.on('resizestop', function(event, ui) {
+                    // resizable plugin does an unwanted height resize
+                    // so we force height to its original value.
+                    var originalSize = ui.originalSize;
+                    $(this).height("auto");
+
+                    stylesCache[options.panelName] = ui.size.width;
+                    updateLayout(self);
+                }).on('resize', function(event, ui) {
+                    return false;
                 });
 
                 $animate.enter(element, container, afterElement, function() {

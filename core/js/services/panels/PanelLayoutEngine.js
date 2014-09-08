@@ -253,6 +253,8 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
         var panelsSize = panels.size();
         var panel, element = null;
 
+        panels.css('left', 0);
+
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
                 dataPanel = dataPanels[i];
@@ -274,7 +276,6 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
             }
 
             element.width(dataPanel.width + "px");
-            element.css("left", 0);
         });
     }
 

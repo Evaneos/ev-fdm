@@ -45,6 +45,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
              */
             element.resizable({
                 handles: "w",
+                helper: "ui-resizable-helper",
                 resize: function(event, ui) {
                     updateBreakpoints(element);
                 }
