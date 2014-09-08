@@ -164,7 +164,7 @@ angular.module('ev-upload')
             previewsContainer: false,
             autoQueue: true,
             maxFilesize: 12,
-            maxFiles: 40,
+            maxFiles: 100,
 
             uploadMultiple: false,
             parallelUploads: 3
