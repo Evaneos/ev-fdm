@@ -5,9 +5,11 @@ module
         '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
         function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
 
-        var container = null,
-            panels    = {},
-            stylesCache = window.stylesCache = {};
+        var container   = null,
+            stylesCache = window.stylesCache = {}
+            self        = this;
+
+        this.panels = {};
 
         /**
          * Panel options are:
@@ -26,8 +28,10 @@ module
                 return;
             }
 
-            if (panels[options.name]) {
-                var panel        = panels[options.name];
+            var name = options.name;
+
+            if (self.panels[name]) {
+                var panel        = self.panels[name];
                 panel.index      = options.index;
 
                 var afterIndex   = findAfterElementIndex(options.index),
@@ -38,13 +42,13 @@ module
                     updateLayout();
                 });
 
-                return panels[options.name];
+                return self.panels[name];
             }
 
             // We call it *THE BEAST*.
-            var element          = angular.element('<div class="panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(options.name, options) + '"   ><div class="panel right" ><div class="panel-inner"><div class="panel-content"></div></div></div></div>'),
+            var element          = angular.element('<div class="panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="panel right" ><div class="panel-inner"><div class="panel-content"></div></div></div></div>'),
                 templatePromises = getTemplatePromise(options);
-            panels[options.name] = options;
+            self.panels[name]         = options;
             options.element      = element;
             options.element.css('z-index', 2000 + options.index);
 
@@ -77,12 +81,12 @@ module
         };
 
         this.close = function(name) {
-            if (!name || !panels[name]) {
+            if (!name || !self.panels[name]) {
                 console.log("Panel not found for:" + name);
             }
 
-            var element  = panels[name].element;
-            panels[name] = null;
+            var element  = self.panels[name].element;
+            self.panels[name] = null;
 
             $animate.leave(element, function() {
                 updateLayout();
