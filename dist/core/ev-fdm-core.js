@@ -3456,7 +3456,7 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
                     // Not authenticated, redirect on homepage
                     if (response.data.result[options.id].authenticated === false) {
-                        window.location.pathname = '/';
+                        window.location.pathname = '/login?expired=1';
                     }
 
                     return $q.reject(response.data.result[options.id]);
