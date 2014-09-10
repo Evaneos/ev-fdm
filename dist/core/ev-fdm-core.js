@@ -2820,7 +2820,7 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
     var httpCache = $cacheFactory('customHttpCache');
 
     function launchRequest(options) {
-        
+
         if(options.cache) {
             var key = JSON.stringify(options),
                 cached = httpCache.get(key);
@@ -2847,9 +2847,15 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
         var promise = $http(requestConfig)
             .then(function(response) {
 
-                // php's xhr is not really consistent, let's be more 
+                // php's xhr is not really consistent, let's be more
                 if (!response.data.success) {
                     $log.warn(response.data.error, response.data.errors);
+
+                    // Not authenticated, redirect on homepage
+                    if (response.data.result[options.id].authenticated === false) {
+                        window.location.pathname = '/login?expired=1';
+                    }
+
                     return $q.reject(response.data.result[options.id]);
                 }
 

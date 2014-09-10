@@ -130,7 +130,7 @@ angular.module('ev-upload')
 ; (function (Dropzone) {
     'use strict';
     angular.module('ev-upload')
-        .directive('evUpload', ['$log', '$q', function ($log, $q) {
+        .directive('evUpload', ['$log', '$q', '$timeout', function ($log, $q, $timeout) {
 
     /*  ev-upload
         =========
@@ -141,9 +141,10 @@ angular.module('ev-upload')
             on the dropzone). It will be call with an argument: the promise for the status of the whole upload.
         - `fileSuccess` will be called each time a file has successfully been uploaded, with the data returned by the
             server.
-        - `fileAdded` will be called each time a file is added to the queue. It will be called with 2 arguments :
+        - `fileAdded` will be called each time a file is added to the queue. It will be called with 3 arguments :
             - dropzoneFile : the Dropzone file being uploaded
             - promise : the promise associated with the file
+            - cancel : a function that can be called to cancel the upload of the file.
 
         Clickable Element : you can define a clickable element inside the directive with the
                             class '.ev-upload-clickable'
@@ -163,7 +164,7 @@ angular.module('ev-upload')
             previewsContainer: false,
             autoQueue: true,
             maxFilesize: 12,
-            maxFiles: 40,
+            maxFiles: 100,
 
             uploadMultiple: false,
             parallelUploads: 3
@@ -240,34 +241,33 @@ angular.module('ev-upload')
                                 $scope.fileAdded({
                                     dropzoneFile: file,
                                     promise: deferred.promise,
-                                    cancel: cancel});
-                            });
-                        });
-
-                        dropzone.on('uploadprogress', function (file, progress) {
-                            var deferred = filesPromises[file.name];
-                            $scope.$apply(function ($scope) {
-                                deferred.notify(progress);
+                                    cancel: cancel
+                                });
                             });
                         });
 
                         dropzone.on('uploadprogress', function (file, progress) {
                             $scope.$apply(function ($scope) {
-                                filesPromises[file.fullPath].notify(progress);
+                                filesPromises[file.name].notify(progress);
                             });
                         });
 
                         dropzone.on('success', function (file, response) {
-                            var deferred = filesPromises[file.name];
                             $scope.$apply(function ($scope) {
-                                deferred.resolve({file: response});
+                                filesPromises[file.name].resolve({file: response});
                                 $scope.fileSuccess({file: response});
                             });
                         });
 
-                        dropzone.on('error', function (file, response) {
+                        dropzone.on('error', function (file, response, xhr) {
+                            if (!response && xhr.status === 500) {
+                                response = settings.dictResponseError || 'Unexpected error during the upload';
+                            }
+                            if (response === 'Upload canceled.') {
+                                response = settings.dictCanceledUpload || 'The upload has been canceled';
+                            }
                             $scope.$apply(function ($scope) {
-                                filesPromises[file.fullPath].reject(response);
+                                filesPromises[file.name].reject(response);
                             });
                         });
 
@@ -282,7 +282,6 @@ angular.module('ev-upload')
                             if(angular.isDefined(progress)){
                                 progress.done += 1;
                             }
-                            delete filesPromises[file.name];
                         });
 
                     }, true);
@@ -291,11 +290,18 @@ angular.module('ev-upload')
                     function startNewUpload($scope) {
                         progress = {
                             done: 0,
+                            progress: 0
+                        };
+
+                        var computeOverallProgress = function () {
+                            progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
+                            progress.total = dropzone.getAcceptedFiles().length;
+                            upload.deferred.notify(progress);
                         };
 
                         // De-register all events
                         dropzone
-                            .off('uploadprogress')
+                            .off('uploadprogress', computeOverallProgress)
                             .off('maxfilesexceeded');
 
                         // upload object, encapsulate the state of the current (multi file) upload
@@ -303,28 +309,43 @@ angular.module('ev-upload')
                             deferred: $q.defer(),
                             hasFileErrored: false,
                         };
+                        computeOverallProgress();
+
                         dropzone.once('error', function() {
                             upload.hasFileErrored = true;
                         });
 
-                        dropzone.on('uploadprogress', function () {
-                            progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
-                            progress.total = dropzone.getAcceptedFiles().length;
-                            upload.deferred.notify(progress);
-                        });
 
-                        dropzone.once('queuecomplete', function () {
+                        dropzone.on('uploadprogress', computeOverallProgress);
+
+                        var isUploadComplete = function () {
+                            return !dropzone.files.filter(function (file) {
+                                return file.status === Dropzone.QUEUED ||
+                                file.status === Dropzone.ADDED ||
+                                file.status === Dropzone.UPLOADING;
+                            }).length;
+                        };
+
+                        var stopIfComplete = function () {
                             $scope.$apply(function ($scope) {
-                                if (upload.hasFileErrored) {
-                                    upload.deferred.reject('filehaserrored');
-                                } else {
-                                    upload.deferred.resolve();
-                                }
+                                $timeout(function () {
+                                    if ( !isUploadComplete() ) { return; }
+                                    dropzone.off('complete', stopIfComplete);
+                                    $timeout(function () {
+                                        if (upload.hasFileErrored) {
+                                            upload.deferred.reject('filehaserrored');
+                                        } else {
+                                            upload.deferred.resolve();
+                                        }
+                                    });
+                                });
                             });
-                        });
+                        };
+
                         dropzone.on('maxfilesexceeded', function() {
                             upload.deferred.reject('maxfilesexceeded');
                         });
+                        dropzone.on('complete', stopIfComplete);
 
                         $scope.currentUpload = upload.deferred.promise;
                         $scope.uploadStart({promise: upload.deferred.promise});
