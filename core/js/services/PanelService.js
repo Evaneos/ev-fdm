@@ -46,14 +46,14 @@ module
             }
 
             // We call it *THE BEAST*.
-            var element          = angular.element('<div class="panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="panel right" ><div class="panel-inner"><div class="panel-content"></div></div></div></div>'),
+            var element          = angular.element('<div class="ev-panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel right" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
                 templatePromises = getTemplatePromise(options);
             self.panels[name]         = options;
             options.element      = element;
             options.element.css('z-index', 2000 + options.index);
 
             return templatePromises.then(function(template) {
-                element.find('.panel-content').html(template);
+                element.find('.ev-panel-content').html(template);
                 element          = $compile(element)($rootScope.$new());
                 options.element  = element;
 
@@ -62,9 +62,9 @@ module
 
                 element.on('resizestop', function(event, ui) {
                     // resizable plugin does an unwanted height resize
-                    // so we force height to its original value.
+                    // so we cancel the height set.
                     var originalSize = ui.originalSize;
-                    $(this).height("auto");
+                    $(this).css("height","");
 
                     stylesCache[options.panelName] = ui.size.width;
                     updateLayout(self);
@@ -153,7 +153,7 @@ module
         }
 
         function updateLayout(element) {
-            var panelElements = angular.element(container).children('.panel-placeholder');
+            var panelElements = angular.element(container).children('.ev-panel-placeholder');
 
             if (element) {
                 for (var i = 0; i < panelElements.length; i++) {
@@ -170,12 +170,12 @@ module
 
         return this;
     }])
-    .directive('panels', ['PanelService', function(panelService) {
+    .directive('evPanels', ['PanelService', function(panelService) {
         return {
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="panels panels-container lisette-module"><div></div></div>',
+            template: '<div class="ev-panels ev-panels-container lisette-module"><div></div></div>',
             link: function (scope, element, attrs) {
               panelService.registerContainer(element);
             }

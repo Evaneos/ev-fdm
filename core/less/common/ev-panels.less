@@ -1,23 +1,23 @@
 
-.panel-placeholder {
+.ev-panel-placeholder {
     height: 100%;
     float: left;
     position: relative;
     display: inline-block;
 
-    &.panel-main {
+    &.ev-panel-main {
         float: none;
         display: block;
 
-        .panel {
-            min-width: @mainpanel-min-width;
+        .ev-panel {
+            min-width: @mainev-panel-min-width;
 
             > .ui-resizable-handle {
                 display: none;
             }
 
-            .panel-inner {
-                .panel-body {
+            .ev-panel-inner {
+                .ev-panel-body {
                     position: relative;
                 }
             }
@@ -35,12 +35,12 @@
     }
 
     // default size for all side panels
-    &:not(.panel-main) .panel {
+    &:not(.ev-panel-main) .ev-panel {
         width: auto;
-        min-width: @panel-min-width;
+        min-width: @ev-panel-min-width;
     }
 
-    &.panel-zero {
+    &.ev-panel-zero {
         display: none;
     }
 
@@ -48,10 +48,10 @@
         height: 100%;
     }
 
-    > .panel {
-        background: @panel-bg;
+    > .ev-panel {
+        background: @ev-panel-bg;
         height: 100%;
-        border-left: 1px solid @panel-inner-border;
+        border-left: 1px solid @ev-panel-inner-border;
         position: relative;
         left: auto!important;
         // z-index: @zindex-modal;
@@ -74,7 +74,7 @@
               padding-bottom: 10px;
               cursor: pointer;
               > div {
-                border: 1px solid @panel-bg;
+                border: 1px solid @ev-panel-bg;
                 padding: 10px;
                 text-align: center;
                 border-radius: 4px;
@@ -118,11 +118,11 @@
             }
           }
 
-        > .panel-inner {
+        > .ev-panel-inner {
             height: 100%;
-            border-bottom: 7px solid @panel-bg;
-            border-left: 7px solid @panel-bg;
-            border-right: 7px solid @panel-bg;
+            border-bottom: 7px solid @ev-panel-bg;
+            border-left: 7px solid @ev-panel-bg;
+            border-right: 7px solid @ev-panel-bg;
             overflow-x: hidden;
             overflow-y: hidden;
 
@@ -131,7 +131,7 @@
                 height: 100%;
             }
 
-            .panel-stacked-section {
+            .ev-panel-stacked-section {
                 display: none;
             }
 
@@ -139,11 +139,11 @@
              * HEADER
              ********************************************************/
 
-            .panel-header {
-                background: @panel-bg;
+            .ev-panel-header {
+                background: @ev-panel-bg;
                 padding: 9px 0;
                 z-index: 2;
-                .panel-title {
+                .ev-panel-title {
                     font-size: 20px;
                     text-transform: uppercase;
                     line-height: 1.7em;
@@ -161,7 +161,7 @@
                     }
                 }
 
-                .panel-action-bar {
+                .ev-panel-action-bar {
                     margin-top: 5px;
                 }
 
@@ -189,7 +189,7 @@
              * BODY
              ********************************************************/
 
-            .panel-body {
+            .ev-panel-body {
                 height: 100%;
                 position: relative;
                 padding: 15px;
@@ -204,9 +204,9 @@
              ********************************************************/
 
 
-            .panel-footer {
+            .ev-panel-footer {
                 padding: 9px 16px;
-                background: @panel-bg;
+                background: @ev-panel-bg;
                 text-align: right;
                 position: absolute;
                 bottom: 0;
@@ -247,16 +247,16 @@
     &.stacked {
         border-left: 1px solid @gray-lighter;
 
-        // Hide the whole panel
-        max-width: @panel-stacked-size;
-        > .panel > .panel-inner {
+        // Hide the whole ev-panel
+        max-width: @ev-panel-stacked-size;
+        > .ev-panel > .ev-panel-inner {
 
             border: none;
 
             > div {
-                > .panel-header,
-                > .panel-body,
-                > .panel-footer {
+                > .ev-panel-header,
+                > .ev-panel-body,
+                > .ev-panel-footer {
                     display: none;
                 }
             }
@@ -268,9 +268,9 @@
 
         // Display only the panel-stacked section
 
-        > .panel > .panel-inner > div {
+        > .ev-panel > .ev-panel-inner > div {
             background-color: @gray-light;
-            .panel-stacked-section {
+            .ev-panel-stacked-section {
                 display: table;
                 margin-left: 14px;
                 height: 100%;
@@ -279,7 +279,7 @@
                 transform-origin: 0 50%;
                 -webkit-transform-origin: 0 50%;
 
-                .panel-stacked-title {
+                .ev-panel-stacked-title {
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
@@ -303,18 +303,18 @@
         max-width: 1000px;
     }
 
-    .panel .has-header {
+    .ev-panel .has-header {
         .lisette-module-searchbar > .inner {
-            bottom: @panel-header-height;
+            bottom: @ev-panel-header-height;
         }
         .lisette-module-bottombar {
-            bottom: @panel-header-height;
+            bottom: @ev-panel-header-height;
         }
     }
 }
 
-.panel-bg {
-  background-color: @panel-bg;
+.ev-panel-bg {
+  background-color: @ev-panel-bg;
 }
 
 .ui-resizable-helper {

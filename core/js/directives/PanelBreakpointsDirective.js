@@ -38,7 +38,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
         scope: false,
         replace: true,
         transclude: true,
-        template: '<div class="" ng-transclude></div>',
+        template: '<div ng-transclude></div>',
         link: function(scope, element, attrs) {
             /**
              * Listener to update the breakpoints properties
