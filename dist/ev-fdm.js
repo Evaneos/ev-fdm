@@ -964,7 +964,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
         scope: false,
         replace: true,
         transclude: true,
-        template: '<div class="" ng-transclude></div>',
+        template: '<div ng-transclude></div>',
         link: function(scope, element, attrs) {
             /**
              * Listener to update the breakpoints properties
@@ -2416,7 +2416,7 @@ module
             }
 
             // We call it *THE BEAST*.
-            var element          = angular.element('<div class="ev-panel-placeholder" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel right" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
+            var element          = angular.element('<div class="ev-panel-placeholder ev-panel-placeholder-' + name + '" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel right" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
                 templatePromises = getTemplatePromise(options);
             self.panels[name]         = options;
             options.element      = element;
