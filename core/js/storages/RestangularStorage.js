@@ -95,6 +95,19 @@ angular.module('ev-fdm')
             return element.put(parameters);
         };
 
+        RestangularStorage.prototype.patch = function(element, changes, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.patch(changes, parameters);
+        };
+
         RestangularStorage.prototype.create = function(element, embed) {
             var parameters = {};
 
