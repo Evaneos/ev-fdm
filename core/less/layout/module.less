@@ -57,7 +57,8 @@
         &.topbar-size-mini .lisette-module-body {
             top: @module-topbar-height-size-mini;
         }
-        .ev-panel-placeholder.ev-panel-main > .ev-panel {
+        .ev-panel-placeholder.ev-panel-main > .ev-panel,
+        .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel {
             .table-container {
                 top: @module-topbar-height;
             }
@@ -72,7 +73,8 @@
             bottom: @module-bottombar-height;
         }
 
-        .ev-panel-placeholder.ev-panel-main > .ev-panel .has-header {
+        .ev-panel-placeholder.ev-panel-main > .ev-panel .has-header,
+        .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel {
             .table-container {
                 bottom: @module-bottombar-height + @ev-panel-header-height;
             }
@@ -144,15 +146,18 @@
             top: @module-tabs-height;
         }
 
-        .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container {
+        .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container,
+        .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .table-container {
             top: (@module-tabs-height + @module-topbar-height);
         }
 
-        &.topbar-size-big .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container {
+        &.topbar-size-big .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container,
+        &.topbar-size-big .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .table-container {
             top: (@module-tabs-height + @module-topbar-height-size-big);
         }
 
-        &.topbar-size-mini .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container {
+        &.topbar-size-mini .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container,
+        &.topbar-size-mini .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .table-container {
             top: (@module-tabs-height + @module-topbar-height-size-mini);
         }
     }
