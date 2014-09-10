@@ -1,6 +1,7 @@
+
 .panel-placeholder {
     height: 100%;
-    float: right;
+    float: left;
     position: relative;
     display: inline-block;
 
@@ -35,7 +36,7 @@
 
     // default size for all side panels
     &:not(.panel-main) .panel {
-        width: @panel-width;
+        width: auto;
         min-width: @panel-min-width;
     }
 
@@ -55,6 +56,7 @@
         left: auto!important;
         // z-index: @zindex-modal;
         background: #FFF;
+        overflow: auto;
 
         .items {
             margin: -15px;
@@ -311,68 +313,11 @@
     }
 }
 
-/*********************************************************
- * ANIMATIONS
- ********************************************************/
-
-.panels-container.animate .panel-placeholder {
-    @animation-duration: 0.2s;
-    .obfuscate() {
-        // animation : slow at the beginning, fast at the end
-        // => after will be hidden at the really end of the animation
-        -webkit-transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
-        transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: @gray-lighter;
-        z-index: 200000000;
-        content: ' ';
-    }
-
-    &.stacked-add {
-        -webkit-transition:all ease-in-out @animation-duration;
-        -moz-transition:all ease-in-out @animation-duration;
-        -o-transition:all ease-in-out @animation-duration;
-        transition:all ease-in-out @animation-duration;
-    }
-    &.stacked-remove {
-        -webkit-transition:all ease-in-out @animation-duration;
-        -moz-transition:all ease-in-out @animation-duration;
-        -o-transition:all ease-in-out @animation-duration;
-        transition:all ease-in-out @animation-duration;
-    }
-
-    &.ng-enter,
-    &.ng-leave {
-        -webkit-transition: all ease-in-out @animation-duration;
-        transition: all ease-in-out @animation-duration;
-        &:after {
-            .obfuscate();
-        }
-    }
-
-    &.ng-enter,
-    &.ng-leave.ng-leave-active {
-        max-width: 0;
-        &:after {
-            opacity: 1;
-        }
-    }
-
-    &.ng-leave,
-    &.ng-enter.ng-enter-active {
-        max-width: 1000px;
-        &.ng-enter.ng-enter-active {
-            &:after {
-                opacity: 0;
-            }
-        }
-    }
-}
-
 .panel-bg {
   background-color: @panel-bg;
+}
+
+.ui-resizable-helper {
+    border: 2px dotted #e5d8ca;
+    background-color: rgba(229, 216, 202,0.3);
 }
