@@ -29,7 +29,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
     }
 
     function updateBreakpoints(element) {
-        var inner = element.find('.panel-inner');
+        var inner = element.find('.ev-panel-inner');
         var bp = getBPMatching(inner.outerWidth());
         applyBPAttribute(element, bp);
     }

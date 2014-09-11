@@ -106,8 +106,8 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     var elements = {};
 
     var stylesCache = window.stylesCache = {};
-    var container = angular.element('.panels-container');
-    var panelZero = container.find('.panel-zero');
+    var container = angular.element('.ev-panels-container');
+    var panelZero = container.find('.ev-panel-zero');
 
     var panelManager = PanelManagerFactory.create({
         updateLayout: function() {
@@ -189,7 +189,7 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     function createPlaceholder(depth) {
         var isMain = depth === 0;
         return angular.element('<div ' +
-            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+            'class="ev-panel-placeholder ' + (isMain ? 'ev-panel-main' : '') + '" ' +
             'style="z-index:' + (2000 + depth) + ';"></div>');
     }
 
