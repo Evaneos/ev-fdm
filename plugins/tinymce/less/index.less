@@ -12,7 +12,7 @@
 @import "src/ComboBox.less";
 @import "src/Container.less";
 // @import "src/Content.Inline.less";
-@import "src/Content.less";
+// @import "src/Content.less";
 @import "src/Content.Objects.less";
 // @import "src/FieldSet.less";
 // @import "src/FitLayout.less";
@@ -20,7 +20,7 @@
 @import "src/FlowLayout.less";
 // @import "src/Icons.Ie7.less";
 
-// @import "src/Iframe.less";
+@import "src/Iframe.less";
 @import "src/Label.less";
 @import "src/ListBox.less";
 // @import "src/MenuBar.less";
@@ -79,8 +79,6 @@
   font-style: normal;
 }
 
-
-
 .mce-tinymce {
   height: 100% ;
   box-sizing: border-box;
@@ -98,13 +96,14 @@
 
     .mce-edit-area {
       height: 100%;
-      padding-bottom:42px;
+      border:1px solid @gray-lighter;
     }
   }
 
   .mce-btn {
     &:extend(.btn);
     &:extend(.btn-default);
+    padding:7px 6px 3px 6px;
     border: none;
     &.mce-active {
       background-color: @gray-lighter;
@@ -118,9 +117,16 @@
   }
 }
 
-.tiny-mce-wrapper {
-  position: relative;
+// .mce-content-body{
+//   color: @gray-lighter;
+//   color:red!important;
+//   line-height: @line-height-computed;
+// }
 
+.tiny-@{prefix}-wrapper {
+  position: relative;
+  border:1px solid @gray-light;
+  border-radius: @border-radius-base;
   .max-chars-info {
     position: absolute;
     bottom: 0;
@@ -144,39 +150,43 @@
 .btn-tinymce {
   .btn-light;
   color: black;
-  padding: 5px;
 }
 
 // -------------------------------------
 // Ovveride and add to fit global design
 
 // Window custom (modal for link for example)
-.mce-window > .mce-container-body {
-  padding: @modal-inner-padding;
-}
-
-.mce-window > .mce-foot {
-  margin-top:-3px; // Fix border removed coz of dynamic height calc in js
-  background: @gray-lighter;
-
-  > .mce-container {
-    text-align:right;
+.@{prefix}-window {
+  > .@{prefix}-container-body {
+    padding: @modal-inner-padding;
   }
-  // Put buttons div as inline-block and apply style to child buttons
-  .mce-btn {
-    display:inline-block;
-    width:auto;
-    margin: @modal-inner-padding/2;
-    > button {
-      &:extend(.btn);
+  > .@{prefix}-foot {
+    margin-top:-3px; // Fix border removed coz of dynamic height calc in js
+    background: @gray-lighter;
+
+    > .@{prefix}-container {
+      text-align:right;
     }
-    // Primary button: always on the right, styled like in bootstrap
-    &.mce-primary {
-      float:right;
-      margin-right: @modal-inner-padding;
+    // Put buttons div as inline-block and apply style to child buttons
+    .@{prefix}-btn {
+      display:inline-block;
+      width:auto;
+      margin: @modal-inner-padding/2;
       > button {
-        &:extend(.btn-primary);
+        &:extend(.btn);
+      }
+      // Primary button: always on the right, styled like in bootstrap
+      &.@{prefix}-primary {
+        float:right;
+        margin-right: @modal-inner-padding;
+        > button {
+          &:extend(.btn-primary);
+        }
       }
     }
   }
+}
+
+.@{prefix}-content-wrapper {
+  font-family: @font-family-sans-serif;
 }

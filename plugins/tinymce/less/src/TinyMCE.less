@@ -136,7 +136,9 @@ div.@{prefix}-tinymce-inline {
 // Reduce double margins between toolbar rows
 
 .@{prefix}-toolbar-grp {
-	padding-bottom: 2px;
+	> .@{prefix}-container-body {
+		background: @gray-lighter;
+	}
 }
 
 .@{prefix}-toolbar-grp .@{prefix}-flow-layout-item {
