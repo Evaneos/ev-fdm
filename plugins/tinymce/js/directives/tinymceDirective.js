@@ -10,15 +10,16 @@
 angular.module('ev-tinymce', ['ui.tinymce'])
     .directive('evTinymce', [function () {
         return {
-            template: '<div class="tiny-mce-wrapper">' +
-                            '<textarea ui-tinymce="tinymceFinalOptions" ng-model="ngModel"></textarea>' +
-                            '<span class="max-chars-info">&nbsp;</span>' +
-                      '</div>',
+            template: '<div class="tiny-mce-wrapper">'
+                + '<textarea ui-tinymce="tinymceFinalOptions" ng-model="ngModel" ng-required="ngRequired"></textarea>'
+                + '<span class="max-chars-info">&nbsp;</span>'
+                + '</div>',
             restrict: 'AE',
             replace: false,
             scope: {
                 ngModel: '=',
-                tinymceOptions: '='
+                tinymceOptions: '&',
+                ngRequired: '&'
             },
             controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 
