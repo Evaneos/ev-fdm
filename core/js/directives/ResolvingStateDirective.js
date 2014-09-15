@@ -34,7 +34,7 @@ angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService'
             $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
                 $('body').removeClass('state-resolving');
 
-                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
 
                 notificationsService.addError({
                     text: errorMessage

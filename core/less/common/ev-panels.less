@@ -1,6 +1,6 @@
 .ev-panel-placeholder {
     height: 100%;
-    float: right;
+    float: left;
     position: relative;
     display: inline-block;
 
@@ -9,7 +9,7 @@
         display: block;
 
         .ev-panel {
-            min-width: @mainpanel-min-width;
+            min-width: @mainev-panel-min-width;
 
             > .ui-resizable-handle {
                 display: none;
@@ -35,8 +35,8 @@
 
     // default size for all side panels
     &:not(.ev-panel-main) .ev-panel {
-        width: @panel-width;
-        min-width: @panel-min-width;
+        width: auto;
+        min-width: @ev-panel-min-width;
     }
 
     &.ev-panel-zero {
@@ -48,13 +48,14 @@
     }
 
     > .ev-panel {
-        background: @panel-bg;
+        background: @ev-panel-bg;
         height: 100%;
-        border-left: 1px solid @panel-inner-border;
+        border-left: 1px solid @ev-panel-inner-border;
         position: relative;
         left: auto!important;
         // z-index: @zindex-modal;
         background: #FFF;
+        overflow: auto;
 
         .items {
             margin: -15px;
@@ -72,7 +73,7 @@
               padding-bottom: 10px;
               cursor: pointer;
               > div {
-                border: 1px solid @panel-bg;
+                border: 1px solid @ev-panel-bg;
                 padding: 10px;
                 text-align: center;
                 border-radius: 4px;
@@ -118,9 +119,9 @@
 
         > .ev-panel-inner {
             height: 100%;
-            border-bottom: 7px solid @panel-bg;
-            border-left: 7px solid @panel-bg;
-            border-right: 7px solid @panel-bg;
+            border-bottom: 7px solid @ev-panel-bg;
+            border-left: 7px solid @ev-panel-bg;
+            border-right: 7px solid @ev-panel-bg;
             overflow-x: hidden;
             overflow-y: hidden;
 
@@ -138,7 +139,7 @@
              ********************************************************/
 
             .ev-panel-header {
-                background: @panel-bg;
+                background: @ev-panel-bg;
                 padding: 9px 0;
                 z-index: 2;
                 .ev-panel-title {
@@ -204,7 +205,7 @@
 
             .ev-panel-footer {
                 padding: 9px 16px;
-                background: @panel-bg;
+                background: @ev-panel-bg;
                 text-align: right;
                 position: absolute;
                 bottom: 0;
@@ -245,8 +246,8 @@
     &.stacked {
         border-left: 1px solid @gray-lighter;
 
-        // Hide the whole panel
-        max-width: @panel-stacked-size;
+        // Hide the whole ev-panel
+        max-width: @ev-panel-stacked-size;
         > .ev-panel > .ev-panel-inner {
 
             border: none;
@@ -303,76 +304,19 @@
 
     .ev-panel .has-header {
         .lisette-module-searchbar > .inner {
-            bottom: @panel-header-height;
+            bottom: @ev-panel-header-height;
         }
         .lisette-module-bottombar {
-            bottom: @panel-header-height;
-        }
-    }
-}
-
-/*********************************************************
- * ANIMATIONS
- ********************************************************/
-
-.ev-panels-container.animate .ev-panel-placeholder {
-    @animation-duration: 0.2s;
-    .obfuscate() {
-        // animation : slow at the beginning, fast at the end
-        // => after will be hidden at the really end of the animation
-        -webkit-transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
-        transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: @gray-lighter;
-        z-index: 200000000;
-        content: ' ';
-    }
-
-    &.stacked-add {
-        -webkit-transition:all ease-in-out @animation-duration;
-        -moz-transition:all ease-in-out @animation-duration;
-        -o-transition:all ease-in-out @animation-duration;
-        transition:all ease-in-out @animation-duration;
-    }
-    &.stacked-remove {
-        -webkit-transition:all ease-in-out @animation-duration;
-        -moz-transition:all ease-in-out @animation-duration;
-        -o-transition:all ease-in-out @animation-duration;
-        transition:all ease-in-out @animation-duration;
-    }
-
-    &.ng-enter,
-    &.ng-leave {
-        -webkit-transition: all ease-in-out @animation-duration;
-        transition: all ease-in-out @animation-duration;
-        &:after {
-            .obfuscate();
-        }
-    }
-
-    &.ng-enter,
-    &.ng-leave.ng-leave-active {
-        max-width: 0;
-        &:after {
-            opacity: 1;
-        }
-    }
-
-    &.ng-leave,
-    &.ng-enter.ng-enter-active {
-        max-width: 1000px;
-        &.ng-enter.ng-enter-active {
-            &:after {
-                opacity: 0;
-            }
+            bottom: @ev-panel-header-height;
         }
     }
 }
 
 .ev-panel-bg {
-  background-color: @panel-bg;
+  background-color: @ev-panel-bg;
+}
+
+.ui-resizable-helper {
+    border: 2px dotted #e5d8ca;
+    background-color: rgba(229, 216, 202,0.3);
 }

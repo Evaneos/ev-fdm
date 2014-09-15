@@ -2,7 +2,7 @@
 
 var module = angular.module('ev-fdm');
 
-module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager', function($timeout, $rootScope, panelManager) {
+module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
 
     var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
 
@@ -29,8 +29,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
     }
 
     function updateBreakpoints(element) {
-        var inner = element.find('.ev-panel-inner');
-        var bp = getBPMatching(inner.outerWidth());
+        var bp = getBPMatching(element.outerWidth());
         applyBPAttribute(element, bp);
     }
 
@@ -39,16 +38,16 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
         scope: false,
         replace: true,
         transclude: true,
-        templateUrl: 'panels/panel-skeleton.phtml',
+        template: '<div ng-transclude></div>',
         link: function(scope, element, attrs) {
             /**
              * Listener to update the breakpoints properties
              */
             element.resizable({
                 handles: "w",
+                helper: "ui-resizable-helper",
                 resize: function(event, ui) {
                     updateBreakpoints(element);
-                    $rootScope.$broadcast('panel-resized', element);
                 }
             });
             $rootScope.$on('module-layout-changed', function() {
