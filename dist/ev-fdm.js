@@ -568,53 +568,35 @@ module.directive('evFilters', function() {
         });
 }) ();
 
-// @TODO: DELETE //
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
-    function _sync($table) {
-        var $headers = $table.find('thead > tr');
-        var $firstTr = $table.find('tbody > tr').first();
+    function _sync($table, $scope) {
+        var containerH, containerW,
+            container    = angular.element('.table-container'),
+            subContainer = angular.element('.ev-fixed-header-table-container');
 
-        // no header to resize
-        if (!$headers.length) { return; }
-
-        // uniform size for every header
-        if (!$firstTr.length) {
-            $headers.addClass('uniform');
-            _uniformSize($headers, $table.outerWidth());
+        if (!container.length) {
+            console.log("Table should be wrapped inside a div having 'table-container' class to use evFixedHeaders directive");
             return;
-        } else {
-            $headers.removeClass('uniform');
         }
 
-        // compute size from first line sizing
-        var currentChildIndex = 0;
-        var $ths = $headers.find('th');
-        $ths.each(function() {
-            var $td = $firstTr.find('td:nth-child(' + (1 + currentChildIndex) + ')');
-            if ($td.is(':visible')) {
-                $(this).css('width', $td.outerWidth()).show();
-                $(this).css('maxWidth', $td.outerWidth()).show();
-            } else {
-                // $(this).hide();
-            }
-            currentChildIndex++;
+        $scope.$watch(function() {
+            containerH = container.height();
+            containerW = container.width();
+            return containerH + "-" + containerW;
+        },
+        function() {
+            subContainer.height(containerH);
+            subContainer.width(containerW);
+            $table.floatThead('reflow');
         });
     }
 
-    function _timeoutSync($table) {
+    function _timeoutSync($table, $scope) {
         $timeout(function() {
-            _sync($table);
+            _sync($table, $scope);
         }, 0, false);
-    }
-
-    function _uniformSize($headers, width) {
-        var $tds = $headers.find('th');
-        if (!$tds.length) { return; }
-        $tds.each(function() {
-            $(this).css('width', (width/$tds.length) + 'px');
-        });
     }
 
     return {
@@ -628,23 +610,32 @@ angular.module('ev-fdm')
 
         link: function ($scope, element, attrs) {
             var $table = $(element);
-            $table.addClass('fixed-headers');
+
+            $table
+                .wrap('<div class="ev-fixed-header-table-container"></div>')
+                .floatThead({
+                    scrollContainer: function($table){
+                        return $table.closest('.ev-fixed-header-table-container');
+                    }
+                });
+
             $(window).on('resize', function() {
-                _sync($table);
+                _sync($table, $scope);
             });
             $scope.$on('module-layout-changed', function() {
-                _sync($table);
+                _sync($table, $scope);
             });
             // watch for raw data changes !
             $scope.$watch('rows', function() {
-                _timeoutSync($table);
+                _timeoutSync($table, $scope);
             }, true);
             // wait for end of digest then sync headers
-            _timeoutSync($table);
+            _timeoutSync($table, $scope);
         }
     };
 
 }]);
+
 'use strict';
 
 var module = angular.module('ev-fdm')

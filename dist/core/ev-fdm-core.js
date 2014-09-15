@@ -254,6 +254,140 @@ angular.module('ev-fdm')
     }]);
 'use strict';
 
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
+'use strict';
+
 angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
@@ -568,83 +702,71 @@ module.directive('evFilters', function() {
         });
 }) ();
 
-// @TODO: DELETE //
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
-    function _sync($table) {
-        var $headers = $table.find('thead > tr');
-        var $firstTr = $table.find('tbody > tr').first();
+    function _sync($table, $scope) {
+        var containerH, containerW,
+            container    = angular.element('.table-container'),
+            subContainer = angular.element('.ev-fixed-header-table-container');
 
-        // no header to resize
-        if (!$headers.length) { return; }
-
-        // uniform size for every header
-        if (!$firstTr.length) {
-            $headers.addClass('uniform');
-            _uniformSize($headers, $table.outerWidth());
+        if (!container.length) {
+            console.log("Table should be wrapped inside a div having 'table-container' class to use evFixedHeaders directive");
             return;
-        } else {
-            $headers.removeClass('uniform');
         }
 
-        // compute size from first line sizing
-        var currentChildIndex = 0;
-        var $ths = $headers.find('th');
-        $ths.each(function() {
-            var $td = $firstTr.find('td:nth-child(' + (1 + currentChildIndex) + ')');
-            if ($td.is(':visible')) {
-                $(this).css('width', $td.outerWidth()).show();
-                $(this).css('maxWidth', $td.outerWidth()).show();
-            } else {
-                // $(this).hide();
-            }
-            currentChildIndex++;
+        $scope.$watch(function() {
+            containerH = container.height();
+            containerW = container.width();
+            return containerH + "-" + containerW;
+        },
+        function() {
+            subContainer.height(containerH);
+            subContainer.width(containerW);
+            $table.floatThead('reflow');
         });
     }
 
-    function _timeoutSync($table) {
+    function _timeoutSync($table, $scope) {
         $timeout(function() {
-            _sync($table);
+            _sync($table, $scope);
         }, 0, false);
     }
 
-    function _uniformSize($headers, width) {
-        var $tds = $headers.find('th');
-        if (!$tds.length) { return; }
-        $tds.each(function() {
-            $(this).css('width', (width/$tds.length) + 'px');
-        });
-    }
-
     return {
-
         restrict: 'A',
         replace: false,
-
         scope: {
             rows: '='
         },
-
         link: function ($scope, element, attrs) {
             var $table = $(element);
-            $table.addClass('fixed-headers');
+
+            $table
+                .wrap('<div class="ev-fixed-header-table-container"></div>')
+                .floatThead({
+                    scrollContainer: function($table){
+                        return $table.closest('.ev-fixed-header-table-container');
+                    }
+                });
+
             $(window).on('resize', function() {
-                _sync($table);
+                _sync($table, $scope);
             });
             $scope.$on('module-layout-changed', function() {
-                _sync($table);
+                _sync($table, $scope);
             });
             // watch for raw data changes !
             $scope.$watch('rows', function() {
-                _timeoutSync($table);
+                _timeoutSync($table, $scope);
             }, true);
             // wait for end of digest then sync headers
-            _timeoutSync($table);
+            _timeoutSync($table, $scope);
         }
     };
 
 }]);
+
 'use strict';
 
 var module = angular.module('ev-fdm')
@@ -1705,140 +1827,6 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
