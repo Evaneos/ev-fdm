@@ -5,11 +5,11 @@
 @prefix:                         mce;
 
 // Default font
-@font-family:                    "Helvetica Neue", Helvetica, Arial, sans-serif;
+@font-family:                    @font-family-sans-serif;
 @font-size:                      14px;
 @line-height:                    20px;
 @has-gradients:                  true;
-@has-radius:                     true;
+@has-radius:                     false;
 @has-boxshadow:                  true;
 
 // Text colors
@@ -20,15 +20,15 @@
 @text-error:                     #aa0000;
 
 // Button
-@btn-text:                       @text;
+@btn-text:                       @btn-default-color;
 @btn-text-shadow:                @text-inverse;
-@btn-border-top:                 rgba(0, 0, 0, .1);
-@btn-border-right:               rgba(0, 0, 0, .1);
-@btn-border-bottom:              fadein(rgba(0, 0, 0, .1), 15%);
-@btn-border-left:                fadein(rgba(0, 0, 0, .1), 15%);
-@btn-split-border:               #bdbdbd;
+@btn-border-top:                 @btn-default-border;
+@btn-border-right:               @btn-default-border;
+@btn-border-bottom:              @btn-default-border;
+@btn-border-left:                @btn-default-border;
+@btn-split-border:               @btn-default-border;
 @btn-caret-border:               @btn-text;
-@btn-text-disabled:              @text-disabled;
+@btn-text-disabled:              @btn-link-disabled-color;
 @btn-box-shadow:                 inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .05);
 @btn-box-shadow-active:          inset 0 2px 4px rgba(0, 0, 0, .15), 0 1px 2px rgba(0, 0, 0, .05);
 @btn-box-disabled-opacity:       0.4;
@@ -85,11 +85,14 @@
 
 // Window
 @window-border:                  #c5c5c5;
-@window-head-border:             @window-border;
+
+@window-head-border:             @modal-content-border-color;
 @window-head-close:              mix(@text, @window-bg, 60%);
 @window-head-close-hover:        mix(@text, @window-bg, 40%);
-@window-foot-border:             @window-border;
-@window-foot-bg:                 @window-bg;
+
+@window-foot-border:             @modal-footer-border-color;
+@window-foot-bg:                 #f00;
+
 @window-fullscreen-bg:           #FFF;
 @window-modalblock-bg:           #000;
 @window-modalblock-opacity:      0.3;

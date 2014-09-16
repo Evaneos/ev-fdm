@@ -71,6 +71,109 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 
 }]);
 
+'use strict';
+
+angular.module('ev-fdm')
+   .animation('.ev-animate-picture-list', function() {
+
+    return {
+      enter : function(element, done) {
+            var width = element.width();
+            element.css('width', 0);
+            element.css('opacity', 0);
+            jQuery(element).animate({
+                width: width,
+                opacity: 1
+            }, 300, done);
+
+            return function(isCancelled) {
+                if(isCancelled) {
+                    jQuery(element).stop();
+                }
+            };
+        },
+        leave : function(element, done) {
+            var width = element.width();
+            element.css('opacity', 1);
+            element.css('width', width + "px");
+
+            jQuery(element).animate({
+                width: 0,
+                opacity: 0.3
+            }, 300, done);
+
+            return function(isCancelled) {
+              if(isCancelled) {
+                jQuery(element).stop();
+              }
+            };
+        },
+        move : function(element, done) {
+          element.css('opacity', 0);
+          jQuery(element).animate({
+              opacity: 1
+          }, done);
+
+          return function(isCancelled) {
+              if(isCancelled) {
+                  jQuery(element).stop();
+              }
+          };
+        },
+
+        // you can also capture these animation events
+        addClass : function(element, className, done) {},
+        removeClass : function(element, className, done) {}
+    };
+});
+
+angular.module('ev-fdm')
+    .animation('.ev-animate-tag-list', function() {
+        return {
+          enter : function(element, done) {
+                element.css('opacity', 0);
+                jQuery(element).animate({
+                    opacity: 1
+                }, 300, done);
+
+                return function(isCancelled) {
+                    if(isCancelled) {
+                        jQuery(element).stop();
+                    }
+                };
+            },
+            leave : function(element, done) {
+                element.css('opacity', 1);
+
+                jQuery(element).animate({
+                    opacity: 0.3
+                }, 300, done);
+
+                return function(isCancelled) {
+                  if(isCancelled) {
+                    jQuery(element).stop();
+                  }
+                };
+            },
+            move : function(element, done) {
+              element.css('opacity', 0);
+              jQuery(element).animate({
+                  opacity: 1
+              }, done);
+
+              return function(isCancelled) {
+                  if(isCancelled) {
+                      jQuery(element).stop();
+                  }
+              };
+            },
+
+            // you can also capture these animation events
+            addClass : function(element, className, done) {},
+            removeClass : function(element, className, done) {}
+        };
+    });
+
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
 
@@ -1112,6 +1215,59 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
 
 (function () {
     'use strict';
+    var module = angular.module('ev-fdm')
+        .directive('evPictureList', function () {
+          return {
+            restrict: 'EA',
+            scope: {
+              pictures: '=',
+              editable: '=',
+              onDelete: '&',
+              onChange: '&'
+            },
+            template:
+                '<ul class="picture-list">' +
+                    '<li ng-repeat="picture in pictures" class="ev-animate-picture-list">' +
+                        '<figure>' +
+                            '<div class="picture-thumb" ' +
+                              'style="background-image: '+
+                                  'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
+                                '<button class="delete-action" ' +
+                                  'ng-click="onDelete({picture: picture, index: $index})" ' +
+                                  'data-ng-show="editable">' +
+                                    '<span class="icon icon-bin"></span>' +
+                                '</button>' +
+                            '</div>' +
+                            '<figcaption>' +
+                                '<span class="copyright">&copy;</span>' +
+                                '<span class="author" data-ng-show="!editable">' +
+                                     '{{ picture.author }}' +
+                                '</span>' +
+                                '<span data-ng-show="editable">' +
+                                    '<input ' +
+                                      'type="text" ' +
+                                      'class="form-control author" ' +
+                                      'ng-model="picture.author" ' +
+                                      'ng-change="onChange({picture: picture})"/>' +
+                                '</span>' +
+                            '</figcaption>' +
+                        '</figure>' +
+                    '</li>' +
+                '</ul><div class="clearfix"></div>',
+        link: function ($scope, elem, attrs) {
+          if (!attrs.onDelete) {
+            $scope.onDelete = function (params) {
+              $scope.pictures.splice(params.index, 1);
+            };
+          }
+          $scope.pictures = $scope.pictures || [];
+        }
+      };
+    });
+})();
+
+(function () {
+    'use strict';
         // update popover template for binding unsafe html
     angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
         $templateCache.put("template/popover/popover.html",
@@ -1732,7 +1888,7 @@ angular.module('ev-fdm')
                                 'ng-class="{active:pane.selected}" '+
                                 'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
                                 '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
-                                    '<span ng-show="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-show="pane.tabIcon" class="icon {{pane.tabIcon}}"></span> '+
                                     '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
                                 '</a>' +
                             '</li>' +
@@ -1770,6 +1926,42 @@ angular.module('ev-fdm')
             };
         });
 }) ();
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('evTagList', function () {
+        return {
+            restrict: 'EA',
+            scope: {
+                elements: '=',
+                editable: '=',
+                className: '@',
+                maxElements: '=',
+                maxAlertMessage: '@'
+            },
+            replace: true,
+            template:
+                '<ul class="list-inline {{ className }}">' +
+                    '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
+                        '<span class="label label-default" >' +
+                            '{{ element.name }}' +
+                            '<button ng-show="editable" type="button" class="close inline" ' +
+                                'ng-click="remove($index)">×</button> ' +
+                        '</span>' +
+                    '</li>' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning">' +
+                        ' {{ maxAlertMessage }}' +
+                    '</li>' +
+                '</ul>',
+            link: function ($scope, elem, attrs) {
+
+                $scope.remove = function (index) {
+                    $scope.elements.splice(index, 1);
+                };
+            }
+        };
+    });
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2841,7 +3033,7 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
                     // Not authenticated, redirect on homepage
                     if (response.data.result[options.id].authenticated === false) {
-                        window.location.pathname = '/login?expired=1';
+                        window.location.href = '/login?expired=1';
                     }
 
                     return $q.reject(response.data.result[options.id]);
@@ -2963,6 +3155,19 @@ angular.module('ev-fdm')
             return element.put(parameters);
         };
 
+        RestangularStorage.prototype.patch = function(element, changes, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.patch(changes, parameters);
+        };
+
         RestangularStorage.prototype.create = function(element, embed) {
             var parameters = {};
 
@@ -3000,6 +3205,7 @@ angular.module('ev-fdm')
 
         return RestangularStorage;
     }]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -3641,4 +3847,230 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
     };
 
     return panelLayoutEngine;
+}]);
+
+var module = angular.module('ev-fdm');
+
+module.factory('PanelManagerFactory', function() {
+    function shouldBeOverriden(name) {
+        return function() {
+            throw new Error('Method ' + name + ' should be overriden');
+        };
+    }
+    var PanelManager = function() {
+        this.panels = _([]);
+    };
+    PanelManager.prototype.open = shouldBeOverriden('open');
+    PanelManager.prototype.close = shouldBeOverriden('close');
+    PanelManager.prototype.push = function(instance) {
+        this.panels.push(instance);
+    };
+    PanelManager.prototype.remove = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            this.panels.splice(i, 1);
+        }
+        return i;
+    };
+    PanelManager.prototype.at = function(index) {
+        return this.panels._wrapped[index];
+    };
+    PanelManager.prototype.each = function() {
+        return this.panels.each.apply(this.panels, arguments);
+    };
+    PanelManager.prototype.dismissAll = function(reason) {
+        // dismiss all panels except the first one
+        var i = 0;
+        this.each(function(instance) {
+            if(i !== 0) {
+                instance.dismiss(reason);
+            }
+            i++;
+        });
+    };
+
+    PanelManager.prototype.dismissChildrenId = function(rank) {
+        var children = this.panels.slice(rank);
+        var reason = '';
+        for (var i = children.length - 1; i >= 0; i--) {
+            var child = children[i];
+            var result = child.dismiss(reason);
+            if (!result) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    PanelManager.prototype.dismissChildren = function(instance, reason) {
+        var children = this.getChildren(instance);
+        for (var i = children.length - 1; i >= 0; i--) {
+            var child = children[i];
+            var result = child.dismiss(reason);
+            if (!result) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+    PanelManager.prototype.last = function() {
+        return this.panels.last();
+    };
+    PanelManager.prototype.getNext = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i < this.panels.size() - 1) {
+            return this.at(i + 1);
+        } else {
+            return null;
+        }
+    };
+    PanelManager.prototype.getChildren = function(instance) {
+        var i = this.panels.indexOf(instance);
+        if (i > -1) {
+            return this.panels.slice(i + 1);
+        } else {
+            return [];
+        }
+    };
+    PanelManager.prototype.size = function() {
+        return this.panels.size();
+    };
+    PanelManager.prototype.isEmpty = function() {
+        return this.panels.size() === 0;
+    };
+
+    return {
+        create: function(methods) {
+            var ChildClass = function() {
+                return PanelManager.call(this);
+            };
+            ChildClass.prototype = _({}).extend(PanelManager.prototype, methods);
+            return new ChildClass();
+        }
+    };
+});
+
+module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', 'PanelLayoutEngine', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory, panelLayoutEngine) {
+
+    var elements = {};
+
+    var stylesCache = window.stylesCache = {};
+    var container = angular.element('.ev-panels-container');
+    var panelZero = container.find('.ev-panel-zero');
+
+    var panelManager = PanelManagerFactory.create({
+        updateLayout: function() {
+            updateLayout();
+        },
+        getElement: function(instance) {
+            if (elements[instance.$$id]) {
+                return elements[instance.$$id];
+            } else {
+                return null;
+            }
+        },
+        open: function(instance, options) {
+            instance.$$stacked = false;
+            instance.$$depth = options.depth;
+            var isMain = options.depth === 0;
+            if(isMain) {
+                instance.isMain = true;
+            }
+
+            var el = createPlaceholder(instance.$$depth);
+            var inner = createPanelView(instance, options);
+            el.html(inner);
+            elements[instance.$$id] = el;
+            $animate.enter(el, container, panelZero, function() {
+                panelManager.updateLayout();
+            });
+            var timerResize = null;
+            el.on('resize', function(event, ui) {
+                if(timerResize !== null) {
+                    $timeout.cancel(timerResize);
+                }
+                timerResize = $timeout(function() {
+                    stylesCache[options.panelName] = ui.size.width;
+                    panelManager.updateLayout();
+                }, 100);
+            });
+            return instance;
+        },
+        replace: function(fromInstance, toInstance, options) {
+            if (typeof(elements[fromInstance.$$id]) != 'undefined') {
+                var el = elements[fromInstance.$$id];
+                toInstance.$$depth = options.depth - 1;
+                var inner = createPanelView(toInstance, options);
+                el.html(inner);
+                elements[toInstance.$$id] = el;
+                delete elements[fromInstance.$$id];
+                return toInstance;
+            } else {
+                return panelManager.open(toInstance, options);
+            }
+        },
+        close: function(instance) {
+            if (typeof(elements[instance.$$id]) != 'undefined') {
+                var el = elements[instance.$$id];
+                $animate.leave(el, function() {
+                    delete elements[instance.$$id];
+                    panelManager.updateLayout();
+                });
+            }
+        }
+    });
+
+    /**
+     * Return the panels sizes (if the user resized them)
+     */
+    function getStylesFromCache(instance, options) {
+        var savedWidth = stylesCache[options.panelName];
+        if (savedWidth) {
+            return 'width: ' + savedWidth + 'px;';
+        }
+
+        return '';
+    }
+
+    /**
+     * Create a panel container in the DOM
+     */
+    function createPlaceholder(depth) {
+        var isMain = depth === 0;
+        return angular.element('<div ' +
+            'class="ev-panel-placeholder ' + (isMain ? 'ev-panel-main' : '') + '" ' +
+            'style="z-index:' + (2000 + depth) + ';"></div>');
+    }
+
+    /**
+     * Create a panel view section
+     */
+    function createPanelView(instance, options) {
+        var inner = angular.element('<div ev-panel-breakpoints style="' + getStylesFromCache(instance, options) + '"></div>');
+        inner.html(options.content);
+        options.scope.panelClass = options.panelClass;
+        return $compile(inner)(options.scope);
+    }
+
+    /**
+     * Whenever a layout is changed
+     */
+    function updateLayout() {
+        panelLayoutEngine.checkStacking(panelManager);
+        $rootScope.$broadcast('module-layout-changed');
+    }
+
+    var timerWindowResize = null;
+    $(window).on('resize', function() {
+        if(timerWindowResize !== null) {
+            $timeout.cancel(timerWindowResize);
+        }
+        timerWindowResize = $timeout(function() {
+            panelManager.updateLayout();
+        }, 100);
+    });
+
+    return panelManager;
 }]);
