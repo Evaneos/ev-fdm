@@ -54,87 +54,73 @@
 
 
 dl {
-  &.dl-big {
     dt {
-      width: 180px;
-    }
-    dd {
-      margin-left: 200px;
-    }
-  }
+        color: @gray;
+        font-weight: 500;
 
-  &.dl-md {
-    dt {
-      width: 130px;
+        &:after {
+          content: " :";
+        }
     }
-    dd {
-      margin-left: 150px;
-    }
-  }
 
-  &.dl-sm {
-    dt {
-      width: 80px;
+    &.dl-big {
+        dt {
+            width: 180px;
+        }
+        dd {
+            margin-left: 200px;
+        }
     }
-    dd {
-      margin-left: 100px;
-    }
-  }
 
-  &.dl-horizontal {
-    dt {
-      color: @gray;
-      font-weight: 500;
-      text-align: left;
-      &:after {
-        content: " :";
-      }
+    &.dl-horizontal {
+        dt {
+            text-align: left;
+        }
     }
-  }
 }
 
 
 hr {
-  &.hr-strong {
-    border-top: @panel-body-padding solid @panel-bg;
-    margin: @panel-body-padding -@panel-body-padding;
-  }
+    &.hr-strong {
+        border-top: @panel-body-padding solid @panel-bg;
+        margin: @panel-body-padding -@panel-body-padding;
+    }
 
-  &.hr-separator {
-    border-top: 2px solid @panel-bg;
-    margin: @panel-body-padding -@panel-body-padding;
-  }
+    &.hr-separator {
+        border-top: 2px solid @panel-bg;
+        margin: @panel-body-padding -@panel-body-padding;
+    }
 
-  &.hr-light {
-    border-top: 1px solid @panel-bg;
-    margin: @panel-body-padding -@panel-body-padding;
-  }
+    &.hr-light {
+        border-top: 1px solid @panel-bg;
+        margin: @panel-body-padding -@panel-body-padding;
+    }
 
-  &.hr-last {
-    margin-bottom: 0px;
-  }
+    &.hr-last {
+        margin-bottom: 0px;
+    }
 
-  &.hr-first {
-    margin-top: 0px;
-  }
+    &.hr-first {
+        margin-top: 0px;
+    }
 }
 
 
 .section {
-  padding: 0 @panel-body-padding;
-  .row {
-    margin-left: -@panel-body-padding;
-    margin-right: -@panel-body-padding;
-  }
+    padding: 0 @panel-body-padding;
+    .row {
+        margin-left: -@panel-body-padding;
+        margin-right: -@panel-body-padding;
+    }
 }
 
 .full-height {
-  overflow-y: auto;
-  height: 100%;
+    overflow-y: auto;
+    height: 100%;
 }
 
 .full-width {
-  width: 100%;
+    width: 100%;
 }
 
 .breakword {
