@@ -1,5 +1,6 @@
+
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['Restangular', function(restangular) {
+    .factory('RestangularStorage', ['Restangular', 'communicationService', function(restangular, communicationService) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
@@ -14,6 +15,19 @@ angular.module('ev-fdm')
 
         RestangularStorage.buildEmbed = function(embed) {
             return embed.join(',');
+        };
+
+        RestangularStorage.buidParameters = function(resource, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(resource.defaultEmbed));
+            }
+            else if(resource.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
+            }
+
+            return parameters;
         };
 
         RestangularStorage.buildFilters = function(filters) {
@@ -70,55 +84,24 @@ angular.module('ev-fdm')
 
 
         RestangularStorage.prototype.getById = function(id, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.one(this.resourceName, id).get(parameters);
+            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buidParameters(this, embed));
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return element.put(parameters);
+            return element.put(RestangularStorage.buidParameters(this, embed));
         };
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
-            var parameters = {};
+            angular.extend(element, changes);
+            communicationService.emit(this.resourceName + '::updating', [ element ]);
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return element.patch(changes, parameters);
+            return element.patch(changes, RestangularStorage.buidParameters(this, embed)).then(function(result) {
+                communicationService.emit(this.resourceName + '::updated');
+            }.bind(this));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.all(this.resourceName).post(element, parameters);
+            return this.restangular.all(this.resourceName).post(element, RestangularStorage.buidParameters(this, embed));
         };
 
         RestangularStorage.prototype.delete = function(element) {
@@ -126,16 +109,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.save = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return element.save(parameters);
+            return element.save(RestangularStorage.buidParameters(this, embed));
         };
 
         RestangularStorage.prototype.getNew = function() {

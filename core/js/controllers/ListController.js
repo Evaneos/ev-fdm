@@ -1,5 +1,5 @@
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
             var self = this;
@@ -40,6 +40,10 @@ angular.module('ev-fdm')
                 self.toggleView('view', element);
             };
 
+            this.$scope.listTrackBy = function(item) {
+                return item.id + '_' + item.updated_at;
+            };
+
             /*
                 Update the view when filter are changed in the SearchController
              */
@@ -62,15 +66,28 @@ angular.module('ev-fdm')
                 }
             });
 
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+            communicationService.on(this.elementName + '::updating', function(event, updatedElements) {
+                var updatedIds = updatedElements.map(function(elt) {
+                    return elt.id;
+                });
+
+                self.elements.some(function(elt)  {
+                    if (updatedIds.indexOf(elt.id) !== -1) {
+                        //add class "updating"
+                        return updatedIds.length === 1;
+                    }
+                });
+            });
+
+            communicationService.on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+            communicationService.on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+            communicationService.on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
@@ -126,5 +143,4 @@ angular.module('ev-fdm')
         };
 
         return ListController;
-
     }]);
