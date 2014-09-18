@@ -51,9 +51,10 @@
 @import "Variables.less";
 
 // To be consistent with the whole design
-@import "../../../core/less/overrides/bootstrap/buttons.less";
+@import (reference) "../../../core/less/overrides/bootstrap/buttons.less";
 @import (reference) "../../../core/less/overrides/bootstrap/modules.less";
-@import "../../../core/less/variables.less";
+@import (reference) "../../../core/less/overrides/bootstrap/index.less";
+@import (reference) "../../../core/less/variables.less";
 
 
 /* Icons */
@@ -150,6 +151,8 @@
 .btn-tinymce {
   .btn-light;
   color: black;
+  position: relative;
+  top: 9px;
 }
 
 // -------------------------------------

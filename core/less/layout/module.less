@@ -14,12 +14,6 @@
  * We keep them during the migration
  */
 
-.module-panel-animations() {
-    // removing animations for the time being, not necessary
-    // .transition(all @animation-duration ease-in-out);
-    // .transition-property(~"width, left, right");
-}
-
 .lisette-module {
     position: absolute;
     top: 0;
@@ -28,7 +22,6 @@
     bottom: 0;
 
     .lisette-module-body {
-        .module-panel-animations();
         position: absolute;
         top: 0;
         left: 0;
@@ -64,7 +57,9 @@
         &.topbar-size-mini .lisette-module-body {
             top: @module-topbar-height-size-mini;
         }
-        .panel-placeholder.panel-main > .panel {
+
+        .ev-panel-placeholder.ev-panel-main > .ev-panel,
+        .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel {
             .table-container {
                 top: @module-topbar-height;
             }
@@ -75,13 +70,14 @@
         .lisette-module-body {
             bottom: @module-bottombar-height;
         }
-        .panel-placeholder.panel-main > .panel .table-container {
+        .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container {
             bottom: @module-bottombar-height;
         }
 
-        .panel-placeholder.panel-main > .panel .has-header {
+        .ev-panel-placeholder.ev-panel-main > .ev-panel .has-header,
+        .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .has-header {
             .table-container {
-                bottom: @module-bottombar-height + @panel-header-height;
+                bottom: @module-bottombar-height + @ev-panel-header-height;
             }
         }
     }
@@ -96,18 +92,18 @@
         .lisette-module-bottombar {
             left: @module-leftbar-width;
         }
-        .panel .table-container {
+        .ev-panel .table-container {
             left: @module-leftbar-width;
         }
 
-        [data-breakpoint='min'],
-        [data-breakpoint='100'],
-        [data-breakpoint='200'],
-        [data-breakpoint='300'],
-        [data-breakpoint='400'],
-        [data-breakpoint='500'],
-        [data-breakpoint='600'],
-        [data-breakpoint='700'] {
+        [data-breakpoint="min"],
+        [data-breakpoint="100"],
+        [data-breakpoint="200"],
+        [data-breakpoint="300"],
+        [data-breakpoint="400"],
+        [data-breakpoint="500"],
+        [data-breakpoint="600"],
+        [data-breakpoint="700"] {
             .lisette-module-leftbar {
               display: none;
             }
@@ -116,7 +112,7 @@
                 left: 0;
             }
 
-            &.panel .table-container {
+            .ev-panel .table-container {
               left: 0;
             }
         }
@@ -151,27 +147,30 @@
             top: @module-tabs-height;
         }
 
-        .panel-placeholder.panel-main > .panel .table-container {
+        .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container,
+        .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .table-container {
             top: (@module-tabs-height + @module-topbar-height);
         }
 
-        &.topbar-size-big .panel-placeholder.panel-main > .panel .table-container {
+        &.topbar-size-big .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container,
+        &.topbar-size-big .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .table-container {
             top: (@module-tabs-height + @module-topbar-height-size-big);
         }
 
-        &.topbar-size-mini .panel-placeholder.panel-main > .panel .table-container {
+        &.topbar-size-mini .ev-panel-placeholder.ev-panel-main > .ev-panel .table-container,
+        &.topbar-size-mini .ev-panel-placeholder.ev-panel-placeholder-main > .ev-panel .table-container {
             top: (@module-tabs-height + @module-topbar-height-size-mini);
         }
     }
 }
 
-.panels-container {
+.ev-panels-container {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: (@zindex-modal-background - 3);
+    z-index: @zindex-container;
 }
 
 body.state-resolving {

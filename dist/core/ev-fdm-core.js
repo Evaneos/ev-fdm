@@ -71,6 +71,109 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 
 }]);
 
+'use strict';
+
+angular.module('ev-fdm')
+   .animation('.ev-animate-picture-list', function() {
+
+    return {
+      enter : function(element, done) {
+            var width = element.width();
+            element.css('width', 0);
+            element.css('opacity', 0);
+            jQuery(element).animate({
+                width: width,
+                opacity: 1
+            }, 300, done);
+
+            return function(isCancelled) {
+                if(isCancelled) {
+                    jQuery(element).stop();
+                }
+            };
+        },
+        leave : function(element, done) {
+            var width = element.width();
+            element.css('opacity', 1);
+            element.css('width', width + "px");
+
+            jQuery(element).animate({
+                width: 0,
+                opacity: 0.3
+            }, 300, done);
+
+            return function(isCancelled) {
+              if(isCancelled) {
+                jQuery(element).stop();
+              }
+            };
+        },
+        move : function(element, done) {
+          element.css('opacity', 0);
+          jQuery(element).animate({
+              opacity: 1
+          }, done);
+
+          return function(isCancelled) {
+              if(isCancelled) {
+                  jQuery(element).stop();
+              }
+          };
+        },
+
+        // you can also capture these animation events
+        addClass : function(element, className, done) {},
+        removeClass : function(element, className, done) {}
+    };
+});
+
+angular.module('ev-fdm')
+    .animation('.ev-animate-tag-list', function() {
+        return {
+          enter : function(element, done) {
+                element.css('opacity', 0);
+                jQuery(element).animate({
+                    opacity: 1
+                }, 300, done);
+
+                return function(isCancelled) {
+                    if(isCancelled) {
+                        jQuery(element).stop();
+                    }
+                };
+            },
+            leave : function(element, done) {
+                element.css('opacity', 1);
+
+                jQuery(element).animate({
+                    opacity: 0.3
+                }, 300, done);
+
+                return function(isCancelled) {
+                  if(isCancelled) {
+                    jQuery(element).stop();
+                  }
+                };
+            },
+            move : function(element, done) {
+              element.css('opacity', 0);
+              jQuery(element).animate({
+                  opacity: 1
+              }, done);
+
+              return function(isCancelled) {
+                  if(isCancelled) {
+                      jQuery(element).stop();
+                  }
+              };
+            },
+
+            // you can also capture these animation events
+            addClass : function(element, className, done) {},
+            removeClass : function(element, className, done) {}
+        };
+    });
+
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
 
@@ -251,236 +354,6 @@ angular.module('ev-fdm')
         };
 
         return SearchController;
-    }]);
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
     }]);
 'use strict';
 
@@ -798,83 +671,71 @@ module.directive('evFilters', function() {
         });
 }) ();
 
-// @TODO: DELETE //
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
-    function _sync($table) {
-        var $headers = $table.find('thead > tr');
-        var $firstTr = $table.find('tbody > tr').first();
+    function _sync($table, $scope) {
+        var containerH, containerW,
+            container    = angular.element('.table-container'),
+            subContainer = angular.element('.ev-fixed-header-table-container');
 
-        // no header to resize
-        if (!$headers.length) { return; }
-
-        // uniform size for every header
-        if (!$firstTr.length) {
-            $headers.addClass('uniform');
-            _uniformSize($headers, $table.outerWidth());
+        if (!container.length) {
+            console.log("Table should be wrapped inside a div having 'table-container' class to use evFixedHeaders directive");
             return;
-        } else {
-            $headers.removeClass('uniform');
         }
 
-        // compute size from first line sizing
-        var currentChildIndex = 0;
-        var $ths = $headers.find('th');
-        $ths.each(function() {
-            var $td = $firstTr.find('td:nth-child(' + (1 + currentChildIndex) + ')');
-            if ($td.is(':visible')) {
-                $(this).css('width', $td.outerWidth()).show();
-                $(this).css('maxWidth', $td.outerWidth()).show();
-            } else {
-                // $(this).hide();
-            }
-            currentChildIndex++;
+        $scope.$watch(function() {
+            containerH = container.height();
+            containerW = container.width();
+            return containerH + "-" + containerW;
+        },
+        function() {
+            subContainer.height(containerH);
+            subContainer.width(containerW);
+            $table.floatThead('reflow');
         });
     }
 
-    function _timeoutSync($table) {
+    function _timeoutSync($table, $scope) {
         $timeout(function() {
-            _sync($table);
+            _sync($table, $scope);
         }, 0, false);
     }
 
-    function _uniformSize($headers, width) {
-        var $tds = $headers.find('th');
-        if (!$tds.length) { return; }
-        $tds.each(function() {
-            $(this).css('width', (width/$tds.length) + 'px');
-        });
-    }
-
     return {
-
         restrict: 'A',
         replace: false,
-
         scope: {
             rows: '='
         },
-
         link: function ($scope, element, attrs) {
             var $table = $(element);
-            $table.addClass('fixed-headers');
+
+            $table
+                .wrap('<div class="ev-fixed-header-table-container"></div>')
+                .floatThead({
+                    scrollContainer: function($table){
+                        return $table.closest('.ev-fixed-header-table-container');
+                    }
+                });
+
             $(window).on('resize', function() {
-                _sync($table);
+                _sync($table, $scope);
             });
             $scope.$on('module-layout-changed', function() {
-                _sync($table);
+                _sync($table, $scope);
             });
             // watch for raw data changes !
             $scope.$watch('rows', function() {
-                _timeoutSync($table);
+                _timeoutSync($table, $scope);
             }, true);
             // wait for end of digest then sync headers
-            _timeoutSync($table);
+            _timeoutSync($table, $scope);
         }
     };
 
 }]);
+
 'use strict';
 
 var module = angular.module('ev-fdm')
@@ -1158,7 +1019,7 @@ var module = angular.module('ev-fdm')
 
 var module = angular.module('ev-fdm');
 
-module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager', function($timeout, $rootScope, panelManager) {
+module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
 
     var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
 
@@ -1185,8 +1046,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
     }
 
     function updateBreakpoints(element) {
-        var inner = element.find('.panel-inner');
-        var bp = getBPMatching(inner.outerWidth());
+        var bp = getBPMatching(element.outerWidth());
         applyBPAttribute(element, bp);
     }
 
@@ -1195,16 +1055,16 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
         scope: false,
         replace: true,
         transclude: true,
-        templateUrl: 'panels/panel-skeleton.phtml',
+        template: '<div ng-transclude></div>',
         link: function(scope, element, attrs) {
             /**
              * Listener to update the breakpoints properties
              */
             element.resizable({
                 handles: "w",
+                helper: "ui-resizable-helper",
                 resize: function(event, ui) {
                     updateBreakpoints(element);
-                    $rootScope.$broadcast('panel-resized', element);
                 }
             });
             $rootScope.$on('module-layout-changed', function() {
@@ -1218,6 +1078,60 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', 'panelManager
         }
     };
 }]);
+
+(function () {
+    'use strict';
+    var module = angular.module('ev-fdm')
+        .directive('evPictureList', function () {
+          return {
+            restrict: 'EA',
+            scope: {
+              pictures: '=',
+              editable: '=',
+              onDelete: '&',
+              onChange: '&'
+            },
+            template:
+                '<ul class="picture-list">' +
+                    '<li ng-repeat="picture in pictures" class="ev-animate-picture-list">' +
+                        '<figure>' +
+                            '<div class="picture-thumb" ' +
+                              'style="background-image: '+
+                                  'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
+                                '<button class="delete-action" ' +
+                                  'ng-click="onDelete({picture: picture, index: $index})" ' +
+                                  'data-ng-show="editable">' +
+                                    '<span class="icon icon-bin"></span>' +
+                                '</button>' +
+                            '</div>' +
+                            '<figcaption>' +
+                                '<span class="copyright">&copy;</span>' +
+                                '<span class="author" data-ng-show="!editable">' +
+                                     '{{ picture.author }}' +
+                                '</span>' +
+                                '<span data-ng-show="editable">' +
+                                    '<input ' +
+                                      'type="text" ' +
+                                      'class="form-control author" ' +
+                                      'ng-model="picture.author" ' +
+                                      'ng-change="onChange({picture: picture})"/>' +
+                                '</span>' +
+                            '</figcaption>' +
+                        '</figure>' +
+                    '</li>' +
+                '</ul><div class="clearfix"></div>',
+        link: function ($scope, elem, attrs) {
+          if (!attrs.onDelete) {
+            $scope.onDelete = function (params) {
+              $scope.pictures.splice(params.index, 1);
+            };
+          }
+          $scope.pictures = $scope.pictures || [];
+        }
+      };
+    });
+})();
+
 (function () {
     'use strict';
         // update popover template for binding unsafe html
@@ -1401,7 +1315,7 @@ angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService'
             $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
                 $('body').removeClass('state-resolving');
 
-                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
 
                 notificationsService.addError({
                     text: errorMessage
@@ -1840,7 +1754,7 @@ angular.module('ev-fdm')
                                 'ng-class="{active:pane.selected}" '+
                                 'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
                                 '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
-                                    '<span ng-show="pane.tabIcon" class="{{pane.tabIcon}}"></span> '+
+                                    '<span ng-show="pane.tabIcon" class="icon {{pane.tabIcon}}"></span> '+
                                     '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
                                 '</a>' +
                             '</li>' +
@@ -1878,6 +1792,42 @@ angular.module('ev-fdm')
             };
         });
 }) ();
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('evTagList', function () {
+        return {
+            restrict: 'EA',
+            scope: {
+                elements: '=',
+                editable: '=',
+                className: '@',
+                maxElements: '=',
+                maxAlertMessage: '@'
+            },
+            replace: true,
+            template:
+                '<ul class="list-inline {{ className }}">' +
+                    '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
+                        '<span class="label label-default" >' +
+                            '{{ element.name }}' +
+                            '<button ng-show="editable" type="button" class="close inline" ' +
+                                'ng-click="remove($index)">×</button> ' +
+                        '</span>' +
+                    '</li>' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning">' +
+                        ' {{ maxAlertMessage }}' +
+                    '</li>' +
+                '</ul>',
+            link: function ($scope, elem, attrs) {
+
+                $scope.remove = function (index) {
+                    $scope.elements.splice(index, 1);
+                };
+            }
+        };
+    });
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -1935,6 +1885,395 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
+
+if(typeof(Fanny) == 'undefined') {
+    Fanny = {}
+};
+
+Fanny.Utils = {
+    generatedIds : {},
+    generateId : function(prefix) {
+        var id = prefix + Math.random() * 10000;
+        if(typeof(this.generatedIds[id] != 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = generateId(prefix);
+        }
+        return id;
+    },
+    convertNumberToString : function(number, nbDecimals, intMinLength) {
+        var thousandsSep = ' ';
+        var decimalSep   = ',';
+        var numberStr    = '';
+        var numberArray  = [];
+        var integer      = '';
+        var decimals     = '';
+        var result       = '';
+        
+        if(typeof(nbDecimals) == 'undefined') {
+            nbDecimals = 2;
+        }
+        
+        numberStr = number + '';
+        numberArray = numberStr.split('.');
+        if(numberArray.length < 1 && numberArray.length > 2) {
+            throw new Error('Invalid number');
+            return false;
+        }
+        
+        integer = numberArray[0];
+        
+        if(numberArray.length == 1) {
+            decimals = '';
+            for(var i = 0; i < nbDecimals; i++) {
+                decimals += '0';
+            }
+        } else {
+            decimals = numberArray[1];
+            if(decimals.length > nbDecimals) {
+                decimals = decimals.substring(0, 2);
+            } else {
+                while(decimals.length < nbDecimals) {
+                    decimals += '0';
+                }
+            }
+        }
+        for(var i = 0; i < integer.length; i++) {
+            if(i % 3 == 0 && i != 0) {
+                result = thousandsSep + result;
+            }
+            result = integer[integer.length - i - 1] + result;
+        }
+        if(result == '') {
+            result = '' + 0;
+        }
+        
+        for(var i = result.length; i < intMinLength; i++) {
+            result = '0' + result;
+        }
+        
+        if(decimals.length > 0) {
+            result += decimalSep + decimals;
+        }
+        return result;
+    },
+    stringToVar : function(string) {
+        if(typeof(string) != 'string') {
+            throw new Error('Not a string');
+            return;
+        }
+        if(!isNaN(string)) {
+            return parseInt(string);
+        }
+        var _exploded = string.split('.');
+        var _result = window;
+        for (var index = 0; index < _exploded.length; index++) {
+            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
+                _result = _result[_exploded[index]];
+            } else {
+                throw new Error('No corresponding var found for ' + string);
+                return;
+            }
+        }
+        return _result;
+    },
+    formatDate : function(date) {
+        if(!date || typeof(date) != 'object') {
+            return '';
+        }
+        var year = date.getFullYear();
+        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
+        var day = this.convertNumberToString(date.getDate(), 0, 2);
+        return year + '-' + month + '-' + day;
+    },
+    Renderers : {
+        date : function(date) {
+            var _date     = null;
+            var _splitted = null;
+            var _obj      = null;
+            if(date && typeof(date) == 'object') {
+                _date = date.date;
+            } else {
+                _date = date;
+            }
+            if(typeof(_date) == 'string' && _date) {
+                _date = _date.split(' ')[0];
+                _splitted = _date.split('-');
+                if (_splitted.length === 3) {
+                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
+                }
+                else {
+                    return '';
+                }
+            } else {
+                return '';
+            }
+        },
+        amounts : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2);
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+            
+        },
+        money : function(number, row) {
+            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        euros : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        upper : function(string) {
+            if(typeof(string) == 'string') {
+                return string.toUpperCase();
+            } else {
+                return string;
+            }
+        }
+    }
+}
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2211,791 +2550,188 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
 
 var module = angular.module('ev-fdm');
 
-module.factory('panelFactory', function() {
-    var Panel = function(extensions) {
-        this.blockers = [];
-        _(this).extend(extensions);
-    };
-    Panel.prototype.addBlocker = function(blocker) {
-        this.blockers.push(blocker);
-    };
-    Panel.prototype.removeBlocker = function(blocker) {
-        this.blockers = _(this.blockers).without(blocker);
-    };
-    Panel.prototype.isBlocked = function(silent) {
-        return _(this.blockers).some(function(blocker) {
-            return blocker(silent);
-        });
-    };
-    return {
-        create: function(extensions) {
-            return new Panel(extensions);
-        }
-    };
-});
+module
+    .service('PanelService', [
+        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
+        function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
 
-module.service('PanelService', [ '$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'panelManager', 'panelFactory', function($rootScope, $http, $templateCache, $q, $injector, $controller, panelManager, panelFactory) {
+        var container   = null,
+            stylesCache = window.stylesCache = {}
+            self        = this;
 
-    // Identifies all panels
-    var currentId = 1;
-
-    function parseOptions(options) {
-        options = options || {};
-
-        if (!options.template && !options.templateUrl && !options.content) {
-            throw new Error('Should define options.template or templateUrl or content');
-        }
-
-        // Retrieve the last panel
-        var last = panelManager.last();
+        this.panels = {};
 
         /**
-         * Parse the opening options (replace or pushFrom)
+         * Panel options are:
+         * - name
+         * - template or templateURL
+         * - index
          */
-        if(options.replace) {
-            if(angular.isString(options.replace)) {
-                //We can use 'panel-main' as a special panel name
-                if(options.replace === 'panel-main') {
-                    options.replace = getMainPanel();
-                } else {
-                    options.replace = getPanel(options.replace);
-                }
-            } else if(options.replace === true) {
-                options.replace = last;
-            }
-        } else if (options.pushFrom) {
-            if(angular.isString(options.pushFrom)) {
-                options.pushFrom = getPanel(options.pushFrom);
+        this.open = function(options) {
+            if (!options.name && options.panelName) {
+                console.log("Deprecated: use name instead of panelName")
+                options.name = options.panelName;
             }
 
-            if(options.pushFrom !== null && options.pushFrom != last) {
-                options.replace = panelManager.getNext(options.pushFrom);
+            if (!options) {
+                console.log("A panel must have a name (options.name)");
+                return;
             }
+
+            var name = options.name;
+
+            if (self.panels[name]) {
+                var panel        = self.panels[name];
+                panel.index      = options.index;
+
+                var afterIndex   = findAfterElementIndex(options.index),
+                    afterElement = getAfterElement(afterIndex);
+
+                panel.element.css('z-index', 2000 + afterIndex);
+                $animate.move(panel.element, container, afterElement, function() {
+                    updateLayout();
+                });
+
+                return self.panels[name];
+            }
+
+            // We call it *THE BEAST*.
+            var element          = angular.element('<div class="ev-panel-placeholder ev-panel-placeholder-' + name + '" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel right" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
+                templatePromises = getTemplatePromise(options);
+            self.panels[name]         = options;
+            options.element      = element;
+            options.element.css('z-index', 2000 + options.index);
+
+            return templatePromises.then(function(template) {
+                element.find('.ev-panel-content').html(template);
+                element          = $compile(element)($rootScope.$new());
+                options.element  = element;
+
+                var afterIndex   = findAfterElementIndex(options.index),
+                    afterElement = getAfterElement(afterIndex);
+
+                element.on('resizestop', function(event, ui) {
+                    // resizable plugin does an unwanted height resize
+                    // so we cancel the height set.
+                    var originalSize = ui.originalSize;
+                    $(this).css("height","");
+
+                    stylesCache[options.panelName] = ui.size.width;
+                    updateLayout(self);
+                }).on('resize', function(event, ui) {
+                    return false;
+                });
+
+                $animate.enter(element, container, afterElement, function() {
+                    updateLayout();
+                });
+
+                return options;
+            });
+        };
+
+        this.close = function(name) {
+            if (!name || !self.panels[name]) {
+                console.log("Panel not found for:" + name);
+            }
+
+            var element  = self.panels[name].element;
+            self.panels[name] = null;
+
+            $animate.leave(element, function() {
+                updateLayout();
+            })
+        };
+
+        /**
+         * Registers a panels container
+         *
+         * element : DOM element
+         */
+        this.registerContainer = function(element) {
+            container = element;
+        };
+
+        var timerWindowResize = null;
+        angular.element($window).on('resize', function() {
+            if(timerWindowResize !== null) {
+                $timeout.cancel(timerWindowResize);
+            }
+            timerWindowResize = $timeout(function() {
+                updateLayout()
+            }, 100);
+        });
+
+        function getStylesFromCache(name, options) {
+            var savedWidth = stylesCache[name];
+            if (savedWidth) {
+                return 'width: ' + savedWidth + 'px;';
+            }
+
+            return '';
         }
 
-        if(!options.replace && !options.pushFrom) {
-            options.pushFrom = last;
-        }
+        function getTemplatePromise(options) {
+            if (options.template || options.templateURL) {
+                return $q.when(options.template)
+            }
 
-        options.panelName = options.panelName || '';
-
-        options.panelClass = options.panelName || '';
-        options.panelClass += ' right';
-
-        options.resolve = options.resolve || {};
-        return options;
-    }
-
-    function getTemplatePromise(options) {
-        return options.content ? $q.when(options.content) :
-            options.template ? $q.when(options.template) :
-            $http.get(options.templateUrl, {
-                cache: $templateCache
-            }).then(function(result) {
+            return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
                 return result.data;
             });
-    }
+        }
 
-    function getResolvePromises(resolves) {
-        var promises = [];
-        angular.forEach(resolves, function(value) {
-            if (angular.isFunction(value) || angular.isArray(value)) {
-                promises.push($q.when($injector.invoke(value)));
+        function findAfterElementIndex(index) {
+            var insertedPanels = angular.element(container).children(),
+                afterIndex     = index - 1;
+
+            if (!index || index > insertedPanels.length) {
+                afterIndex = insertedPanels.length - 1;
             }
-        });
-        return promises;
-    }
+            else if (index < 1) {
+                afterIndex = 0;
+            }
 
-    function getPromises(options) {
-        return [getTemplatePromise(options)].concat(getResolvePromises(options.resolve));
-    }
+            return afterIndex;
+        }
 
-    function resolveAll(options) {
-        return $q.all(getPromises(options))
-            .then(function(contentAndLocals) {
-                // variables injected in the controller
-                var locals = {};
-                var i = 1;
-                angular.forEach(options.resolve, function(value, key) {
-                    locals[key] = contentAndLocals[i++];
-                });
-                return {
-                    content: contentAndLocals[0],
-                    locals: locals
-                };
-            });
-    }
+        function getAfterElement(afterIndex) {
+            var insertedPanels = angular.element(container).children(),
+                domElement     = insertedPanels[afterIndex];
 
-    /**
-     * Resolves everything needed to the view (templates, locals)
-     * + creates the controller, scope
-     * + finally creates the view
-     */
-    function createInstance(options, done) {
-        var self = this;
-        var resultDeferred = $q.defer();
-        var openedDeferred = $q.defer();
+            return domElement ? angular.element(domElement) : null;
+        }
 
-        var instance = panelFactory.create({
-            panelName : options.panelName,
-            result: resultDeferred.promise,
-            opened: openedDeferred.promise,
-            close: function(result) {
-                if (!instance.isBlocked()) {
-                    var notCancelled = panelManager.dismissChildren(instance, 'parent closed');
-                    if (!notCancelled) {
-                        return false;
+        function updateLayout(element) {
+            var panelElements = angular.element(container).children('.ev-panel-placeholder');
+
+            if (element) {
+                for (var i = 0; i < panelElements.length; i++) {
+                    var current = panelElements[i];
+                    if (element == current) {
+                        panelElements.splice(i, 1);
+                        panelElements.push(element);
+                        break;
                     }
-                    panelManager.close(instance, options);
-                    panelManager.remove(instance);
-                    resultDeferred.resolve(result);
-                    return true;
                 }
-                return false;
-            },
-            dismiss: function(reason) {
-                if (!instance.isBlocked()) {
-                    var notCancelled = panelManager.dismissChildren(instance, 'parent dismissed');
-                    if (!notCancelled) {
-                      return false;
-                    }
-                    panelManager.close(instance, options);
-                    panelManager.remove(instance);
-                    resultDeferred.reject(reason);
-                    return true;
-                }
-                return false;
             }
-        });
+            panelLayoutEngine.checkStacking(panelElements);
+        }
 
-        resolveAll(options)
-            .then(function(contentAndLocals) {
-
-                // create scope
-                var scope = (options.scope || $rootScope).$new();
-                scope.$close = instance.close;
-                scope.$dismiss = instance.dismiss;
-
-                // fires the controller
-                var controller;
-                if (options.controller) {
-                    var locals = contentAndLocals.locals;
-                    locals.$scope = scope;
-                    locals.$instance = instance;
-                    controller = $controller(options.controller, locals);
-                }
-
-                // add variables required by panelManager
-                options.scope = scope;
-                options.deferred = resultDeferred;
-                options.content = contentAndLocals.content;
-
-                // finally open the view
-                if (options.replace) {
-                    panelManager.replace(options.replace, instance, options);
-                    panelManager.remove(options.replace, options);
-                } else {
-                    panelManager.open(instance, options);
-                }
-            })
-            .then(function() {
-                openedDeferred.resolve(true);
-            }, function() {
-                openedDeferred.resolve(false);
-            });
-
-        return instance;
-    }
-
-    /**
-     * Get a panel instance via his name
-     */
-    function getPanel(panelName) {
-        var panel = panelManager.panels.find(function(_panel) {
-            return _panel.panelName === panelName;
-        });
-
-        return panel || null;
-    }
-
-    /**
-     * Get the main panel instance
-     */
-    function getMainPanel() {
-        var mainPanel = panelManager.panels.first();
-        // var mainPanel = panelManager.panels.find(function(_panel) {
-        //     return _panel.isMain === true;
-        // });
-
-        return mainPanel || null;
-    }
-
-    /**
-     * Return a boolean if either the panel exist or not
-     */
-    function hasPanel(panelName) {
-        return getPanel(panelName) != null;
-    }
-
-    /**
-     * @param {Object} options
-     *        - {Mixed} template / templateUrl / content
-     *        - (optional) {String} controller
-     *        - (optional) {Mixed} scope
-     *        - (optional) {Object} resolve
-     *        - (optional) {String} panelName
-     *        - (optional) {Mixed} pushFrom :
-     *                            + {String} : the panel name
-     *                            + {Object} : the panel instance
-     *        - (optional) {Mixed} replaceAt :
-     *                            + {String} : the panel name
-     *                            + {Object} : the panel instance
-     *                            + {Boolean}: if true replace the last panel
-     *
-     * @return {Object} The panel instance or null if something wrong occured
-     */
-    function open(options) {
-        options = parseOptions(options);
-
-        var instance;
-
-        if (options.replace) {
-            var result = panelManager.dismissChildren(options.replace, 'parent replaced');
-            // some child might have canceled the close
-            if (!result) {
-                return null;
+        return this;
+    }])
+    .directive('evPanels', ['PanelService', function(panelService) {
+        return {
+            restrict: 'AE',
+            scope: {},
+            replace: true,
+            template: '<div class="ev-panels ev-panels-container lisette-module"><div></div></div>',
+            link: function (scope, element, attrs) {
+              panelService.registerContainer(element);
             }
-        }
+        };
+    }]);
 
-        if (options.replace && options.replace.isBlocked()) {
-            return null;
-        }
-
-        // Contains the panel 'depth'
-        options.depth = panelManager.panels.size();
-        instance = createInstance(options);
-
-        // Attach some variables to the instance
-        instance.$$id = currentId++;
-
-        panelManager.push(instance);
-
-        return instance;
-    }
-
-    var panelService = {
-        getPanel : getPanel,
-        hasPanel : hasPanel,
-        open: open,
-        count: function() {
-            return panelManager.size();
-        },
-        dismissChildrenId: function(i) {
-            panelManager.dismissChildrenId(i);
-        },
-        dismissAll: function(reason) {
-            panelManager.dismissAll(reason);
-        },
-        dismissChildren: function(instance, reason) {
-            return panelManager.dismissChildren(instance, reason);
-        }
-    };
-
-    return panelService;
-}]);
-// WORK IN PROGRESS
-
-// var module = angular.module('ev-fdm');
-
-// module.factory('Panel', function() {
-
-//     var Panel = function(extensions) {
-//         this.blockers = [];
-//         _(this).extend(extensions);
-//     };
-
-//     Panel.prototype.addBlocker = function(blocker) {
-//         this.blockers.push(blocker);
-//     };
-
-//     Panel.prototype.removeBlocker = function(blocker) {
-//         this.blockers = _(this.blockers).without(blocker);
-//     };
-
-//     Panel.prototype.isBlocked = function(silent) {
-//         return _(this.blockers).some(function(blocker) {
-//             return blocker(silent);
-//         });
-//     };
-
-//     return Panel;
-// });
-
-// module.service('PanelServiceUI', [ '$rootScope', '$compile', '$animate', '$timeout', function($rootScope, $compile, $animate, $timeout) {
-
-//     var STACKED_WIDTH = 15;
-//     var els = {};
-
-//     var Region = function() {
-//         this.updateStacking = function() {
-//             // return $timeout(checkStackingThrottled);
-//         };
-
-//         this.open = function(instance, options) {
-//             instance.$$depth = region.panels.size();
-//             var el = createPlaceholder(instance.$$depth);
-//             var inner = createPanelView(instance, options);
-//             el.html(inner);
-//             els[instance.$$id] = el;
-//             $animate.enter(el, container, panelZero, function() {
-//                 options.scope.$emit('animation-complete');
-//                 $rootScope.$broadcast('module-layout-changed');
-//                 region.updateStacking();
-//             });
-//             el.on('resize', function(event, ui) {
-//                 stylesCache[instance.$$depth + '-' + options.panelClass] = ui.size.width;
-//                 region.updateStacking();
-//             });
-//             region.updateStacking();
-//             return instance;
-//         };
-
-//         this.replace = function(fromInstance, toInstance, options) {
-//             if (typeof(els[fromInstance.$$id]) != 'undefined') {
-//                 var el = els[fromInstance.$$id];
-//                 toInstance.$$depth = region.panels.size() - 1;
-//                 var inner = createPanelView(toInstance, options);
-//                 el.html(inner);
-//                 els[toInstance.$$id] = el;
-//                 delete els[fromInstance.$$id];
-//                 region.updateStacking();
-//                 return toInstance;
-//             } else {
-//                 return region.open(toInstance, options);
-//             }
-//         };
-
-//         this.close = function(instance) {
-//             if (typeof(els[instance.$$id]) != 'undefined') {
-//                 var el = els[instance.$$id];
-//                 $animate.leave(el, function() {
-//                     delete els[instance.$$id];
-//                     region.updateStacking();
-//                 });
-//                 region.updateStacking();
-//             }
-//         };
-
-//         this.remove = function(instance) {
-//             // TODO
-
-//             // var i = this.panels.indexOf(instance);
-//             // if (i > -1) {
-//             //     this.panels.splice(i, 1);
-//             // }
-//             // return i;
-//         };
-//     };
-
-//     var region = new Region();
-
-//     function getEl(instance) {
-//         if (els[instance.$$id]) {
-//             return els[instance.$$id];
-//         } else {
-//             return null;
-//         }
-//     }
-
-//     function getStylesFromCache(instance, options) {
-//         var savedWidth = stylesCache[instance.$$depth + '-' + options.panelClass];
-//         if (savedWidth) {
-//             return 'width: ' + savedWidth + 'px;';
-//         } else {
-//             return '';
-//         }
-//     }
-
-//     function stack(fromInstanceIndex) {
-//         for (var i = 0; i < region.panels.size(); i++) {
-//             var shouldStack = (i < fromInstanceIndex);
-//             var instance = region.at(i);
-//             var el = getEl(instance);
-//             if (instance.$$stacked && !shouldStack) {
-//                 delete instance.$$actualWidth;
-//                 $animate.removeClass(el, 'stacked');
-//             } else if (!instance.$$stacked && shouldStack) {
-//                 instance.$$actualWidth = getEl(instance).outerWidth();
-//                 $animate.addClass(el, 'stacked');
-//             }
-//             instance.$$stacked = shouldStack;
-//         }
-//     }
-
-//     function checkStacking() {
-//         var maxWidth = $(window).innerWidth() - 100;
-//         for (var i = 0; i < region.panels.size(); i++) {
-//             var j = 0;
-//             var totalWidth = _(region.panels).reduce(function(memo, instance) {
-//                 if (j++ < i) {
-//                     return memo + STACKED_WIDTH;
-//                 } else {
-//                     var el = getEl(instance);
-//                     if (!el) { return memo; }
-//                     if (instance.$$stacked) { return memo + instance.$$actualWidth; }
-//                     var width = el.outerWidth();
-//                     if (width < 50) {
-//                         // most probably before animation has finished landing
-//                         // we neeed to anticipate a final w
-//                         return memo + 300;
-//                     } else {
-//                         return memo + width;
-//                     }
-//                 }
-//             }, 0);
-//             if (totalWidth < maxWidth) {
-//                 return stack(i);
-//             }
-//         }
-//         // stack all
-//         stack(region.panels.size() - 1);
-//     }
-
-//     function createPlaceholder(depth) {
-//         var isMain = depth === 1;
-//         return angular.element('<div ' +
-//             'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
-//             'style="z-index:' + (2000 + depth) + ';"></div>');
-//     }
-
-//     function createPanelView(instance, options) {
-//         var inner = angular.element(options.content);
-//         inner.attr('style', getStylesFromCache(instance, options));
-//         inner.attr('right-panel-window', true);
-//         options.scope.panelClass = options.panelClass;
-//         return $compile(inner)(options.scope);
-//     }
-
-//     var checkStackingThrottled = _(checkStacking).debounce(50);
-
-//     $(window).on('resize', function() {
-//         region.updateStacking();
-//     });
-
-//     var stylesCache = window.stylesCache = {};
-//     var container = angular.element('.lisette-module-region.right');
-//     var panelZero = container.find('.panel-zero');
-
-
-//     return region;
-// }]);
-
-// module.service('PanelService', ['$rootScope', '$http', '$templateCache', '$q', '$injector', '$controller',  'PanelServiceUI', 'Panel',
-//                         function($rootScope, $http, $templateCache, $q, $injector, $controller, panelServiceUI, Panel) {
-
-//     var panels = [];
-
-//     var openingTypes = {
-//         PUSH    : 1,       // Creates a new panel after the others
-//         REPLACE : 2        // Replace the panel if it already exists, and dismiss its children
-//     };
-//     var defaultOpeningType = openingTypes.PUSH;
-//     var STACKED_WIDTH = 15;
-
-//     /**
-//      * HELPERS
-//      */
-
-//     /**
-//      * Get a panel with his name
-//      * @param  {String} panelName the panel name
-//      * @return {Object}           either the panel or null
-//      */
-//     function getPanel(panelName) {
-//         var panel = _(this.panels).where({
-//             panelName: panelName
-//         });
-
-//         if(panel) {
-//             return _(panel).last();
-//         }
-
-//         return null;
-//     }
-
-//     /**
-//      * Return true if we have this panel, false otherwise
-//      * @param  {String}  panelName the panel name
-//      * @return {Boolean}           if we have this panel or not
-//      */
-//     function hasPanel(panelName) {
-//         return getPanel(panelName) !== null;
-//     }
-
-//     function _isEmpty() {
-//         return panels.length === 0;
-//     }
-
-//     function _remove(panel) {
-//         var i = panels.indexOf(panel);
-//         if (i > -1) {
-//             panels.splice(i, 1);
-//         }
-
-//         return i;
-//     }
-
-//     function _each() {
-//         return this.panels.each.apply(this.panels, arguments);
-//     }
-
-//     function _getNextPanel(panel) {
-//         var i = panels.indexOf(panel);
-//         if (i < panels.length - 1) {
-//             return panels[i + 1];
-//         } else {
-//             return null;
-//         }
-//     }
-
-//     function _getNextPanels(panel) {
-//         var i = panels.indexOf(panel);
-//         if (i > -1 && i < panels.length - 1) {
-//             return panels.slice(i + 1)
-//         } else {
-//             return [];
-//         }
-//     }
-
-//     /**
-//      * Helper to parse the options
-//      * @param  {Object} options the options(todo list them)
-//      * @return {Object}         the options formatted
-//      */
-//     function _parseOptions(options) {
-//         if (!options.template && !options.templateUrl && !options.content) {
-//             throw new Error('Should define options.template or templateUrl or content');
-//         }
-
-//         if (!openingTypes[options.openingType]){
-//             options.openingType = defaultOpeningType;
-//         }
-//         options.panelName = options.panelClass || '';
-
-//         options.panelClass = options.panelClass || '';
-//         options.panelClass += ' right';
-
-//         options.resolve = options.resolve || {};
-
-//         // We generate our id
-//         options.$$id = panels.length + 1;
-
-//         return options;
-//     }
-
-//     function getTemplatePromise(options) {
-//         return options.content ? $q.when(options.content) :
-//             options.template ? $q.when(options.template) :
-//             $http.get(options.templateUrl, {
-//                 cache: $templateCache
-//             }).then(function(result) {
-//                 return result.data;
-//             });
-//     }
-
-//     function getResolvePromises(resolves) {
-//         var promises = [];
-//         angular.forEach(resolves, function(value) {
-//             if (angular.isFunction(value) || angular.isArray(value)) {
-//                 promises.push($q.when($injector.invoke(value)));
-//             }
-//         });
-//         return promises;
-//     }
-
-//     function getPromises(options) {
-//         return [getTemplatePromise(options)].concat(getResolvePromises(options.resolve));
-//     }
-
-//     function resolveAll(options) {
-//         return $q.all(getPromises(options))
-//             .then(function(contentAndLocals) {
-//                 // variables injected in the controller
-//                 var locals = {};
-//                 var i = 1;
-//                 angular.forEach(options.resolve, function(value, key) {
-//                     locals[key] = contentAndLocals[i++];
-//                 });
-//                 return {
-//                     content: contentAndLocals[0],
-//                     locals: locals
-//                 };
-//             });
-//     }
-
-//     /**
-//      * Resolves everything needed to the view (templates, locals)
-//      * + creates the controller, scope
-//      * + finally creates the view
-//      */
-//     function createInstance(region, options, done) {
-//         var resultDeferred = $q.defer();
-//         var openedDeferred = $q.defer();
-
-//         var instance = new Panel({
-//             panelName : options.panelName,
-//             result: resultDeferred.promise,
-//             opened: openedDeferred.promise,
-//             close: function(result) {
-//                 if (!instance.isBlocked()) {
-//                     var notCancelled = dismissChildren(instance, 'parent closed');
-//                     if (!notCancelled) {
-//                         return false;
-//                     }
-
-//                     region.close(instance, options);
-//                     region.remove(instance);
-
-//                     resultDeferred.resolve(result);
-//                     return true;
-//                 }
-//                 return false;
-//             },
-//             dismiss: function(reason) {
-//                 if (!instance.isBlocked()) {
-//                     var notCancelled = dismissChildren(instance, 'parent dismissed');
-//                     if (!notCancelled) {
-//                       return false;
-//                     }
-//                     region.close(instance, options);
-//                     region.remove(instance);
-
-//                     resultDeferred.reject(reason);
-
-//                     return true;
-//                 }
-//                 return false;
-//             }
-//         });
-
-//         resolveAll(options)
-//             .then(function(contentAndLocals) {
-
-//                 // create scope
-//                 var scope = (options.scope || $rootScope).$new();
-//                 scope.$close = instance.close;
-//                 scope.$dismiss = instance.dismiss;
-
-//                 // fires the controller
-//                 var controller;
-//                 if (options.controller) {
-//                     var locals = contentAndLocals.locals;
-//                     locals.$scope = scope;
-//                     locals.$instance = instance;
-//                     controller = $controller(options.controller, locals);
-//                 }
-
-//                 // add variables required by regions
-//                 options.scope = scope;
-//                 options.deferred = resultDeferred;
-//                 options.content = contentAndLocals.content;
-
-//                 // finally open the view
-//                 if (options.replace) {
-//                     region.replace(options.replace, instance, options);
-//                     region.remove(options.replace, options);
-//                 } else {
-//                     region.open(instance, options);
-//                 }
-//             })
-//             .then(function() {
-//                 openedDeferred.resolve(true);
-//             }, function() {
-//                 openedDeferred.resolve(false);
-//             });
-
-//         return instance;
-//     }
-
-//     function dismissChildrens(panel, reason) {
-//         var childrens = _getNextPanels(panel);
-//         var i = childrens.length -1;
-
-//         for (; i >= 0; i--) {
-//             var child  = childrens[i];
-//             var result = child.dismiss(reason);
-//             if (!result) {
-//                 return false;
-//             }
-
-//         }
-
-//         return true;
-//     }
-
-//     /**
-//      * Dismiss all panels except the first one (the main list)
-//      */
-//     function dismissAll(reason) {
-//         if(panels.length >= 2) {
-//             dismissChildrens(panels[1], reason);
-//         }
-//     }
-
-//     /**
-//      * Open a new panel
-//      */
-//     function open(options) {
-//         options = _parseOptions(options);
-//         var  lastPanel = _(panels).last();
-
-//         if (options.push && !options.pushFrom) {
-//             options.pushFrom = lastPanel;
-//         }
-
-//         if (options.pushFrom && options.pushFrom != lastPanel) {
-//             options.replace = _getNextPanel(options.pushFrom);
-//             if (options.replace) {
-//                 var result = _dismissChildrens(options.replace, 'parent replaced');
-//                 // some child might have canceled the close
-//                 if (!result) {
-//                     return false;
-//                 }
-//             }
-//         }
-
-//         if (!options.push && !_isEmpty()) {
-//             options.replace = lastPanel;
-//         }
-
-//         if (options.replace && options.replace.isBlocked()) {
-//             return false;
-//         }
-
-//         var panel = createInstance(panelServiceUI, options);
-//         panels.push(panel);
-
-//         return panel;
-//     }
-
-
-
-//     /**
-//      * Our panel service.
-//      * @type {Object}
-//      */
-//     var PanelService = {
-//         panels: panels,
-//         openingTypes: openingTypes,
-//         getPanel: getPanel,
-//         hasPanel: hasPanel,
-//         open: open,
-//         dismissChildrens: dismissChildrens,
-//         dismissAll: dismissAll
-//     };
-
-//     return PanelService;
-// }]);
 var module = angular.module('ev-fdm');
 
 var SidonieModalService = function($modal, $animate, $log) {
@@ -3747,165 +3483,6 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
-
-if(typeof(Fanny) == 'undefined') {
-    Fanny = {}
-};
-
-Fanny.Utils = {
-    generatedIds : {},
-    generateId : function(prefix) {
-        var id = prefix + Math.random() * 10000;
-        if(typeof(this.generatedIds[id] != 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = generateId(prefix);
-        }
-        return id;
-    },
-    convertNumberToString : function(number, nbDecimals, intMinLength) {
-        var thousandsSep = ' ';
-        var decimalSep   = ',';
-        var numberStr    = '';
-        var numberArray  = [];
-        var integer      = '';
-        var decimals     = '';
-        var result       = '';
-        
-        if(typeof(nbDecimals) == 'undefined') {
-            nbDecimals = 2;
-        }
-        
-        numberStr = number + '';
-        numberArray = numberStr.split('.');
-        if(numberArray.length < 1 && numberArray.length > 2) {
-            throw new Error('Invalid number');
-            return false;
-        }
-        
-        integer = numberArray[0];
-        
-        if(numberArray.length == 1) {
-            decimals = '';
-            for(var i = 0; i < nbDecimals; i++) {
-                decimals += '0';
-            }
-        } else {
-            decimals = numberArray[1];
-            if(decimals.length > nbDecimals) {
-                decimals = decimals.substring(0, 2);
-            } else {
-                while(decimals.length < nbDecimals) {
-                    decimals += '0';
-                }
-            }
-        }
-        for(var i = 0; i < integer.length; i++) {
-            if(i % 3 == 0 && i != 0) {
-                result = thousandsSep + result;
-            }
-            result = integer[integer.length - i - 1] + result;
-        }
-        if(result == '') {
-            result = '' + 0;
-        }
-        
-        for(var i = result.length; i < intMinLength; i++) {
-            result = '0' + result;
-        }
-        
-        if(decimals.length > 0) {
-            result += decimalSep + decimals;
-        }
-        return result;
-    },
-    stringToVar : function(string) {
-        if(typeof(string) != 'string') {
-            throw new Error('Not a string');
-            return;
-        }
-        if(!isNaN(string)) {
-            return parseInt(string);
-        }
-        var _exploded = string.split('.');
-        var _result = window;
-        for (var index = 0; index < _exploded.length; index++) {
-            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
-                _result = _result[_exploded[index]];
-            } else {
-                throw new Error('No corresponding var found for ' + string);
-                return;
-            }
-        }
-        return _result;
-    },
-    formatDate : function(date) {
-        if(!date || typeof(date) != 'object') {
-            return '';
-        }
-        var year = date.getFullYear();
-        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
-        var day = this.convertNumberToString(date.getDate(), 0, 2);
-        return year + '-' + month + '-' + day;
-    },
-    Renderers : {
-        date : function(date) {
-            var _date     = null;
-            var _splitted = null;
-            var _obj      = null;
-            if(date && typeof(date) == 'object') {
-                _date = date.date;
-            } else {
-                _date = date;
-            }
-            if(typeof(_date) == 'string' && _date) {
-                _date = _date.split(' ')[0];
-                _splitted = _date.split('-');
-                if (_splitted.length === 3) {
-                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
-                }
-                else {
-                    return '';
-                }
-            } else {
-                return '';
-            }
-        },
-        amounts : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2);
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-            
-        },
-        money : function(number, row) {
-            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        euros : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        upper : function(string) {
-            if(typeof(string) == 'string') {
-                return string.toUpperCase();
-            } else {
-                return string;
-            }
-        }
-    }
-}
 angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
@@ -3962,7 +3539,7 @@ var module = angular.module('ev-fdm');
 /**
  * STACKING AND PANELS SIZE MANAGEMENT
  */
-module.service('PanelLayoutEngine', ['$animate', function($animate) {
+module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
 
     var STACKED_WIDTH = 35;
 
@@ -3975,25 +3552,24 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * Extract all useful panels informations
      * The (min-/max-/stacked-)width and the stacked state
      * @param  {Array} panels the panels
-     * @param  {Object}  panelManager (we need a function from it.. TO refactor.)
      * @return {Array}        Array containing the extracted values
      */
-    function getDataFromPanels(panels, panelManager) {
+    function getDataFromPanels(panels) {
         var datas = [];
         var i = 0;
         var panelsLength = panels.size();
 
-        for (; i < panelsLength; i++) {
-            var panel = panels._wrapped[i]; // Dealing with a _ object, yeah..
-            var panelElement = panelManager.getElement(panel);
+        angular.forEach(panels, function(panelDom) {
+            var panelElement = angular.element(panelDom);
+
             datas.push({
                 minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
                 maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
-                stacked:  panel.$$stacked,
+                stacked:  panelElement.hasClass('stacked'),
                 width:    panelElement.width(),
                 stackedWidth: STACKED_WIDTH
             });
-        }
+        });
 
         return datas;
     }
@@ -4025,12 +3601,12 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
                     continue;
                 }
 
-                var _width = data.minWidth;
-                if(_width < data.stackedWidth) {
-                    _width = data.stackedWidth;
+                var width = data.minWidth;
+                if(width < data.stackedWidth) {
+                    width = data.stackedWidth;
                 }
 
-                totalMinWidth += _width;
+                totalMinWidth += width;
             }
 
             if (totalMinWidth > limit) {
@@ -4063,12 +3639,12 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
                     continue;
                 }
 
-                var _width = data.maxWidth;
-                if(_width < data.stackedWidth) {
-                    _width = data.stackedWidth;
+                var width = data.maxWidth;
+                if(width < data.stackedWidth) {
+                    width = data.stackedWidth;
                 }
 
-                totalMaxWidth += _width;
+                totalMaxWidth += width;
             }
 
             if (totalMaxWidth < limit) {
@@ -4083,11 +3659,10 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * For each panels, test if he needs to be stacked
      */
     function updateStackState(datas,limit) {
-
         var minStacked = countMinStacked(datas, limit);
         var maxStacked = countMaxStacked(datas, limit);
 
-        _(datas).each(function(element) {
+        angular.forEach(datas, function(element) {
             element.stacked = false;
         });
 
@@ -4096,7 +3671,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
         /**
          * Specific rule where, for more readability, we stack a panel.
          */
-        if(((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
+        if (((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
             nbStacked = datas.length - 3;
         }
 
@@ -4115,32 +3690,26 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * Update the size of each panels
      */
     function updateSize(datas, limit) {
-        var data = null;
+        var totalWidth = 0;
 
-        // Ensures the width aren't below the min
-        _(datas).each(function(data) {
-            if(data.width < data.minWidth) {
+        angular.forEach(datas, function(data) {
+            // Ensures the width aren't below the min
+            if (data.width < data.minWidth) {
                 data.width = data.minWidth;
             }
+
+            totalWidth += data.stacked ? data.stackedWidth : data.width;
         });
 
-        // Total width of all datas
-        var totalWidth = _(datas).reduce(function(memo, data) {
-            if(data.stacked) {
-                return memo + data.stackedWidth;
-            }
-
-            return memo + data.width;
-        }, 0);
-
         // Delta is the gap we have to reach the limit
-        var delta = limit - totalWidth;
-        var i = 0;
-        var datasLength = datas.length;
-        for (i = 0; i < datasLength; i++) {
+        var delta = limit - totalWidth,
+            datasLength = datas.length
+            data = null;
+
+        for (var i = 0; i < datasLength; i++) {
             data = datas[i];
 
-            if(data.stacked) {
+            if (data.stacked) {
                 data.width = data.stackedWidth;
                 continue;
             }
@@ -4164,7 +3733,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
             delta = delta - (data.width - oldWidth);
 
             // Break if there is no more delta
-            if(delta === 0) {
+            if (delta === 0) {
                 break;
             }
         }
@@ -4183,7 +3752,6 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * @return {Array}  datas computed
      */
     function calculateStackingFromData(datas, limit) {
-
         var result = updateStackState(datas, limit);
         datas      = result.datas;
 
@@ -4205,47 +3773,46 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * @param  {Array}   panels      the panels
      * @param  {Array}   dataPanels  the datas we want to apply
      * @param  {Int}     windowWidth the windowWidth
-     * @param  {Object}  panelManager (we need a function from it.. TO refactor.)
      */
-    function resizeAndStackPanels(panels, dataPanels, windowWidth, panelManager) {
+    function resizeAndStackPanels(panels, dataPanels, windowWidth) {
         // If we need to stack all the panels
         // We don't stack the last one, but we hide all the stacked panels
         var isMobile  = false;
         var lastPanel = dataPanels[dataPanels.length - 1];
-        if(lastPanel.stacked === true) {
+
+        if (lastPanel.stacked === true) {
             lastPanel.stacked = false;
             lastPanel.width = windowWidth;
             isMobile = true;
         }
 
-        var i = 0;
         var panelsSize = panels.size();
-        var panel, dataPanel, element = null;
-        for (; i < panelsSize; i++) {
-            panel = panels._wrapped[i]; // Dealing with a _ object, yeah..
-            dataPanel = dataPanels[i];
-            element = panelManager.getElement(panel);
+        var panel, element = null;
 
-            if(!element) {
+        panels.css('left', 0);
+
+        angular.forEach(panels, function(domElement, i) {
+            var element   = angular.element(domElement),
+                dataPanel = dataPanels[i];
+
+            if (!element) {
                 console.log('no element for this panel)');
-                continue;
+                return;
             }
 
-            if (panel.$$stacked && !dataPanel.stacked) {
+            if (element.hasClass('stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'stacked');
                 $animate.removeClass(element, 'stacked-mobile');
-            } else if (!panel.$$stacked && dataPanel.stacked) {
+            } else if (!element.hasClass('stacked') && dataPanel.stacked) {
                 $animate.addClass(element, 'stacked');
 
-                if(isMobile) {
+                if (isMobile) {
                     $animate.addClass(element, 'stacked-mobile');
                 }
             }
 
-            panel.$$stacked = dataPanel.stacked;
-
-            element.children().first().width(dataPanel.width);
-        }
+            element.width(dataPanel.width + "px");
+        });
     }
 
     /**************************
@@ -4254,22 +3821,20 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
 
     /**
      * Check the stacking and so on
-     * The first args is panelManager because we need panels and a (stupid! to refactor) method from it..
      */
-    function checkStacking(panelManager) {
-
-        var panels = panelManager.panels;
-
-        var windowWidth   = $(window).innerWidth();
+    function checkStacking(panels) {
+        var windowWidth   = angular.element($window).innerWidth();
 
         // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels, panelManager);
+        var rawDataPanels = getDataFromPanels(panels);
 
         // #2 - We compute these new data with our specifics rules (agnostic algorithm)
         var dataPanels    = calculateStackingFromData(rawDataPanels, windowWidth);
 
         // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, windowWidth, panelManager);
+        resizeAndStackPanels(panels, dataPanels, windowWidth);
+
+        $rootScope.$broadcast('module-layout-changed');
     }
 
 
@@ -4283,6 +3848,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
 
     return panelLayoutEngine;
 }]);
+
 var module = angular.module('ev-fdm');
 
 module.factory('PanelManagerFactory', function() {
@@ -4391,8 +3957,8 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     var elements = {};
 
     var stylesCache = window.stylesCache = {};
-    var container = angular.element('.panels-container');
-    var panelZero = container.find('.panel-zero');
+    var container = angular.element('.ev-panels-container');
+    var panelZero = container.find('.ev-panel-zero');
 
     var panelManager = PanelManagerFactory.create({
         updateLayout: function() {
@@ -4474,7 +4040,7 @@ module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout
     function createPlaceholder(depth) {
         var isMain = depth === 0;
         return angular.element('<div ' +
-            'class="panel-placeholder ' + (isMain ? 'panel-main' : '') + '" ' +
+            'class="ev-panel-placeholder ' + (isMain ? 'ev-panel-main' : '') + '" ' +
             'style="z-index:' + (2000 + depth) + ';"></div>');
     }
 

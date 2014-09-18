@@ -1,0 +1,31 @@
+// Contextual variations
+.panel-default {
+  .panel-variant(@panel-default-border; @panel-default-text; @body-bg; @panel-default-border);
+}
+
+.panel-default .panel-body {
+  background: @body-bg;
+}
+
+.panel .panel-body {
+  border-top: none;
+}
+
+.panel .panel-body ~ .panel-body {
+  border-top: 1px solid @gray-lighter;
+}
+
+.panel-body-small {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.panel {
+  .box-shadow(none);
+}
+
+.panel-heading {
+  h5 .icon {
+    margin-right: 11px;
+  }
+}

@@ -10,7 +10,7 @@
   "dependencies": {
     "jquery": "~2.0.3",
     "angular": "1.2.16",
-    "angular-ui-router": "~0.2.0",
+    "angular-ui-router": "git@github.com:Evaneos/ui-router#view-prevent-update",
     "angular-animate": "1.2.16",
     "angular-ui-select2": "~0.0.2",
     "angular-loading-bar": "25ece2a54c683b98aef598b3d2739999d1b8bba4",
@@ -22,16 +22,11 @@
     "moment": "~2.5.1",
     "angular-moment": "~0.6.2",
     "angular-ui-date": "~0.0.3",
+    "jquery.floatThead": "1.2.8",
     "underscore": "~1.5.1",
     "restangular": "~1.4.0",
-
-
     "angular-leaflet-directive": "~0.7.7",
-
-
     "dropzone": "~3.10.2",
-
-
     "angular-ui-tinymce": "0b2a007e6878e1a4599cc1fac57cf063bdc2f951"
   }
 }
