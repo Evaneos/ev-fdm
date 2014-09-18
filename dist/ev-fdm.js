@@ -3562,13 +3562,23 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
 
-            datas.push({
+            var data = {
                 minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
                 maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
                 stacked:  panelElement.hasClass('stacked'),
                 width:    panelElement.width(),
                 stackedWidth: STACKED_WIDTH
-            });
+            };
+
+            if (data.width < data.minWidth) {
+                data.width = data.minWidth;
+            }
+
+            if (data.width > data.maxWidth && data.maxWidth > 0) {
+                data.width = data.maxWidth;
+            }
+
+            datas.push(data);
         });
 
         return datas;
