@@ -59,24 +59,11 @@ angular.module('ev-fdm')
              */
             this.$scope.$on('$stateChangeSuccess', function(event, toState) {
                 if(toState.name === self.elementName) {
-                  self.$scope.activeElement = null;
+                    self.$scope.activeElement = null;
                 }
                 else {
-                  self.setActiveElement();
+                    self.setActiveElement();
                 }
-            });
-
-            communicationService.on(this.elementName + '::updating', function(event, updatedElements) {
-                var updatedIds = updatedElements.map(function(elt) {
-                    return elt.id;
-                });
-
-                self.elements.some(function(elt)  {
-                    if (updatedIds.indexOf(elt.id) !== -1) {
-                        //add class "updating"
-                        return updatedIds.length === 1;
-                    }
-                });
             });
 
             communicationService.on(this.elementName + '::updated', function(event) {

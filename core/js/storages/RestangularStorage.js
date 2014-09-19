@@ -1,4 +1,3 @@
-
 angular.module('ev-fdm')
     .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
 
@@ -6,6 +5,13 @@ angular.module('ev-fdm')
             this.restangular = restangular;
             this.resourceName = resourceName;
             this.defaultEmbed = defaultEmbed || [];
+
+            this.emitEventCallbackCreator = function(eventName) {
+                return function(result) {
+                    communicationService.emit(this.resourceName + '::' + eventName);
+                    return result;
+                }.bind(this);
+            }.bind(this);
         }
 
         RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
@@ -88,30 +94,24 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
-            return element.put(RestangularStorage.buildParameters(this, embed)).then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-                return result;
-            }.bind(this));
+            return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated'));
         };
 
         RestangularStorage.prototype.updateAll = function(elements, embed) {
             communicationService.emit(this.resourceName + '::updating', elements);
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.put(RestangularStorage.buildParameters(this, embed));
-            })).then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-                return result;
-            }.bind(this));
+                return element.put(parameters);
+            })).then(this.emitEventCallbackCreator('updated'));
         };
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
             angular.extend(element, changes);
             communicationService.emit(this.resourceName + '::updating', [ element ]);
-
-            return element.patch(changes, RestangularStorage.buildParameters(this, embed)).then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-            }.bind(this));
+            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated'));
         };
 
         RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
@@ -119,30 +119,22 @@ angular.module('ev-fdm')
                 angular.extend(element, changes);
             });
             communicationService.emit(this.resourceName + '::updating', elements);
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.patch(changes, RestangularStorage.buildParameters(this, embed));
-            })).then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-                return result;
-            }.bind(this));
+                return element.patch(changes, parameters);
+            })).then(this.emitEventCallbackCreator('updated'));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
             return this.restangular.all(this.resourceName)
                 .post(element, RestangularStorage.buildParameters(this, embed))
-                .then(function(result) {
-                    communicationService.emit(this.resourceName + '::updated');
-                    return result;
-                }.bind(this));
+                .then(this.emitEventCallbackCreator('created'));
         };
 
         RestangularStorage.prototype.delete = function(element) {
             communicationService.emit(this.resourceName + '::updating', [element]);
-            return element.remove().then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-                return result;
-            }.bind(this));
+            return element.remove().then(this.emitEventCallbackCreator('deleted'));
         };
 
         RestangularStorage.prototype.deleteAll = function(elements) {
@@ -150,36 +142,27 @@ angular.module('ev-fdm')
 
             return $q.all(elements.map(function(element) {
                 return element.remove();
-            })).then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-                return result;
-            }.bind(this));
+            })).then(this.emitEventCallbackCreator('deleted'));
         };
 
         RestangularStorage.prototype.save = function(element, embed) {
             communicationService.emit(this.resourceName + '::updating', [element]);
             return element.save(RestangularStorage.buildParameters(this, embed))
-                .then(function(result) {
-                    communicationService.emit(this.resourceName + '::updated');
-                    return result;
-                }.bind(this));
+                .then(this.emitEventCallbackCreator('updated'));
         };
 
         RestangularStorage.prototype.saveAll = function(elements, embed) {
             communicationService.emit(this.resourceName + '::updating', elements);
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.save(RestangularStorage.buildParameters(this, embed));
-            })).then(function(result) {
-                communicationService.emit(this.resourceName + '::updated');
-                return result;
-            }.bind(this));
+                return element.save(parameters);
+            })).then(this.emitEventCallbackCreator('updated'));
         };
 
         RestangularStorage.prototype.getNew = function() {
             return this.restangular.one(this.resourceName);
         };
-
 
         return RestangularStorage;
     }]);
