@@ -33,7 +33,6 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                             tinyMCE.execCommand("mceAddEditor", false, textareaId);
                         } catch (e) {}
                     }
-
                 });
 
                 var defaultOptions = {

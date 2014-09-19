@@ -50,7 +50,7 @@ angular.module('ev-fdm')
                 _sync($table, $scope);
             });
             $scope.$on('module-layout-changed', function() {
-                _sync($table, $scope);
+                _timeoutSync($table, $scope);
             });
             // watch for raw data changes !
             $scope.$watch('rows', function() {
