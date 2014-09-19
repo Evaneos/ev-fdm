@@ -96,7 +96,10 @@
 }
 
 .btn-disabled {
-  &:extend(.btn[disabled] all);
+  .btn;
+
+  .opacity(.65);
+  .box-shadow(none);
   pointer-events: all;
   cursor: not-allowed;
 }

@@ -1,6 +1,8 @@
 // Copy of the original tinymce theme
 // So you can add or custom what you need
 
+@import "Variables.less";
+
 // @import "src/AbsoluteLayout.less";
 // @import "src/Animations.less";
 // @import "src/ButtonGroup.less";
@@ -48,13 +50,10 @@
 
 // Customization files
 @import "Icons.less";
-@import "Variables.less";
 
 // To be consistent with the whole design
-@import (reference) "../../../core/less/overrides/bootstrap/buttons.less";
-@import (reference) "../../../core/less/overrides/bootstrap/modules.less";
-@import (reference) "../../../core/less/overrides/bootstrap/index.less";
 @import (reference) "../../../core/less/variables.less";
+@import (reference) "../../../core/less/overrides/bootstrap/index.less";
 
 
 /* Icons */
@@ -102,8 +101,8 @@
   }
 
   .mce-btn {
-    &:extend(.btn);
-    &:extend(.btn-default);
+    .btn;
+    .btn-default;
     padding:7px 6px 3px 6px;
     border: none;
     &.mce-active {
@@ -113,7 +112,7 @@
       background-color: transparent;
     }
     &.mce-primary {
-      &:extend(.btn-primary);
+      .btn-primary;
     }
   }
 }
@@ -176,14 +175,14 @@
       width:auto;
       margin: @modal-inner-padding/2;
       > button {
-        &:extend(.btn);
+        .btn;
       }
       // Primary button: always on the right, styled like in bootstrap
       &.@{prefix}-primary {
         float:right;
         margin-right: @modal-inner-padding;
         > button {
-          &:extend(.btn-primary);
+          .btn-primary;
         }
       }
     }
