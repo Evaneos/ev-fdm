@@ -357,6 +357,299 @@ angular.module('ev-fdm')
     }]);
 'use strict';
 
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
+
+if(typeof(Fanny) == 'undefined') {
+    Fanny = {}
+};
+
+Fanny.Utils = {
+    generatedIds : {},
+    generateId : function(prefix) {
+        var id = prefix + Math.random() * 10000;
+        if(typeof(this.generatedIds[id] != 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = generateId(prefix);
+        }
+        return id;
+    },
+    convertNumberToString : function(number, nbDecimals, intMinLength) {
+        var thousandsSep = ' ';
+        var decimalSep   = ',';
+        var numberStr    = '';
+        var numberArray  = [];
+        var integer      = '';
+        var decimals     = '';
+        var result       = '';
+        
+        if(typeof(nbDecimals) == 'undefined') {
+            nbDecimals = 2;
+        }
+        
+        numberStr = number + '';
+        numberArray = numberStr.split('.');
+        if(numberArray.length < 1 && numberArray.length > 2) {
+            throw new Error('Invalid number');
+            return false;
+        }
+        
+        integer = numberArray[0];
+        
+        if(numberArray.length == 1) {
+            decimals = '';
+            for(var i = 0; i < nbDecimals; i++) {
+                decimals += '0';
+            }
+        } else {
+            decimals = numberArray[1];
+            if(decimals.length > nbDecimals) {
+                decimals = decimals.substring(0, 2);
+            } else {
+                while(decimals.length < nbDecimals) {
+                    decimals += '0';
+                }
+            }
+        }
+        for(var i = 0; i < integer.length; i++) {
+            if(i % 3 == 0 && i != 0) {
+                result = thousandsSep + result;
+            }
+            result = integer[integer.length - i - 1] + result;
+        }
+        if(result == '') {
+            result = '' + 0;
+        }
+        
+        for(var i = result.length; i < intMinLength; i++) {
+            result = '0' + result;
+        }
+        
+        if(decimals.length > 0) {
+            result += decimalSep + decimals;
+        }
+        return result;
+    },
+    stringToVar : function(string) {
+        if(typeof(string) != 'string') {
+            throw new Error('Not a string');
+            return;
+        }
+        if(!isNaN(string)) {
+            return parseInt(string);
+        }
+        var _exploded = string.split('.');
+        var _result = window;
+        for (var index = 0; index < _exploded.length; index++) {
+            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
+                _result = _result[_exploded[index]];
+            } else {
+                throw new Error('No corresponding var found for ' + string);
+                return;
+            }
+        }
+        return _result;
+    },
+    formatDate : function(date) {
+        if(!date || typeof(date) != 'object') {
+            return '';
+        }
+        var year = date.getFullYear();
+        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
+        var day = this.convertNumberToString(date.getDate(), 0, 2);
+        return year + '-' + month + '-' + day;
+    },
+    Renderers : {
+        date : function(date) {
+            var _date     = null;
+            var _splitted = null;
+            var _obj      = null;
+            if(date && typeof(date) == 'object') {
+                _date = date.date;
+            } else {
+                _date = date;
+            }
+            if(typeof(_date) == 'string' && _date) {
+                _date = _date.split(' ')[0];
+                _splitted = _date.split('-');
+                if (_splitted.length === 3) {
+                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
+                }
+                else {
+                    return '';
+                }
+            } else {
+                return '';
+            }
+        },
+        amounts : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2);
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+            
+        },
+        money : function(number, row) {
+            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        euros : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        upper : function(string) {
+            if(typeof(string) == 'string') {
+                return string.toUpperCase();
+            } else {
+                return string;
+            }
+        }
+    }
+}
+'use strict';
+
 angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
@@ -723,7 +1016,7 @@ angular.module('ev-fdm')
                 _sync($table, $scope);
             });
             $scope.$on('module-layout-changed', function() {
-                _sync($table, $scope);
+                _timeoutSync($table, $scope);
             });
             // watch for raw data changes !
             $scope.$watch('rows', function() {
@@ -1885,299 +2178,6 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
-
-if(typeof(Fanny) == 'undefined') {
-    Fanny = {}
-};
-
-Fanny.Utils = {
-    generatedIds : {},
-    generateId : function(prefix) {
-        var id = prefix + Math.random() * 10000;
-        if(typeof(this.generatedIds[id] != 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = generateId(prefix);
-        }
-        return id;
-    },
-    convertNumberToString : function(number, nbDecimals, intMinLength) {
-        var thousandsSep = ' ';
-        var decimalSep   = ',';
-        var numberStr    = '';
-        var numberArray  = [];
-        var integer      = '';
-        var decimals     = '';
-        var result       = '';
-        
-        if(typeof(nbDecimals) == 'undefined') {
-            nbDecimals = 2;
-        }
-        
-        numberStr = number + '';
-        numberArray = numberStr.split('.');
-        if(numberArray.length < 1 && numberArray.length > 2) {
-            throw new Error('Invalid number');
-            return false;
-        }
-        
-        integer = numberArray[0];
-        
-        if(numberArray.length == 1) {
-            decimals = '';
-            for(var i = 0; i < nbDecimals; i++) {
-                decimals += '0';
-            }
-        } else {
-            decimals = numberArray[1];
-            if(decimals.length > nbDecimals) {
-                decimals = decimals.substring(0, 2);
-            } else {
-                while(decimals.length < nbDecimals) {
-                    decimals += '0';
-                }
-            }
-        }
-        for(var i = 0; i < integer.length; i++) {
-            if(i % 3 == 0 && i != 0) {
-                result = thousandsSep + result;
-            }
-            result = integer[integer.length - i - 1] + result;
-        }
-        if(result == '') {
-            result = '' + 0;
-        }
-        
-        for(var i = result.length; i < intMinLength; i++) {
-            result = '0' + result;
-        }
-        
-        if(decimals.length > 0) {
-            result += decimalSep + decimals;
-        }
-        return result;
-    },
-    stringToVar : function(string) {
-        if(typeof(string) != 'string') {
-            throw new Error('Not a string');
-            return;
-        }
-        if(!isNaN(string)) {
-            return parseInt(string);
-        }
-        var _exploded = string.split('.');
-        var _result = window;
-        for (var index = 0; index < _exploded.length; index++) {
-            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
-                _result = _result[_exploded[index]];
-            } else {
-                throw new Error('No corresponding var found for ' + string);
-                return;
-            }
-        }
-        return _result;
-    },
-    formatDate : function(date) {
-        if(!date || typeof(date) != 'object') {
-            return '';
-        }
-        var year = date.getFullYear();
-        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
-        var day = this.convertNumberToString(date.getDate(), 0, 2);
-        return year + '-' + month + '-' + day;
-    },
-    Renderers : {
-        date : function(date) {
-            var _date     = null;
-            var _splitted = null;
-            var _obj      = null;
-            if(date && typeof(date) == 'object') {
-                _date = date.date;
-            } else {
-                _date = date;
-            }
-            if(typeof(_date) == 'string' && _date) {
-                _date = _date.split(' ')[0];
-                _splitted = _date.split('-');
-                if (_splitted.length === 3) {
-                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
-                }
-                else {
-                    return '';
-                }
-            } else {
-                return '';
-            }
-        },
-        amounts : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2);
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-            
-        },
-        money : function(number, row) {
-            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        euros : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        upper : function(string) {
-            if(typeof(string) == 'string') {
-                return string.toUpperCase();
-            } else {
-                return string;
-            }
-        }
-    }
-}
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -3833,7 +3833,11 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
      * Check the stacking and so on
      */
     function checkStacking(panels) {
+        var body = angular.element('body');
+        var overflowSetting = body.css('overflow');
+        body.css('overflow', 'hidden');
         var windowWidth   = angular.element($window).innerWidth();
+        body.css('overflow', overflowSetting);
 
         // #1 - We extract the data from our panels (width, and so on)
         var rawDataPanels = getDataFromPanels(panels);
@@ -3857,230 +3861,4 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
     };
 
     return panelLayoutEngine;
-}]);
-
-var module = angular.module('ev-fdm');
-
-module.factory('PanelManagerFactory', function() {
-    function shouldBeOverriden(name) {
-        return function() {
-            throw new Error('Method ' + name + ' should be overriden');
-        };
-    }
-    var PanelManager = function() {
-        this.panels = _([]);
-    };
-    PanelManager.prototype.open = shouldBeOverriden('open');
-    PanelManager.prototype.close = shouldBeOverriden('close');
-    PanelManager.prototype.push = function(instance) {
-        this.panels.push(instance);
-    };
-    PanelManager.prototype.remove = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            this.panels.splice(i, 1);
-        }
-        return i;
-    };
-    PanelManager.prototype.at = function(index) {
-        return this.panels._wrapped[index];
-    };
-    PanelManager.prototype.each = function() {
-        return this.panels.each.apply(this.panels, arguments);
-    };
-    PanelManager.prototype.dismissAll = function(reason) {
-        // dismiss all panels except the first one
-        var i = 0;
-        this.each(function(instance) {
-            if(i !== 0) {
-                instance.dismiss(reason);
-            }
-            i++;
-        });
-    };
-
-    PanelManager.prototype.dismissChildrenId = function(rank) {
-        var children = this.panels.slice(rank);
-        var reason = '';
-        for (var i = children.length - 1; i >= 0; i--) {
-            var child = children[i];
-            var result = child.dismiss(reason);
-            if (!result) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    PanelManager.prototype.dismissChildren = function(instance, reason) {
-        var children = this.getChildren(instance);
-        for (var i = children.length - 1; i >= 0; i--) {
-            var child = children[i];
-            var result = child.dismiss(reason);
-            if (!result) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-    PanelManager.prototype.last = function() {
-        return this.panels.last();
-    };
-    PanelManager.prototype.getNext = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i < this.panels.size() - 1) {
-            return this.at(i + 1);
-        } else {
-            return null;
-        }
-    };
-    PanelManager.prototype.getChildren = function(instance) {
-        var i = this.panels.indexOf(instance);
-        if (i > -1) {
-            return this.panels.slice(i + 1);
-        } else {
-            return [];
-        }
-    };
-    PanelManager.prototype.size = function() {
-        return this.panels.size();
-    };
-    PanelManager.prototype.isEmpty = function() {
-        return this.panels.size() === 0;
-    };
-
-    return {
-        create: function(methods) {
-            var ChildClass = function() {
-                return PanelManager.call(this);
-            };
-            ChildClass.prototype = _({}).extend(PanelManager.prototype, methods);
-            return new ChildClass();
-        }
-    };
-});
-
-module.service('panelManager', [ '$rootScope', '$compile', '$animate', '$timeout', 'PanelManagerFactory', 'PanelLayoutEngine', function($rootScope, $compile, $animate, $timeout, PanelManagerFactory, panelLayoutEngine) {
-
-    var elements = {};
-
-    var stylesCache = window.stylesCache = {};
-    var container = angular.element('.ev-panels-container');
-    var panelZero = container.find('.ev-panel-zero');
-
-    var panelManager = PanelManagerFactory.create({
-        updateLayout: function() {
-            updateLayout();
-        },
-        getElement: function(instance) {
-            if (elements[instance.$$id]) {
-                return elements[instance.$$id];
-            } else {
-                return null;
-            }
-        },
-        open: function(instance, options) {
-            instance.$$stacked = false;
-            instance.$$depth = options.depth;
-            var isMain = options.depth === 0;
-            if(isMain) {
-                instance.isMain = true;
-            }
-
-            var el = createPlaceholder(instance.$$depth);
-            var inner = createPanelView(instance, options);
-            el.html(inner);
-            elements[instance.$$id] = el;
-            $animate.enter(el, container, panelZero, function() {
-                panelManager.updateLayout();
-            });
-            var timerResize = null;
-            el.on('resize', function(event, ui) {
-                if(timerResize !== null) {
-                    $timeout.cancel(timerResize);
-                }
-                timerResize = $timeout(function() {
-                    stylesCache[options.panelName] = ui.size.width;
-                    panelManager.updateLayout();
-                }, 100);
-            });
-            return instance;
-        },
-        replace: function(fromInstance, toInstance, options) {
-            if (typeof(elements[fromInstance.$$id]) != 'undefined') {
-                var el = elements[fromInstance.$$id];
-                toInstance.$$depth = options.depth - 1;
-                var inner = createPanelView(toInstance, options);
-                el.html(inner);
-                elements[toInstance.$$id] = el;
-                delete elements[fromInstance.$$id];
-                return toInstance;
-            } else {
-                return panelManager.open(toInstance, options);
-            }
-        },
-        close: function(instance) {
-            if (typeof(elements[instance.$$id]) != 'undefined') {
-                var el = elements[instance.$$id];
-                $animate.leave(el, function() {
-                    delete elements[instance.$$id];
-                    panelManager.updateLayout();
-                });
-            }
-        }
-    });
-
-    /**
-     * Return the panels sizes (if the user resized them)
-     */
-    function getStylesFromCache(instance, options) {
-        var savedWidth = stylesCache[options.panelName];
-        if (savedWidth) {
-            return 'width: ' + savedWidth + 'px;';
-        }
-
-        return '';
-    }
-
-    /**
-     * Create a panel container in the DOM
-     */
-    function createPlaceholder(depth) {
-        var isMain = depth === 0;
-        return angular.element('<div ' +
-            'class="ev-panel-placeholder ' + (isMain ? 'ev-panel-main' : '') + '" ' +
-            'style="z-index:' + (2000 + depth) + ';"></div>');
-    }
-
-    /**
-     * Create a panel view section
-     */
-    function createPanelView(instance, options) {
-        var inner = angular.element('<div ev-panel-breakpoints style="' + getStylesFromCache(instance, options) + '"></div>');
-        inner.html(options.content);
-        options.scope.panelClass = options.panelClass;
-        return $compile(inner)(options.scope);
-    }
-
-    /**
-     * Whenever a layout is changed
-     */
-    function updateLayout() {
-        panelLayoutEngine.checkStacking(panelManager);
-        $rootScope.$broadcast('module-layout-changed');
-    }
-
-    var timerWindowResize = null;
-    $(window).on('resize', function() {
-        if(timerWindowResize !== null) {
-            $timeout.cancel(timerWindowResize);
-        }
-        timerWindowResize = $timeout(function() {
-            panelManager.updateLayout();
-        }, 100);
-    });
-
-    return panelManager;
 }]);

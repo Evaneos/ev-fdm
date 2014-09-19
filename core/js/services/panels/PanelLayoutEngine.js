@@ -297,7 +297,11 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
      * Check the stacking and so on
      */
     function checkStacking(panels) {
+        var body = angular.element('body');
+        var overflowSetting = body.css('overflow');
+        body.css('overflow', 'hidden');
         var windowWidth   = angular.element($window).innerWidth();
+        body.css('overflow', overflowSetting);
 
         // #1 - We extract the data from our panels (width, and so on)
         var rawDataPanels = getDataFromPanels(panels);
