@@ -99,7 +99,6 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.updateAll = function(elements, embed) {
-            communicationService.emit(this.resourceName + '::updating', elements);
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
@@ -109,7 +108,6 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
             angular.extend(element, changes);
-            communicationService.emit(this.resourceName + '::updating', [ element ]);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
@@ -118,7 +116,6 @@ angular.module('ev-fdm')
             elements.forEach(function(element) {
                 angular.extend(element, changes);
             });
-            communicationService.emit(this.resourceName + '::updating', elements);
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
@@ -133,12 +130,10 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.delete = function(element) {
-            communicationService.emit(this.resourceName + '::updating', [element]);
             return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
         };
 
         RestangularStorage.prototype.deleteAll = function(elements) {
-            communicationService.emit(this.resourceName + '::updating', elements);
 
             return $q.all(elements.map(function(element) {
                 return element.remove();
@@ -146,13 +141,11 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.save = function(element, embed) {
-            communicationService.emit(this.resourceName + '::updating', [element]);
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
         RestangularStorage.prototype.saveAll = function(elements, embed) {
-            communicationService.emit(this.resourceName + '::updating', elements);
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {

@@ -164,9 +164,11 @@ angular.module('ev-fdm')
             if (!this.$scope.selectedElements || !this.elements) {
                 this.$scope.selectedElements = [];
             } else {
-                var selectedElementsIds = this.elements.map(function(elt) { return elt.id; });
+                var selectedElementsIds = this.elements.map(function(elt) {
+                    return restangular.configuration.getIdFromElem(elt);
+                });
                 this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
-                    return selectedElementsIds.indexOf(elt.id) !== -1;
+                    return selectedElementsIds.indexOf(restangular.configuration.getIdFromElem(elt)) !== -1;
                 });
             }
             this.setActiveElement();
