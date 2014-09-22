@@ -17,7 +17,7 @@ angular.module('ev-fdm')
                     '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
                             '{{ element.name }}' +
-                            '<button ng-show="editable" type="button" class="close inline" ' +
+                            '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
                     '</li>' +

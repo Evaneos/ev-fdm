@@ -19,6 +19,7 @@
                                   'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
                                 '<button class="delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
+                                  'tabIndex="-1"' +
                                   'data-ng-show="editable">' +
                                     '<span class="icon icon-bin"></span>' +
                                 '</button>' +
