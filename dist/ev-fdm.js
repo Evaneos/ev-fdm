@@ -113,10 +113,6 @@ angular.module('ev-fdm')
                 self.toggleView('view', element);
             };
 
-            this.$scope.listTrackBy = function(item) {
-                return item.id + '_' + item.updatedAt;
-            };
-
             /*
                 Update the view when filter are changed in the SearchController
              */
