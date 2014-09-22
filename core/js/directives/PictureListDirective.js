@@ -17,7 +17,11 @@
                             '<div class="picture-thumb" ' +
                               'style="background-image: '+
                                   'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
-                                '<button class="delete-action" ' +
+                                '<button class="action update-action"' +
+                                    'data-ng-show="editable">' +
+                                    '<span class="icon icon-edit"></span>' +
+                                '</button>' +
+                                '<button class="action delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
                                   'data-ng-show="editable">' +
                                     '<span class="icon icon-bin"></span>' +
