@@ -1,16 +1,13 @@
 angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
+    .factory('SearchController', ['communicationService', function(communicationService) {
         function SearchController($scope) {
-            var self = this;
-
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
+                communicationService.emit('common::filters.changed', this.$scope.filters);
+            }.bind(this);
+        }
 
         return SearchController;
     }]);
