@@ -40,17 +40,12 @@ angular.module('ev-fdm')
                 self.toggleView('view', element);
             };
 
-            this.$scope.listTrackBy = function(item) {
-                return item.id + '_' + item.updated_at;
-            };
-
             /*
                 Update the view when filter are changed in the SearchController
              */
             this.$scope.$on('common::filters.changed', function(event, filters) {
                 self.filters = filters;
                 self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             });
 
@@ -80,37 +75,42 @@ angular.module('ev-fdm')
         }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
+            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                this.elements = elements;
+                this.updateScope();
+            }.bind(this));
         };
 
         ListController.prototype.updateScope = function () {
-            var self = this;
-
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
+
+            if (!this.$scope.selectedElements || !this.elements) {
+                this.$scope.selectedElements = [];
+            } else {
+                var selectedElementsIds = this.elements.map(function(elt) { return elt.id; });
+                this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
+                    return selectedElementsIds.indexOf(elt.id) !== -1;
+                });
+            }
             this.setActiveElement();
         };
 
         ListController.prototype.setActiveElement = function() {
-          var self = this;
-          this.$scope.activeElement = null;
+            var self = this;
+            this.$scope.activeElement = null;
 
-          if(angular.isDefined($state.params.id)) {
-            angular.forEach(this.elements, function(element) {
-              var elementId = restangular.configuration.getIdFromElem(element);
-              if(elementId == $state.params.id) {
-                self.$scope.activeElement = element;
-                }
-            });
-          }
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if (elementId == $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
         };
 
         ListController.prototype.toggleView = function(view, element) {
