@@ -88,19 +88,40 @@
  *          })
  *      }
  */
-.placeholder-style(@rules) {
+.placeholder-style(@rules, @rules-hover) {
   &::-webkit-input-placeholder {
     @rules();
   }
+
+  &:hover::-webkit-input-placeholder {
+    @rules();
+  }
+
   &:-moz-placeholder {
     opacity:  1;
     @rules();
   }
+
+  &:hover:-moz-placeholder {
+    opacity:  1;
+    @rules();
+  }
+
   &::-moz-placeholder {
     opacity:  1;
     @rules();
   }
+
+  &:hover::-moz-placeholder {
+    opacity:  1;
+    @rules();
+  }
+
   &:-ms-input-placeholder {
+    @rules();
+  }
+
+  &:hover:-ms-input-placeholder {
     @rules();
   }
 }
