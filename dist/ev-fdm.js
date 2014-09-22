@@ -4640,7 +4640,7 @@ angular.module('ev-tinymce', ['ui.tinymce'])
             replace: false,
             scope: {
                 ngModel: '=',
-                tinymceOptions: '&',
+                tinymceOptions: '=',
                 ngRequired: '&'
             },
             controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {

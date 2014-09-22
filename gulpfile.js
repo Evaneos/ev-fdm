@@ -33,7 +33,7 @@ var assets = ['images', 'fonts'];
 function concatCorePlugins(src, suffix, customDest) {
     customDest = customDest || dest;
     return gulp.src(src)
-        .pipe(sourcemaps.init())
+        .pipe(sourcemaps.init({ loadMaps: true }))
             .pipe(concat(pkg.name + suffix))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(customDest));
@@ -46,7 +46,7 @@ function concatCorePlugins(src, suffix, customDest) {
 
 function minifySrc(src, dest, name) {
     return gulp.src(src)
-        .pipe(sourcemaps.init())
+        .pipe(sourcemaps.init({ loadMaps: true }))
             .pipe(concat(name + '.js'))
             .pipe(gulp.dest(dest))
             .pipe(uglify({
@@ -119,7 +119,7 @@ gulp.task('watch-js', tasks);
 
 function minifyLess(src, paths, dest, name) {
     return gulp.src(src)
-        .pipe(sourcemaps.init())
+        .pipe(sourcemaps.init({ loadMaps: true }))
             .pipe(less({
                 paths: paths
             }))
