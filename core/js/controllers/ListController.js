@@ -41,13 +41,13 @@ angular.module('ev-fdm')
             };
 
             /*
-                Update the view when filter are changed in the SearchController
+             * Update the view when filter are changed in the SearchController
              */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
+            communicationService.on('common::filters.changed', function(event, filters) {
+                this.filters = filters;
+                this.sortKey = this.defaultSortKey;
+                this.update(1, this.filters, this.sortKey, this.reverseSort);
+            }.bind(this));
 
             /*
                 When returning to the list state remove the active element

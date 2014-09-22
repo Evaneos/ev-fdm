@@ -114,13 +114,13 @@ angular.module('ev-fdm')
             };
 
             /*
-                Update the view when filter are changed in the SearchController
+             * Update the view when filter are changed in the SearchController
              */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
+            communicationService.on('common::filters.changed', function(event, filters) {
+                this.filters = filters;
+                this.sortKey = this.defaultSortKey;
+                this.update(1, this.filters, this.sortKey, this.reverseSort);
+            }.bind(this));
 
             /*
                 When returning to the list state remove the active element
@@ -242,21 +242,19 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
+    .factory('SearchController', ['communicationService', function(communicationService) {
         function SearchController($scope) {
-            var self = this;
-
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
+                communicationService.emit('common::filters.changed', this.$scope.filters);
+            }.bind(this);
+        }
 
         return SearchController;
     }]);
+
 'use strict';
 
 angular.module('ev-fdm')
