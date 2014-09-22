@@ -279,11 +279,20 @@
                 .rotate(-90deg);
                 transform-origin: 0 50%;
                 -webkit-transform-origin: 0 50%;
+                writing-mode: tb-rl;
+                cursor: pointer;
 
                 .ev-panel-stacked-title {
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
+
+                    .icon {
+                        position: relative;
+                        bottom: 15px;
+                        margin-right: 12px;
+                        font-size: 18px;
+                    }
                 }
             }
         }
