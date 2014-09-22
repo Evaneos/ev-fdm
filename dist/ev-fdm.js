@@ -175,7 +175,7 @@ angular.module('ev-fdm')
     });
 
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
             var self = this;
@@ -217,72 +217,78 @@ angular.module('ev-fdm')
             };
 
             /*
-                Update the view when filter are changed in the SearchController
+             * Update the view when filter are changed in the SearchController
              */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
+            communicationService.on('common::filters.changed', function(event, filters) {
+                this.filters = filters;
+                this.sortKey = this.defaultSortKey;
+                this.update(1, this.filters, this.sortKey, this.reverseSort);
+            }.bind(this));
 
             /*
                 When returning to the list state remove the active element
              */
             this.$scope.$on('$stateChangeSuccess', function(event, toState) {
                 if(toState.name === self.elementName) {
-                  self.$scope.activeElement = null;
+                    self.$scope.activeElement = null;
                 }
                 else {
-                  self.setActiveElement();
+                    self.setActiveElement();
                 }
             });
 
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+            communicationService.on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+            communicationService.on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+            communicationService.on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
+            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                this.elements = elements;
+                this.updateScope();
+            }.bind(this));
         };
 
         ListController.prototype.updateScope = function () {
-            var self = this;
-
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
+
+            if (!this.$scope.selectedElements || !this.elements) {
+                this.$scope.selectedElements = [];
+            } else {
+                var selectedElementsIds = this.elements.map(function(elt) {
+                    return restangular.configuration.getIdFromElem(elt);
+                });
+                this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
+                    return selectedElementsIds.indexOf(restangular.configuration.getIdFromElem(elt)) !== -1;
+                });
+            }
             this.setActiveElement();
         };
 
         ListController.prototype.setActiveElement = function() {
-          var self = this;
-          this.$scope.activeElement = null;
+            var self = this;
+            this.$scope.activeElement = null;
 
-          if(angular.isDefined($state.params.id)) {
-            angular.forEach(this.elements, function(element) {
-              var elementId = restangular.configuration.getIdFromElem(element);
-              if(elementId == $state.params.id) {
-                self.$scope.activeElement = element;
-                }
-            });
-          }
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if (elementId == $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
         };
 
         ListController.prototype.toggleView = function(view, element) {
@@ -302,7 +308,6 @@ angular.module('ev-fdm')
         };
 
         return ListController;
-
     }]);
 
 'use strict';
@@ -340,155 +345,19 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
+    .factory('SearchController', ['communicationService', function(communicationService) {
         function SearchController($scope) {
-            var self = this;
-
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
+                communicationService.emit('common::filters.changed', this.$scope.filters);
+            }.bind(this);
+        }
 
         return SearchController;
     }]);
-'use strict';
 
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -2020,6 +1889,140 @@ angular.module('ev-fdm')
             templateUrl: 'value.phtml'
         };
     });
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -3060,12 +3063,19 @@ angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['Restangular', function(restangular) {
+    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
             this.resourceName = resourceName;
             this.defaultEmbed = defaultEmbed || [];
+
+            this.emitEventCallbackCreator = function(eventName, elements) {
+                return function(result) {
+                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    return result;
+                }.bind(this);
+            }.bind(this);
         }
 
         RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
@@ -3075,6 +3085,19 @@ angular.module('ev-fdm')
 
         RestangularStorage.buildEmbed = function(embed) {
             return embed.join(',');
+        };
+
+        RestangularStorage.buildParameters = function(resource, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(resource.defaultEmbed));
+            }
+            else if(resource.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
+            }
+
+            return parameters;
         };
 
         RestangularStorage.buildFilters = function(filters) {
@@ -3089,7 +3112,7 @@ angular.module('ev-fdm')
                     res[filterKey + '.id'] = filter.id;
                 }
                 else if(angular.isArray(filter) && filter.length > 0) {
-                  res[filterKey] = filter.join(',');
+                    res[filterKey] = filter.join(',');
                 }
                 else if(angular.isDate(filter)) {
                     res[filterKey] = filter.toISOString();
@@ -3116,7 +3139,7 @@ angular.module('ev-fdm')
             else if(this.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
             }
-            
+
             if(sortKey) {
                 parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
             }
@@ -3131,78 +3154,72 @@ angular.module('ev-fdm')
 
 
         RestangularStorage.prototype.getById = function(id, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.one(this.resourceName, id).get(parameters);
+            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
-            var parameters = {};
+            return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.updateAll = function(elements, embed) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.put(parameters);
+            return $q.all(elements.map(function(element) {
+                return element.put(parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
-            var parameters = {};
+            angular.extend(element, changes);
+            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
+            elements.forEach(function(element) {
+                angular.extend(element, changes);
+            });
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.patch(changes, parameters);
+            return $q.all(elements.map(function(element) {
+                return element.patch(changes, parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.all(this.resourceName).post(element, parameters);
+            return this.restangular.all(this.resourceName)
+                .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('created', [element]));
         };
 
         RestangularStorage.prototype.delete = function(element) {
-            return element.remove();
+            return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
+        };
+
+        RestangularStorage.prototype.deleteAll = function(elements) {
+
+            return $q.all(elements.map(function(element) {
+                return element.remove();
+            })).then(this.emitEventCallbackCreator('deleted', elements));
         };
 
         RestangularStorage.prototype.save = function(element, embed) {
-            var parameters = {};
+            return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.saveAll = function(elements, embed) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.save(parameters);
+            return $q.all(elements.map(function(element) {
+                return element.save(parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.getNew = function() {
             return this.restangular.one(this.resourceName);
         };
-
 
         return RestangularStorage;
     }]);
@@ -4545,3 +4562,4 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
+//# sourceMappingURL=ev-fdm.js.map

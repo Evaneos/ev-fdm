@@ -1,5 +1,5 @@
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
             var self = this;
@@ -41,72 +41,78 @@ angular.module('ev-fdm')
             };
 
             /*
-                Update the view when filter are changed in the SearchController
+             * Update the view when filter are changed in the SearchController
              */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
+            communicationService.on('common::filters.changed', function(event, filters) {
+                this.filters = filters;
+                this.sortKey = this.defaultSortKey;
+                this.update(1, this.filters, this.sortKey, this.reverseSort);
+            }.bind(this));
 
             /*
                 When returning to the list state remove the active element
              */
             this.$scope.$on('$stateChangeSuccess', function(event, toState) {
                 if(toState.name === self.elementName) {
-                  self.$scope.activeElement = null;
+                    self.$scope.activeElement = null;
                 }
                 else {
-                  self.setActiveElement();
+                    self.setActiveElement();
                 }
             });
 
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+            communicationService.on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+            communicationService.on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+            communicationService.on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
+            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                this.elements = elements;
+                this.updateScope();
+            }.bind(this));
         };
 
         ListController.prototype.updateScope = function () {
-            var self = this;
-
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
+
+            if (!this.$scope.selectedElements || !this.elements) {
+                this.$scope.selectedElements = [];
+            } else {
+                var selectedElementsIds = this.elements.map(function(elt) {
+                    return restangular.configuration.getIdFromElem(elt);
+                });
+                this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
+                    return selectedElementsIds.indexOf(restangular.configuration.getIdFromElem(elt)) !== -1;
+                });
+            }
             this.setActiveElement();
         };
 
         ListController.prototype.setActiveElement = function() {
-          var self = this;
-          this.$scope.activeElement = null;
+            var self = this;
+            this.$scope.activeElement = null;
 
-          if(angular.isDefined($state.params.id)) {
-            angular.forEach(this.elements, function(element) {
-              var elementId = restangular.configuration.getIdFromElem(element);
-              if(elementId == $state.params.id) {
-                self.$scope.activeElement = element;
-                }
-            });
-          }
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if (elementId == $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
         };
 
         ListController.prototype.toggleView = function(view, element) {
@@ -126,5 +132,4 @@ angular.module('ev-fdm')
         };
 
         return ListController;
-
     }]);
