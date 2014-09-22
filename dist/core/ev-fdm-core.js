@@ -357,6 +357,395 @@ angular.module('ev-fdm')
     }]);
 'use strict';
 
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
+
+if(typeof(Fanny) == 'undefined') {
+    Fanny = {}
+};
+
+Fanny.Utils = {
+    generatedIds : {},
+    generateId : function(prefix) {
+        var id = prefix + Math.random() * 10000;
+        if(typeof(this.generatedIds[id] != 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = generateId(prefix);
+        }
+        return id;
+    },
+    convertNumberToString : function(number, nbDecimals, intMinLength) {
+        var thousandsSep = ' ';
+        var decimalSep   = ',';
+        var numberStr    = '';
+        var numberArray  = [];
+        var integer      = '';
+        var decimals     = '';
+        var result       = '';
+        
+        if(typeof(nbDecimals) == 'undefined') {
+            nbDecimals = 2;
+        }
+        
+        numberStr = number + '';
+        numberArray = numberStr.split('.');
+        if(numberArray.length < 1 && numberArray.length > 2) {
+            throw new Error('Invalid number');
+            return false;
+        }
+        
+        integer = numberArray[0];
+        
+        if(numberArray.length == 1) {
+            decimals = '';
+            for(var i = 0; i < nbDecimals; i++) {
+                decimals += '0';
+            }
+        } else {
+            decimals = numberArray[1];
+            if(decimals.length > nbDecimals) {
+                decimals = decimals.substring(0, 2);
+            } else {
+                while(decimals.length < nbDecimals) {
+                    decimals += '0';
+                }
+            }
+        }
+        for(var i = 0; i < integer.length; i++) {
+            if(i % 3 == 0 && i != 0) {
+                result = thousandsSep + result;
+            }
+            result = integer[integer.length - i - 1] + result;
+        }
+        if(result == '') {
+            result = '' + 0;
+        }
+        
+        for(var i = result.length; i < intMinLength; i++) {
+            result = '0' + result;
+        }
+        
+        if(decimals.length > 0) {
+            result += decimalSep + decimals;
+        }
+        return result;
+    },
+    stringToVar : function(string) {
+        if(typeof(string) != 'string') {
+            throw new Error('Not a string');
+            return;
+        }
+        if(!isNaN(string)) {
+            return parseInt(string);
+        }
+        var _exploded = string.split('.');
+        var _result = window;
+        for (var index = 0; index < _exploded.length; index++) {
+            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
+                _result = _result[_exploded[index]];
+            } else {
+                throw new Error('No corresponding var found for ' + string);
+                return;
+            }
+        }
+        return _result;
+    },
+    formatDate : function(date) {
+        if(!date || typeof(date) != 'object') {
+            return '';
+        }
+        var year = date.getFullYear();
+        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
+        var day = this.convertNumberToString(date.getDate(), 0, 2);
+        return year + '-' + month + '-' + day;
+    },
+    Renderers : {
+        date : function(date) {
+            var _date     = null;
+            var _splitted = null;
+            var _obj      = null;
+            if(date && typeof(date) == 'object') {
+                _date = date.date;
+            } else {
+                _date = date;
+            }
+            if(typeof(_date) == 'string' && _date) {
+                _date = _date.split(' ')[0];
+                _splitted = _date.split('-');
+                if (_splitted.length === 3) {
+                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
+                }
+                else {
+                    return '';
+                }
+            } else {
+                return '';
+            }
+        },
+        amounts : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2);
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+            
+        },
+        money : function(number, row) {
+            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        euros : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        upper : function(string) {
+            if(typeof(string) == 'string') {
+                return string.toUpperCase();
+            } else {
+                return string;
+            }
+        }
+    }
+}
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
+'use strict';
+
 angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
@@ -1089,7 +1478,8 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
               pictures: '=',
               editable: '=',
               onDelete: '&',
-              onChange: '&'
+              onChange: '&',
+              showUpdate: '='
             },
             template:
                 '<ul class="picture-list">' +
@@ -1098,8 +1488,9 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                             '<div class="picture-thumb" ' +
                               'style="background-image: '+
                                   'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
-                                '<button class="action update-action"' +
-                                    'data-ng-show="editable">' +
+                                '<button class="action update-action ev-upload-clickable"' +
+                                    'ng-click="onUpdate({picture: picture, index: $index})" ' +
+                                    'data-ng-show="editable && showUpdate">' +
                                     '<span class="icon icon-edit"></span>' +
                                 '</button>' +
                                 '<button class="action delete-action" ' +
@@ -1129,6 +1520,10 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
             };
+            $scope.onUpdate = function (params) {
+                console.log('et la maintenant ça update');
+                console.log(params);
+            }
           }
           $scope.pictures = $scope.pictures || [];
         }
@@ -1891,931 +2286,6 @@ angular.module('ev-fdm')
     });
 'use strict';
 
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
-
-if(typeof(Fanny) == 'undefined') {
-    Fanny = {}
-};
-
-Fanny.Utils = {
-    generatedIds : {},
-    generateId : function(prefix) {
-        var id = prefix + Math.random() * 10000;
-        if(typeof(this.generatedIds[id] != 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = generateId(prefix);
-        }
-        return id;
-    },
-    convertNumberToString : function(number, nbDecimals, intMinLength) {
-        var thousandsSep = ' ';
-        var decimalSep   = ',';
-        var numberStr    = '';
-        var numberArray  = [];
-        var integer      = '';
-        var decimals     = '';
-        var result       = '';
-        
-        if(typeof(nbDecimals) == 'undefined') {
-            nbDecimals = 2;
-        }
-        
-        numberStr = number + '';
-        numberArray = numberStr.split('.');
-        if(numberArray.length < 1 && numberArray.length > 2) {
-            throw new Error('Invalid number');
-            return false;
-        }
-        
-        integer = numberArray[0];
-        
-        if(numberArray.length == 1) {
-            decimals = '';
-            for(var i = 0; i < nbDecimals; i++) {
-                decimals += '0';
-            }
-        } else {
-            decimals = numberArray[1];
-            if(decimals.length > nbDecimals) {
-                decimals = decimals.substring(0, 2);
-            } else {
-                while(decimals.length < nbDecimals) {
-                    decimals += '0';
-                }
-            }
-        }
-        for(var i = 0; i < integer.length; i++) {
-            if(i % 3 == 0 && i != 0) {
-                result = thousandsSep + result;
-            }
-            result = integer[integer.length - i - 1] + result;
-        }
-        if(result == '') {
-            result = '' + 0;
-        }
-        
-        for(var i = result.length; i < intMinLength; i++) {
-            result = '0' + result;
-        }
-        
-        if(decimals.length > 0) {
-            result += decimalSep + decimals;
-        }
-        return result;
-    },
-    stringToVar : function(string) {
-        if(typeof(string) != 'string') {
-            throw new Error('Not a string');
-            return;
-        }
-        if(!isNaN(string)) {
-            return parseInt(string);
-        }
-        var _exploded = string.split('.');
-        var _result = window;
-        for (var index = 0; index < _exploded.length; index++) {
-            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
-                _result = _result[_exploded[index]];
-            } else {
-                throw new Error('No corresponding var found for ' + string);
-                return;
-            }
-        }
-        return _result;
-    },
-    formatDate : function(date) {
-        if(!date || typeof(date) != 'object') {
-            return '';
-        }
-        var year = date.getFullYear();
-        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
-        var day = this.convertNumberToString(date.getDate(), 0, 2);
-        return year + '-' + month + '-' + day;
-    },
-    Renderers : {
-        date : function(date) {
-            var _date     = null;
-            var _splitted = null;
-            var _obj      = null;
-            if(date && typeof(date) == 'object') {
-                _date = date.date;
-            } else {
-                _date = date;
-            }
-            if(typeof(_date) == 'string' && _date) {
-                _date = _date.split(' ')[0];
-                _splitted = _date.split('-');
-                if (_splitted.length === 3) {
-                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
-                }
-                else {
-                    return '';
-                }
-            } else {
-                return '';
-            }
-        },
-        amounts : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2);
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-            
-        },
-        money : function(number, row) {
-            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        euros : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        upper : function(string) {
-            if(typeof(string) == 'string') {
-                return string.toUpperCase();
-            } else {
-                return string;
-            }
-        }
-    }
-}
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
-'use strict';
-
-/* Services */
-var module = angular.module('ev-fdm');
-
-var AbstractAutocompleteStorage = function (AbstractStorage, $timeout) {
-    _.extend (this, AbstractStorage);
-    this.AbstractStorage = AbstractStorage;
-    this.$timeout = $timeout;
-}
-
-AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (searchCallback, matchingCallback, minLength) {
-    var me = this;
-
-    var filterTextTimeout;
-    return {
-        minimumInputLength: minLength,
-        allowClear: true,
-        initSelection: function() {
-            return '';
-        },
-        query: function(q) {
-            var res = [],
-                searchParam = q.term;
-
-            if (filterTextTimeout) {
-                me.$timeout.cancel(filterTextTimeout);
-            }
-
-            // Fetches the result from the data store
-            filterTextTimeout = me.$timeout(function() {
-                searchCallback.call(me, searchParam.toUpperCase()).then(function (result){
-                        var res = matchingCallback (result);
-                        q.callback ({ results : res });
-                    }
-                );
-            }, 600);
-
-        }
-    };
-}
-
-// Demonstrate how to register services
-// In this case it is a simple value service.
-module.service('AbstractAutocompleteStorage', ['Storage', '$timeout', AbstractAutocompleteStorage]);
-
-'use strict';
-
-function AjaxStorage($http, $q, $cacheFactory, $log) {
-
-    var httpCache = $cacheFactory('customHttpCache');
-
-    function launchRequest(options) {
-
-        if(options.cache) {
-            var key = JSON.stringify(options),
-                cached = httpCache.get(key);
-
-            if(cached) {
-                return cached;
-            }
-        }
-
-        // Add the request id... Ah, history...
-        options.id = Fanny.Utils.generateId ('proxy:request:');
-        var requestConfig = {
-            url         : '/backoffice/common/xhr',
-            method      : 'POST',
-            responseType: 'json',
-            headers     : {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-            },
-            data: options
-        };
-
-        // We have to use then instead of success/error since they prevent from changing the value in the promise
-        // We don't treat the error case since the server always returns a 200 status code
-        var promise = $http(requestConfig)
-            .then(function(response) {
-
-                // php's xhr is not really consistent, let's be more
-                if (!response.data.success) {
-                    $log.warn(response.data.error, response.data.errors);
-
-                    // Not authenticated, redirect on homepage
-                    if (response.data.result[options.id].authenticated === false) {
-                        window.location.href = '/login?expired=1';
-                    }
-
-                    return $q.reject(response.data.result[options.id]);
-                }
-
-                return response.data.result[options.id].data;
-            });
-
-        if(options.cache) {
-            httpCache.put(key, promise);
-        }
-
-        return promise;
-    }
-
-    return {
-        launchRequest: launchRequest
-    }
-
-}
-
-angular.module('ev-fdm')
-    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
-
-angular.module('ev-fdm')
-    .factory('RestangularStorage', ['Restangular', function(restangular) {
-
-        function RestangularStorage(resourceName, defaultEmbed) {
-            this.restangular = restangular;
-            this.resourceName = resourceName;
-            this.defaultEmbed = defaultEmbed || [];
-        }
-
-        RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
-            var sortDir = reverseSort ? 'DESC' : 'ASC';
-            return sortKey + ':' + sortDir;
-        };
-
-        RestangularStorage.buildEmbed = function(embed) {
-            return embed.join(',');
-        };
-
-        RestangularStorage.buildFilters = function(filters) {
-            var res = {};
-
-            angular.forEach(filters, function(filter, filterKey) {
-
-                if(angular.isObject(filter) && angular.isDefined(filter.uuid)) {
-                    res[filterKey + '.uuid'] = filter.uuid;
-                }
-                else if(angular.isObject(filter) && angular.isDefined(filter.id)) {
-                    res[filterKey + '.id'] = filter.id;
-                }
-                else if(angular.isArray(filter) && filter.length > 0) {
-                  res[filterKey] = filter.join(',');
-                }
-                else if(angular.isDate(filter)) {
-                    res[filterKey] = filter.toISOString();
-                }
-                else if(angular.isDefined(filter) && filter !== '' && filter !== null) {
-                    res[filterKey] = filter;
-                }
-
-            });
-
-            return res;
-        };
-
-        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
-            var parameters = {};
-
-            if(angular.isNumber(page) && page > 0) {
-                parameters.page = page;
-            }
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-            
-            if(sortKey) {
-                parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
-            }
-
-            if(filters) {
-                filters = RestangularStorage.buildFilters(filters);
-                angular.extend(parameters, filters);
-            }
-
-            return this.restangular.all(this.resourceName).getList(parameters);
-        };
-
-
-        RestangularStorage.prototype.getById = function(id, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.one(this.resourceName, id).get(parameters);
-        };
-
-        RestangularStorage.prototype.update = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return element.put(parameters);
-        };
-
-        RestangularStorage.prototype.patch = function(element, changes, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return element.patch(changes, parameters);
-        };
-
-        RestangularStorage.prototype.create = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.all(this.resourceName).post(element, parameters);
-        };
-
-        RestangularStorage.prototype.delete = function(element) {
-            return element.remove();
-        };
-
-        RestangularStorage.prototype.save = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return element.save(parameters);
-        };
-
-        RestangularStorage.prototype.getNew = function() {
-            return this.restangular.one(this.resourceName);
-        };
-
-
-        return RestangularStorage;
-    }]);
-
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-function Storage(AjaxStorage) {
-
-        return {
-
-            get: function(options) {
-                return AjaxStorage.launchRequest(options);
-            }
-
-        }
-}
-
-module.service('Storage', ['AjaxStorage', Storage]);
-'use strict';
-
-/* Start angularLocalStorage */
-
-var angularLocalStorage = angular.module('LocalStorageModule', []);
-
-// You should set a prefix to avoid overwriting any local storage variables from the rest of your app
-// e.g. angularLocalStorage.constant('prefix', 'youAppName');
-angularLocalStorage.value('prefix', 'ls');
-// Cookie options (usually in case of fallback)
-// expiry = Number of days before cookies expire // 0 = Does not expire
-// path = The web path the cookie represents
-angularLocalStorage.constant('cookie', { expiry:30, path: '/'});
-angularLocalStorage.constant('notify', { setItem: true, removeItem: false} );
-
-angularLocalStorage.service('localStorageService', [
-  '$rootScope',
-  'prefix',
-  'cookie',
-  'notify',
-  function($rootScope, prefix, cookie, notify) {
-
-  // If there is a prefix set in the config lets use that with an appended period for readability
-  //var prefix = angularLocalStorage.constant;
-  if (prefix.substr(-1)!=='.') {
-    prefix = !!prefix ? prefix + '.' : '';
-  }
-
-  // Checks the browser to see if local storage is supported
-  var browserSupportsLocalStorage = function () {
-    try {
-        return ('localStorage' in window && window['localStorage'] !== null);
-    } catch (e) {
-        $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-        return false;
-    }
-  };
-
-  // Directly adds a value to local storage
-  // If local storage is not available in the browser use cookies
-  // Example use: localStorageService.add('library','angular');
-  var addToLocalStorage = function (key, value) {
-
-    // If this browser does not support local storage use cookies
-    if (!browserSupportsLocalStorage()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
-      if (notify.setItem) {
-        $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: 'cookie'});
-      }
-      return addToCookies(key, value);
-    }
-
-    // Let's convert undefined values to null to get the value consistent
-    if (typeof value == "undefined") value = null;
-
-    try {
-      if (angular.isObject(value) || angular.isArray(value)) {
-          value = angular.toJson(value);
-      }
-      localStorage.setItem(prefix+key, value);
-      if (notify.setItem) {
-        $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: 'localStorage'});
-      }
-    } catch (e) {
-      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-      return addToCookies(key, value);
-    }
-    return true;
-  };
-
-  // Directly get a value from local storage
-  // Example use: localStorageService.get('library'); // returns 'angular'
-  var getFromLocalStorage = function (key) {
-    if (!browserSupportsLocalStorage()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
-      return getFromCookies(key);
-    }
-
-    var item = localStorage.getItem(prefix+key);
-    if (!item) return null;
-    if (item.charAt(0) === "{" || item.charAt(0) === "[") {
-        return angular.fromJson(item);
-    }
-    return item;
-  };
-
-  // Remove an item from local storage
-  // Example use: localStorageService.remove('library'); // removes the key/value pair of library='angular'
-  var removeFromLocalStorage = function (key) {
-    if (!browserSupportsLocalStorage()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
-       if (notify.removeItem) {
-        $rootScope.$broadcast('LocalStorageModule.notification.removeitem', {key: key, storageType: 'cookie'});
-      }
-      return removeFromCookies(key);
-    }
-
-    try {
-      localStorage.removeItem(prefix+key);
-      if (notify.removeItem) {
-        $rootScope.$broadcast('LocalStorageModule.notification.removeitem', {key: key, storageType: 'localStorage'});
-      }
-    } catch (e) {
-      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-      return removeFromCookies(key);
-    }
-    return true;
-  };
-
-  // Return array of keys for local storage
-  // Example use: var keys = localStorageService.keys()
-  var getKeysForLocalStorage = function () {
-
-    if (!browserSupportsLocalStorage()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
-      return false;
-    }
-
-    var prefixLength = prefix.length;
-    var keys = [];
-    for (var key in localStorage) {
-      // Only return keys that are for this app
-      if (key.substr(0,prefixLength) === prefix) {
-        try {
-          keys.push(key.substr(prefixLength))
-        } catch (e) {
-          $rootScope.$broadcast('LocalStorageModule.notification.error',e.Description);
-          return [];
-        }
-      }
-    }
-    return keys;
-  };
-
-  // Remove all data for this app from local storage
-  // Example use: localStorageService.clearAll();
-  // Should be used mostly for development purposes
-  var clearAllFromLocalStorage = function () {
-
-    if (!browserSupportsLocalStorage()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
-      return clearAllFromCookies();
-    }
-
-    var prefixLength = prefix.length;
-
-    for (var key in localStorage) {
-      // Only remove items that are for this app
-      if (key.substr(0,prefixLength) === prefix) {
-        try {
-          removeFromLocalStorage(key.substr(prefixLength));
-        } catch (e) {
-          $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-          return clearAllFromCookies();
-        }
-      }
-    }
-    return true;
-  };
-
-  // Checks the browser to see if cookies are supported
-  var browserSupportsCookies = function() {
-    try {
-      return navigator.cookieEnabled ||
-        ("cookie" in document && (document.cookie.length > 0 ||
-        (document.cookie = "test").indexOf.call(document.cookie, "test") > -1));
-    } catch (e) {
-      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-      return false;
-    }
-  };
-
-  // Directly adds a value to cookies
-  // Typically used as a fallback is local storage is not available in the browser
-  // Example use: localStorageService.cookie.add('library','angular');
-  var addToCookies = function (key, value) {
-
-    if (typeof value == "undefined") return false;
-
-    if (!browserSupportsCookies()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.error','COOKIES_NOT_SUPPORTED');
-      return false;
-    }
-
-    try {
-      var expiry = '', expiryDate = new Date();
-      if (value === null) {
-        cookie.expiry = -1;
-        value = '';
-      }
-      if (cookie.expiry !== 0) {
-        expiryDate.setTime(expiryDate.getTime() + (cookie.expiry*24*60*60*1000));
-        expiry = "; expires="+expiryDate.toGMTString();
-      }
-      if (!!key) {
-        document.cookie = prefix + key + "=" + encodeURIComponent(value) + expiry + "; path="+cookie.path;
-      }
-    } catch (e) {
-      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-      return false;
-    }
-    return true;
-  };
-
-  // Directly get a value from a cookie
-  // Example use: localStorageService.cookie.get('library'); // returns 'angular'
-  var getFromCookies = function (key) {
-    if (!browserSupportsCookies()) {
-      $rootScope.$broadcast('LocalStorageModule.notification.error','COOKIES_NOT_SUPPORTED');
-      return false;
-    }
-
-    var cookies = document.cookie.split(';');
-    for(var i=0;i < cookies.length;i++) {
-      var thisCookie = cookies[i];
-      while (thisCookie.charAt(0)==' ') {
-        thisCookie = thisCookie.substring(1,thisCookie.length);
-      }
-      if (thisCookie.indexOf(prefix+key+'=') === 0) {
-        return decodeURIComponent(thisCookie.substring(prefix.length+key.length+1,thisCookie.length));
-      }
-    }
-    return null;
-  };
-
-  var removeFromCookies = function (key) {
-    addToCookies(key,null);
-  };
-
-  var clearAllFromCookies = function () {
-    var thisCookie = null, thisKey = null;
-    var prefixLength = prefix.length;
-    var cookies = document.cookie.split(';');
-    for(var i=0;i < cookies.length;i++) {
-      thisCookie = cookies[i];
-      while (thisCookie.charAt(0)==' ') {
-        thisCookie = thisCookie.substring(1,thisCookie.length);
-      }
-      key = thisCookie.substring(prefixLength,thisCookie.indexOf('='));
-      removeFromCookies(key);
-    }
-  };
-
-  return {
-    isSupported: browserSupportsLocalStorage,
-    set: addToLocalStorage, 
-    add: addToLocalStorage, //DEPRECATED
-    get: getFromLocalStorage,
-    keys: getKeysForLocalStorage,
-    remove: removeFromLocalStorage,
-    clearAll: clearAllFromLocalStorage,
-    cookie: {
-      set: addToCookies,
-      add: addToCookies, //DEPRECATED
-      get: getFromCookies,
-      remove: removeFromCookies,
-      clearAll: clearAllFromCookies
-    }
-  };
-
-}]);
-'use strict';
-
 var module = angular.module('ev-fdm');
 
 /**
@@ -3487,57 +2957,542 @@ module.service('SortService', [function() {
         'isReverse'     : isReverse
     }
 }]);
-angular.module('ev-fdm')
-  .directive('disableValidation', function() {
+'use strict';
+
+/* Services */
+var module = angular.module('ev-fdm');
+
+var AbstractAutocompleteStorage = function (AbstractStorage, $timeout) {
+    _.extend (this, AbstractStorage);
+    this.AbstractStorage = AbstractStorage;
+    this.$timeout = $timeout;
+}
+
+AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (searchCallback, matchingCallback, minLength) {
+    var me = this;
+
+    var filterTextTimeout;
     return {
-      require: '^form',
-      restrict: 'A',
-      link: function(scope, element, attrs, form) {
-        var control;
+        minimumInputLength: minLength,
+        allowClear: true,
+        initSelection: function() {
+            return '';
+        },
+        query: function(q) {
+            var res = [],
+                searchParam = q.term;
 
-        scope.$watch(attrs.disableValidation, function(value) {
-          if (!control) {
-            control = form[element.attr("name")];
-          }
-          if (value === false) {
-            form.$addControl(control);
-            angular.forEach(control.$error, function(validity, validationToken) {
-              form.$setValidity(validationToken, !validity, control);
-            });
-          } else {
-            form.$removeControl(control);
-          }
-        });
-      }
-    };
-  });
+            if (filterTextTimeout) {
+                me.$timeout.cancel(filterTextTimeout);
+            }
 
-angular.module('ev-fdm')
-.directive('strictMin', function() {
-    return {
-        require: 'ngModel',
-        link: function(scope, elm, attrs, ctrl) {
+            // Fetches the result from the data store
+            filterTextTimeout = me.$timeout(function() {
+                searchCallback.call(me, searchParam.toUpperCase()).then(function (result){
+                        var res = matchingCallback (result);
+                        q.callback ({ results : res });
+                    }
+                );
+            }, 600);
 
-            function validator(viewValue) {
-                var testedValue = parseFloat(viewValue),
-                    min = parseFloat(attrs.strictMin);
-
-                if(testedValue > min ) {
-                    ctrl.$setValidity('strictMin', true);
-                    return viewValue;
-                }
-                else {
-                    ctrl.$setValidity('strictMin', false);
-                    return undefined;
-                }
-
-            };
-
-            ctrl.$parsers.unshift(validator);
-            ctrl.$formatters.push(validator);
         }
+    };
+}
+
+// Demonstrate how to register services
+// In this case it is a simple value service.
+module.service('AbstractAutocompleteStorage', ['Storage', '$timeout', AbstractAutocompleteStorage]);
+
+'use strict';
+
+function AjaxStorage($http, $q, $cacheFactory, $log) {
+
+    var httpCache = $cacheFactory('customHttpCache');
+
+    function launchRequest(options) {
+
+        if(options.cache) {
+            var key = JSON.stringify(options),
+                cached = httpCache.get(key);
+
+            if(cached) {
+                return cached;
+            }
+        }
+
+        // Add the request id... Ah, history...
+        options.id = Fanny.Utils.generateId ('proxy:request:');
+        var requestConfig = {
+            url         : '/backoffice/common/xhr',
+            method      : 'POST',
+            responseType: 'json',
+            headers     : {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            data: options
+        };
+
+        // We have to use then instead of success/error since they prevent from changing the value in the promise
+        // We don't treat the error case since the server always returns a 200 status code
+        var promise = $http(requestConfig)
+            .then(function(response) {
+
+                // php's xhr is not really consistent, let's be more
+                if (!response.data.success) {
+                    $log.warn(response.data.error, response.data.errors);
+
+                    // Not authenticated, redirect on homepage
+                    if (response.data.result[options.id].authenticated === false) {
+                        window.location.href = '/login?expired=1';
+                    }
+
+                    return $q.reject(response.data.result[options.id]);
+                }
+
+                return response.data.result[options.id].data;
+            });
+
+        if(options.cache) {
+            httpCache.put(key, promise);
+        }
+
+        return promise;
     }
-});
+
+    return {
+        launchRequest: launchRequest
+    }
+
+}
+
+angular.module('ev-fdm')
+    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
+
+angular.module('ev-fdm')
+    .factory('RestangularStorage', ['Restangular', function(restangular) {
+
+        function RestangularStorage(resourceName, defaultEmbed) {
+            this.restangular = restangular;
+            this.resourceName = resourceName;
+            this.defaultEmbed = defaultEmbed || [];
+        }
+
+        RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
+            var sortDir = reverseSort ? 'DESC' : 'ASC';
+            return sortKey + ':' + sortDir;
+        };
+
+        RestangularStorage.buildEmbed = function(embed) {
+            return embed.join(',');
+        };
+
+        RestangularStorage.buildFilters = function(filters) {
+            var res = {};
+
+            angular.forEach(filters, function(filter, filterKey) {
+
+                if(angular.isObject(filter) && angular.isDefined(filter.uuid)) {
+                    res[filterKey + '.uuid'] = filter.uuid;
+                }
+                else if(angular.isObject(filter) && angular.isDefined(filter.id)) {
+                    res[filterKey + '.id'] = filter.id;
+                }
+                else if(angular.isArray(filter) && filter.length > 0) {
+                  res[filterKey] = filter.join(',');
+                }
+                else if(angular.isDate(filter)) {
+                    res[filterKey] = filter.toISOString();
+                }
+                else if(angular.isDefined(filter) && filter !== '' && filter !== null) {
+                    res[filterKey] = filter;
+                }
+
+            });
+
+            return res;
+        };
+
+        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+            var parameters = {};
+
+            if(angular.isNumber(page) && page > 0) {
+                parameters.page = page;
+            }
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+            
+            if(sortKey) {
+                parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
+            }
+
+            if(filters) {
+                filters = RestangularStorage.buildFilters(filters);
+                angular.extend(parameters, filters);
+            }
+
+            return this.restangular.all(this.resourceName).getList(parameters);
+        };
+
+
+        RestangularStorage.prototype.getById = function(id, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return this.restangular.one(this.resourceName, id).get(parameters);
+        };
+
+        RestangularStorage.prototype.update = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.put(parameters);
+        };
+
+        RestangularStorage.prototype.patch = function(element, changes, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.patch(changes, parameters);
+        };
+
+        RestangularStorage.prototype.create = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return this.restangular.all(this.resourceName).post(element, parameters);
+        };
+
+        RestangularStorage.prototype.delete = function(element) {
+            return element.remove();
+        };
+
+        RestangularStorage.prototype.save = function(element, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            }
+            else if(this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            return element.save(parameters);
+        };
+
+        RestangularStorage.prototype.getNew = function() {
+            return this.restangular.one(this.resourceName);
+        };
+
+
+        return RestangularStorage;
+    }]);
+
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+function Storage(AjaxStorage) {
+
+        return {
+
+            get: function(options) {
+                return AjaxStorage.launchRequest(options);
+            }
+
+        }
+}
+
+module.service('Storage', ['AjaxStorage', Storage]);
+'use strict';
+
+/* Start angularLocalStorage */
+
+var angularLocalStorage = angular.module('LocalStorageModule', []);
+
+// You should set a prefix to avoid overwriting any local storage variables from the rest of your app
+// e.g. angularLocalStorage.constant('prefix', 'youAppName');
+angularLocalStorage.value('prefix', 'ls');
+// Cookie options (usually in case of fallback)
+// expiry = Number of days before cookies expire // 0 = Does not expire
+// path = The web path the cookie represents
+angularLocalStorage.constant('cookie', { expiry:30, path: '/'});
+angularLocalStorage.constant('notify', { setItem: true, removeItem: false} );
+
+angularLocalStorage.service('localStorageService', [
+  '$rootScope',
+  'prefix',
+  'cookie',
+  'notify',
+  function($rootScope, prefix, cookie, notify) {
+
+  // If there is a prefix set in the config lets use that with an appended period for readability
+  //var prefix = angularLocalStorage.constant;
+  if (prefix.substr(-1)!=='.') {
+    prefix = !!prefix ? prefix + '.' : '';
+  }
+
+  // Checks the browser to see if local storage is supported
+  var browserSupportsLocalStorage = function () {
+    try {
+        return ('localStorage' in window && window['localStorage'] !== null);
+    } catch (e) {
+        $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+        return false;
+    }
+  };
+
+  // Directly adds a value to local storage
+  // If local storage is not available in the browser use cookies
+  // Example use: localStorageService.add('library','angular');
+  var addToLocalStorage = function (key, value) {
+
+    // If this browser does not support local storage use cookies
+    if (!browserSupportsLocalStorage()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
+      if (notify.setItem) {
+        $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: 'cookie'});
+      }
+      return addToCookies(key, value);
+    }
+
+    // Let's convert undefined values to null to get the value consistent
+    if (typeof value == "undefined") value = null;
+
+    try {
+      if (angular.isObject(value) || angular.isArray(value)) {
+          value = angular.toJson(value);
+      }
+      localStorage.setItem(prefix+key, value);
+      if (notify.setItem) {
+        $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: 'localStorage'});
+      }
+    } catch (e) {
+      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+      return addToCookies(key, value);
+    }
+    return true;
+  };
+
+  // Directly get a value from local storage
+  // Example use: localStorageService.get('library'); // returns 'angular'
+  var getFromLocalStorage = function (key) {
+    if (!browserSupportsLocalStorage()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
+      return getFromCookies(key);
+    }
+
+    var item = localStorage.getItem(prefix+key);
+    if (!item) return null;
+    if (item.charAt(0) === "{" || item.charAt(0) === "[") {
+        return angular.fromJson(item);
+    }
+    return item;
+  };
+
+  // Remove an item from local storage
+  // Example use: localStorageService.remove('library'); // removes the key/value pair of library='angular'
+  var removeFromLocalStorage = function (key) {
+    if (!browserSupportsLocalStorage()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
+       if (notify.removeItem) {
+        $rootScope.$broadcast('LocalStorageModule.notification.removeitem', {key: key, storageType: 'cookie'});
+      }
+      return removeFromCookies(key);
+    }
+
+    try {
+      localStorage.removeItem(prefix+key);
+      if (notify.removeItem) {
+        $rootScope.$broadcast('LocalStorageModule.notification.removeitem', {key: key, storageType: 'localStorage'});
+      }
+    } catch (e) {
+      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+      return removeFromCookies(key);
+    }
+    return true;
+  };
+
+  // Return array of keys for local storage
+  // Example use: var keys = localStorageService.keys()
+  var getKeysForLocalStorage = function () {
+
+    if (!browserSupportsLocalStorage()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
+      return false;
+    }
+
+    var prefixLength = prefix.length;
+    var keys = [];
+    for (var key in localStorage) {
+      // Only return keys that are for this app
+      if (key.substr(0,prefixLength) === prefix) {
+        try {
+          keys.push(key.substr(prefixLength))
+        } catch (e) {
+          $rootScope.$broadcast('LocalStorageModule.notification.error',e.Description);
+          return [];
+        }
+      }
+    }
+    return keys;
+  };
+
+  // Remove all data for this app from local storage
+  // Example use: localStorageService.clearAll();
+  // Should be used mostly for development purposes
+  var clearAllFromLocalStorage = function () {
+
+    if (!browserSupportsLocalStorage()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
+      return clearAllFromCookies();
+    }
+
+    var prefixLength = prefix.length;
+
+    for (var key in localStorage) {
+      // Only remove items that are for this app
+      if (key.substr(0,prefixLength) === prefix) {
+        try {
+          removeFromLocalStorage(key.substr(prefixLength));
+        } catch (e) {
+          $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+          return clearAllFromCookies();
+        }
+      }
+    }
+    return true;
+  };
+
+  // Checks the browser to see if cookies are supported
+  var browserSupportsCookies = function() {
+    try {
+      return navigator.cookieEnabled ||
+        ("cookie" in document && (document.cookie.length > 0 ||
+        (document.cookie = "test").indexOf.call(document.cookie, "test") > -1));
+    } catch (e) {
+      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+      return false;
+    }
+  };
+
+  // Directly adds a value to cookies
+  // Typically used as a fallback is local storage is not available in the browser
+  // Example use: localStorageService.cookie.add('library','angular');
+  var addToCookies = function (key, value) {
+
+    if (typeof value == "undefined") return false;
+
+    if (!browserSupportsCookies()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.error','COOKIES_NOT_SUPPORTED');
+      return false;
+    }
+
+    try {
+      var expiry = '', expiryDate = new Date();
+      if (value === null) {
+        cookie.expiry = -1;
+        value = '';
+      }
+      if (cookie.expiry !== 0) {
+        expiryDate.setTime(expiryDate.getTime() + (cookie.expiry*24*60*60*1000));
+        expiry = "; expires="+expiryDate.toGMTString();
+      }
+      if (!!key) {
+        document.cookie = prefix + key + "=" + encodeURIComponent(value) + expiry + "; path="+cookie.path;
+      }
+    } catch (e) {
+      $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+      return false;
+    }
+    return true;
+  };
+
+  // Directly get a value from a cookie
+  // Example use: localStorageService.cookie.get('library'); // returns 'angular'
+  var getFromCookies = function (key) {
+    if (!browserSupportsCookies()) {
+      $rootScope.$broadcast('LocalStorageModule.notification.error','COOKIES_NOT_SUPPORTED');
+      return false;
+    }
+
+    var cookies = document.cookie.split(';');
+    for(var i=0;i < cookies.length;i++) {
+      var thisCookie = cookies[i];
+      while (thisCookie.charAt(0)==' ') {
+        thisCookie = thisCookie.substring(1,thisCookie.length);
+      }
+      if (thisCookie.indexOf(prefix+key+'=') === 0) {
+        return decodeURIComponent(thisCookie.substring(prefix.length+key.length+1,thisCookie.length));
+      }
+    }
+    return null;
+  };
+
+  var removeFromCookies = function (key) {
+    addToCookies(key,null);
+  };
+
+  var clearAllFromCookies = function () {
+    var thisCookie = null, thisKey = null;
+    var prefixLength = prefix.length;
+    var cookies = document.cookie.split(';');
+    for(var i=0;i < cookies.length;i++) {
+      thisCookie = cookies[i];
+      while (thisCookie.charAt(0)==' ') {
+        thisCookie = thisCookie.substring(1,thisCookie.length);
+      }
+      key = thisCookie.substring(prefixLength,thisCookie.indexOf('='));
+      removeFromCookies(key);
+    }
+  };
+
+  return {
+    isSupported: browserSupportsLocalStorage,
+    set: addToLocalStorage, 
+    add: addToLocalStorage, //DEPRECATED
+    get: getFromLocalStorage,
+    keys: getKeysForLocalStorage,
+    remove: removeFromLocalStorage,
+    clearAll: clearAllFromLocalStorage,
+    cookie: {
+      set: addToCookies,
+      add: addToCookies, //DEPRECATED
+      get: getFromCookies,
+      remove: removeFromCookies,
+      clearAll: clearAllFromCookies
+    }
+  };
+
+}]);
 var module = angular.module('ev-fdm');
 
 /**
@@ -3866,3 +3821,55 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
 
     return panelLayoutEngine;
 }]);
+
+angular.module('ev-fdm')
+  .directive('disableValidation', function() {
+    return {
+      require: '^form',
+      restrict: 'A',
+      link: function(scope, element, attrs, form) {
+        var control;
+
+        scope.$watch(attrs.disableValidation, function(value) {
+          if (!control) {
+            control = form[element.attr("name")];
+          }
+          if (value === false) {
+            form.$addControl(control);
+            angular.forEach(control.$error, function(validity, validationToken) {
+              form.$setValidity(validationToken, !validity, control);
+            });
+          } else {
+            form.$removeControl(control);
+          }
+        });
+      }
+    };
+  });
+
+angular.module('ev-fdm')
+.directive('strictMin', function() {
+    return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+
+            function validator(viewValue) {
+                var testedValue = parseFloat(viewValue),
+                    min = parseFloat(attrs.strictMin);
+
+                if(testedValue > min ) {
+                    ctrl.$setValidity('strictMin', true);
+                    return viewValue;
+                }
+                else {
+                    ctrl.$setValidity('strictMin', false);
+                    return undefined;
+                }
+
+            };
+
+            ctrl.$parsers.unshift(validator);
+            ctrl.$formatters.push(validator);
+        }
+    }
+});

@@ -8,7 +8,8 @@
               pictures: '=',
               editable: '=',
               onDelete: '&',
-              onChange: '&'
+              onChange: '&',
+              showUpdate: '='
             },
             template:
                 '<ul class="picture-list">' +
@@ -17,8 +18,9 @@
                             '<div class="picture-thumb" ' +
                               'style="background-image: '+
                                   'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
-                                '<button class="action update-action"' +
-                                    'data-ng-show="editable">' +
+                                '<button class="action update-action ev-upload-clickable"' +
+                                    'ng-click="onUpdate({picture: picture, index: $index})" ' +
+                                    'data-ng-show="editable && showUpdate">' +
                                     '<span class="icon icon-edit"></span>' +
                                 '</button>' +
                                 '<button class="action delete-action" ' +
@@ -48,6 +50,10 @@
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
             };
+            $scope.onUpdate = function (params) {
+                console.log('et la maintenant ça update');
+                console.log(params);
+            }
           }
           $scope.pictures = $scope.pictures || [];
         }
