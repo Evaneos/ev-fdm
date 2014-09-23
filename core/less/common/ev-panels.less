@@ -18,9 +18,10 @@
             }
 
             .ev-panel-title {
+                color: @gray-dark;
                 &:hover {
                     cursor: pointer;
-                    color: @gray;
+                    color: @gray-darker;
                 }
             }
         }
@@ -317,12 +318,17 @@
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
+                    color: @gray-dark;
 
                     .icon {
                         position: relative;
                         bottom: 15px;
                         margin-right: 12px;
                         font-size: 18px;
+                    }
+
+                    &:hover {
+                        color: @gray-darker;
                     }
                 }
             }

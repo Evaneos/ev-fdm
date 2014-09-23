@@ -21,7 +21,7 @@ angular.module('ev-fdm')
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
                     '</li>' +
-                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning">' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning no-margin">' +
                         ' {{ maxAlertMessage }}' +
                     '</li>' +
                 '</ul>',

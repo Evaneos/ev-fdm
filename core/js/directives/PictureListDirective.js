@@ -11,13 +11,12 @@
               onChange: '&'
             },
             template:
-                '<ul class="picture-list">' +
-                    '<li ng-repeat="picture in pictures" class="ev-animate-picture-list">' +
+                '<ul class="picture-list row">' +
+                    '<li ng-repeat="picture in pictures" class="col-xs-4 ev-animate-picture-list">' +
                         '<figure>' +
-                            '<div class="picture-thumb" ' +
-                              'style="background-image: '+
-                                  'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
-                                '<button class="delete-action" ' +
+                            '<div class="picture-thumb">' +
+                                '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
+                                '<button class="action delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
                                   'tabIndex="-1"' +
                                   'data-ng-show="editable">' +

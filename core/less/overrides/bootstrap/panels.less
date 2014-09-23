@@ -7,15 +7,16 @@
   background: @body-bg;
 }
 
-.panel .panel-body {
+.panel-body {
   border-top: none;
+  padding: 13px;
 }
 
 // .panel .panel-body ~ .panel-body {
 //   border-top: 1px solid @gray-lighter;
 // }
 
-.panel-body-small {
+.panel .panel-body-small {
   padding-top: 7px;
   padding-bottom: 7px;
 }
@@ -28,10 +29,20 @@
   padding: 10px 10px;
 
   h5 .icon {
-    margin-right: 11px;
+    margin-right: 5px;
   }
 
   h5 .icon-bin {
     margin-right: 0;
   }
+}
+
+/**
+ * Smaller panel, you can append under a normal panel
+ */
+.panel-appendix {
+  margin: -20px 20px 0 20px;
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
