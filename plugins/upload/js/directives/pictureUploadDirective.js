@@ -17,11 +17,12 @@ angular.module('ev-upload')
         return {
             restrict: 'AE',
             scope: {
-                pictureSuccess: '&newPicture',
-                url: '@'
+                pictures: '=',
+                url: '@',
+                language: '='
             },
             template:
-            '<ev-upload settings="settings" file-success="pictureSuccess({picture: file})"' +
+            '<ev-upload settings="settings" file-success="addPicture(file)"' +
                 'class="ev-picture-upload" upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
@@ -116,6 +117,22 @@ angular.module('ev-upload')
                         .finally(function () {
                             $scope.uploading = false;
                         });
+                };
+
+                $scope.addPicture = function(picture) {
+                    console.log(picture);
+                    var pictureData = picture.data[0];
+
+                    if($scope.language) {
+                        if (Array.isArray(pictureData.legend)) {
+                            pictureData.legend = {};
+                        }
+                        if (!pictureData.legend[$scope.language]) {
+                            pictureData.legend[$scope.language] = { name: '' };
+                        }
+                    }
+
+                    $scope.pictures.unshift(pictureData);
                 };
             }
         };
