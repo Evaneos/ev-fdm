@@ -18,7 +18,6 @@ angular.module('ev-fdm')
         },
         function() {
             subContainer.height(containerH);
-            subContainer.width(containerW);
             $table.floatThead('reflow');
         });
     }

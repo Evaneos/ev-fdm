@@ -690,7 +690,6 @@ angular.module('ev-fdm')
             return containerH + "-" + containerW;
         },
         function() {
-            subContainer.height(containerH);
             subContainer.width(containerW);
             $table.floatThead('reflow');
         });
@@ -1101,7 +1100,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                                   'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
                                 '<button class="action update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
-                                    'data-ng-show="editable & showUpdate">' +
+                                    'data-ng-show="editable && showUpdate">' +
                                     '<span class="icon icon-edit"></span>' +
                                 '</button>' +
                                 '<button class="action delete-action" ' +
