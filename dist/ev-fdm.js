@@ -1097,7 +1097,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
             },
             template:
                 '<ul class="picture-list row">' +
-                    '<li ng-repeat="picture in pictures" class="col-xs-6 ev-animate-picture-list">' +
+                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-6 ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb">' +
                                 '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
