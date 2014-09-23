@@ -1,22 +1,52 @@
-.panel-placeholder {
-    height: 100%;
-    float: right;
-    position: relative;
-    display: inline-block;
 
-    &.panel-main {
-        float: none;
-        display: block;
+.ev-panels-container {
+    > div:nth-child(2) { /*Select the first panel-placeholder (main)*/
+        .ev-panel {
 
-        .panel {
-            min-width: @mainpanel-min-width;
+            float: none;
+            display: block;
+            min-width: @mainev-panel-min-width;
 
             > .ui-resizable-handle {
                 display: none;
             }
 
-            .panel-inner {
-                .panel-body {
+            .ev-panel-inner {
+                .ev-panel-body {
+                    position: relative;
+                }
+            }
+
+            .ev-panel-title {
+                color: @gray-dark;
+                &:hover {
+                    cursor: pointer;
+                    color: @gray-darker;
+                }
+            }
+        }
+    }
+}
+
+.ev-panel-placeholder {
+    height: 100%;
+    float: left;
+    position: relative;
+    display: inline-block;
+
+    &.ev-panel-main {
+        float: none;
+        display: block;
+
+        .ev-panel {
+            min-width: @mainev-panel-min-width;
+
+            > .ui-resizable-handle {
+                display: none;
+            }
+
+            .ev-panel-inner {
+                .ev-panel-body {
                     position: relative;
                 }
             }
@@ -34,27 +64,58 @@
     }
 
     // default size for all side panels
-    &:not(.panel-main) .panel {
-        width: @panel-width;
-        min-width: @panel-min-width;
+    &:not(.ev-panelplaceholder-main) .ev-panel,
+    &:not(.ev-panel-main) .ev-panel {
+        width: auto;
+        min-width: @ev-panel-min-width;
     }
 
-    &.panel-zero {
+    &.ev-panel-zero {
         display: none;
     }
 
     div[ui-view] {
         height: 100%;
+        position: relative;
     }
 
-    > .panel {
-        background: @panel-bg;
+    &[data-breakpoint~="100"],
+    &[data-breakpoint~="200"],
+    &[data-breakpoint~="300"] {
+        .items {
+          padding: 15px;
+        }
+        .items-table {
+          display: none;
+        }
+        .items-inline {
+          > div {
+            width: 100%;
+          }
+          display: block;
+        }
+        .footer .btn {
+          min-width: 0;
+        }
+    }
+
+    &[data-breakpoint~="300"] {
+        .items-inline {
+          > div {
+            width: 50%;
+          }
+        }
+    }
+
+    > .ev-panel {
+        background: @ev-panel-bg;
         height: 100%;
-        border-left: 1px solid @panel-inner-border;
+        border-left: 1px solid @ev-panel-inner-border;
         position: relative;
         left: auto!important;
         // z-index: @zindex-modal;
         background: #FFF;
+        overflow: auto;
 
         .items {
             margin: -15px;
@@ -72,7 +133,7 @@
               padding-bottom: 10px;
               cursor: pointer;
               > div {
-                border: 1px solid @panel-bg;
+                border: 1px solid @ev-panel-bg;
                 padding: 10px;
                 text-align: center;
                 border-radius: 4px;
@@ -88,39 +149,13 @@
                 color: @gray-darker;
               }
             }
-          }
-          &[data-breakpoint~="100"],
-          &[data-breakpoint~="200"],
-          &[data-breakpoint~="300"] {
-            .items {
-              padding: 15px;
-            }
-            .items-table {
-              display: none;
-            }
-            .items-inline {
-              > div {
-                width: 100%;
-              }
-              display: block;
-            }
-            .footer .btn {
-              min-width: 0;
-            }
-          }
-          &[data-breakpoint~="300"] {
-            .items-inline {
-              > div {
-                width: 50%;
-              }
-            }
-          }
+        }
 
-        > .panel-inner {
+        > .ev-panel-inner {
             height: 100%;
-            border-bottom: 7px solid @panel-bg;
-            border-left: 7px solid @panel-bg;
-            border-right: 7px solid @panel-bg;
+            border-bottom: @ev-panel-inner-border-width solid @ev-panel-bg;
+            border-left: @ev-panel-inner-border-width solid @ev-panel-bg;
+            border-right: @ev-panel-inner-border-width solid @ev-panel-bg;
             overflow-x: hidden;
             overflow-y: hidden;
 
@@ -129,7 +164,7 @@
                 height: 100%;
             }
 
-            .panel-stacked-section {
+            .ev-panel-stacked-section {
                 display: none;
             }
 
@@ -137,11 +172,11 @@
              * HEADER
              ********************************************************/
 
-            .panel-header {
-                background: @panel-bg;
+            .ev-panel-header {
+                background: @ev-panel-bg;
                 padding: 9px 0;
                 z-index: 2;
-                .panel-title {
+                .ev-panel-title {
                     font-size: 20px;
                     text-transform: uppercase;
                     line-height: 1.7em;
@@ -159,7 +194,7 @@
                     }
                 }
 
-                .panel-action-bar {
+                .ev-panel-action-bar {
                     margin-top: 5px;
                 }
 
@@ -187,7 +222,7 @@
              * BODY
              ********************************************************/
 
-            .panel-body {
+            .ev-panel-body {
                 height: 100%;
                 position: relative;
                 padding: 15px;
@@ -202,9 +237,9 @@
              ********************************************************/
 
 
-            .panel-footer {
+            .ev-panel-footer {
                 padding: 9px 16px;
-                background: @panel-bg;
+                background: @ev-panel-bg;
                 text-align: right;
                 position: absolute;
                 bottom: 0;
@@ -245,16 +280,16 @@
     &.stacked {
         border-left: 1px solid @gray-lighter;
 
-        // Hide the whole panel
-        max-width: @panel-stacked-size;
-        > .panel > .panel-inner {
+        // Hide the whole ev-panel
+        max-width: @ev-panel-stacked-size;
+        > .ev-panel > .ev-panel-inner {
 
             border: none;
 
             > div {
-                > .panel-header,
-                > .panel-body,
-                > .panel-footer {
+                > .ev-panel-header,
+                > .ev-panel-body,
+                > .ev-panel-footer {
                     display: none;
                 }
             }
@@ -266,9 +301,9 @@
 
         // Display only the panel-stacked section
 
-        > .panel > .panel-inner > div {
+        > .ev-panel > .ev-panel-inner > div {
             background-color: @gray-light;
-            .panel-stacked-section {
+            .ev-panel-stacked-section {
                 display: table;
                 margin-left: 14px;
                 height: 100%;
@@ -276,11 +311,25 @@
                 .rotate(-90deg);
                 transform-origin: 0 50%;
                 -webkit-transform-origin: 0 50%;
+                writing-mode: tb-rl;
+                cursor: pointer;
 
-                .panel-stacked-title {
+                .ev-panel-stacked-title {
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
+                    color: @gray-dark;
+
+                    .icon {
+                        position: relative;
+                        bottom: 15px;
+                        margin-right: 12px;
+                        font-size: 18px;
+                    }
+
+                    &:hover {
+                        color: @gray-darker;
+                    }
                 }
             }
         }
@@ -301,78 +350,21 @@
         max-width: 1000px;
     }
 
-    .panel .has-header {
+    .ev-panel .has-header {
         .lisette-module-searchbar > .inner {
-            bottom: @panel-header-height;
+            bottom: @ev-panel-header-height;
         }
         .lisette-module-bottombar {
-            bottom: @panel-header-height;
+            bottom: @ev-panel-header-height;
         }
     }
 }
 
-/*********************************************************
- * ANIMATIONS
- ********************************************************/
-
-.panels-container.animate .panel-placeholder {
-    @animation-duration: 0.2s;
-    .obfuscate() {
-        // animation : slow at the beginning, fast at the end
-        // => after will be hidden at the really end of the animation
-        -webkit-transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
-        transition: opacity cubic-bezier(1, 0, 1, 0) @animation-duration;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: @gray-lighter;
-        z-index: 200000000;
-        content: ' ';
-    }
-
-    &.stacked-add {
-        -webkit-transition:all ease-in-out @animation-duration;
-        -moz-transition:all ease-in-out @animation-duration;
-        -o-transition:all ease-in-out @animation-duration;
-        transition:all ease-in-out @animation-duration;
-    }
-    &.stacked-remove {
-        -webkit-transition:all ease-in-out @animation-duration;
-        -moz-transition:all ease-in-out @animation-duration;
-        -o-transition:all ease-in-out @animation-duration;
-        transition:all ease-in-out @animation-duration;
-    }
-
-    &.ng-enter,
-    &.ng-leave {
-        -webkit-transition: all ease-in-out @animation-duration;
-        transition: all ease-in-out @animation-duration;
-        &:after {
-            .obfuscate();
-        }
-    }
-
-    &.ng-enter,
-    &.ng-leave.ng-leave-active {
-        max-width: 0;
-        &:after {
-            opacity: 1;
-        }
-    }
-
-    &.ng-leave,
-    &.ng-enter.ng-enter-active {
-        max-width: 1000px;
-        &.ng-enter.ng-enter-active {
-            &:after {
-                opacity: 0;
-            }
-        }
-    }
+.ev-panel-bg {
+  background-color: @ev-panel-bg;
 }
 
-.panel-bg {
-  background-color: @panel-bg;
+.ui-resizable-helper {
+    border: 2px dotted #e5d8ca;
+    background-color: rgba(229, 216, 202,0.3);
 }

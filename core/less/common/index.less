@@ -96,18 +96,18 @@ dl {
 
 hr {
   &.hr-strong {
-    border-top: @panel-body-padding solid @panel-bg;
-    margin: @panel-body-padding -@panel-body-padding;
+    border-top: @ev-panel-body-padding solid @ev-panel-bg;
+    margin: @ev-panel-body-padding -@ev-panel-body-padding;
   }
 
   &.hr-separator {
-    border-top: 2px solid @panel-bg;
-    margin: @panel-body-padding -@panel-body-padding;
+    border-top: 2px solid @ev-panel-bg;
+    margin: @ev-panel-body-padding -@ev-panel-body-padding;
   }
 
   &.hr-light {
-    border-top: 1px solid @panel-bg;
-    margin: @panel-body-padding -@panel-body-padding;
+    border-top: 1px solid @ev-panel-bg;
+    margin: @ev-panel-body-padding -@ev-panel-body-padding;
   }
 
   &.hr-last {
@@ -121,10 +121,10 @@ hr {
 
 
 .section {
-  padding: 0 @panel-body-padding;
+  padding: 0 @ev-panel-body-padding;
   .row {
-    margin-left: -@panel-body-padding;
-    margin-right: -@panel-body-padding;
+    margin-left: -@ev-panel-body-padding;
+    margin-right: -@ev-panel-body-padding;
   }
 }
 
@@ -141,6 +141,14 @@ hr {
     word-wrap: break-word;
 }
 
+.no-padding {
+  padding: 0;
+}
+
+.no-margin {
+  margin: 0;
+}
+
 
 @import "icons.less";
 @import "icons-color.less";
@@ -152,8 +160,8 @@ hr {
 @import "sortable.less";
 @import "animations.less";
 @import "controls.less";
-@import "panels.less";
-@import 'panel-responsive.less';
+@import "ev-panels.less";
+@import 'ev-panel-responsive.less';
 @import "list.less";
 @import "promise.less";
 @import "mixins.less";
@@ -161,5 +169,5 @@ hr {
 @import "countriesflags.less";
 @import "buttongroup.less";
 @import "thumbnails.less";
-@import "panel-tabs.less";
+@import "ev-panel-tabs.less";
 @import "input.less";

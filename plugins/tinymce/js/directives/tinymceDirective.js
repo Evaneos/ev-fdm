@@ -22,6 +22,18 @@ angular.module('ev-tinymce', ['ui.tinymce'])
                 ngRequired: '&'
             },
             controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
+                $scope.$on('module-layout-changed', function() {
+                    var textareaId = $element.find('textarea').attr('id'),
+                        tinyMCE = window.tinyMCE,
+                        editor = tinyMCE.get(textareaId);
+
+                    if (editor) {
+                        try {
+                            editor.remove();
+                            tinyMCE.execCommand("mceAddEditor", false, textareaId);
+                        } catch (e) {}
+                    }
+                });
 
                 var defaultOptions = {
                     menubar: false,

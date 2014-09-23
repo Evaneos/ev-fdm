@@ -10,7 +10,6 @@
   margin: 0;
   margin-left: -5px;
   position: relative;
-  color: inherit;
   background-color: transparent;
   padding-right: 10px;
   font-weight: inherit;
@@ -19,6 +18,8 @@
   border-bottom: @gray-light 1px solid;
 
   .placeholder-style({
+    color: @gray;
+  }, {
     color: @gray-light;
   });
 
@@ -39,6 +40,18 @@ textarea, h5, h4, h3, h2, h1 {
     border: none;
     &:hover, &:focus {
       border: none;
+    }
+  }
+}
+
+textarea, h5, h4, h3, h2, h1 {
+  &.input-inline, & .input-inline {
+    display: inline;
+    border-bottom: @gray-light 1px solid;
+
+    &:hover, &:focus {
+      outline: none;
+      border-bottom: @gray-light 1px solid;
     }
   }
 }

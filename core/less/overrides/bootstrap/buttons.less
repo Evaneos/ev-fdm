@@ -96,7 +96,10 @@
 }
 
 .btn-disabled {
-  &:extend(.btn[disabled] all);
+  .btn;
+
+  .opacity(.65);
+  .box-shadow(none);
   pointer-events: all;
   cursor: not-allowed;
 }
@@ -108,6 +111,10 @@
   margin: 0;
   padding: 0;
   text-align: left;
+}
+
+.btn-link:hover {
+  text-decoration: none;
 }
 
 .dropdown {

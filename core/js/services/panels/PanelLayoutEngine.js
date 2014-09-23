@@ -3,7 +3,7 @@ var module = angular.module('ev-fdm');
 /**
  * STACKING AND PANELS SIZE MANAGEMENT
  */
-module.service('PanelLayoutEngine', ['$animate', function($animate) {
+module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
 
     var STACKED_WIDTH = 35;
 
@@ -16,25 +16,34 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * Extract all useful panels informations
      * The (min-/max-/stacked-)width and the stacked state
      * @param  {Array} panels the panels
-     * @param  {Object}  panelManager (we need a function from it.. TO refactor.)
      * @return {Array}        Array containing the extracted values
      */
-    function getDataFromPanels(panels, panelManager) {
+    function getDataFromPanels(panels) {
         var datas = [];
         var i = 0;
         var panelsLength = panels.size();
 
-        for (; i < panelsLength; i++) {
-            var panel = panels._wrapped[i]; // Dealing with a _ object, yeah..
-            var panelElement = panelManager.getElement(panel);
-            datas.push({
+        angular.forEach(panels, function(panelDom) {
+            var panelElement = angular.element(panelDom);
+
+            var data = {
                 minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
                 maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
-                stacked:  panel.$$stacked,
+                stacked:  panelElement.hasClass('stacked'),
                 width:    panelElement.width(),
                 stackedWidth: STACKED_WIDTH
-            });
-        }
+            };
+
+            if (data.width < data.minWidth) {
+                data.width = data.minWidth;
+            }
+
+            if (data.width > data.maxWidth && data.maxWidth > 0) {
+                data.width = data.maxWidth;
+            }
+
+            datas.push(data);
+        });
 
         return datas;
     }
@@ -66,12 +75,12 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
                     continue;
                 }
 
-                var _width = data.minWidth;
-                if(_width < data.stackedWidth) {
-                    _width = data.stackedWidth;
+                var width = data.minWidth;
+                if(width < data.stackedWidth) {
+                    width = data.stackedWidth;
                 }
 
-                totalMinWidth += _width;
+                totalMinWidth += width;
             }
 
             if (totalMinWidth > limit) {
@@ -104,12 +113,12 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
                     continue;
                 }
 
-                var _width = data.maxWidth;
-                if(_width < data.stackedWidth) {
-                    _width = data.stackedWidth;
+                var width = data.maxWidth;
+                if(width < data.stackedWidth) {
+                    width = data.stackedWidth;
                 }
 
-                totalMaxWidth += _width;
+                totalMaxWidth += width;
             }
 
             if (totalMaxWidth < limit) {
@@ -124,11 +133,10 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * For each panels, test if he needs to be stacked
      */
     function updateStackState(datas,limit) {
-
         var minStacked = countMinStacked(datas, limit);
         var maxStacked = countMaxStacked(datas, limit);
 
-        _(datas).each(function(element) {
+        angular.forEach(datas, function(element) {
             element.stacked = false;
         });
 
@@ -137,7 +145,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
         /**
          * Specific rule where, for more readability, we stack a panel.
          */
-        if(((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
+        if (((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
             nbStacked = datas.length - 3;
         }
 
@@ -156,32 +164,26 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * Update the size of each panels
      */
     function updateSize(datas, limit) {
-        var data = null;
+        var totalWidth = 0;
 
-        // Ensures the width aren't below the min
-        _(datas).each(function(data) {
-            if(data.width < data.minWidth) {
+        angular.forEach(datas, function(data) {
+            // Ensures the width aren't below the min
+            if (data.width < data.minWidth) {
                 data.width = data.minWidth;
             }
+
+            totalWidth += data.stacked ? data.stackedWidth : data.width;
         });
 
-        // Total width of all datas
-        var totalWidth = _(datas).reduce(function(memo, data) {
-            if(data.stacked) {
-                return memo + data.stackedWidth;
-            }
-
-            return memo + data.width;
-        }, 0);
-
         // Delta is the gap we have to reach the limit
-        var delta = limit - totalWidth;
-        var i = 0;
-        var datasLength = datas.length;
-        for (i = 0; i < datasLength; i++) {
+        var delta = limit - totalWidth,
+            datasLength = datas.length
+            data = null;
+
+        for (var i = 0; i < datasLength; i++) {
             data = datas[i];
 
-            if(data.stacked) {
+            if (data.stacked) {
                 data.width = data.stackedWidth;
                 continue;
             }
@@ -205,7 +207,7 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
             delta = delta - (data.width - oldWidth);
 
             // Break if there is no more delta
-            if(delta === 0) {
+            if (delta === 0) {
                 break;
             }
         }
@@ -224,7 +226,6 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * @return {Array}  datas computed
      */
     function calculateStackingFromData(datas, limit) {
-
         var result = updateStackState(datas, limit);
         datas      = result.datas;
 
@@ -246,47 +247,46 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
      * @param  {Array}   panels      the panels
      * @param  {Array}   dataPanels  the datas we want to apply
      * @param  {Int}     windowWidth the windowWidth
-     * @param  {Object}  panelManager (we need a function from it.. TO refactor.)
      */
-    function resizeAndStackPanels(panels, dataPanels, windowWidth, panelManager) {
+    function resizeAndStackPanels(panels, dataPanels, windowWidth) {
         // If we need to stack all the panels
         // We don't stack the last one, but we hide all the stacked panels
         var isMobile  = false;
         var lastPanel = dataPanels[dataPanels.length - 1];
-        if(lastPanel.stacked === true) {
+
+        if (lastPanel.stacked === true) {
             lastPanel.stacked = false;
             lastPanel.width = windowWidth;
             isMobile = true;
         }
 
-        var i = 0;
         var panelsSize = panels.size();
-        var panel, dataPanel, element = null;
-        for (; i < panelsSize; i++) {
-            panel = panels._wrapped[i]; // Dealing with a _ object, yeah..
-            dataPanel = dataPanels[i];
-            element = panelManager.getElement(panel);
+        var panel, element = null;
 
-            if(!element) {
+        panels.css('left', 0);
+
+        angular.forEach(panels, function(domElement, i) {
+            var element   = angular.element(domElement),
+                dataPanel = dataPanels[i];
+
+            if (!element) {
                 console.log('no element for this panel)');
-                continue;
+                return;
             }
 
-            if (panel.$$stacked && !dataPanel.stacked) {
+            if (element.hasClass('stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'stacked');
                 $animate.removeClass(element, 'stacked-mobile');
-            } else if (!panel.$$stacked && dataPanel.stacked) {
+            } else if (!element.hasClass('stacked') && dataPanel.stacked) {
                 $animate.addClass(element, 'stacked');
 
-                if(isMobile) {
+                if (isMobile) {
                     $animate.addClass(element, 'stacked-mobile');
                 }
             }
 
-            panel.$$stacked = dataPanel.stacked;
-
-            element.children().first().width(dataPanel.width);
-        }
+            element.width(dataPanel.width + "px");
+        });
     }
 
     /**************************
@@ -295,22 +295,24 @@ module.service('PanelLayoutEngine', ['$animate', function($animate) {
 
     /**
      * Check the stacking and so on
-     * The first args is panelManager because we need panels and a (stupid! to refactor) method from it..
      */
-    function checkStacking(panelManager) {
-
-        var panels = panelManager.panels;
-
-        var windowWidth   = $(window).innerWidth();
+    function checkStacking(panels) {
+        var body = angular.element('body');
+        var overflowSetting = body.css('overflow');
+        body.css('overflow', 'hidden');
+        var windowWidth   = angular.element($window).innerWidth();
+        body.css('overflow', overflowSetting);
 
         // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels, panelManager);
+        var rawDataPanels = getDataFromPanels(panels);
 
         // #2 - We compute these new data with our specifics rules (agnostic algorithm)
         var dataPanels    = calculateStackingFromData(rawDataPanels, windowWidth);
 
         // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, windowWidth, panelManager);
+        resizeAndStackPanels(panels, dataPanels, windowWidth);
+
+        $rootScope.$broadcast('module-layout-changed');
     }
 
 
