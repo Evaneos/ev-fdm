@@ -79,10 +79,8 @@ angular.module('ev-fdm')
     return {
       enter : function(element, done) {
             var width = element.width();
-            element.css('width', 0);
             element.css('opacity', 0);
             jQuery(element).animate({
-                width: width,
                 opacity: 1
             }, 300, done);
 
@@ -93,12 +91,9 @@ angular.module('ev-fdm')
             };
         },
         leave : function(element, done) {
-            var width = element.width();
             element.css('opacity', 1);
-            element.css('width', width + "px");
 
             jQuery(element).animate({
-                width: 0,
                 opacity: 0.3
             }, 300, done);
 
@@ -1097,7 +1092,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
             },
             template:
                 '<ul class="picture-list row">' +
-                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-6 ev-animate-picture-list">' +
+                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-4 ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb">' +
                                 '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
