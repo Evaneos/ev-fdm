@@ -17,11 +17,11 @@ angular.module('ev-fdm')
                     '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
                             '{{ element.name }}' +
-                            '<button ng-show="editable" type="button" class="close inline" ' +
+                            '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
                     '</li>' +
-                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning">' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning no-margin">' +
                         ' {{ maxAlertMessage }}' +
                     '</li>' +
                 '</ul>',

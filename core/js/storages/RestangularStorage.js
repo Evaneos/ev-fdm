@@ -1,10 +1,17 @@
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['Restangular', function(restangular) {
+    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
             this.resourceName = resourceName;
             this.defaultEmbed = defaultEmbed || [];
+
+            this.emitEventCallbackCreator = function(eventName, elements) {
+                return function(result) {
+                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    return result;
+                }.bind(this);
+            }.bind(this);
         }
 
         RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
@@ -14,6 +21,19 @@ angular.module('ev-fdm')
 
         RestangularStorage.buildEmbed = function(embed) {
             return embed.join(',');
+        };
+
+        RestangularStorage.buildParameters = function(resource, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(resource.defaultEmbed));
+            }
+            else if(resource.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
+            }
+
+            return parameters;
         };
 
         RestangularStorage.buildFilters = function(filters) {
@@ -28,7 +48,7 @@ angular.module('ev-fdm')
                     res[filterKey + '.id'] = filter.id;
                 }
                 else if(angular.isArray(filter) && filter.length > 0) {
-                  res[filterKey] = filter.join(',');
+                    res[filterKey] = filter.join(',');
                 }
                 else if(angular.isDate(filter)) {
                     res[filterKey] = filter.toISOString();
@@ -55,7 +75,7 @@ angular.module('ev-fdm')
             else if(this.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
             }
-            
+
             if(sortKey) {
                 parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
             }
@@ -70,78 +90,72 @@ angular.module('ev-fdm')
 
 
         RestangularStorage.prototype.getById = function(id, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.one(this.resourceName, id).get(parameters);
+            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
-            var parameters = {};
+            return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.updateAll = function(elements, embed) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.put(parameters);
+            return $q.all(elements.map(function(element) {
+                return element.put(parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
-            var parameters = {};
+            angular.extend(element, changes);
+            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
+            elements.forEach(function(element) {
+                angular.extend(element, changes);
+            });
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.patch(changes, parameters);
+            return $q.all(elements.map(function(element) {
+                return element.patch(changes, parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.all(this.resourceName).post(element, parameters);
+            return this.restangular.all(this.resourceName)
+                .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('created', [element]));
         };
 
         RestangularStorage.prototype.delete = function(element) {
-            return element.remove();
+            return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
+        };
+
+        RestangularStorage.prototype.deleteAll = function(elements) {
+
+            return $q.all(elements.map(function(element) {
+                return element.remove();
+            })).then(this.emitEventCallbackCreator('deleted', elements));
         };
 
         RestangularStorage.prototype.save = function(element, embed) {
-            var parameters = {};
+            return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.saveAll = function(elements, embed) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.save(parameters);
+            return $q.all(elements.map(function(element) {
+                return element.save(parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.getNew = function() {
             return this.restangular.one(this.resourceName);
         };
-
 
         return RestangularStorage;
     }]);

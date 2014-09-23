@@ -17,7 +17,7 @@ angular.module('ev-fdm')
             return containerH + "-" + containerW;
         },
         function() {
-            subContainer.height(containerH);
+            subContainer.height(container.height());
             $table.floatThead('reflow');
         });
     }
@@ -44,6 +44,7 @@ angular.module('ev-fdm')
                         return $table.closest('.ev-fixed-header-table-container');
                     }
                 });
+            angular.element('.table-container').css('overflow', 'hidden');
 
             $(window).on('resize', function() {
                 _sync($table, $scope);

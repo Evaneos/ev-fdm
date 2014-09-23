@@ -79,10 +79,8 @@ angular.module('ev-fdm')
     return {
       enter : function(element, done) {
             var width = element.width();
-            element.css('width', 0);
             element.css('opacity', 0);
             jQuery(element).animate({
-                width: width,
                 opacity: 1
             }, 300, done);
 
@@ -93,12 +91,9 @@ angular.module('ev-fdm')
             };
         },
         leave : function(element, done) {
-            var width = element.width();
             element.css('opacity', 1);
-            element.css('width', width + "px");
 
             jQuery(element).animate({
-                width: 0,
                 opacity: 0.3
             }, 300, done);
 
@@ -175,7 +170,7 @@ angular.module('ev-fdm')
     });
 
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', function($state, $stateParams, restangular) {
+    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
             var self = this;
@@ -217,72 +212,78 @@ angular.module('ev-fdm')
             };
 
             /*
-                Update the view when filter are changed in the SearchController
+             * Update the view when filter are changed in the SearchController
              */
-            this.$scope.$on('common::filters.changed', function(event, filters) {
-                self.filters = filters;
-                self.sortKey = self.defaultSortKey;
-                self.defaultReverseSort = self.defaultReverseSort;
-                self.update(1, self.filters, self.sortKey, self.reverseSort);
-            });
+            communicationService.on('common::filters.changed', function(event, filters) {
+                this.filters = filters;
+                this.sortKey = this.defaultSortKey;
+                this.update(1, this.filters, this.sortKey, this.reverseSort);
+            }.bind(this));
 
             /*
                 When returning to the list state remove the active element
              */
             this.$scope.$on('$stateChangeSuccess', function(event, toState) {
                 if(toState.name === self.elementName) {
-                  self.$scope.activeElement = null;
+                    self.$scope.activeElement = null;
                 }
                 else {
-                  self.setActiveElement();
+                    self.setActiveElement();
                 }
             });
 
-            this.$scope.$on(this.elementName + '::updated', function(event, updatedElements) {
+            communicationService.on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::created', function(event, createdElements) {
+            communicationService.on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            this.$scope.$on(this.elementName + '::deleted', function(event, deletedElements) {
+            communicationService.on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            var self = this;
-            self.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                self.elements = elements;
-                self.updateScope();
-            });
+            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                this.elements = elements;
+                this.updateScope();
+            }.bind(this));
         };
 
         ListController.prototype.updateScope = function () {
-            var self = this;
-
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
-            this.$scope.selectedElements = [];
+
+            if (!this.$scope.selectedElements || !this.elements) {
+                this.$scope.selectedElements = [];
+            } else {
+                var selectedElementsIds = this.elements.map(function(elt) {
+                    return restangular.configuration.getIdFromElem(elt);
+                });
+                this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
+                    return selectedElementsIds.indexOf(restangular.configuration.getIdFromElem(elt)) !== -1;
+                });
+            }
             this.setActiveElement();
         };
 
         ListController.prototype.setActiveElement = function() {
-          var self = this;
-          this.$scope.activeElement = null;
+            var self = this;
+            this.$scope.activeElement = null;
 
-          if(angular.isDefined($state.params.id)) {
-            angular.forEach(this.elements, function(element) {
-              var elementId = restangular.configuration.getIdFromElem(element);
-              if(elementId == $state.params.id) {
-                self.$scope.activeElement = element;
-                }
-            });
-          }
+            if(angular.isDefined($state.params.id)) {
+                angular.forEach(this.elements, function(element) {
+                    var elementId = restangular.configuration.getIdFromElem(element);
+                    if (elementId == $state.params.id) {
+                        self.$scope.activeElement = element;
+                    }
+                });
+            }
         };
 
         ListController.prototype.toggleView = function(view, element) {
@@ -302,7 +303,6 @@ angular.module('ev-fdm')
         };
 
         return ListController;
-
     }]);
 
 'use strict';
@@ -340,21 +340,19 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-
+    .factory('SearchController', ['communicationService', function(communicationService) {
         function SearchController($scope) {
-            var self = this;
-
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                $rootScope.$broadcast('common::filters.changed', self.$scope.filters);
-            };
-        };
+                communicationService.emit('common::filters.changed', this.$scope.filters);
+            }.bind(this);
+        }
 
         return SearchController;
     }]);
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -690,7 +688,7 @@ angular.module('ev-fdm')
             return containerH + "-" + containerW;
         },
         function() {
-            subContainer.height(containerH);
+            subContainer.height(container.height());
             $table.floatThead('reflow');
         });
     }
@@ -717,6 +715,7 @@ angular.module('ev-fdm')
                         return $table.closest('.ev-fixed-header-table-container');
                     }
                 });
+            angular.element('.table-container').css('overflow', 'hidden');
 
             $(window).on('resize', function() {
                 _sync($table, $scope);
@@ -1089,15 +1088,18 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
               editable: '=',
               onDelete: '&',
               onChange: '&',
-              showUpdate: '='
+              showUpdate: '=',
+              language: '='
             },
             template:
-                '<ul class="picture-list">' +
-                    '<li ng-repeat="picture in pictures" class="ev-animate-picture-list">' +
+                '<ul class="picture-list row">' +
+                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-4 ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb" ' +
                               'style="background-image: '+
-                                  'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
+                              'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
+                            '<div class="picture-thumb">' +
+                                '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
                                 '<button class="action update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +
@@ -1105,6 +1107,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                                 '</button>' +
                                 '<button class="action delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
+                                  'tabIndex="-1"' +
                                   'data-ng-show="editable">' +
                                     '<span class="icon icon-bin"></span>' +
                                 '</button>' +
@@ -1120,6 +1123,18 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                                       'class="form-control author" ' +
                                       'ng-model="picture.author" ' +
                                       'ng-change="onChange({picture: picture})"/>' +
+                                '</span>' +
+                            '</figcaption>' +
+                            '<figcaption ng-if="language">' +
+                                '<span class="author" data-ng-show="!editable">' +
+                                     '{{ picture.legend[language].name }}' +
+                                '</span>' +
+                                '<span data-ng-show="editable">' +
+                                    '<input ' +
+                                        'type="text" ' +
+                                        'class="form-control author" ' +
+                                        'ng-model="picture.legend[language].name" ' +
+                                        'ng-change="onChange({picture: picture})"/>' +
                                 '</span>' +
                             '</figcaption>' +
                         '</figure>' +
@@ -1820,11 +1835,11 @@ angular.module('ev-fdm')
                     '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
                             '{{ element.name }}' +
-                            '<button ng-show="editable" type="button" class="close inline" ' +
+                            '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
                     '</li>' +
-                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning">' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning no-margin">' +
                         ' {{ maxAlertMessage }}' +
                     '</li>' +
                 '</ul>',
@@ -3068,12 +3083,19 @@ angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['Restangular', function(restangular) {
+    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
             this.resourceName = resourceName;
             this.defaultEmbed = defaultEmbed || [];
+
+            this.emitEventCallbackCreator = function(eventName, elements) {
+                return function(result) {
+                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    return result;
+                }.bind(this);
+            }.bind(this);
         }
 
         RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
@@ -3083,6 +3105,19 @@ angular.module('ev-fdm')
 
         RestangularStorage.buildEmbed = function(embed) {
             return embed.join(',');
+        };
+
+        RestangularStorage.buildParameters = function(resource, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(resource.defaultEmbed));
+            }
+            else if(resource.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
+            }
+
+            return parameters;
         };
 
         RestangularStorage.buildFilters = function(filters) {
@@ -3097,7 +3132,7 @@ angular.module('ev-fdm')
                     res[filterKey + '.id'] = filter.id;
                 }
                 else if(angular.isArray(filter) && filter.length > 0) {
-                  res[filterKey] = filter.join(',');
+                    res[filterKey] = filter.join(',');
                 }
                 else if(angular.isDate(filter)) {
                     res[filterKey] = filter.toISOString();
@@ -3124,7 +3159,7 @@ angular.module('ev-fdm')
             else if(this.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
             }
-            
+
             if(sortKey) {
                 parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
             }
@@ -3139,78 +3174,72 @@ angular.module('ev-fdm')
 
 
         RestangularStorage.prototype.getById = function(id, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.one(this.resourceName, id).get(parameters);
+            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
-            var parameters = {};
+            return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.updateAll = function(elements, embed) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.put(parameters);
+            return $q.all(elements.map(function(element) {
+                return element.put(parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
-            var parameters = {};
+            angular.extend(element, changes);
+            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
+            elements.forEach(function(element) {
+                angular.extend(element, changes);
+            });
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.patch(changes, parameters);
+            return $q.all(elements.map(function(element) {
+                return element.patch(changes, parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            return this.restangular.all(this.resourceName).post(element, parameters);
+            return this.restangular.all(this.resourceName)
+                .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('created', [element]));
         };
 
         RestangularStorage.prototype.delete = function(element) {
-            return element.remove();
+            return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
+        };
+
+        RestangularStorage.prototype.deleteAll = function(elements) {
+
+            return $q.all(elements.map(function(element) {
+                return element.remove();
+            })).then(this.emitEventCallbackCreator('deleted', elements));
         };
 
         RestangularStorage.prototype.save = function(element, embed) {
-            var parameters = {};
+            return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
-            }
-            else if(this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
+        RestangularStorage.prototype.saveAll = function(elements, embed) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
 
-            return element.save(parameters);
+            return $q.all(elements.map(function(element) {
+                return element.save(parameters);
+            })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.getNew = function() {
             return this.restangular.one(this.resourceName);
         };
-
 
         return RestangularStorage;
     }]);

@@ -18,9 +18,10 @@
             }
 
             .ev-panel-title {
+                color: @gray-dark;
                 &:hover {
                     cursor: pointer;
-                    color: @gray;
+                    color: @gray-darker;
                 }
             }
         }
@@ -75,6 +76,7 @@
 
     div[ui-view] {
         height: 100%;
+        position: relative;
     }
 
     &[data-breakpoint~="100"],
@@ -151,9 +153,9 @@
 
         > .ev-panel-inner {
             height: 100%;
-            border-bottom: 7px solid @ev-panel-bg;
-            border-left: 7px solid @ev-panel-bg;
-            border-right: 7px solid @ev-panel-bg;
+            border-bottom: @ev-panel-inner-border-width solid @ev-panel-bg;
+            border-left: @ev-panel-inner-border-width solid @ev-panel-bg;
+            border-right: @ev-panel-inner-border-width solid @ev-panel-bg;
             overflow-x: hidden;
             overflow-y: hidden;
 
@@ -316,12 +318,17 @@
                     display: table-cell;
                     vertical-align: middle;
                     text-transform: uppercase;
+                    color: @gray-dark;
 
                     .icon {
                         position: relative;
                         bottom: 15px;
                         margin-right: 12px;
                         font-size: 18px;
+                    }
+
+                    &:hover {
+                        color: @gray-darker;
                     }
                 }
             }
