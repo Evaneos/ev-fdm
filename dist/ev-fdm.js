@@ -1139,10 +1139,12 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                     '</li>' +
                 '</ul><div class="clearfix"></div>',
         link: function ($scope, elem, attrs) {
+          $scope.pictures = $scope.pictures || [];
+
           // Number of columns for pictures
-          $scope.colNumber = $scope.colNumber || 2;
+          var colNumber = $scope.colNumber || 2;
           // Convert it to bootstrap convention (12)
-          $scope.colNumberBootstrap = 12 / $scope.colNumber;
+          $scope.colNumberBootstrap = 12 / colNumber;
 
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
@@ -1153,7 +1155,6 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                 console.log(params);
             };
           }
-          $scope.pictures = $scope.pictures || [];
         }
       };
     });
@@ -4165,10 +4166,12 @@ angular.module('ev-upload')
                 tooltipText: '@',
                 iconName: '@',
                 url: '@',
-                language: '='
+                language: '=',
+                maxFiles: '@',
+                addPicture: '&'
             },
             template:
-            '<ev-upload settings="settings" file-success="addPicture(file)"' +
+            '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
                 'upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
                     '<button type="button" tabIndex="-1" class="btn btn-link ev-upload-clickable"' +
@@ -4186,17 +4189,18 @@ angular.module('ev-upload')
                 '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
             '</ev-upload>',
 
-            link: function ($scope) {
+            link: function ($scope, elem, attrs) {
+                $scope.uploading = false;
+
                 $scope.settings = {
                     acceptedFiles: 'image/*',
-                    url: $scope.url
+                    url: $scope.url,
+                    maxFiles: $scope.maxFiles || 100
                 };
-            },
-            controller: function ($scope) {
+
                 $scope.$watch('url', function (url) {
                     $scope.settings.url = url;
                 });
-                $scope.uploading = false;
 
                 $scope.newUpload = function (upload) {
                     $scope.upload = null;
@@ -4224,20 +4228,23 @@ angular.module('ev-upload')
                         });
                 };
 
-                $scope.addPicture = function(picture) {
-                    console.log(picture);
-                    var pictureData = picture.data[0];
-                    if($scope.language) {
-                        if (Array.isArray(pictureData.legend)) {
-                            pictureData.legend = {};
+                // This allow us to override the add picture
+                if(!attrs.addPicture) {
+                    $scope.addPicture = function(picture) {
+                        picture = picture.picture;
+                        var pictureData = picture.data[0];
+                        if($scope.language) {
+                            if (Array.isArray(pictureData.legend)) {
+                                pictureData.legend = {};
+                            }
+                            if (!pictureData.legend[$scope.language]) {
+                                pictureData.legend[$scope.language] = { name: '' };
+                            }
                         }
-                        if (!pictureData.legend[$scope.language]) {
-                            pictureData.legend[$scope.language] = { name: '' };
-                        }
-                    }
 
-                    $scope.pictures.unshift(pictureData);
-                };
+                        $scope.pictures.unshift(pictureData);
+                    };
+                }
             }
         };
 }]);

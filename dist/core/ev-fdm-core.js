@@ -1139,10 +1139,12 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                     '</li>' +
                 '</ul><div class="clearfix"></div>',
         link: function ($scope, elem, attrs) {
+          $scope.pictures = $scope.pictures || [];
+
           // Number of columns for pictures
-          $scope.colNumber = $scope.colNumber || 2;
+          var colNumber = $scope.colNumber || 2;
           // Convert it to bootstrap convention (12)
-          $scope.colNumberBootstrap = 12 / $scope.colNumber;
+          $scope.colNumberBootstrap = 12 / colNumber;
 
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
@@ -1153,7 +1155,6 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                 console.log(params);
             };
           }
-          $scope.pictures = $scope.pictures || [];
         }
       };
     });
