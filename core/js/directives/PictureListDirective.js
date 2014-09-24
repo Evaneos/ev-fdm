@@ -16,9 +16,6 @@
                 '<ul class="picture-list row">' +
                     '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-4 ev-animate-picture-list">' +
                         '<figure>' +
-                            '<div class="picture-thumb" ' +
-                              'style="background-image: '+
-                              'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
                             '<div class="picture-thumb">' +
                                 '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
                                 '<button class="action update-action ev-upload-clickable"' +
@@ -67,9 +64,9 @@
               $scope.pictures.splice(params.index, 1);
             };
             $scope.onUpdate = function (params) {
-                console.log('et la maintenant ça update');
+                // Not implemented yet
                 console.log(params);
-            }
+            };
           }
           $scope.pictures = $scope.pictures || [];
         }
