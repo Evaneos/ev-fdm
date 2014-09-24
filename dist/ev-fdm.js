@@ -4259,7 +4259,7 @@ angular.module('ev-tinymce', [])
                             editor.focus();
 
                             editor.on('blur', function (e) {
-                                editor.hide();
+                                tinyMCE.execCommand("mceToggleEditor", false, tinyId);
                                 placeholderElem.html(placeholderOrText());
                                 getTinyElm().hide();
                                 placeholderElem.show();
@@ -4287,7 +4287,7 @@ angular.module('ev-tinymce', [])
 
                 scope.$on('$destroy', function() {
                     if (tinyInstance) {
-                        tinyInstance.remove();
+                        tinyInstance.destroy();
                         tinyInstance = null;
                     }
                 });
