@@ -10,11 +10,12 @@
               onDelete: '&',
               onChange: '&',
               showUpdate: '=',
-              language: '='
+              language: '=',
+              colNumber: '='
             },
             template:
                 '<ul class="picture-list row">' +
-                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-4 ev-animate-picture-list">' +
+                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb">' +
                                 '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
@@ -59,6 +60,11 @@
                     '</li>' +
                 '</ul><div class="clearfix"></div>',
         link: function ($scope, elem, attrs) {
+          // Number of columns for pictures
+          $scope.colNumber = $scope.colNumber || 2;
+          // Convert it to bootstrap convention (12)
+          $scope.colNumberBootstrap = 12 / $scope.colNumber;
+
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
