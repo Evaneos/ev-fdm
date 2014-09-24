@@ -1,11 +1,11 @@
 @import "../variables.less";
 @font-face {
     font-family: 'icomoon';
-    src:url('@{path-fonts}/icomoon/sidonie.eot?2014-09-18-1611');
-    src:url('@{path-fonts}/icomoon/sidonie.eot?#iefix2014-09-18-1611') format('embedded-opentype'),
-      url('@{path-fonts}/icomoon/sidonie.woff?2014-09-18-1611') format('woff'),
-      url('@{path-fonts}/icomoon/sidonie.ttf?2014-09-18-1611') format('truetype'),
-      url('@{path-fonts}/icomoon/sidonie.svg?2014-09-18-1611#sidonie') format('svg');
+    src:url('@{path-fonts}/icomoon/sidonie.eot?2014-09-24-1428');
+    src:url('@{path-fonts}/icomoon/sidonie.eot?#iefix2014-09-24-1428') format('embedded-opentype'),
+      url('@{path-fonts}/icomoon/sidonie.woff?2014-09-24-1428') format('woff'),
+      url('@{path-fonts}/icomoon/sidonie.ttf?2014-09-24-1428') format('truetype'),
+      url('@{path-fonts}/icomoon/sidonie.svg?2014-09-24-1428#sidonie') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -16,7 +16,7 @@
 @media screen and (-webkit-min-device-pixel-ratio:0) {
     @font-face {
         font-family: 'icomoon';
-        src: url('@{path-fonts}/icomoon/sidonie.svg?2014-09-18-1611#sidonie') format('svg');
+        src: url('@{path-fonts}/icomoon/sidonie.svg?2014-09-24-1428#sidonie') format('svg');
     }
 }
 
@@ -27,6 +27,7 @@ you can use the generic selector below, but it's slower:
 [class*="icon-"] {
 */
 .icon,
+.icon-todo,
 .icon-tip,
 .icon-eye,
 .icon-camera,
@@ -347,4 +348,7 @@ you can use the generic selector below, but it's slower:
 }
 .icon-tip:before {
     content: "\e647";
+}
+.icon-todo:before {
+    content: "\e648";
 }
