@@ -23,6 +23,7 @@ angular.module('ev-upload')
             scope: {
                 pictures: '=',
                 buttonText: '@',
+                tooltipText: '@',
                 iconName: '@',
                 url: '@',
                 language: '='
@@ -31,7 +32,9 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="addPicture(file)"' +
                 'upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<button type="button" tabIndex="-1" class="btn btn-link ev-upload-clickable">' +
+                    '<button type="button" tabIndex="-1" class="btn btn-link ev-upload-clickable"' +
+                            'tooltip="{{tooltipText}}"' +
+                            'tooltip-placement="top">' +
                         '<span class="icon {{iconName}}"></span>' +
                        '{{buttonText}}' +
                     '</button>' +
