@@ -27,6 +27,7 @@ you can use the generic selector below, but it's slower:
 [class*="icon-"] {
 */
 .icon,
+.icon-replace,
 .icon-todo,
 .icon-tip,
 .icon-eye,
@@ -130,41 +131,59 @@ you can use the generic selector below, but it's slower:
     font-size: @font-size-small;
 }
 
-.icon-hang-up:before {
+.icon-replace:before {
     content: "\e600";
 }
-.icon-fold:before {
+.icon-todo:before {
+    content: "\e648";
+}
+.icon-tip:before {
+    content: "\e647";
+}
+.icon-eye:before {
+    content: "\e645";
+}
+.icon-camera:before {
+    content: "\e646";
+}
+.icon-wifi:before {
+    content: "\e644";
+}
+.icon-hang-up:before {
     content: "\e601";
 }
-.icon-unfold:before {
+.icon-fold:before {
     content: "\e602";
 }
-.icon-handle:before {
+.icon-unfold:before {
     content: "\e603";
+}
+.icon-handle:before {
+    content: "\e604";
 }
 .icon-euro:before {
     content: "\e63f";
 }
 .icon-accomodation:before {
-    content: "\e604";
-}
-.icon-daybyday:before {
     content: "\e605";
 }
-.icon-intro:before {
+.icon-daybyday:before {
     content: "\e606";
 }
-.icon-next:before {
+.icon-intro:before {
     content: "\e607";
 }
-.icon-place:before {
+.icon-next:before {
     content: "\e608";
 }
-.icon-previous:before {
+.icon-place:before {
     content: "\e609";
 }
-.icon-quote:before {
+.icon-previous:before {
     content: "\e60a";
+}
+.icon-quote:before {
+    content: "\e60b";
 }
 .icon-edit:before {
     content: "\e637";
@@ -194,13 +213,13 @@ you can use the generic selector below, but it's slower:
     content: "\e62f";
 }
 .icon-help:before {
-    content: "\e60b";
-}
-.icon-calendar:before {
     content: "\e60c";
 }
-.icon-bin:before {
+.icon-calendar:before {
     content: "\e60d";
+}
+.icon-bin:before {
+    content: "\e60e";
 }
 .icon-infos:before {
     content: "\e62b";
@@ -212,35 +231,35 @@ you can use the generic selector below, but it's slower:
     content: "\e629";
 }
 .icon-workflow:before {
-    content: "\e60e";
-}
-.icon-users:before {
     content: "\e60f";
 }
-.icon-triangle-right:before {
+.icon-users:before {
     content: "\e610";
 }
-.icon-triangle-left:before {
+.icon-triangle-right:before {
     content: "\e611";
 }
-.icon-triangle_up:before {
+.icon-triangle-left:before {
     content: "\e612";
+}
+.icon-triangle_up:before {
+    content: "\e613";
 }
 .select2-container .select2-choice .select2-arrow b:before,
 .icon-triangle_down:before {
-    content: "\e613";
-}
-.icon-traveller-source:before {
     content: "\e614";
 }
-.icon-testimonial:before {
+.icon-traveller-source:before {
     content: "\e615";
 }
-.icon-tableur:before {
+.icon-testimonial:before {
     content: "\e616";
 }
-.icon-stats:before {
+.icon-tableur:before {
     content: "\e617";
+}
+.icon-stats:before {
+    content: "\e618";
 }
 .icon-source:before {
     content: "\e627";
@@ -255,100 +274,85 @@ you can use the generic selector below, but it's slower:
     content: "\e625";
 }
 .icon-prefilled:before {
-    content: "\e618";
-}
-.icon-pixels:before {
     content: "\e619";
 }
-.icon-pdf:before {
+.icon-pixels:before {
     content: "\e61a";
 }
-.icon-other:before {
+.icon-pdf:before {
     content: "\e61b";
 }
-.icon-money:before {
+.icon-other:before {
     content: "\e61c";
 }
-.icon-lambda:before {
+.icon-money:before {
     content: "\e61d";
 }
-.icon-home:before {
+.icon-lambda:before {
     content: "\e61e";
 }
-.icon-filter:before {
+.icon-home:before {
     content: "\e61f";
 }
-.icon-faq:before {
+.icon-filter:before {
     content: "\e620";
 }
-.icon-evaneos:before {
+.icon-faq:before {
     content: "\e621";
 }
-.icon-emo-sad:before {
+.icon-evaneos:before {
     content: "\e622";
 }
-.icon-emo-normal:before {
+.icon-emo-sad:before {
     content: "\e623";
 }
-.icon-emo-happy:before {
+.icon-emo-normal:before {
     content: "\e628";
 }
-.icon-download:before {
+.icon-emo-happy:before {
     content: "\e62c";
 }
-.icon-dossiers-voyageurs:before {
+.icon-download:before {
     content: "\e62d";
 }
-.icon-doc:before {
+.icon-dossiers-voyageurs:before {
     content: "\e62e";
 }
-.icon-doc-lambda:before {
+.icon-doc:before {
     content: "\e638";
 }
-.icon-display-lines:before {
+.icon-doc-lambda:before {
     content: "\e639";
 }
-.icon-display-hierarchical:before {
+.icon-display-lines:before {
     content: "\e63a";
 }
-.icon-cross:before {
+.icon-display-hierarchical:before {
     content: "\e63b";
 }
-.icon-create:before {
+.icon-cross:before {
     content: "\e63c";
 }
-.icon-article:before {
+.icon-create:before {
     content: "\e63d";
+}
+.icon-article:before {
+    content: "\e63e";
 }
 .icon-arrow-up:before,
 .trend.up i:before {
-    content: "\e63e";
-}
-.icon-arrow-right:before {
     content: "\e640";
 }
-.icon-arrow-left:before {
+.icon-arrow-right:before {
     content: "\e641";
+}
+.icon-arrow-left:before {
+    content: "\e642";
 }
 .icon-arrow-down:before,
 .trend.down i:before {
-    content: "\e642";
-}
-.icon-agences-locales:before {
     content: "\e643";
 }
-.icon-wifi:before {
-    content: "\e644";
-}
-.icon-eye:before {
-    content: "\e645";
-}
-.icon-camera:before {
-    content: "\e646";
-}
-.icon-tip:before {
-    content: "\e647";
-}
-.icon-todo:before {
-    content: "\e648";
+.icon-agences-locales:before {
+    content: "\e649";
 }
