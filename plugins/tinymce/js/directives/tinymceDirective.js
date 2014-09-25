@@ -39,7 +39,6 @@ angular.module('ev-tinymce', [])
             template: '<div class="tiny-mce-wrapper">'
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
-                + '<span class="max-chars-info">&nbsp;</span>'
                 + '<div class="ev-tinymce-toolbar"></div>'
                 + '</div>',
             restrict: 'AE',
