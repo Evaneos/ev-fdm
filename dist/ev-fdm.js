@@ -647,6 +647,102 @@ Fanny.Utils = {
     }
 }
 'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
+'use strict';
 
 angular.module('ev-fdm')
     .directive('activableSet', function() {
@@ -2207,102 +2303,6 @@ angular.module('ev-fdm')
         };
     });
 'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
-'use strict';
 
 var module = angular.module('ev-fdm');
 
@@ -3525,57 +3525,6 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
-angular.module('ev-fdm')
-  .directive('disableValidation', function() {
-    return {
-      require: '^form',
-      restrict: 'A',
-      link: function(scope, element, attrs, form) {
-        var control;
-
-        scope.$watch(attrs.disableValidation, function(value) {
-          if (!control) {
-            control = form[element.attr("name")];
-          }
-          if (value === false) {
-            form.$addControl(control);
-            angular.forEach(control.$error, function(validity, validationToken) {
-              form.$setValidity(validationToken, !validity, control);
-            });
-          } else {
-            form.$removeControl(control);
-          }
-        });
-      }
-    };
-  });
-
-angular.module('ev-fdm')
-.directive('strictMin', function() {
-    return {
-        require: 'ngModel',
-        link: function(scope, elm, attrs, ctrl) {
-
-            function validator(viewValue) {
-                var testedValue = parseFloat(viewValue),
-                    min = parseFloat(attrs.strictMin);
-
-                if(testedValue > min ) {
-                    ctrl.$setValidity('strictMin', true);
-                    return viewValue;
-                }
-                else {
-                    ctrl.$setValidity('strictMin', false);
-                    return undefined;
-                }
-
-            };
-
-            ctrl.$parsers.unshift(validator);
-            ctrl.$formatters.push(validator);
-        }
-    }
-});
 var module = angular.module('ev-fdm');
 
 /**
@@ -3905,6 +3854,57 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
     return panelLayoutEngine;
 }]);
 
+angular.module('ev-fdm')
+  .directive('disableValidation', function() {
+    return {
+      require: '^form',
+      restrict: 'A',
+      link: function(scope, element, attrs, form) {
+        var control;
+
+        scope.$watch(attrs.disableValidation, function(value) {
+          if (!control) {
+            control = form[element.attr("name")];
+          }
+          if (value === false) {
+            form.$addControl(control);
+            angular.forEach(control.$error, function(validity, validationToken) {
+              form.$setValidity(validationToken, !validity, control);
+            });
+          } else {
+            form.$removeControl(control);
+          }
+        });
+      }
+    };
+  });
+
+angular.module('ev-fdm')
+.directive('strictMin', function() {
+    return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+
+            function validator(viewValue) {
+                var testedValue = parseFloat(viewValue),
+                    min = parseFloat(attrs.strictMin);
+
+                if(testedValue > min ) {
+                    ctrl.$setValidity('strictMin', true);
+                    return viewValue;
+                }
+                else {
+                    ctrl.$setValidity('strictMin', false);
+                    return undefined;
+                }
+
+            };
+
+            ctrl.$parsers.unshift(validator);
+            ctrl.$formatters.push(validator);
+        }
+    }
+});
 angular.module('ev-leaflet', ['leaflet-directive'])
     .provider('evLeaflet', function() {
         this.$get =function () {
