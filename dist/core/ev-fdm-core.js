@@ -355,6 +355,395 @@ angular.module('ev-fdm')
 
 'use strict';
 
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
+
+if(typeof(Fanny) == 'undefined') {
+    Fanny = {}
+};
+
+Fanny.Utils = {
+    generatedIds : {},
+    generateId : function(prefix) {
+        var id = prefix + Math.random() * 10000;
+        if(typeof(this.generatedIds[id] != 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = generateId(prefix);
+        }
+        return id;
+    },
+    convertNumberToString : function(number, nbDecimals, intMinLength) {
+        var thousandsSep = ' ';
+        var decimalSep   = ',';
+        var numberStr    = '';
+        var numberArray  = [];
+        var integer      = '';
+        var decimals     = '';
+        var result       = '';
+        
+        if(typeof(nbDecimals) == 'undefined') {
+            nbDecimals = 2;
+        }
+        
+        numberStr = number + '';
+        numberArray = numberStr.split('.');
+        if(numberArray.length < 1 && numberArray.length > 2) {
+            throw new Error('Invalid number');
+            return false;
+        }
+        
+        integer = numberArray[0];
+        
+        if(numberArray.length == 1) {
+            decimals = '';
+            for(var i = 0; i < nbDecimals; i++) {
+                decimals += '0';
+            }
+        } else {
+            decimals = numberArray[1];
+            if(decimals.length > nbDecimals) {
+                decimals = decimals.substring(0, 2);
+            } else {
+                while(decimals.length < nbDecimals) {
+                    decimals += '0';
+                }
+            }
+        }
+        for(var i = 0; i < integer.length; i++) {
+            if(i % 3 == 0 && i != 0) {
+                result = thousandsSep + result;
+            }
+            result = integer[integer.length - i - 1] + result;
+        }
+        if(result == '') {
+            result = '' + 0;
+        }
+        
+        for(var i = result.length; i < intMinLength; i++) {
+            result = '0' + result;
+        }
+        
+        if(decimals.length > 0) {
+            result += decimalSep + decimals;
+        }
+        return result;
+    },
+    stringToVar : function(string) {
+        if(typeof(string) != 'string') {
+            throw new Error('Not a string');
+            return;
+        }
+        if(!isNaN(string)) {
+            return parseInt(string);
+        }
+        var _exploded = string.split('.');
+        var _result = window;
+        for (var index = 0; index < _exploded.length; index++) {
+            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
+                _result = _result[_exploded[index]];
+            } else {
+                throw new Error('No corresponding var found for ' + string);
+                return;
+            }
+        }
+        return _result;
+    },
+    formatDate : function(date) {
+        if(!date || typeof(date) != 'object') {
+            return '';
+        }
+        var year = date.getFullYear();
+        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
+        var day = this.convertNumberToString(date.getDate(), 0, 2);
+        return year + '-' + month + '-' + day;
+    },
+    Renderers : {
+        date : function(date) {
+            var _date     = null;
+            var _splitted = null;
+            var _obj      = null;
+            if(date && typeof(date) == 'object') {
+                _date = date.date;
+            } else {
+                _date = date;
+            }
+            if(typeof(_date) == 'string' && _date) {
+                _date = _date.split(' ')[0];
+                _splitted = _date.split('-');
+                if (_splitted.length === 3) {
+                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
+                }
+                else {
+                    return '';
+                }
+            } else {
+                return '';
+            }
+        },
+        amounts : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2);
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+            
+        },
+        money : function(number, row) {
+            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        euros : function(number) {
+            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
+            if(number >= 0) {
+                return res;
+            } else {
+                return $('<span>').addClass('text-orange').html(res)
+            }
+        },
+        upper : function(string) {
+            if(typeof(string) == 'string') {
+                return string.toUpperCase();
+            } else {
+                return string;
+            }
+        }
+    }
+}
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
+'use strict';
+
 angular.module('ev-fdm')
     .directive('activableSet', function() {
         return {
@@ -1980,395 +2369,6 @@ angular.module('ev-fdm')
     });
 'use strict';
 
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
-
-if(typeof(Fanny) == 'undefined') {
-    Fanny = {}
-};
-
-Fanny.Utils = {
-    generatedIds : {},
-    generateId : function(prefix) {
-        var id = prefix + Math.random() * 10000;
-        if(typeof(this.generatedIds[id] != 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = generateId(prefix);
-        }
-        return id;
-    },
-    convertNumberToString : function(number, nbDecimals, intMinLength) {
-        var thousandsSep = ' ';
-        var decimalSep   = ',';
-        var numberStr    = '';
-        var numberArray  = [];
-        var integer      = '';
-        var decimals     = '';
-        var result       = '';
-        
-        if(typeof(nbDecimals) == 'undefined') {
-            nbDecimals = 2;
-        }
-        
-        numberStr = number + '';
-        numberArray = numberStr.split('.');
-        if(numberArray.length < 1 && numberArray.length > 2) {
-            throw new Error('Invalid number');
-            return false;
-        }
-        
-        integer = numberArray[0];
-        
-        if(numberArray.length == 1) {
-            decimals = '';
-            for(var i = 0; i < nbDecimals; i++) {
-                decimals += '0';
-            }
-        } else {
-            decimals = numberArray[1];
-            if(decimals.length > nbDecimals) {
-                decimals = decimals.substring(0, 2);
-            } else {
-                while(decimals.length < nbDecimals) {
-                    decimals += '0';
-                }
-            }
-        }
-        for(var i = 0; i < integer.length; i++) {
-            if(i % 3 == 0 && i != 0) {
-                result = thousandsSep + result;
-            }
-            result = integer[integer.length - i - 1] + result;
-        }
-        if(result == '') {
-            result = '' + 0;
-        }
-        
-        for(var i = result.length; i < intMinLength; i++) {
-            result = '0' + result;
-        }
-        
-        if(decimals.length > 0) {
-            result += decimalSep + decimals;
-        }
-        return result;
-    },
-    stringToVar : function(string) {
-        if(typeof(string) != 'string') {
-            throw new Error('Not a string');
-            return;
-        }
-        if(!isNaN(string)) {
-            return parseInt(string);
-        }
-        var _exploded = string.split('.');
-        var _result = window;
-        for (var index = 0; index < _exploded.length; index++) {
-            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
-                _result = _result[_exploded[index]];
-            } else {
-                throw new Error('No corresponding var found for ' + string);
-                return;
-            }
-        }
-        return _result;
-    },
-    formatDate : function(date) {
-        if(!date || typeof(date) != 'object') {
-            return '';
-        }
-        var year = date.getFullYear();
-        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
-        var day = this.convertNumberToString(date.getDate(), 0, 2);
-        return year + '-' + month + '-' + day;
-    },
-    Renderers : {
-        date : function(date) {
-            var _date     = null;
-            var _splitted = null;
-            var _obj      = null;
-            if(date && typeof(date) == 'object') {
-                _date = date.date;
-            } else {
-                _date = date;
-            }
-            if(typeof(_date) == 'string' && _date) {
-                _date = _date.split(' ')[0];
-                _splitted = _date.split('-');
-                if (_splitted.length === 3) {
-                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
-                }
-                else {
-                    return '';
-                }
-            } else {
-                return '';
-            }
-        },
-        amounts : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2);
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-            
-        },
-        money : function(number, row) {
-            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        euros : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        upper : function(string) {
-            if(typeof(string) == 'string') {
-                return string.toUpperCase();
-            } else {
-                return string;
-            }
-        }
-    }
-}
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
-'use strict';
-
 var module = angular.module('ev-fdm');
 
 /**
@@ -3590,57 +3590,6 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
-angular.module('ev-fdm')
-  .directive('disableValidation', function() {
-    return {
-      require: '^form',
-      restrict: 'A',
-      link: function(scope, element, attrs, form) {
-        var control;
-
-        scope.$watch(attrs.disableValidation, function(value) {
-          if (!control) {
-            control = form[element.attr("name")];
-          }
-          if (value === false) {
-            form.$addControl(control);
-            angular.forEach(control.$error, function(validity, validationToken) {
-              form.$setValidity(validationToken, !validity, control);
-            });
-          } else {
-            form.$removeControl(control);
-          }
-        });
-      }
-    };
-  });
-
-angular.module('ev-fdm')
-.directive('strictMin', function() {
-    return {
-        require: 'ngModel',
-        link: function(scope, elm, attrs, ctrl) {
-
-            function validator(viewValue) {
-                var testedValue = parseFloat(viewValue),
-                    min = parseFloat(attrs.strictMin);
-
-                if(testedValue > min ) {
-                    ctrl.$setValidity('strictMin', true);
-                    return viewValue;
-                }
-                else {
-                    ctrl.$setValidity('strictMin', false);
-                    return undefined;
-                }
-
-            };
-
-            ctrl.$parsers.unshift(validator);
-            ctrl.$formatters.push(validator);
-        }
-    }
-});
 var module = angular.module('ev-fdm');
 
 /**
@@ -3969,3 +3918,55 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
 
     return panelLayoutEngine;
 }]);
+
+angular.module('ev-fdm')
+  .directive('disableValidation', function() {
+    return {
+      require: '^form',
+      restrict: 'A',
+      link: function(scope, element, attrs, form) {
+        var control;
+
+        scope.$watch(attrs.disableValidation, function(value) {
+          if (!control) {
+            control = form[element.attr("name")];
+          }
+          if (value === false) {
+            form.$addControl(control);
+            angular.forEach(control.$error, function(validity, validationToken) {
+              form.$setValidity(validationToken, !validity, control);
+            });
+          } else {
+            form.$removeControl(control);
+          }
+        });
+      }
+    };
+  });
+
+angular.module('ev-fdm')
+.directive('strictMin', function() {
+    return {
+        require: 'ngModel',
+        link: function(scope, elm, attrs, ctrl) {
+
+            function validator(viewValue) {
+                var testedValue = parseFloat(viewValue),
+                    min = parseFloat(attrs.strictMin);
+
+                if(testedValue > min ) {
+                    ctrl.$setValidity('strictMin', true);
+                    return viewValue;
+                }
+                else {
+                    ctrl.$setValidity('strictMin', false);
+                    return undefined;
+                }
+
+            };
+
+            ctrl.$parsers.unshift(validator);
+            ctrl.$formatters.push(validator);
+        }
+    }
+});
