@@ -57,7 +57,6 @@ angular.module('ev-tinymce', [])
 
                         if (tinyElm.html() === '' || tinyElm.text() === '') {
                             placeholder = true;
-                            // editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
                         } else if(tinyElm.text() === attrs.placeholder) {
                             placeholder = true;
 
@@ -209,10 +208,12 @@ angular.module('ev-tinymce', [])
                         // if (editor.getContent() === ngModel.$viewValue) {
                         //     return;
                         // }
-                        var ngModelText = angular.element(ngModel.$viewValue).text();
+                        var ngModelText = angular.element('<div>' + ngModel.$viewValue + '</div>').text();
                         if (!ngModel.$viewValue || ngModel.$viewValue === '' || ngModelText === '') {
                             placeholder = true;
-                            editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                            if (attrs.placeholder) {
+                                editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                            }
                         } else if(ngModelText === attrs.placeholder) {
                             placeholder = true;
                         } else {
