@@ -177,7 +177,7 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
 
         // Delta is the gap we have to reach the limit
         var delta = limit - totalWidth,
-            datasLength = datas.length
+            datasLength = datas.length,
             data = null;
 
         for (var i = 0; i < datasLength; i++) {

@@ -19,10 +19,14 @@
     outline: none !important;
     border: 1px solid @gray-light;
     margin-right: 3px;
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: 3px;
+    margin-bottom: 3px;
     padding: 7px 13px;
     box-shadow: none;
+
+    .btn::first-line {
+      margin-top: 0;
+    }
 
     .icon {
         margin-right: 5px;
@@ -93,13 +97,35 @@
         box-shadow: none;
         opacity: .6;
     }
+    &:focus {
+      background-color: @gray-lighter;
+    }
 }
 
 .btn-disabled {
   .btn;
+  .btn-default;
+
+  color: @gray;
+
+  .icon {
+    color: @gray;
+  }
+
+  &:hover {
+    color: @gray;
+    background-color: @gray-lighter;
+
+    .icon {
+      color: @gray;
+    }
+  }
 
   .opacity(.65);
   .box-shadow(none);
+
+
+
   pointer-events: all;
   cursor: not-allowed;
 }

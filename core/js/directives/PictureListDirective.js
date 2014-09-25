@@ -10,15 +10,13 @@
               onDelete: '&',
               onChange: '&',
               showUpdate: '=',
-              language: '='
+              language: '=',
+              colNumber: '='
             },
             template:
                 '<ul class="picture-list row">' +
-                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-4 ev-animate-picture-list">' +
+                    '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">' +
                         '<figure>' +
-                            '<div class="picture-thumb" ' +
-                              'style="background-image: '+
-                              'url(\'{{picture.id | imageUrl:245:150 | escapeQuotes }}\');">' +
                             '<div class="picture-thumb">' +
                                 '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
                                 '<button class="action update-action ev-upload-clickable"' +
@@ -62,16 +60,22 @@
                     '</li>' +
                 '</ul><div class="clearfix"></div>',
         link: function ($scope, elem, attrs) {
+          $scope.pictures = $scope.pictures || [];
+
+          // Number of columns for pictures
+          var colNumber = $scope.colNumber || 2;
+          // Convert it to bootstrap convention (12)
+          $scope.colNumberBootstrap = 12 / colNumber;
+
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
             };
             $scope.onUpdate = function (params) {
-                console.log('et la maintenant ça update');
+                // Not implemented yet
                 console.log(params);
-            }
+            };
           }
-          $scope.pictures = $scope.pictures || [];
         }
       };
     });
