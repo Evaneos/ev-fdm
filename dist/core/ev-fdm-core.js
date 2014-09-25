@@ -513,7 +513,7 @@ angular.module('ev-fdm').directive('evEditSection', [function () {
         template: ''
             + '<div class="edit">'
                 + '<div ng-show="!options.edit">'
-                    + '<span class="icon icon-edit"></span><button class="btn btn-link" data-ng-click="edit()">Editer</button>'
+                    + '<span class="icon icon-edit"></span><button class="btn btn-link" ng-click="edit()">Editer</button>'
                 + '</div>'
                 + '<div ng-show="options.edit">'
                     + '<button class="btn btn-link" ng-click="save()"><span class="icon icon-tick"></span></button>&nbsp;'
@@ -522,39 +522,35 @@ angular.module('ev-fdm').directive('evEditSection', [function () {
             + '</div>'
             + '<div class="transclude"></div>',
 
-        link: function (scope, element, attrs, tabsCtrl, transcludeFn) {
-            var _transcludedScope = {
-                edit: false
-            };
+        link: function(scope, element, attrs, controller, transcludeFn) {
+            var _transcludedScope = {};
+            var options = scope.options;
 
-            function editToggle() {
-                _transcludedScope.edit = scope.options.edit = scope.options.edit ? false : true;
+            function setEditMode(editMode) {
+                _transcludedScope.edit = options.edit = editMode;
             }
 
             scope.edit = function() {
-                if (!scope.options.onEdit || scope.options.onEdit && scope.options.onEdit() !== false) {
-                    editToggle();
+                if (!options.onEdit || options.onEdit && options.onEdit() !== false) {
+                    setEditMode(true);
                 }
             };
 
             scope.save = function() {
-                if (!scope.options.onSave || scope.options.onSave && scope.options.onSave() !== false) {
-                    editToggle();
+                if (!options.onSave || options.onSave && options.onSave() !== false) {
+                    setEditMode(false);
                 }
             };
 
             scope.cancel = function() {
-                if (!scope.options.onCancel || scope.options.onCancel && scope.options.onCancel() !== false) {
-                    editToggle();
+                if (!options.onCancel || options.onCancel && options.onCancel() !== false) {
+                    setEditMode(false);
                 }
             };
 
             transcludeFn(function(clone, transcludedScope) {
-
                 // default state
-                if (scope.options.edit) {
-                    transcludedScope.edit = true;
-                }
+                transcludedScope.edit = !!options.edit;
 
                 // transclude values
                 _transcludedScope = transcludedScope;
@@ -563,8 +559,9 @@ angular.module('ev-fdm').directive('evEditSection', [function () {
                 element.find('.transclude').append(clone);
             });
         }
-    }
+    };
 }]);
+
 'use strict';
 
 angular.module('ev-fdm')
