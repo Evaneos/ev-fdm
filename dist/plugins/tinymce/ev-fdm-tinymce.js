@@ -51,17 +51,26 @@ angular.module('ev-tinymce', [])
             link: function (scope, elm, attrs, ngModel) {
                 var updateView = function () {
                     ngModel.$setViewValue(tinyElm.html());
-                    if (tinyElm.html() === "" || tinyElm.text() === "") {
-                        placeholder = true;
-                        var editor = getTinyInstance();
-                        if (editor) {
-                            editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
+
+                    var editor = getTinyInstance();
+                    if (editor) {
+
+                        if (tinyElm.html() === '' || tinyElm.text() === '') {
+                            placeholder = true;
+                            // editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
+                        } else if(tinyElm.text() === attrs.placeholder) {
+                            placeholder = true;
+
+                        } else {
+                            placeholder = false;
                         }
                     }
                     if (!scope.$root.$$phase) {
                       scope.$apply();
                     }
                 };
+
+
                 var tinyId = 'uiTinymce' + generatedIds++;
                 var tinyElm = elm.find(".ev-tinymce-content");
                 tinyElm.attr('id', tinyId);
@@ -145,10 +154,8 @@ angular.module('ev-tinymce', [])
                     });
 
                     ed.on('focus', function (e) {
-                        console.log(placeholder);
                         if (placeholder) {
                             ed.setContent('');
-                            placeholder = false;
                         }
                     });
                     // TODO : refactor with new changes
@@ -202,15 +209,18 @@ angular.module('ev-tinymce', [])
                         // if (editor.getContent() === ngModel.$viewValue) {
                         //     return;
                         // }
-                        if (!ngModel.$viewValue || ngModel.$viewValue === "") {
+                        var ngModelText = angular.element(ngModel.$viewValue).text();
+                        if (!ngModel.$viewValue || ngModel.$viewValue === '' || ngModelText === '') {
                             placeholder = true;
-                            editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
+                            editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                        } else if(ngModelText === attrs.placeholder) {
+                            placeholder = true;
                         } else {
+                            placeholder = false;
                             editor.setContent(ngModel.$viewValue);
                         }
                     }
                 };
-                console.log('tadam');
                 // scope.$on('$destroy', function() {
                 //     if (tinyInstance) {
                 //         tinyInstance.destroy();

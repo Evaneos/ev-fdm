@@ -60,6 +60,7 @@ angular.module('ev-tinymce', [])
                             // editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
                         } else if(tinyElm.text() === attrs.placeholder) {
                             placeholder = true;
+
                         } else {
                             placeholder = false;
                         }
@@ -211,7 +212,7 @@ angular.module('ev-tinymce', [])
                         var ngModelText = angular.element(ngModel.$viewValue).text();
                         if (!ngModel.$viewValue || ngModel.$viewValue === '' || ngModelText === '') {
                             placeholder = true;
-                            editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
+                            editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
                         } else if(ngModelText === attrs.placeholder) {
                             placeholder = true;
                         } else {
