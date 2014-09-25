@@ -43,7 +43,7 @@
 @import "src/TextBox.less";
 // @import "src/Throbber.less";
 @import "src/TinyMCE.less";
-@import "src/ToolTip.less";
+// @import "src/ToolTip.less";
 // @import "src/Variables.less";
 @import "src/Window.less";
 
@@ -103,13 +103,13 @@
   .mce-btn {
     .btn;
     .btn-default;
-    padding:7px 6px 3px 6px;
+    padding: 7px 6px 3px 6px;
     border: none;
     &.mce-active {
-      background-color: @gray-lighter;
+      background-color: @gray-light;
     }
     &:not(.mce-active):hover {
-      background-color: transparent;
+        background: @gray-lighter;
     }
     &.mce-primary {
       .btn-primary;
@@ -119,7 +119,10 @@
 
 .@{prefix}-toolbar-grp>.@{prefix}-container-body {
   background: @body-bg;
-  border-bottom: 1px solid @gray-light;
+}
+
+.mce-edit-focus {
+    outline: none;
 }
 
 // .mce-content-body{
@@ -196,4 +199,9 @@
 
 .@{prefix}-content-wrapper {
   font-family: @font-family-sans-serif;
+}
+
+
+.ev-tinymce-toolbar {
+    height: 30px
 }

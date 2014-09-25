@@ -1,3 +1,4 @@
+/* jshint camelcase: false */
 /**
  * Directive to override some settings in tinymce
  * Usage:
@@ -11,12 +12,13 @@
     var defaultOptions = {
         menubar: false,
         statusbar: false,
-        resize: false,
+        //resize: false,
         toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-        skin: false,
+        //skin: false,
         'verify_html': true,
         'convert_fonts_to_spans': true,
-        'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
+        //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
+        inline: true,
 
         // We choose to have a restrictive approach here.
         // The aim is to output the cleanest html possible.
@@ -38,6 +40,7 @@ angular.module('ev-tinymce', [])
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
                 + '<span class="max-chars-info">&nbsp;</span>'
+                + '<div class="ev-tinymce-toolbar"></div>'
                 + '</div>',
             restrict: 'AE',
             replace: true,
@@ -53,15 +56,12 @@ angular.module('ev-tinymce', [])
                       scope.$apply();
                     }
                 };
-                var placeholderOrText = function () {
-                    return (ngModel.$viewValue && ngModel.$viewValue !== '') ?
-                        ngModel.$viewValue : '<span class="placeholder-light">'+ attrs.placeholder +'</span>';
-                };
                 var tinyId = 'uiTinymce' + generatedIds++;
                 var getTinyElm = function() {
                     return elm.find(".ev-tinymce-content");
                 };
                 getTinyElm().attr('id', tinyId);
+                elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
 
                 var tinyInstance;
                 var getTinyInstance = function() {
@@ -70,7 +70,9 @@ angular.module('ev-tinymce', [])
                     }
                     return tinyInstance;
                 };
-                var options = angular.extend({}, defaultOptions, scope.tinymceOptions);
+                var options = angular.extend({
+                    fixed_toolbar_container: '#' + tinyId + 'toolbar',
+                }, defaultOptions, scope.tinymceOptions);
 
 
                 // /**
@@ -150,10 +152,10 @@ angular.module('ev-tinymce', [])
 
                     //             *
                     //              * Specific case where the old and new text are both over the limit of max chars.
-                    //              * This case can occur on the first initilization, if data from DB are over the 
+                    //              * This case can occur on the first initilization, if data from DB are over the
                     //              * limit.
                     //              * For now, we substring the content (but that break the html and everything..)
-                                 
+
                     //             var isLimitAlert = (oldText.length > maxChars) && (currentTextLength > maxChars);
                     //             if(isLimitAlert) {
                     //                 var shorterText = oldText.substring(0, maxChars);
@@ -176,54 +178,22 @@ angular.module('ev-tinymce', [])
                 options.elems = tinyId;
                 options.mode = "exact";
 
-                var placeholderElem = elm.find(".ev-placeholder-container");
-                placeholderElem.hide();
-                function setupPlaceholderBehaviour() {
-                    placeholderElem.show();
-                    placeholderElem.html(placeholderOrText());
-                    scope.$evalAsync(function () {
-                        placeholderElem.click(function () {
-                            if(!getTinyInstance()) {
-                                tinyMCE.init(options);
-                            }
-                            tinyMCE.execCommand("mceToggleEditor", false, tinyId);
-                            var editor = getTinyInstance();
-                            placeholderElem.hide();
-                            editor.focus();
-
-                            editor.on('blur', function (e) {
-                                tinyMCE.execCommand("mceToggleEditor", false, tinyId);
-                                placeholderElem.html(placeholderOrText());
-                                getTinyElm().hide();
-                                placeholderElem.show();
-                            });
-                        });
-                    });
-                }
-
-                if (attrs.placeholder) {
-                    setupPlaceholderBehaviour();
-                } else {
-                    // setTimeout(function () {
-                        tinyMCE.init(options);
-                        tinyMCE.execCommand("mceToggleEditor", false, tinyId);
-                    // }, 1000);
-                }
+                tinyMCE.init(options);
+                tinyMCE.execCommand("mceToggleEditor", false, tinyId);
 
                 ngModel.$render = function() {
-                    placeholderElem.html(placeholderOrText());
                     var editor = getTinyInstance();
                     if (editor) {
                         editor.setContent(ngModel.$viewValue || '');
                     }
                 };
 
-                scope.$on('$destroy', function() {
-                    if (tinyInstance) {
-                        tinyInstance.destroy();
-                        tinyInstance = null;
-                    }
-                });
+                // scope.$on('$destroy', function() {
+                //     if (tinyInstance) {
+                //         tinyInstance.destroy();
+                //         tinyInstance = null;
+                //     }
+                // });
             },
         };
     }]);
