@@ -51,16 +51,21 @@ angular.module('ev-tinymce', [])
 
             link: function (scope, elm, attrs, ngModel) {
                 var updateView = function () {
-                    ngModel.$setViewValue(getTinyElm().html());
+                    ngModel.$setViewValue(tinyElm.html());
+                    if (tinyElm.html() === "" || tinyElm.text() === "") {
+                        placeholder = true;
+                        var editor = getTinyInstance();
+                        if (editor) {
+                            editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
+                        }
+                    }
                     if (!scope.$root.$$phase) {
                       scope.$apply();
                     }
                 };
                 var tinyId = 'uiTinymce' + generatedIds++;
-                var getTinyElm = function() {
-                    return elm.find(".ev-tinymce-content");
-                };
-                getTinyElm().attr('id', tinyId);
+                var tinyElm = elm.find(".ev-tinymce-content");
+                tinyElm.attr('id', tinyId);
                 elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
 
                 var tinyInstance;
@@ -118,25 +123,35 @@ angular.module('ev-tinymce', [])
                     });
                     // Update model on button click
                     ed.on('ExecCommand', function (e) {
-                        ed.save();
+                        // ed.save();
                         updateView();
                     });
                     // Update model on keypress
                     ed.on('KeyUp', function (e) {
-                        ed.save();
+                        // ed.save();
                         updateView();
                     });
                     // Update model on change, i.e. copy/pasted text, plugins altering content
                     ed.on('SetContent', function (e) {
                         if(!e.initial){
-                            ed.save();
+                            // ed.save();
                             updateView();
                         }
                     });
                     ed.on('blur', function(e) {
-                        getTinyElm().blur();
+                        tinyElm.blur();
+                        if(placeholder) {
+                            ngModel.$render();
+                        }
                     });
 
+                    ed.on('focus', function (e) {
+                        console.log(placeholder);
+                        if (placeholder) {
+                            ed.setContent('');
+                            placeholder = false;
+                        }
+                    });
                     // TODO : refactor with new changes
                     // if(options.maxChars) {
                     //     var currentText       = '';
@@ -180,14 +195,23 @@ angular.module('ev-tinymce', [])
 
                 tinyMCE.init(options);
                 tinyMCE.execCommand("mceToggleEditor", false, tinyId);
+                var placeholder = false;
 
                 ngModel.$render = function() {
                     var editor = getTinyInstance();
                     if (editor) {
-                        editor.setContent(ngModel.$viewValue || '');
+                        // if (editor.getContent() === ngModel.$viewValue) {
+                        //     return;
+                        // }
+                        if (!ngModel.$viewValue || ngModel.$viewValue === "") {
+                            placeholder = true;
+                            editor.setContent('<span class="placeholder">' + attrs.placeholder + '</span>');
+                        } else {
+                            editor.setContent(ngModel.$viewValue);
+                        }
                     }
                 };
-
+                console.log('tadam');
                 // scope.$on('$destroy', function() {
                 //     if (tinyInstance) {
                 //         tinyInstance.destroy();
