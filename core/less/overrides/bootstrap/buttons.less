@@ -93,13 +93,35 @@
         box-shadow: none;
         opacity: .6;
     }
+    &:focus {
+      background-color: @gray-lighter;
+    }
 }
 
 .btn-disabled {
   .btn;
+  .btn-default;
+
+  color: @gray;
+
+  .icon {
+    color: @gray;
+  }
+
+  &:hover {
+    color: @gray;
+    background-color: @gray-lighter;
+
+    .icon {
+      color: @gray;
+    }
+  }
 
   .opacity(.65);
   .box-shadow(none);
+
+
+
   pointer-events: all;
   cursor: not-allowed;
 }
