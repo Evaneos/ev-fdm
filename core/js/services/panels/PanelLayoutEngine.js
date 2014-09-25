@@ -45,8 +45,6 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
             datas.push(data);
         });
 
-        console.table(datas);
-        console.table();
         return datas;
     }
 
