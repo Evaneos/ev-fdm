@@ -1276,55 +1276,55 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
  *     promise-default-styles="true">
  *
  */
-angular.module('ev-fdm')
-    .directive('promise', [function () {
+angular.module('ev-fdm').directive('promise', [
+    function () {
+        function applyClass(classes, element) {
+            element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
+            element.addClass(classes);
+        }
 
-    function applyClass(classes, element) {
-        element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
-        element.addClass(classes);
-    }
+        return {
+            restrict: 'A',
+            replace: false,
 
-    return {
-
-        restrict: 'A',
-        replace: false,
-
-        controller: ['$scope', '$attrs', '$parse', '$element', function($scope, $attrs, $parse, $element) {
-            var promiseGetter = $parse($attrs.promise);
-            var emptyMessage = $attrs.emptyMessage;
-            var promiseDefaultStyles = ($attrs.promiseDefaultStyles !== 'false');
-            if (promiseDefaultStyles) {
-                applyClass('promise-default-styles', $element);
-            }
-            if (emptyMessage) {
-                $element.append('<div class="promise-empty-message">' + emptyMessage + '</div>');
-            }
-            $scope.$watch(function() {
-                return promiseGetter($scope);
-            }, function(promise) {
-                if (promise) {
-                    applyClass('promise-resolving', $element);
-                    promise.then(function(result) {
-                        // make sure we are dealing with arrays
-                        // otherwise (not a collection, we can't assume it's empty or non empty)
-                        if (emptyMessage && angular.isArray(result) && !result.length) {
-                            applyClass('promise-resolved promise-empty', $element);
-                        } else {
-                            applyClass('promise-resolved', $element);
-                        }
-
-                        return result;
-                    }, function() {
-                        applyClass('promise-rejected', $element);
-                    })
-                } else {
-                    applyClass('promise-resolved', $element);
+            controller: ['$scope', '$attrs', '$parse', '$element', function($scope, $attrs, $parse, $element) {
+                var promiseGetter = $parse($attrs.promise);
+                var emptyMessage = $attrs.emptyMessage;
+                var promiseDefaultStyles = ($attrs.promiseDefaultStyles !== 'false');
+                if (promiseDefaultStyles) {
+                    applyClass('promise-default-styles', $element);
                 }
-            });
-        }]
-    }
+                if (emptyMessage) {
+                    $element.append('<div class="promise-empty-message">' + emptyMessage + '</div>');
+                }
+                $scope.$watch(function() {
+                    return promiseGetter($scope);
+                }, function(promise) {
+                    if (promise) {
+                        applyClass('promise-resolving', $element);
+                        promise.then(function(result) {
+                            // make sure we are dealing with arrays
+                            // otherwise (not a collection, we can't assume it's empty or non empty)
+                            if (emptyMessage && angular.isArray(result) && !result.length) {
+                                applyClass('promise-resolved promise-empty', $element);
+                            } else {
+                                applyClass('promise-resolved', $element);
+                            }
 
-}]);
+                            return result;
+                        }, function() {
+                            applyClass('promise-rejected', $element);
+                        });
+                    } else {
+                        applyClass('promise-resolved', $element);
+                    }
+                });
+            }]
+        };
+
+    }
+]);
+
 (function () {
     'use strict';
     angular.module('ev-fdm')
@@ -1371,54 +1371,68 @@ angular.module('ev-fdm')
 }());
 'use strict';
 
-angular.module('ev-fdm').directive('body', ['$rootScope', 'NotificationsService', '$state', function ($rootScope, notificationsService, $state) {
-    return {
-        restrict: 'E',
-        link: function(scope, element, attrs) {
+angular.module('ev-fdm').directive('body', [
+    '$rootScope',
+    'NotificationsService',
+    '$state',
+    function($rootScope, notificationsService, $state) {
+        return {
+            restrict: 'E',
+            link: function(scope, element, attrs) {
 
-            $rootScope.$on('$stateChangeStart', function(event, toState) {
-                // not a tab changing
-                var dotX = $state.current.name.indexOf('.'),
-                     stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
+                $rootScope.$on('$stateChangeStart', function(event, toState) {
+                    // not a tab changing
+                    var dotX = $state.current.name.indexOf('.');
+                    var stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
 
-                if (!stateName || toState.name.indexOf(stateName) !== 0) {
-                    $('body').addClass('state-resolving');
-                }
-            });
-
-            $rootScope.$on('$stateChangeSuccess', function() {
-                element.removeClass('state-resolving');
-            });
-
-            /**
-             * When there is an error on a state change
-             *
-             * In your state config you can add the following.
-             * This will allows the router to fallback to this state on error
-             * while displaying the specified message
-
-                  fallback: {
-                    state: 'list',
-                    message: t('Unable to open this transaction!')
-                  }
-             */
-            $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
-                $('body').removeClass('state-resolving');
-
-                var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
-
-                notificationsService.addError({
-                    text: errorMessage
+                    if (!stateName || toState.name.indexOf(stateName) !== 0) {
+                        $('body').addClass('state-resolving');
+                    }
                 });
 
-                // Redirect to the fallback we defined in our state
-                if(toState && toState.fallback && toState.fallback.state) {
-                  $state.go(toState.fallback.state);
-                }
-            });
-        }
-    };
-}]);
+                $rootScope.$on('$stateChangeSuccess', function() {
+                    element.removeClass('state-resolving');
+                });
+
+                /**
+                 * When there is an error on a state change
+                 *
+                 * In your state config you can add the following.
+                 * This will allows the router to fallback to this state on error
+                 * while displaying the specified message
+
+                      fallback: {
+                        state: 'list',
+                        message: t('Unable to open this transaction!')
+                      }
+                 */
+                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
+                    if (console.error) {
+                        console.error(
+                            'toState=', toState,
+                            'toParams=', toParams,
+                            'fromState=', fromState,
+                            'error=', error,
+                            'event=', event
+                        );
+                    }
+                    $('body').removeClass('state-resolving');
+
+                    var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+                    notificationsService.addError({
+                        text: errorMessage
+                    });
+
+                    // Redirect to the fallback we defined in our state
+                    if (toState && toState.fallback && toState.fallback.state) {
+                      $state.go(toState.fallback.state);
+                    }
+                });
+            }
+        };
+    }
+]);
 
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
