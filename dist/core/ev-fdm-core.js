@@ -1164,7 +1164,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                     '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb">' +
-                                '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
+                                '<img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
                                 '<button class="action update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +

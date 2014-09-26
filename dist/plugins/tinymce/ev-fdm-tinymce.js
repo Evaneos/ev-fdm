@@ -14,7 +14,7 @@
         statusbar: false,
         //resize: false,
         toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-        //skin: false,
+        skin: false,
         'verify_html': true,
         'convert_fonts_to_spans': true,
         //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',

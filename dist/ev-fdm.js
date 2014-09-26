@@ -1164,7 +1164,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
                     '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb">' +
-                                '<img src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
+                                '<img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
                                 '<button class="action update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +
@@ -4097,7 +4097,7 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         statusbar: false,
         //resize: false,
         toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-        //skin: false,
+        skin: false,
         'verify_html': true,
         'convert_fonts_to_spans': true,
         //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
