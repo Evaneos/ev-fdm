@@ -116,19 +116,23 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.toggleView = function(view, element) {
-            if(!element) {
-                $state.go(this.elementName);
+            if (!element) {
+                $state.go(this.goToViewStatePath());
                 return;
             }
 
             var id = restangular.configuration.getIdFromElem(element);
 
-            if(!id || $stateParams.id === id) {
-                $state.go(this.elementName);
+            if (!id || $stateParams.id === id) {
+                $state.go(this.goToViewStatePath());
             }
             else {
-                $state.go(this.elementName + '.' + view, {id: id});
+                $state.go(this.goToViewStatePath(view), { id: id });
             }
+        };
+
+        ListController.prototype.goToViewStatePath = function(view) {
+            return this.elementName + (view ? '.' + view : '');
         };
 
         return ListController;
