@@ -39,7 +39,7 @@ angular.module('ev-tinymce', [])
             template: '<div class="tiny-mce-wrapper">'
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
-                + '<div class="ev-tinymce-toolbar"></div>'
+                + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
                 + '<div class="max-chars-info"></div>'
                 + '</div>',
             restrict: 'AE',
@@ -163,6 +163,13 @@ angular.module('ev-tinymce', [])
                             placeholder = true;
                             setPlaceholder();
                         }
+                    }
+                };
+
+                scope.focusTinymce = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.focus();
                     }
                 };
 
