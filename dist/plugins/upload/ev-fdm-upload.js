@@ -232,7 +232,6 @@ angular.module('ev-upload')
                 };
 
                 $scope.addPicture = function(picture) {
-                    console.log(picture);
                     var pictureData = picture.data[0];
 
                     if($scope.language) {

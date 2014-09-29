@@ -3657,12 +3657,12 @@ angular.module('ev-fdm')
         }
     }
 });
-var module = angular.module('ev-fdm');
+angular.module('ev-fdm')
 
 /**
  * STACKING AND PANELS SIZE MANAGEMENT
  */
-module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
+.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
 
     var STACKED_WIDTH = 35;
 
@@ -3679,15 +3679,14 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
      */
     function getDataFromPanels(panels) {
         var datas = [];
-        var i = 0;
-        var panelsLength = panels.size();
 
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
 
             var data = {
                 minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
-                maxWidth: parseInt(panelElement.children().first().css('max-width')) || 0,
+                maxWidth: parseInt(panelElement.children().first().css('max-width'))
+                    || angular.element($window).innerWidth(),
                 stacked:  panelElement.hasClass('stacked'),
                 width:    panelElement.width(),
                 stackedWidth: STACKED_WIDTH
@@ -3918,9 +3917,6 @@ module.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', functi
             lastPanel.width = windowWidth;
             isMobile = true;
         }
-
-        var panelsSize = panels.size();
-        var panel, element = null;
 
         panels.css('left', 0);
 
@@ -4550,7 +4546,6 @@ angular.module('ev-upload')
                 };
 
                 $scope.addPicture = function(picture) {
-                    console.log(picture);
                     var pictureData = picture.data[0];
 
                     if($scope.language) {
