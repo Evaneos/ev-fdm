@@ -51,7 +51,7 @@ angular.module('ev-tinymce', [])
 
             link: function (scope, elm, attrs, ngModel) {
                 var tinyId = 'uiTinymce' + generatedIds++;
-                var tinyElm = elm.find(".ev-tinymce-content");
+                var tinyElm = elm.find('.ev-tinymce-content');
                 tinyElm.attr('id', tinyId);
                 elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
 
@@ -79,7 +79,7 @@ angular.module('ev-tinymce', [])
                 // /**
                 //  * Update the information area about the textEditor state (maxChars, ..)
                 //  */
-                var updateInfo = function(currentChars, maxChars) {
+                var updateCharCounter = function(currentChars, maxChars) {
                     var maxCharInfosElm = elm.parent().find('.max-chars-info');
                     maxCharInfosElm.text(currentChars + ' / ' + maxChars);
 
@@ -101,12 +101,25 @@ angular.module('ev-tinymce', [])
                     editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
                 };
 
+                var updatePlaceholder = function(newText) {
+                    var editor = getTinyInstance();
+                    if (hasFocus) {
+                        if (currentText === attrs.placeholder) {
+                            editor.setContent('');
+                        }
+                    } else {
+                        if (newText !== attrs.placeholder) {
+                            setPlaceholder();
+                        }
+                    }
+                };
+
                 var updateView = function () {
                     var editor = getTinyInstance();
                     var newHtml = tinyElm.html();
                     var newText = tinyElm.text();
-                    var overLimit = maxChars && newText.length > maxChars;
-                    var isLimitAlert = maxChars && overLimit && (currentText.length > maxChars);
+                    var newTextOverLimit = maxChars && newText.length > maxChars;
+                    var currentTextOverLimit = maxChars && currentText.length > maxChars;
 
                     if (placeholder && newText === attrs.placeholder) {
                         currentHtml = newHtml;
@@ -118,11 +131,11 @@ angular.module('ev-tinymce', [])
                      * limit.
                      * For now, we substring the content (but that break the html and everything..)
                      */
-                    else if (maxChars && (isLimitAlert || (!currentText.length && overLimit))) {
+                    else if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
                         var shorterText = newText.substr(0, maxChars);
                         // be carefull, setContent call this method again
                         editor.setContent(shorterText, {format: 'text'});
-                    } else if(maxChars && overLimit) {
+                    } else if(currentTextOverLimit && newTextOverLimit) {
                         editor.setContent(currentHtml); // be carefull, setContent call this method again
                     } else {
                         ngModel.$setViewValue(newHtml);
@@ -131,26 +144,13 @@ angular.module('ev-tinymce', [])
                     }
 
                     if (maxChars) {
-                        updateInfo(currentText.length, maxChars);
+                        updateCharCounter(currentText.length, maxChars);
                     }
 
                     placeholder = newText === '' || newText === attrs.placeholder;
 
                     if (placeholder && attrs.placeholder) {
-                        if (hasFocus) {
-                            if (currentText === attrs.placeholder) {
-                                editor.setContent('');
-                            }
-                        } else {
-                            if (newText !== attrs.placeholder) {
-                                setPlaceholder();
-                            }
-                        }
-                    }
-
-
-                    if (!scope.$root.$$phase) {
-                        scope.$apply();
+                        updatePlaceholder(newText);
                     }
                 };
 
@@ -175,33 +175,33 @@ angular.module('ev-tinymce', [])
 
                 /* Options */
 
-                var setup = function (ed) {
-                    ed.on('init', function() {
+                var setup = function(editor) {
+                    editor.on('init', function() {
                         if (ngModel.$viewValue) {
                             ngModel.$render();
                         }
                     });
                     // Update model on button click
-                    ed.on('ExecCommand', function (e) {
+                    editor.on('ExecCommand', function (e) {
                         updateView();
                     });
                     // Update model on keypress
-                    ed.on('KeyUp', function (e) {
+                    editor.on('KeyUp', function (e) {
                         updateView();
                     });
                     // Update model on change, i.e. copy/pasted text, plugins altering content
-                    ed.on('SetContent', function (e) {
+                    editor.on('SetContent', function (e) {
                         if (!e.initial) {
                             updateView();
                         }
                     });
-                    ed.on('blur', function(e) {
+                    editor.on('blur', function(e) {
                         hasFocus = false;
                         tinyElm.blur();
                         updateView();
                     });
 
-                    ed.on('focus', function (e) {
+                    editor.on('focus', function (e) {
                         hasFocus = true;
                         updateView();
                     });
@@ -210,17 +210,18 @@ angular.module('ev-tinymce', [])
                 // extend options with initial uiTinymceConfig and options from directive attribute value
                 options.setup = setup;
                 options.elems = tinyId;
-                options.mode = "exact";
+                options.mode = 'exact';
 
                 tinyMCE.init(options);
-                tinyMCE.execCommand("mceToggleEditor", false, tinyId);
 
-                // scope.$on('$destroy', function() {
-                //     if (tinyInstance) {
-                //         tinyInstance.destroy();
-                //         tinyInstance = null;
-                //     }
-                // });
+                scope.$on('$destroy', function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.destroy();
+                    }
+                });
+
+                tinyMCE.execCommand('mceToggleEditor', false, tinyId);
             },
         };
     }]);
