@@ -3309,6 +3309,9 @@ angular.module('ev-fdm')
             })).then(this.emitEventCallbackCreator('deleted', elements));
         };
 
+        /**
+         * prefer use of create() or update()
+         */
         RestangularStorage.prototype.save = function(element, embed) {
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(this.emitEventCallbackCreator('updated', [element]));

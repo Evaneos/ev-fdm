@@ -3309,6 +3309,9 @@ angular.module('ev-fdm')
             })).then(this.emitEventCallbackCreator('deleted', elements));
         };
 
+        /**
+         * prefer use of create() or update()
+         */
         RestangularStorage.prototype.save = function(element, embed) {
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(this.emitEventCallbackCreator('updated', [element]));
@@ -4118,7 +4121,8 @@ angular.module('ev-tinymce', [])
             template: '<div class="tiny-mce-wrapper">'
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
-                + '<div class="ev-tinymce-toolbar"></div>'
+                + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
+                + '<div class="max-chars-info"></div>'
                 + '</div>',
             restrict: 'AE',
             replace: true,
@@ -4128,29 +4132,8 @@ angular.module('ev-tinymce', [])
             },
 
             link: function (scope, elm, attrs, ngModel) {
-                var updateView = function () {
-                    ngModel.$setViewValue(tinyElm.html());
-
-                    var editor = getTinyInstance();
-                    if (editor) {
-
-                        if (tinyElm.html() === '' || tinyElm.text() === '') {
-                            placeholder = true;
-                        } else if(tinyElm.text() === attrs.placeholder) {
-                            placeholder = true;
-
-                        } else {
-                            placeholder = false;
-                        }
-                    }
-                    if (!scope.$root.$$phase) {
-                      scope.$apply();
-                    }
-                };
-
-
                 var tinyId = 'uiTinymce' + generatedIds++;
-                var tinyElm = elm.find(".ev-tinymce-content");
+                var tinyElm = elm.find('.ev-tinymce-content');
                 tinyElm.attr('id', tinyId);
                 elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
 
@@ -4170,143 +4153,157 @@ angular.module('ev-tinymce', [])
                 //  * This part is used for the max-chars attibute.
                 //  * It allows us to easily limit the number of characters typed in the editor
                 //  */
-                // options.maxChars = attrs.maxChars || options.maxChars || null;
+                options.maxChars = attrs.maxChars || options.maxChars || null;
                 // // We set the max char warning when the THRESHOLD is reached
                 // // Here, it's 85% of max chars
-                // var THRESHOLD = 85;
+                var THRESHOLD = 85;
 
                 // /**
                 //  * Update the information area about the textEditor state (maxChars, ..)
                 //  */
-                // var updateInfo = function(currentChars, maxChars) {
-                //     var maxCharInfosElm = elm.parent().find('.max-chars-info');
-                //     maxCharInfosElm.text(currentChars + ' / ' + maxChars);
+                var updateCharCounter = function(currentChars, maxChars) {
+                    var maxCharInfosElm = elm.parent().find('.max-chars-info');
+                    maxCharInfosElm.text(currentChars + ' / ' + maxChars);
 
-                //     var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
-                //     var isMaxLimitReached  = currentChars >= maxChars;
+                    var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
+                    var isMaxLimitReached  = currentChars >= maxChars;
 
-                //     var warningClassName = 'max-chars-warning';
-                //     var alertClassName   = 'max-chars-reached';
-                //     if(isThresholdReached) {
-                //         maxCharInfosElm.addClass(warningClassName);
-                //     } else {
-                //         maxCharInfosElm.removeClass(warningClassName);
-                //     }
+                    maxCharInfosElm.toggleClass('max-chars-warning', isThresholdReached);
+                    maxCharInfosElm.toggleClass('max-chars-reached', isMaxLimitReached);
+                };
 
-                //     if(isMaxLimitReached) {
-                //             maxCharInfosElm.addClass(alertClassName);
-                //     } else {
-                //             maxCharInfosElm.removeClass(alertClassName);
-                //     }
-                // };
+                var hasFocus = false;
+                var placeholder = false;
+                var currentHtml = '';
+                var currentText = '';
+                var maxChars = options.maxChars;
 
+                var setPlaceholder = function() {
+                    var editor = getTinyInstance();
+                    editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                };
+
+                var updatePlaceholder = function(newText) {
+                    var editor = getTinyInstance();
+                    if (hasFocus) {
+                        if (currentText === attrs.placeholder) {
+                            editor.setContent('');
+                        }
+                    } else {
+                        if (newText !== attrs.placeholder) {
+                            setPlaceholder();
+                        }
+                    }
+                };
+
+                var updateView = function () {
+                    var editor = getTinyInstance();
+                    var newHtml = tinyElm.html();
+                    var newText = tinyElm.text();
+                    var newTextOverLimit = maxChars && newText.length > maxChars;
+                    var currentTextOverLimit = maxChars && currentText.length > maxChars;
+
+                    if (placeholder && newText === attrs.placeholder) {
+                        currentHtml = newHtml;
+                        currentText = newText;
+                    }
+                    /*
+                     * Specific case where the old and new text are both over the limit of max chars.
+                     * This case can occur on the first initilization, if data from DB are over the
+                     * limit.
+                     * For now, we substring the content (but that break the html and everything..)
+                     */
+                    else if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
+                        var shorterText = newText.substr(0, maxChars);
+                        // be carefull, setContent call this method again
+                        editor.setContent(shorterText, {format: 'text'});
+                    } else if(currentTextOverLimit && newTextOverLimit) {
+                        editor.setContent(currentHtml); // be carefull, setContent call this method again
+                    } else {
+                        ngModel.$setViewValue(newHtml);
+                        currentHtml = newHtml;
+                        currentText = newText;
+                    }
+
+                    if (maxChars) {
+                        updateCharCounter(currentText.length, maxChars);
+                    }
+
+                    placeholder = newText === '' || newText === attrs.placeholder;
+
+                    if (placeholder && attrs.placeholder) {
+                        updatePlaceholder(newText);
+                    }
+                };
+
+                ngModel.$render = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        if (ngModel.$viewValue) {
+                            editor.setContent(ngModel.$viewValue);
+                        } else if (attrs.placeholder) {
+                            placeholder = true;
+                            setPlaceholder();
+                        }
+                    }
+                };
+
+                scope.focusTinymce = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.focus();
+                    }
+                };
 
                 /* Options */
 
-                var setup = function (ed) {
-                    ed.on('init', function() {
-                        ngModel.$render();
-                    });
-                    // Update model on button click
-                    ed.on('ExecCommand', function (e) {
-                        // ed.save();
-                        updateView();
-                    });
-                    // Update model on keypress
-                    ed.on('KeyUp', function (e) {
-                        // ed.save();
-                        updateView();
-                    });
-                    // Update model on change, i.e. copy/pasted text, plugins altering content
-                    ed.on('SetContent', function (e) {
-                        if(!e.initial){
-                            // ed.save();
-                            updateView();
-                        }
-                    });
-                    ed.on('blur', function(e) {
-                        tinyElm.blur();
-                        if(placeholder) {
+                var setup = function(editor) {
+                    editor.on('init', function() {
+                        if (ngModel.$viewValue) {
                             ngModel.$render();
                         }
                     });
-
-                    ed.on('focus', function (e) {
-                        if (placeholder) {
-                            ed.setContent('');
+                    // Update model on button click
+                    editor.on('ExecCommand', function (e) {
+                        updateView();
+                    });
+                    // Update model on keypress
+                    editor.on('KeyUp', function (e) {
+                        updateView();
+                    });
+                    // Update model on change, i.e. copy/pasted text, plugins altering content
+                    editor.on('SetContent', function (e) {
+                        if (!e.initial) {
+                            updateView();
                         }
                     });
-                    // TODO : refactor with new changes
-                    // if(options.maxChars) {
-                    //     var currentText       = '';
-                    //     var currentTextLength = '';
-                    //     var oldText           = '';
-                    //     var maxChars          = options.maxChars;
+                    editor.on('blur', function(e) {
+                        hasFocus = false;
+                        tinyElm.blur();
+                        updateView();
+                    });
 
-                    //     ed.on('init', function(e) {
-                    //        scope.$watch(function() { return ed.getContent(); }, function(newHtml, oldHtml) {
-                    //             currentText       = angular.element(newHtml).text();
-                    //             currentTextLength = currentText.length;
-                    //             oldText           = angular.element(oldHtml).text();
-
-                    //             *
-                    //              * Specific case where the old and new text are both over the limit of max chars.
-                    //              * This case can occur on the first initilization, if data from DB are over the
-                    //              * limit.
-                    //              * For now, we substring the content (but that break the html and everything..)
-
-                    //             var isLimitAlert = (oldText.length > maxChars) && (currentTextLength > maxChars);
-                    //             if(isLimitAlert) {
-                    //                 var shorterText = oldText.substring(0, maxChars);
-                    //                 scope.ngModel = shorterText;
-                    //                 currentTextLength = shorterText.length;
-
-                    //             } else if(currentTextLength > maxChars) {
-                    //                 scope.ngModel    = oldHtml;
-                    //                 currentTextLength = angular.element(scope.ngModel).text().length;
-                    //             }
-
-                    //             updateInfo(currentTextLength, maxChars);
-                    //         });
-                    //     });
-                    // }
+                    editor.on('focus', function (e) {
+                        hasFocus = true;
+                        updateView();
+                    });
                 };
 
                 // extend options with initial uiTinymceConfig and options from directive attribute value
                 options.setup = setup;
                 options.elems = tinyId;
-                options.mode = "exact";
+                options.mode = 'exact';
 
                 tinyMCE.init(options);
-                tinyMCE.execCommand("mceToggleEditor", false, tinyId);
-                var placeholder = false;
 
-                ngModel.$render = function() {
+                scope.$on('$destroy', function() {
                     var editor = getTinyInstance();
                     if (editor) {
-                        // if (editor.getContent() === ngModel.$viewValue) {
-                        //     return;
-                        // }
-                        var ngModelText = angular.element('<div>' + ngModel.$viewValue + '</div>').text();
-                        if (!ngModel.$viewValue || ngModel.$viewValue === '' || ngModelText === '') {
-                            placeholder = true;
-                            if (attrs.placeholder) {
-                                editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
-                            }
-                        } else if(ngModelText === attrs.placeholder) {
-                            placeholder = true;
-                        } else {
-                            placeholder = false;
-                            editor.setContent(ngModel.$viewValue);
-                        }
+                        editor.destroy();
                     }
-                };
-                // scope.$on('$destroy', function() {
-                //     if (tinyInstance) {
-                //         tinyInstance.destroy();
-                //         tinyInstance = null;
-                //     }
-                // });
+                });
+
+                tinyMCE.execCommand('mceToggleEditor', false, tinyId);
             },
         };
     }]);
