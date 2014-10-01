@@ -1,11 +1,13 @@
 'use strict';
 
-angular.module('ev-fdm').directive('evEditSection', [function () {
+angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', function (notificationsService) {
     return {
         restrict: 'AE',
         transclude: true,
         scope: {
-            options: '='
+            options: '=',
+            successMessage: '@',
+            errorMessage: '@'
         },
 
         template: ''
@@ -35,7 +37,21 @@ angular.module('ev-fdm').directive('evEditSection', [function () {
             };
 
             scope.save = function() {
-                if (!options.onSave || options.onSave && options.onSave() !== false) {
+                var resultSave = !options.onSave || options.onSave && options.onSave();
+                if (resultSave.then) {
+                    resultSave.then(
+                        function success() {
+                            notificationsService.addSuccess({text: options.successMessage || scope.successMessage });
+                            if (options.success) {
+                                options.success();
+                            }
+                            setEditMode(false);
+                        },
+                        function error() {
+                            notificationsService.addError({text: options.errorMessage || scope.errorMessage });
+                        }
+                    );
+                } else if (resultSave !== false) {
                     setEditMode(false);
                 }
             };

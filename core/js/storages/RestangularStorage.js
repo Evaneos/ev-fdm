@@ -107,6 +107,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.patch = function(element, changes, embed) {
+            if (!element.patch) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             angular.extend(element, changes);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
                 .then(this.emitEventCallbackCreator('updated', [element]));
