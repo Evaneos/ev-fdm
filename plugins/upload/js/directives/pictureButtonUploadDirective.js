@@ -38,9 +38,8 @@ angular.module('ev-upload')
                     '</button>' +
                 '</div>' +
                 '<div class="ev-picture-uploading" ng-show="uploading">' +
-                    '<div class="ev-picture-upload-label"> {{"Upload en cours"| i18n}} </div>' +
-                    '<div class="spinner"></div>' +
-                    '<p> {{upload.done}} / {{upload.total}} {{ "photo(s) uploadée(s)" | i18n }} </p>' +
+                    '<div class="ev-picture-upload-label"> {{"Transfert en cours"| i18n}} </div>' +
+                    '<p> {{upload.done}} / {{upload.total}} </p>' +
                 '</div>' +
                 '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
             '</ev-upload>',
@@ -61,20 +60,23 @@ angular.module('ev-upload')
                 });
 
                 $scope.newUpload = function (upload) {
-                    $scope.upload = null;
+                    $scope.upload = {
+                        done: 0,
+                        total: '?'
+                    };
                     $scope.uploading = true;
                     $scope.uploadPromise = upload;
                     upload
                         .then(
                             function success () {
                                 NotificationsService.addSuccess({
-                                    text: 'Les images ont été uploadées avec succès'
+                                    text: 'Les images ont été transférées avec succès'
                                 });
                             },
                             function error () {
                                 NotificationsService.add({
                                     type: NotificationsService.type.WARNING,
-                                    text: 'Certaines images n\'ont pas pu être uploadées.'
+                                    text: 'Certaines images n\'ont pas pu être transférées.'
                                 });
                             },
                             function onNotify (progress) {
