@@ -54,6 +54,8 @@ angular.module('ev-upload')
                     maxFiles: $scope.maxFiles || 100
                 };
 
+                $scope.pictures = $scope.pictures || [];
+
                 $scope.$watch('url', function (url) {
                     $scope.settings.url = url;
                 });
