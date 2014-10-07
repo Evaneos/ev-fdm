@@ -12,7 +12,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 // just beneath the menu
 .config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
-    cfpLoadingBarProvider.parentSelector = '#lisette-menu';
+    cfpLoadingBarProvider.parentSelector = '#menu';
 }])
 
 .config(['$tooltipProvider', function($tooltipProvider) {
@@ -942,8 +942,6 @@ angular.module('ev-fdm')
 angular.module('ev-fdm')
 .directive('evModuleHeader', ['$timeout', function ($timeout) {
 
-    var self = this;
-
     function _sync($wrapper) {
         var $header = $wrapper.find('.lisette-module-header');
 
@@ -955,7 +953,7 @@ angular.module('ev-fdm')
         // bs will watch the scroll for us and add the affix css class to $header
         $header.affix({
             offset: {
-                top: 1 //$('#lisette-menu').attr('data-offset-top')
+                top: 1
             }
         });
     }
@@ -971,7 +969,7 @@ angular.module('ev-fdm')
         $scope.$on('itemsLoaded', function() {
             _sync($wrapper);
         });
-    }
+    };
 }]);
 'use strict';
 
