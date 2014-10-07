@@ -12,7 +12,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 // just beneath the menu
 .config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
-    cfpLoadingBarProvider.parentSelector = '#lisette-menu';
+    cfpLoadingBarProvider.parentSelector = '#menu';
 }])
 
 .config(['$tooltipProvider', function($tooltipProvider) {
