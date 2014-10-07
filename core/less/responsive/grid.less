@@ -1,0 +1,64 @@
+@import "../variables.less";
+
+// Helper for styling all the column style
+@num-columns: 12;
+
+.column(@size, @rules) {
+    .loopCol (@index) when (@index > 0) {
+        @selector: ~'.col-@{size}-@{index}';
+        @{selector} {
+            @rules();
+        }
+        .loopCol(@index - 1);
+    }
+    .loopCol (@num-columns);
+}
+
+.allColumns(@rules) {
+    .column('xs', @rules);
+    .column('sm', @rules);
+    .column('md', @rules);
+    .column('lg', @rules);
+}
+
+
+// Common style for all columns
+.allColumns({
+    position: relative;
+    // Prevent columns from collapsing when empty
+    min-height: 1px;
+    // Inner gutter via padding
+    padding-left:  (@grid-gutter-width / 2);
+    padding-right: (@grid-gutter-width / 2);
+});
+
+// Standard column properties
+.column-properties(@size) {
+    .column(@size, {
+        float: left;
+        width: percentage((@index / @num-columns));
+    });
+    // Offset
+    .column('@{size}-offset', {
+        margin-left: percentage((@index / @num-columns));
+    });
+    // TODO add pull and push behaviour to be iso bootstrap ?
+};
+
+// Extra small grid
+.column-properties('xs');
+
+// Small grid
+.ev-size-sm, .ev-size-md, .ev-size-lg {
+    .column-properties('sm');
+}
+
+// Medium grid
+.ev-size-md, .ev-size-lg {
+    .column-properties('md');
+}
+
+// Large grid
+.ev-size-lg {
+    .column-properties('lg');
+}
