@@ -1,8 +1,36 @@
-@import "../variables.less";
+@import "variables.less";
+@import (reference) "bower_components/bootstrap/less/mixins.less";
+
+
+// Bootstrap imports
+
+.row {
+    .make-row();
+}
+// Set the container width, and override it for fixed navbars in media queries
+.container {
+    .container-fixed();
+}
+
+// Container width
+.ev-viewport-sm .container {
+    max-width: @container-sm;
+}
+.ev-viewport-md .container {
+    max-width: @container-md;
+}
+.ev-viewport-md .container {
+    max-width: @container-lg;
+}
+
+/*
+    Grid Layout
+    ===========
+
+    We are using the same principle as bootstrap. With more helper mixin to keep our code DRY :)
+*/
 
 // Helper for styling all the column style
-@num-columns: 12;
-
 .column(@size, @rules) {
     .loopCol (@index) when (@index > 0) {
         @selector: ~'.col-@{size}-@{index}';
@@ -49,16 +77,15 @@
 .column-properties('xs');
 
 // Small grid
-.ev-size-sm, .ev-size-md, .ev-size-lg {
+.ev-viewport-sm, .ev-viewport-md, .ev-viewport-lg {
     .column-properties('sm');
 }
 
 // Medium grid
-.ev-size-md, .ev-size-lg {
+.ev-viewport-md, .ev-viewport-lg {
     .column-properties('md');
 }
-
 // Large grid
-.ev-size-lg {
+.ev-viewport-lg {
     .column-properties('lg');
 }
