@@ -8,15 +8,43 @@
 
 "use strict";
 angular.module('ev-fdm')
-    .directive('responsiveViewport', function () {
+    .provider('evResponsiveViewport', function () {
         var breakpoints = {
             480: 'ev-viewport-xs',
             880: 'ev-viewport-sm',
             1100: 'ev-viewport-md'
         };
+        this.$get =function () {
+            return breakpoints;
+        };
+
+        this.setXsBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-xs';
+        };
+
+        this.setSmBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-sm';
+        };
+
+        this.setMdBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-md';
+        };
+
+        this.setBreakpoints = function (breaks) {
+            if (breaks.length !== 3) {
+                throw new Error('There should be three breakpoints');
+            }
+            breaks.sort();
+            breakpoints[breaks[0]] = 'ev-viewport-xs';
+            breakpoints[breaks[1]] = 'ev-viewport-sm';
+            breakpoints[breaks[2]] = 'ev-viewport-md';
+        };
+    })
+    .directive('evResponsiveViewport', ['evResponsiveViewport', function (breakpoints) {
         return {
             link: function (scope, elm) {
                 var updateViewport = function () {
+
                     var elmWidth = elm.width();
                     var _class;
 
@@ -25,7 +53,7 @@ angular.module('ev-fdm')
                         return elmWidth < breakpoint;
                     });
                     if (largeViewport) {
-                        _class = 'viewport-lg';
+                        _class = 'ev-viewport-lg';
                     }
 
                     if (!elm.hasClass(_class)) {
@@ -40,4 +68,4 @@ angular.module('ev-fdm')
                 scope.$on('module-layout-changed', updateViewport);
             }
         };
-    });
+    }]);
