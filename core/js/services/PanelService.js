@@ -1,13 +1,11 @@
-var module = angular.module('ev-fdm');
+angular.module('ev-fdm')
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
+        '$window', 'PanelLayoutEngine', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+            $window, panelLayoutEngine) {
 
-module
-    .service('PanelService', [
-        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
-        function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
-
-        var container   = null,
-            stylesCache = window.stylesCache = {}
-            self        = this;
+        var container   = null;
+        var stylesCache = window.stylesCache = {};
+        var self        = this;
 
         this.panels = {};
 
@@ -19,7 +17,7 @@ module
          */
         this.open = function(options) {
             if (!options.name && options.panelName) {
-                console.log("Deprecated: use name instead of panelName")
+                console.log("Deprecated: use name instead of panelName");
                 options.name = options.panelName;
             }
 
@@ -28,7 +26,8 @@ module
                 return;
             }
 
-            var name = options.name;
+            // Change panelName to panel-name
+            var name = options.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
             if (self.panels[name]) {
                 var panel        = self.panels[name];
@@ -46,14 +45,14 @@ module
             }
 
             // We call it *THE BEAST*.
-            var element          = angular.element('<div class="ev-panel-placeholder ev-panel-placeholder-' + name + '" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
-                templatePromises = getTemplatePromise(options);
-            self.panels[name]         = options;
+            var element          = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
+                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, options) + '"></div>');
+            var templatePromises = getTemplatePromise(options);
+            self.panels[name]    = options;
             options.element      = element;
-            options.element.css('z-index', 2000 + options.index);
 
             return templatePromises.then(function(template) {
-                element.find('.ev-panel-content').html(template);
+                element.html(template);
                 element          = $compile(element)($rootScope.$new());
                 options.element  = element;
 
@@ -63,7 +62,6 @@ module
                 element.on('resizestop', function(event, ui) {
                     // resizable plugin does an unwanted height resize
                     // so we cancel the height set.
-                    var originalSize = ui.originalSize;
                     $(this).css("height","");
 
                     stylesCache[options.panelName] = ui.size.width;
@@ -90,7 +88,7 @@ module
 
             $animate.leave(element, function() {
                 updateLayout();
-            })
+            });
         };
 
         /**
@@ -108,7 +106,7 @@ module
                 $timeout.cancel(timerWindowResize);
             }
             timerWindowResize = $timeout(function() {
-                updateLayout()
+                updateLayout();
             }, 100);
         });
 
@@ -123,7 +121,7 @@ module
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
-                return $q.when(options.template)
+                return $q.when(options.template);
             }
 
             return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
@@ -153,7 +151,7 @@ module
         }
 
         function updateLayout(element) {
-            var panelElements = angular.element(container).children('.ev-panel-placeholder');
+            var panelElements = angular.element(container).children('.ev-panel');
 
             if (element) {
                 for (var i = 0; i < panelElements.length; i++) {
@@ -165,7 +163,9 @@ module
                     }
                 }
             }
-            panelLayoutEngine.checkStacking(panelElements);
+
+            var containerWidth = angular.element(container).innerWidth(); 
+            panelLayoutEngine.checkStacking(panelElements, containerWidth);
         }
 
         return this;
@@ -175,7 +175,7 @@ module
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="ev-panels ev-panels-container lisette-module"><div></div></div>',
+            template: '<div class="ev-panels-container"></div>',
             link: function (scope, element, attrs) {
               panelService.registerContainer(element);
             }

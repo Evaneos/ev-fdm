@@ -1,261 +1,13 @@
 
 .ev-panels-container {
-    > div:nth-child(2) { /*Select the first panel-placeholder (main)*/
-        .ev-panel {
-
-            float: none;
-            display: block;
-            min-width: @mainev-panel-min-width;
-
-            > .ui-resizable-handle {
-                display: none;
-            }
-
-            .ev-panel-inner {
-                .ev-panel-body {
-                    position: relative;
-                }
-            }
-
-            .ev-panel-title {
-                color: @gray-dark;
-                &:hover {
-                    cursor: pointer;
-                    color: @gray-darker;
-                }
-            }
-        }
-    }
-}
-
-.ev-panel-placeholder {
     height: 100%;
-    float: left;
-    position: relative;
-    display: inline-block;
-
-    &.ev-panel-main {
-        float: none;
-        display: block;
-
-        .ev-panel {
-            min-width: @mainev-panel-min-width;
-
-            > .ui-resizable-handle {
-                display: none;
-            }
-
-            .ev-panel-inner {
-                .ev-panel-body {
-                    position: relative;
-                }
-            }
-        }
-    }
-
-    .table-container {
-         position: absolute;
-         top: 0;
-         left: 0;
-         right: 0;
-         bottom: 0;
-         overflow-y: auto;
-         overflow-x: auto;
-    }
-
-    // default size for all side panels
-    &:not(.ev-panelplaceholder-main) .ev-panel,
-    &:not(.ev-panel-main) .ev-panel {
-        width: auto;
-        min-width: @ev-panel-min-width;
-    }
-
-    &.ev-panel-zero {
-        display: none;
-    }
-
-    div[ui-view] {
-        height: 100%;
-    }
-
-    &[data-breakpoint~="100"],
-    &[data-breakpoint~="200"],
-    &[data-breakpoint~="300"] {
-        .items {
-          padding: 15px;
-        }
-        .items-table {
-          display: none;
-        }
-        .items-inline {
-          > div {
-            width: 100%;
-          }
-          display: block;
-        }
-        .footer .btn {
-          min-width: 0;
-        }
-    }
-
-    &[data-breakpoint~="300"] {
-        .items-inline {
-          > div {
-            width: 50%;
-          }
-        }
-    }
-
-    > .ev-panel {
+    display: table;
+    .ev-panel {
+        display: table-cell;
+        vertical-align: top;
         background: @ev-panel-bg;
-        height: 100%;
-        border-left: 1px solid @ev-panel-inner-border;
-        // NEVER put this in position: relative; because scrollbar
-        left: auto!important;
-        // z-index: @zindex-modal;
-        background: #FFF;
+        border: @ev-panel-inner-border-width solid @ev-panel-bg;
         overflow: auto;
-
-        .items {
-            margin: -15px;
-          }
-          .items-table {
-            margin-top: 0;
-          }
-          .items-inline {
-            display: none;
-            margin-right: -10px;
-            margin-bottom: -10px;
-            > div {
-              display: inline-block;
-              padding-right: 10px;
-              padding-bottom: 10px;
-              cursor: pointer;
-              > div {
-                border: 1px solid @ev-panel-bg;
-                padding: 10px;
-                text-align: center;
-                border-radius: 4px;
-                height: 40px;
-                .text-overflow();
-              }
-              &:hover > div {
-                border-color: @gray-light;
-              }
-              &:active > div,
-              &.active > div {
-                border-color: @brand-primary;
-                color: @gray-darker;
-              }
-            }
-        }
-
-        > .ev-panel-inner {
-            height: 100%;
-            border-bottom: @ev-panel-inner-border-width solid @ev-panel-bg;
-            border-left: @ev-panel-inner-border-width solid @ev-panel-bg;
-            border-right: @ev-panel-inner-border-width solid @ev-panel-bg;
-            overflow-x: hidden;
-            overflow-y: hidden;
-
-            // ui-view
-            > div {
-                height: 100%;
-            }
-
-            .ev-panel-stacked-section {
-                display: none;
-            }
-
-            /*********************************************************
-             * HEADER
-             ********************************************************/
-
-            .ev-panel-header {
-                background: @ev-panel-bg;
-                padding: 9px 0;
-                z-index: 2;
-                .ev-panel-title {
-                    font-size: 20px;
-                    text-transform: uppercase;
-                    line-height: 1.7em;
-                    margin-right: 30px;
-                    display: block;
-                    .text-overflow();
-
-                    .small {
-                        color: @gray;
-                        font-size: 15px;
-                    }
-
-                    input {
-                        width: 100%;
-                    }
-                }
-
-                .ev-panel-action-bar {
-                    margin-top: 5px;
-                }
-
-                .close {
-                    font-size: 32px;
-                    color: @gray;
-                    opacity: 1;
-                    width: 50px;
-                    height: 50px;
-                    box-shadow: none;
-                    text-shadow: none;
-                    outline: none;
-                    position: absolute;
-                    top: 10px;
-                    right: 0px;
-                    text-align: center;
-
-                    &:hover {
-                        color: @gray-dark;
-                    }
-                }
-            }
-
-            /*********************************************************
-             * BODY
-             ********************************************************/
-
-            .ev-panel-body {
-                height: 100%;
-                position: relative;
-                padding: 15px;
-
-                &.nopadding {
-                    padding: 0;
-                }
-            }
-
-            /*********************************************************
-             * FOOTER
-             ********************************************************/
-
-
-            .ev-panel-footer {
-                padding: 9px 16px;
-                background: @ev-panel-bg;
-                text-align: right;
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                z-index: 2;
-                .btn {
-                    margin-left: 10px;
-                    min-width: 150px;
-                    &:first-child {
-                        margin-left: 0;
-                    }
-                }
-            }
-        }
-
-
         /*********************************************************
          * RESIZABLE HANDLER
          ********************************************************/
@@ -276,66 +28,49 @@
      * STACKED STATE
      ********************************************************/
 
-    &.stacked {
+    .ev-panel.ev-stacked {
+        border: none;
         border-left: 1px solid @gray-lighter;
-
-        // Hide the whole ev-panel
         max-width: @ev-panel-stacked-size;
-        > .ev-panel > .ev-panel-inner {
-
-            border: none;
-
-            > div {
-                > .ev-panel-header,
-                > .ev-panel-body,
-                > .ev-panel-footer {
-                    display: none;
-                }
-            }
-        }
-
-        .ui-resizable-handle {
+        
+        > *:not(.ev-panel-stacked) {
             display: none;
         }
 
+        // .ui-resizable-handle {
+        //     display: none;
+        // }
+
         // Display only the panel-stacked section
+        .ev-stacked-section{
+            display: table;
+            margin-left: 14px;
+            height: 100%;
+            width: 400px;
+            .rotate(-90deg);
+            transform-origin: 0 50%;
+            -webkit-transform-origin: 0 50%;
+            writing-mode: tb-rl;
+            cursor: pointer;
 
-        > .ev-panel > .ev-panel-inner > div {
-            background-color: @gray-light;
-            .ev-panel-stacked-section {
-                display: table;
-                margin-left: 14px;
-                height: 100%;
-                width: 400px;
-                .rotate(-90deg);
-                transform-origin: 0 50%;
-                -webkit-transform-origin: 0 50%;
-                writing-mode: tb-rl;
-                cursor: pointer;
+            .ev-panel-stacked-title {
+                display: table-cell;
+                vertical-align: middle;
+                text-transform: uppercase;
+                color: @gray-dark;
 
-                .ev-panel-stacked-title {
-                    display: table-cell;
-                    vertical-align: middle;
-                    text-transform: uppercase;
-                    color: @gray-dark;
+                .icon {
+                    position: relative;
+                    bottom: 15px;
+                    margin-right: 12px;
+                    font-size: 18px;
+                }
 
-                    .icon {
-                        position: relative;
-                        bottom: 15px;
-                        margin-right: 12px;
-                        font-size: 18px;
-                    }
-
-                    &:hover {
-                        color: @gray-darker;
-                    }
+                &:hover {
+                    color: @gray-darker;
                 }
             }
         }
-    }
-
-    &.stacked-mobile {
-        display: none;
     }
 
 
@@ -347,15 +82,6 @@
     &.stacked-add,
     &.stacked-remove.stacked-remove-active {
         max-width: 1000px;
-    }
-
-    .ev-panel .has-header {
-        .lisette-module-searchbar > .inner {
-            bottom: @ev-panel-header-height;
-        }
-        .lisette-module-bottombar {
-            bottom: @ev-panel-header-height;
-        }
     }
 }
 

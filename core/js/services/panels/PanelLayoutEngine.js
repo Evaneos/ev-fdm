@@ -1,9 +1,11 @@
+
+
 angular.module('ev-fdm')
 
 /**
  * STACKING AND PANELS SIZE MANAGEMENT
  */
-.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
+.service('PanelLayoutEngine', ['$animate', '$rootScope', function($animate, $rootScope) {
 
     var STACKED_WIDTH = 35;
 
@@ -18,18 +20,17 @@ angular.module('ev-fdm')
      * @param  {Array} panels the panels
      * @return {Array}        Array containing the extracted values
      */
-    function getDataFromPanels(panels) {
+    function getDataFromPanels(panels, containerWidth) {
         var datas = [];
 
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
 
             var data = {
-                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
-                maxWidth: parseInt(panelElement.children().first().css('max-width'))
-                    || angular.element($window).innerWidth(),
-                stacked:  panelElement.hasClass('stacked'),
-                width:    panelElement.width(),
+                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH + 1,
+                maxWidth: parseInt(panelElement.children().first().css('max-width')) || containerWidth,
+                stacked:  panelElement.hasClass('ev-stacked'),
+                width:    panelElement.outerWidth(),
                 stackedWidth: STACKED_WIDTH
             };
 
@@ -40,7 +41,6 @@ angular.module('ev-fdm')
             if (data.width > data.maxWidth && data.maxWidth > 0) {
                 data.width = data.maxWidth;
             }
-
             datas.push(data);
         });
 
@@ -245,9 +245,9 @@ angular.module('ev-fdm')
      * Apply our results to the panels
      * @param  {Array}   panels      the panels
      * @param  {Array}   dataPanels  the datas we want to apply
-     * @param  {Int}     windowWidth the windowWidth
+     * @param  {Int}     containerWidth the containerWidth
      */
-    function resizeAndStackPanels(panels, dataPanels, windowWidth) {
+    function resizeAndStackPanels(panels, dataPanels, containerWidth) {
         // If we need to stack all the panels
         // We don't stack the last one, but we hide all the stacked panels
         var isMobile  = false;
@@ -255,11 +255,9 @@ angular.module('ev-fdm')
 
         if (lastPanel.stacked === true) {
             lastPanel.stacked = false;
-            lastPanel.width = windowWidth;
+            lastPanel.width = containerWidth;
             isMobile = true;
         }
-
-        panels.css('left', 0);
 
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
@@ -270,18 +268,17 @@ angular.module('ev-fdm')
                 return;
             }
 
-            if (element.hasClass('stacked') && !dataPanel.stacked) {
-                $animate.removeClass(element, 'stacked');
-                $animate.removeClass(element, 'stacked-mobile');
-            } else if (!element.hasClass('stacked') && dataPanel.stacked) {
-                $animate.addClass(element, 'stacked');
+            if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
+                $animate.removeClass(element, 'ev-stacked');
+                $animate.removeClass(element, 'ev-stacked-mobile');
+            } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
+                $animate.addClass(element, 'ev-stacked');
 
                 if (isMobile) {
-                    $animate.addClass(element, 'stacked-mobile');
+                    $animate.addClass(element, 'ev-stacked-mobile');
                 }
             }
-
-            element.width(dataPanel.width + "px");
+            element.outerWidth(dataPanel.width + "px");
         });
     }
 
@@ -292,21 +289,15 @@ angular.module('ev-fdm')
     /**
      * Check the stacking and so on
      */
-    function checkStacking(panels) {
-        var body = angular.element('body');
-        var overflowSetting = body.css('overflow');
-        body.css('overflow', 'hidden');
-        var windowWidth   = angular.element($window).innerWidth();
-        body.css('overflow', overflowSetting);
-
+    function checkStacking(panels, containerWidth) {
         // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels);
+        var rawDataPanels = getDataFromPanels(panels, containerWidth);
 
         // #2 - We compute these new data with our specifics rules (agnostic algorithm)
-        var dataPanels    = calculateStackingFromData(rawDataPanels, windowWidth);
+        var dataPanels    = calculateStackingFromData(rawDataPanels, containerWidth);
 
         // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, windowWidth);
+        resizeAndStackPanels(panels, dataPanels, containerWidth);
 
         $rootScope.$broadcast('module-layout-changed');
     }
