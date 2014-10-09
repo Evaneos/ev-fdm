@@ -6,7 +6,7 @@ var module = angular.module('ev-fdm')
         return {
             restrict: 'AE',
             replace: true,
-            templateUrl: 'pagination.phtml',
+            templateUrl: 'ev-pagination.html',
             scope: {
                 currPage:     '=',
                 nbPage:       '=',
@@ -78,7 +78,7 @@ var module = angular.module('ev-fdm')
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
                         scope.currPage = value;
-                        
+
                         if(angular.isFunction(scope.onPageChange)) {
                             scope.onPageChange(value);
                         }
@@ -88,7 +88,7 @@ var module = angular.module('ev-fdm')
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
                         scope.currPage++;
-                        
+
                         if(angular.isFunction(scope.onPageChange)) {
                             scope.onPageChange(scope.currPage);
                         }

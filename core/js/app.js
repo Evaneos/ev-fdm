@@ -37,7 +37,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
  */
 .config(['$stateProvider', function($stateProvider) {
     $stateProvider.state('ev-error', {
-        templateUrl: 'ev-error.phtml'
+        templateUrl: 'ev-error.html'
     });
 }])
 

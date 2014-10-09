@@ -6,6 +6,7 @@
 var gulp = require('gulp');
 var less = require('gulp-less');
 var concat = require('gulp-concat');
+var insert = require('gulp-insert');
 var uglify = require('gulp-uglify');
 var csso = require('gulp-csso');
 var sourcemaps = require('gulp-sourcemaps');
@@ -183,6 +184,50 @@ tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-less'; })
 tasks.unshift('less-all', 'watch-core-less', 'watch-icon');
 gulp.task('watch-less', tasks);
 
+// ///////////////////////////////////////////////////
+// VIEWS
+// //////////////////////////////////////////////////
+
+function concatViews(src, dest) {
+    return gulp.src(src)
+        .pipe(insert.wrap(function(file) {
+            return '<script type="text/ng-template" id="' + file.relative + '">';
+        }, '</script>'))
+        .pipe(concat('ev-templates.html'))
+        .pipe(gulp.dest(dest + '/views'));
+}
+
+gulp.task('core-views', function() {
+    return concatViews(['core/views/**/*'], dest + '/core');
+});
+
+gulp.task('watch-core-views', function () {
+    gulp.watch([
+        'core/views/**/*'
+    ], ['core-views']);
+});
+
+plugins.forEach(function(name) {
+    var dir = 'plugins/' + name;
+    var src = [dir + '/views/**/*'];
+    gulp.task('plugin-' + name + '-views', function () {
+        return concatViews(src, dest + '/' + dir);
+    });
+
+    gulp.task('watch-plugin-' + name + '-views', function () {
+        gulp.watch([dir + '/views/**/*.html'], ['plugin-' + name + '-views']);
+    });
+});
+
+var tasks = plugins.map(function(name) { return 'plugin-' + name + '-views'; });
+tasks.unshift('core-views');
+gulp.task('views-all', tasks);
+
+
+
+tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-views'; });
+tasks.unshift('views-all', 'watch-core-views');
+gulp.task('watch-views', tasks);
 
 
 // ///////////////////////////////////////////////////
@@ -240,6 +285,6 @@ tasks.unshift('copy-all', 'watch-core-copy');
 gulp.task('watch-copy', tasks);
 
 
-gulp.task('default', ['js-all', 'less-all', 'copy-all']);
-gulp.task('watch', ['watch-copy', 'watch-less', 'watch-js']);
+gulp.task('default', ['js-all', 'less-all', 'copy-all', 'views-all']);
+gulp.task('watch', ['watch-copy', 'watch-less', 'watch-js', 'watch-views']);
 
