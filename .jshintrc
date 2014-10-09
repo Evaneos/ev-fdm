@@ -10,7 +10,7 @@
     "undef": true,
     "unused": "vars",
     "laxbreak": true,
-    "maxparams": 8,
+    "maxparams": 10,
     "maxdepth": 6,
     "maxlen": 120,
     "boss": true,
