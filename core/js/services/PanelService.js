@@ -33,11 +33,11 @@ angular.module('ev-fdm')
                 var panel        = self.panels[name];
                 panel.index      = options.index;
 
-                var afterIndex   = findAfterElementIndex(options.index),
-                    afterElement = getAfterElement(afterIndex);
+                var beforeIndex   = findBeforeElementIndex(options.index),
+                    beforeElement = getBeforeElement(beforeIndex);
 
-                panel.element.css('z-index', 2000 + afterIndex);
-                $animate.move(panel.element, container, afterElement, function() {
+                panel.element.css('z-index', 2000 + beforeIndex);
+                $animate.move(panel.element, container, beforeElement, function() {
                     updateLayout();
                 });
 
@@ -56,12 +56,12 @@ angular.module('ev-fdm')
                 element          = $compile(element)($rootScope.$new());
                 options.element  = element;
 
-                var afterIndex   = findAfterElementIndex(options.index),
-                    afterElement = getAfterElement(afterIndex);
+                var beforeIndex   = findBeforeElementIndex(options.index),
+                    beforeElement = getBeforeElement(beforeIndex);
 
                 element.resizable({
                     handles: "w",
-                    helper: "ui-resizable-helper"
+                    helper: "ui-resizable-helper",
                 });
                 
                 element.on('resizestop', function(event, ui) {
@@ -69,14 +69,21 @@ angular.module('ev-fdm')
                     // so we cancel the height set.
                     $(this).css("height","");
 
-                    stylesCache[options.panelName] = ui.size.width;
-                    updateLayout(self);
-                });
+                    var delta = ui.size.width - ui.originalSize.width;
+                    beforeElement.width(beforeElement.width() - delta);
+                    element.width(ui.size.width);
+                    console.log('after width', element.width());
 
-                $animate.enter(element, container, afterElement, function() {
+                    stylesCache[options.panelName] = ui.size.width;
+                    
+                    updateLayout(self);
+
+                            });
+
+                $animate.enter(element, container, beforeElement, function() {
                     updateLayout();
                 });
-
+            
                 return options;
             });
         };
@@ -92,7 +99,7 @@ angular.module('ev-fdm')
             $animate.leave(element, function() {
                 updateLayout();
             });
-        };
+        };          
 
         /**
          * Registers a panels container
@@ -111,7 +118,7 @@ angular.module('ev-fdm')
             timerWindowResize = $timeout(function() {
                 updateLayout();
             }, 100);
-        });
+        });         
 
         function getStylesFromCache(name, options) {
             var savedWidth = stylesCache[name];
@@ -132,30 +139,30 @@ angular.module('ev-fdm')
             });
         }
 
-        function findAfterElementIndex(index) {
+        function findBeforeElementIndex(index) {
             var insertedPanels = angular.element(container).children(),
-                afterIndex     = index - 1;
+                beforeIndex     = index - 1;
 
             if (!index || index > insertedPanels.length) {
-                afterIndex = insertedPanels.length - 1;
+                beforeIndex = insertedPanels.length - 1;
             }
             else if (index < 1) {
-                afterIndex = 0;
+                beforeIndex = 0;
             }
 
-            return afterIndex;
+            return beforeIndex;
         }
 
-        function getAfterElement(afterIndex) {
+        function getBeforeElement(beforeIndex) {
             var insertedPanels = angular.element(container).children(),
-                domElement     = insertedPanels[afterIndex];
+                domElement     = insertedPanels[beforeIndex];
 
             return domElement ? angular.element(domElement) : null;
         }
 
         function updateLayout(element) {
             var panelElements = angular.element(container).children('.ev-panel');
-
+            
             if (element) {
                 for (var i = 0; i < panelElements.length; i++) {
                     var current = panelElements[i];
@@ -166,7 +173,6 @@ angular.module('ev-fdm')
                     }
                 }
             }
-
             var containerWidth = angular.element(container).innerWidth(); 
             panelLayoutEngine.checkStacking(panelElements, containerWidth);
         }

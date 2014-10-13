@@ -10,9 +10,9 @@
 angular.module('ev-fdm')
     .provider('evResponsiveViewport', function () {
         var breakpoints = {
-            480: 'ev-viewport-xs',
-            880: 'ev-viewport-sm',
-            1100: 'ev-viewport-md'
+            300: 'ev-viewport-xs',
+            600: 'ev-viewport-sm',
+            1000: 'ev-viewport-md'
         };
         this.$get =function () {
             return breakpoints;

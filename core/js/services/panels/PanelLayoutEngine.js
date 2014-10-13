@@ -33,7 +33,7 @@ angular.module('ev-fdm')
                 width:    panelElement.outerWidth(),
                 stackedWidth: STACKED_WIDTH
             };
-
+            console.log("panelelm", panelElement.outerWidth());
             if (data.width < data.minWidth) {
                 data.width = data.minWidth;
             }
