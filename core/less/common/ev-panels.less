@@ -1,26 +1,15 @@
 
 .ev-panels-container {
     height: 100%;
+    width: 100%;
     display: table;
     .ev-panel {
         display: table-cell;
         vertical-align: top;
         background: @ev-panel-bg;
-        border: @ev-panel-inner-border-width solid @ev-panel-bg;
-        overflow: auto;
-        /*********************************************************
-         * RESIZABLE HANDLER
-         ********************************************************/
-
-        > .ui-resizable-handle {
-            left: 0;
-        }
-        &.ui-resizable-resizing {
-            > .ui-resizable-handle {
-                width: 100%;
-                background: transparent;
-                border-left: 7px solid @gray-light;
-            }
+        position: relative;
+        &:not(:first-child) {
+            border-left: 1px solid @gray-light;
         }
     }
 
@@ -29,17 +18,11 @@
      ********************************************************/
 
     .ev-panel.ev-stacked {
-        border: none;
-        border-left: 1px solid @gray-lighter;
         max-width: @ev-panel-stacked-size;
         
         > *:not(.ev-panel-stacked) {
             display: none;
         }
-
-        // .ui-resizable-handle {
-        //     display: none;
-        // }
 
         // Display only the panel-stacked section
         .ev-stacked-section{
@@ -88,6 +71,26 @@
 .ev-panel-bg {
   background-color: @ev-panel-bg;
 }
+
+// Resizable stuff
+
+
+/*********************************************************
+ * RESIZABLE HANDLER
+ ********************************************************/
+
+.ev-panel > .ui-resizable-handle {
+    background: transparent;
+    left: -@ev-panel-inner-border-width / 2 ;
+    top: 0;
+    bottom: 0;
+    width: @ev-panel-inner-border-width;
+    height: auto;
+}
+
+.ev-panel:first-child > .ui-resizable-handle {
+    display: none;
+} 
 
 .ui-resizable-helper {
     border: 2px dotted #e5d8ca;

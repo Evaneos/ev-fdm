@@ -59,6 +59,11 @@ angular.module('ev-fdm')
                 var afterIndex   = findAfterElementIndex(options.index),
                     afterElement = getAfterElement(afterIndex);
 
+                element.resizable({
+                    handles: "w",
+                    helper: "ui-resizable-helper"
+                });
+                
                 element.on('resizestop', function(event, ui) {
                     // resizable plugin does an unwanted height resize
                     // so we cancel the height set.
@@ -66,8 +71,6 @@ angular.module('ev-fdm')
 
                     stylesCache[options.panelName] = ui.size.width;
                     updateLayout(self);
-                }).on('resize', function(event, ui) {
-                    return false;
                 });
 
                 $animate.enter(element, container, afterElement, function() {
