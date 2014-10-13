@@ -1,8 +1,11 @@
 
-.ev-panels-container {
+.ev-panels-wrapper {
     height: 100%;
     width: 100%;
-    display: table;
+    max-width: 100%;
+    .ev-panel-container {
+        display: table;   
+    }
     .ev-panel {
         display: table-cell;
         vertical-align: top;
@@ -12,6 +15,9 @@
         &:not(:first-child) {
             border-left: 1px solid @gray-light;
         }
+        .ev-stacked-section {
+            display: none;
+        }
     }
 
     /*********************************************************
@@ -20,39 +26,22 @@
 
     .ev-panel.ev-stacked {
         max-width: @ev-panel-stacked-size;
+        vertical-align: middle;
         
+        // Hide everything that is not the stacked section
         > *:not(.ev-panel-stacked) {
             display: none;
         }
 
         // Display only the panel-stacked section
         .ev-stacked-section{
-            display: table;
-            margin-left: 14px;
-            height: 100%;
-            width: 400px;
-            .rotate(-90deg);
-            transform-origin: 0 50%;
-            -webkit-transform-origin: 0 50%;
-            writing-mode: tb-rl;
-            cursor: pointer;
-
-            .ev-panel-stacked-title {
-                display: table-cell;
-                vertical-align: middle;
-                text-transform: uppercase;
-                color: @gray-dark;
-
-                .icon {
-                    position: relative;
-                    bottom: 15px;
-                    margin-right: 12px;
-                    font-size: 18px;
-                }
-
-                &:hover {
-                    color: @gray-darker;
-                }
+            display: block;
+            transform: rotate(-90deg);
+            white-space: nowrap;
+            text-transform: uppercase;
+            color: @gray-dark;
+            &:hover {
+                color: @gray-darker;
             }
         }
     }

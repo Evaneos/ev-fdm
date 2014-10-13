@@ -27,8 +27,8 @@ angular.module('ev-fdm')
             var panelElement = angular.element(panelDom);
 
             var data = {
-                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH + 1,
-                maxWidth: parseInt(panelElement.children().first().css('max-width')) || containerWidth,
+                minWidth: parseInt(panelElement.css('min-width')) || STACKED_WIDTH + 1,
+                maxWidth: parseInt(panelElement.css('max-width')) || containerWidth,
                 stacked:  panelElement.hasClass('ev-stacked'),
                 width:    panelElement.outerWidth(),
                 stackedWidth: STACKED_WIDTH
