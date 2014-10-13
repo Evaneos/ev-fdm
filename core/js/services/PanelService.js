@@ -72,7 +72,6 @@ angular.module('ev-fdm')
                     var delta = ui.size.width - ui.originalSize.width;
                     beforeElement.width(beforeElement.width() - delta);
                     element.width(ui.size.width);
-                    console.log('after width', element.width());
 
                     stylesCache[options.panelName] = ui.size.width;
                     
