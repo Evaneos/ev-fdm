@@ -1,8 +1,8 @@
-
 .ev-panels-wrapper {
     height: 100%;
     width: 100%;
     max-width: 100%;
+
     .ev-panel-container {
         display: table;
         height: 100%;
@@ -17,6 +17,7 @@
         &:not(:first-child) {
             border-left: 1px solid @ev-panel-bg-dark;
         }
+
         .ev-stacked-section {
             display: none;
         }
@@ -30,14 +31,14 @@
         max-width: @ev-panel-stacked-size;
         vertical-align: middle;
         background: darken(@ev-panel-bg, 20%);
-        
+
         // Hide everything that is not the stacked section
-        > *:not(.ev-panel-stacked) {
+        & > div[ui-view] > *:not(.ev-stacked-section) {
             display: none;
         }
 
         // Display only the panel-stacked section
-        .ev-stacked-section{
+        .ev-stacked-section {
             display: block;
             transform: rotate(-90deg);
             white-space: nowrap;
@@ -84,7 +85,7 @@
 .ev-panel.ev-stacked > .ui-resizable-handle,
 .ev-panel:last-child > .ui-resizable-handle {
     display: none;
-} 
+}
 
 .ui-resizable-helper {
     border: 2px dotted #e5d8ca;
