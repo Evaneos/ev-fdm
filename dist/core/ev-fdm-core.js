@@ -37,7 +37,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
  */
 .config(['$stateProvider', function($stateProvider) {
     $stateProvider.state('ev-error', {
-        templateUrl: 'ev-error.phtml'
+        templateUrl: 'ev-error.html'
     });
 }])
 
@@ -702,7 +702,7 @@ module.directive('evFilters', function() {
         restrict: 'E',
         replace: true,
         transclude: true,
-        templateUrl: 'filters.phtml'
+        templateUrl: 'ev-filters.html'
     };
 });
 (function () {
@@ -999,7 +999,7 @@ var module = angular.module('ev-fdm')
         return {
             restrict: 'AE',
             replace: true,
-            templateUrl: 'pagination.phtml',
+            templateUrl: 'ev-pagination.html',
             scope: {
                 currPage:     '=',
                 nbPage:       '=',
@@ -1071,7 +1071,7 @@ var module = angular.module('ev-fdm')
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
                         scope.currPage = value;
-                        
+
                         if(angular.isFunction(scope.onPageChange)) {
                             scope.onPageChange(value);
                         }
@@ -1081,7 +1081,7 @@ var module = angular.module('ev-fdm')
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
                         scope.currPage++;
-                        
+
                         if(angular.isFunction(scope.onPageChange)) {
                             scope.onPageChange(scope.currPage);
                         }
@@ -1094,70 +1094,6 @@ var module = angular.module('ev-fdm')
             }
     };
 }]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
-
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
-    }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
-        } else {
-            attributeValue = BREAKS[breakpIndex];
-        }
-        element.attr('data-breakpoint', attributeValue);
-    }
-
-    function updateBreakpoints(element) {
-        var bp = getBPMatching(element.outerWidth());
-        applyBPAttribute(element, bp);
-    }
-
-    return {
-        restrict: 'A',
-        scope: false,
-        replace: true,
-        transclude: true,
-        template: '<div ng-transclude></div>',
-        link: function(scope, element, attrs) {
-            /**
-             * Listener to update the breakpoints properties
-             */
-            element.resizable({
-                handles: "w",
-                helper: "ui-resizable-helper",
-                resize: function(event, ui) {
-                    updateBreakpoints(element);
-                }
-            });
-            $rootScope.$on('module-layout-changed', function() {
-                updateBreakpoints(element);
-            });
-            $timeout(function() {
-                updateBreakpoints(element);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
-        }
-    };
-}]);
-
 (function () {
     'use strict';
     var module = angular.module('ev-fdm')
@@ -1452,6 +1388,78 @@ angular.module('ev-fdm').directive('body', [
         };
     }
 ]);
+
+/*
+    responsive-viewport
+    ===================
+
+    I'm a directive that place the proper class responsive class dependanding on the size of the element I'm attached.
+
+*/
+
+"use strict";
+angular.module('ev-fdm')
+    .provider('evResponsiveViewport', function () {
+        var breakpoints = {
+            300: 'ev-viewport-xs',
+            600: 'ev-viewport-sm',
+            1000: 'ev-viewport-md'
+        };
+        this.$get =function () {
+            return breakpoints;
+        };
+
+        this.setXsBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-xs';
+        };
+
+        this.setSmBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-sm';
+        };
+
+        this.setMdBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-md';
+        };
+
+        this.setBreakpoints = function (breaks) {
+            if (breaks.length !== 3) {
+                throw new Error('There should be three breakpoints');
+            }
+            breaks.sort();
+            breakpoints[breaks[0]] = 'ev-viewport-xs';
+            breakpoints[breaks[1]] = 'ev-viewport-sm';
+            breakpoints[breaks[2]] = 'ev-viewport-md';
+        };
+    })
+    .directive('evResponsiveViewport', ['evResponsiveViewport', function (breakpoints) {
+        return {
+            link: function (scope, elm) {
+                var updateViewport = function () {
+
+                    var elmWidth = elm.width();
+                    var _class;
+
+                    var largeViewport = !Object.keys(breakpoints).some(function (breakpoint) {
+                        _class = breakpoints[breakpoint];
+                        return elmWidth < breakpoint;
+                    });
+                    if (largeViewport) {
+                        _class = 'ev-viewport-lg';
+                    }
+
+                    if (!elm.hasClass(_class)) {
+                        Object.keys(breakpoints).forEach(function (key) {
+                            elm.removeClass(breakpoints[key]);
+                        });
+                        elm.addClass(_class);
+                    }
+                };
+
+                updateViewport();
+                scope.$on('module-layout-changed', updateViewport);
+            }
+        };
+    }]);
 
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
@@ -2005,7 +2013,7 @@ angular.module('ev-fdm')
                 value: '=',
                 noValue: '@',
             },
-            templateUrl: 'value.phtml'
+            templateUrl: 'ev-value.html'
         };
     });
 'use strict';
@@ -2671,18 +2679,58 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
     this.type = TYPES;
 }]);
 
-var module = angular.module('ev-fdm');
+const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
 
-module
-    .service('PanelService', [
-        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
-        function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
+angular.module('ev-fdm')
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
+        '$window', 'PanelLayoutEngine', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+            $window, panelLayoutEngine) {
 
-        var container   = null,
-            stylesCache = window.stylesCache = {}
-            self        = this;
+        var containers   = {};
+        var panelsList   = {};
+        var stylesCache  = window.stylesCache = {};
+        var self         = this;
+        
+        var addToDom = function (panel, containerId) {
+            var container = containers[containerId];
+            if (!container || panel.element.parent().length) {
+                return;
+            }
 
-        this.panels = {};
+            // If no panel index, or no panel inside the container, it is added at the end
+            if (!panel.index || !container.children().length) {
+                $animate.move(panel.element, container, null, function () {
+                    updateLayout(null, container);
+                });
+            } else {
+                var beforePanel = getBeforePanel(panel.index, containerId);
+                    $animate.move(panel.element, container, beforePanel, function () {
+                        updateLayout(null, container);
+                });
+            }
+        };
+
+        function getBeforePanel(index, containerId) {
+            var beforePanel = null;
+            var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
+                return panelsList[containerId][panelName];
+            });
+            panels
+                .filter(function (panel) {
+                    return panel.element.parent().length;
+                })
+                .filter(function (panel) {
+                    return panel.index;
+                })
+                .some(function (insertedPanel) {
+                    var isBeforePanel = insertedPanel.index > index;
+                    if (isBeforePanel) {
+                        beforePanel = insertedPanel;
+                    }
+                    return !isBeforePanel;
+                });
+            return beforePanel || panels[0];
+        }
 
         /**
          * Panel options are:
@@ -2690,90 +2738,114 @@ module
          * - template or templateURL
          * - index
          */
-        this.open = function(options) {
-            if (!options.name && options.panelName) {
-                console.log("Deprecated: use name instead of panelName")
-                options.name = options.panelName;
+        this.open = function (panel, id) {
+            if (!id) {
+                id = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[id] = panelsList[id] || {};
+
+            if (!panel.name && panel.panelName) {
+                console.log("Deprecated: use name instead of panelName");
+                panel.name = panel.panelName;
             }
 
-            if (!options) {
+            if (!panel) {
                 console.log("A panel must have a name (options.name)");
                 return;
             }
 
-            var name = options.name;
+            // Change panelName to panel-name
+            var name = panel.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
-            if (self.panels[name]) {
-                var panel        = self.panels[name];
-                panel.index      = options.index;
-
-                var afterIndex   = findAfterElementIndex(options.index),
-                    afterElement = getAfterElement(afterIndex);
-
-                panel.element.css('z-index', 2000 + afterIndex);
-                $animate.move(panel.element, container, afterElement, function() {
-                    updateLayout();
-                });
-
-                return self.panels[name];
+            if (panels[name]) {
+                return panels[name];
             }
 
             // We call it *THE BEAST*.
-            var element          = angular.element('<div class="ev-panel-placeholder ev-panel-placeholder-' + name + '" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
-                templatePromises = getTemplatePromise(options);
-            self.panels[name]         = options;
-            options.element      = element;
-            options.element.css('z-index', 2000 + options.index);
+            var element          = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
+                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '"></div>');
+            var templatePromises = getTemplatePromise(panel);
+            panels[name]         = panel;
+            panel.element      = element;
 
             return templatePromises.then(function(template) {
-                element.find('.ev-panel-content').html(template);
+                element.html(template);
                 element          = $compile(element)($rootScope.$new());
-                options.element  = element;
+                panel.element  = element;
 
-                var afterIndex   = findAfterElementIndex(options.index),
-                    afterElement = getAfterElement(afterIndex);
-
+                element.resizable({
+                    handles: "e",
+                    helper: "ui-resizable-helper",
+                });
+                
                 element.on('resizestop', function(event, ui) {
                     // resizable plugin does an unwanted height resize
                     // so we cancel the height set.
-                    var originalSize = ui.originalSize;
                     $(this).css("height","");
 
-                    stylesCache[options.panelName] = ui.size.width;
-                    updateLayout(self);
-                }).on('resize', function(event, ui) {
+                    var afterPanel = element.next('.ev-panel');
+                    var delta = ui.size.width - ui.originalSize.width;
+                    afterPanel.width(afterPanel.width() - delta);
+                    element.width(ui.size.width);
+                    stylesCache[panel.panelName] = ui.size.width;
+                    updateLayout(self, containers[id]);
+                })
+                .on('resize', function () {
+                    // Prevent jquery ui to do weird things 
                     return false;
                 });
 
-                $animate.enter(element, container, afterElement, function() {
-                    updateLayout();
-                });
-
-                return options;
+                addToDom(panel, id);
+                return panel;
             });
         };
 
-        this.close = function(name) {
-            if (!name || !self.panels[name]) {
+
+        this.close = function(name, containerId) {
+
+            // Change panelName to panel-name
+            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[containerId];
+
+            if (!name || !panels[name]) {
                 console.log("Panel not found for:" + name);
             }
 
-            var element  = self.panels[name].element;
-            self.panels[name] = null;
+            var element  = panels[name].element;
+            panels[name] = null;
 
-            $animate.leave(element, function() {
-                updateLayout();
-            })
-        };
+            $animate.leave(element).then(function() {
+                updateLayout(null, containerId);
+            });
+        };          
 
         /**
          * Registers a panels container
          *
          * element : DOM element
          */
-        this.registerContainer = function(element) {
-            container = element;
+        this.registerContainer = function(container, containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            if (!containers[containerId]) {
+                containers[containerId] = container;
+                if (!panelsList[containerId]) {
+                    return;
+                }
+
+                Object.keys(panelsList[containerId]).forEach(function (panelName) {
+                    var panel = panelsList[containerId][panelName];
+                    addToDom(panel, containerId);
+                });
+            }
         };
+
+
 
         var timerWindowResize = null;
         angular.element($window).on('resize', function() {
@@ -2781,9 +2853,9 @@ module
                 $timeout.cancel(timerWindowResize);
             }
             timerWindowResize = $timeout(function() {
-                updateLayout()
+                updateLayout();
             }, 100);
-        });
+        });         
 
         function getStylesFromCache(name, options) {
             var savedWidth = stylesCache[name];
@@ -2796,7 +2868,7 @@ module
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
-                return $q.when(options.template)
+                return $q.when(options.template);
             }
 
             return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
@@ -2804,30 +2876,16 @@ module
             });
         }
 
-        function findAfterElementIndex(index) {
-            var insertedPanels = angular.element(container).children(),
-                afterIndex     = index - 1;
-
-            if (!index || index > insertedPanels.length) {
-                afterIndex = insertedPanels.length - 1;
+       
+        function updateLayout(element, container) {
+            if (!container) {
+                Object.keys(containers).map(function (id) {
+                    updateLayout(null, containers[id]);
+                });
+                return this;
             }
-            else if (index < 1) {
-                afterIndex = 0;
-            }
-
-            return afterIndex;
-        }
-
-        function getAfterElement(afterIndex) {
-            var insertedPanels = angular.element(container).children(),
-                domElement     = insertedPanels[afterIndex];
-
-            return domElement ? angular.element(domElement) : null;
-        }
-
-        function updateLayout(element) {
-            var panelElements = angular.element(container).children('.ev-panel-placeholder');
-
+            var panelElements = angular.element(container).children('.ev-panel');
+            
             if (element) {
                 for (var i = 0; i < panelElements.length; i++) {
                     var current = panelElements[i];
@@ -2838,7 +2896,8 @@ module
                     }
                 }
             }
-            panelLayoutEngine.checkStacking(panelElements);
+            var containerWidth = container.parent().innerWidth();
+            panelLayoutEngine.checkStacking(panelElements, containerWidth);
         }
 
         return this;
@@ -2848,9 +2907,9 @@ module
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="ev-panels ev-panels-container lisette-module"><div></div></div>',
+            template: '<div class="ev-panels-wrapper"><div class="ev-panels-container"></div></div>',
             link: function (scope, element, attrs) {
-              panelService.registerContainer(element);
+              panelService.registerContainer(element.children(), attrs.id);
             }
         };
     }]);
@@ -3677,12 +3736,14 @@ angular.module('ev-fdm')
         }
     }
 });
+
+
 angular.module('ev-fdm')
 
 /**
  * STACKING AND PANELS SIZE MANAGEMENT
  */
-.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
+.service('PanelLayoutEngine', ['$animate', '$rootScope', function($animate, $rootScope) {
 
     var STACKED_WIDTH = 35;
 
@@ -3697,21 +3758,19 @@ angular.module('ev-fdm')
      * @param  {Array} panels the panels
      * @return {Array}        Array containing the extracted values
      */
-    function getDataFromPanels(panels) {
+    function getDataFromPanels(panels, containerWidth) {
         var datas = [];
 
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
 
             var data = {
-                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
-                maxWidth: parseInt(panelElement.children().first().css('max-width'))
-                    || angular.element($window).innerWidth(),
-                stacked:  panelElement.hasClass('stacked'),
-                width:    panelElement.width(),
+                minWidth: parseInt(panelElement.css('min-width')) || STACKED_WIDTH + 1,
+                maxWidth: parseInt(panelElement.css('max-width')) || containerWidth,
+                stacked:  panelElement.hasClass('ev-stacked'),
+                width:    panelElement.outerWidth(),
                 stackedWidth: STACKED_WIDTH
             };
-
             if (data.width < data.minWidth) {
                 data.width = data.minWidth;
             }
@@ -3719,7 +3778,6 @@ angular.module('ev-fdm')
             if (data.width > data.maxWidth && data.maxWidth > 0) {
                 data.width = data.maxWidth;
             }
-
             datas.push(data);
         });
 
@@ -3924,9 +3982,9 @@ angular.module('ev-fdm')
      * Apply our results to the panels
      * @param  {Array}   panels      the panels
      * @param  {Array}   dataPanels  the datas we want to apply
-     * @param  {Int}     windowWidth the windowWidth
+     * @param  {Int}     containerWidth the containerWidth
      */
-    function resizeAndStackPanels(panels, dataPanels, windowWidth) {
+    function resizeAndStackPanels(panels, dataPanels, containerWidth) {
         // If we need to stack all the panels
         // We don't stack the last one, but we hide all the stacked panels
         var isMobile  = false;
@@ -3934,11 +3992,9 @@ angular.module('ev-fdm')
 
         if (lastPanel.stacked === true) {
             lastPanel.stacked = false;
-            lastPanel.width = windowWidth;
+            lastPanel.width = containerWidth;
             isMobile = true;
         }
-
-        panels.css('left', 0);
 
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
@@ -3949,18 +4005,17 @@ angular.module('ev-fdm')
                 return;
             }
 
-            if (element.hasClass('stacked') && !dataPanel.stacked) {
-                $animate.removeClass(element, 'stacked');
-                $animate.removeClass(element, 'stacked-mobile');
-            } else if (!element.hasClass('stacked') && dataPanel.stacked) {
-                $animate.addClass(element, 'stacked');
+            if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
+                $animate.removeClass(element, 'ev-stacked');
+                $animate.removeClass(element, 'ev-stacked-mobile');
+            } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
+                $animate.addClass(element, 'ev-stacked');
 
                 if (isMobile) {
-                    $animate.addClass(element, 'stacked-mobile');
+                    $animate.addClass(element, 'ev-stacked-mobile');
                 }
             }
-
-            element.width(dataPanel.width + "px");
+            element.outerWidth(dataPanel.width + "px");
         });
     }
 
@@ -3971,21 +4026,15 @@ angular.module('ev-fdm')
     /**
      * Check the stacking and so on
      */
-    function checkStacking(panels) {
-        var body = angular.element('body');
-        var overflowSetting = body.css('overflow');
-        body.css('overflow', 'hidden');
-        var windowWidth   = angular.element($window).innerWidth();
-        body.css('overflow', overflowSetting);
-
+    function checkStacking(panels, containerWidth) {
         // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels);
+        var rawDataPanels = getDataFromPanels(panels, containerWidth);
 
         // #2 - We compute these new data with our specifics rules (agnostic algorithm)
-        var dataPanels    = calculateStackingFromData(rawDataPanels, windowWidth);
+        var dataPanels    = calculateStackingFromData(rawDataPanels, containerWidth);
 
         // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, windowWidth);
+        resizeAndStackPanels(panels, dataPanels, containerWidth);
 
         $rootScope.$broadcast('module-layout-changed');
     }
