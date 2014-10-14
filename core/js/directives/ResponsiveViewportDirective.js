@@ -58,8 +58,9 @@ angular.module('ev-fdm')
 
                     if (!elm.hasClass(_class)) {
                         Object.keys(breakpoints).forEach(function (key) {
-                            elm.removeClass(breakpoints[key]);
-                        });
+                                elm.removeClass(breakpoints[key]);
+                            });
+                        elm.removeClass('ev-viewport-lg');
                         elm.addClass(_class);
                     }
                 };
