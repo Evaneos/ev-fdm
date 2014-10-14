@@ -10,6 +10,11 @@
         height: 100%;
         width: 100%;
     }
+
+    /*********************************************************
+     * NORMAL STATE
+     ********************************************************/
+
     .ev-panel {
         display: table-cell;
         vertical-align: top;
@@ -20,8 +25,12 @@
             border-left: 1px solid @ev-panel-dark-color;
         }
 
-        .ev-stacked-section {
+        .ev-stacked-show {
             display: none;
+        }
+
+        .ev-stacked-hide {
+            display: show;
         }
     }
 
@@ -33,16 +42,22 @@
         max-width: @ev-panel-stacked-size;
         vertical-align: bottom;
         background: @ev-panel-dark-color;        
-        // Hide everything that FOLLOW the stacked section
-        .ev-stacked-section ~ * {
-            display: none;
-        }
-
-        // Display only the panel-stacked section
-        .ev-stacked-section {
-            display: block;
+        > * {
             transform: rotate(-90deg);
             white-space: nowrap;
+        }
+        // Hide everything that FOLLOW the stacked section
+        .ev-stacked-hide {
+            display: none;
+        }
+    
+        // Display only the panel-stacked section
+        .ev-stacked-show {
+            display: block;
+        }
+
+        &:not(:first-child) {
+            border-left: 1px solid @ev-panel-color;
         }
     }
 }
@@ -67,9 +82,9 @@
     height: auto;
 }
 
-.ev-panel.ev-stacked > .ui-resizable-handle,
-.ev-panel:last-child > .ui-resizable-handle {
-    display: none;
+.ev-panel.ev-stacked .ui-resizable-handle,
+.ev-panel:last-child .ui-resizable-handle {
+    display: none !important;   // Mandatory here since a display: block is added by jQuery to the element
 }
 
 .ui-resizable-helper {
