@@ -12,7 +12,7 @@
     }
     .ev-panel {
         display: table-cell;
-        vertical-align: bottom;
+        vertical-align: top;
         background: @ev-panel-color;
         position: relative;
         box-sizing: border-box;
@@ -31,7 +31,7 @@
 
     .ev-panel.ev-stacked {
         max-width: @ev-panel-stacked-size;
-        vertical-align: middle;
+        vertical-align: bottom;
         background: @ev-panel-dark-color;        
         // Hide everything that FOLLOW the stacked section
         .ev-stacked-section ~ * {
