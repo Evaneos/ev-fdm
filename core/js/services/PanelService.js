@@ -93,7 +93,7 @@ angular.module('ev-fdm')
                 panel.element  = element;
 
                 element.resizable({
-                    handles: "w",
+                    handles: "e",
                     helper: "ui-resizable-helper",
                 });
                 
@@ -102,9 +102,9 @@ angular.module('ev-fdm')
                     // so we cancel the height set.
                     $(this).css("height","");
 
-                    var beforePanel = element.prev();
+                    var afterPanel = element.next('.ev-panel');
                     var delta = ui.size.width - ui.originalSize.width;
-                    beforePanel.width(beforePanel.width() - delta);
+                    afterPanel.width(afterPanel.width() - delta);
                     element.width(ui.size.width);
                     stylesCache[panel.panelName] = ui.size.width;
                     updateLayout(self, containers[id]);
@@ -117,6 +117,13 @@ angular.module('ev-fdm')
 
 
         this.close = function(name, containerId) {
+
+            // Change panelName to panel-name
+            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
             var panels = panelsList[containerId];
 
             if (!name || !panels[name]) {
