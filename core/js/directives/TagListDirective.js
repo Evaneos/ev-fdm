@@ -9,7 +9,8 @@ angular.module('ev-fdm')
                 editable: '=',
                 className: '@',
                 maxElements: '=',
-                maxAlertMessage: '@'
+                maxAlertMessage: '@',
+                onTagDeleted: '&'
             },
             replace: true,
             template:
@@ -29,6 +30,7 @@ angular.module('ev-fdm')
 
                 $scope.remove = function (index) {
                     $scope.elements.splice(index, 1);
+                    $scope.onTagDeleted();
                 };
             }
         };

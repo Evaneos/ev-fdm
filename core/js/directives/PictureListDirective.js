@@ -11,7 +11,8 @@
               onChange: '&',
               showUpdate: '=',
               language: '=',
-              colNumber: '='
+              colNumber: '=',
+              onPictureDeleted: '&'
             },
             template:
                 '<ul class="picture-list row">' +
@@ -70,6 +71,7 @@
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
+              $scope.onPictureDeleted();
             };
             $scope.onUpdate = function (params) {
                 // Not implemented yet

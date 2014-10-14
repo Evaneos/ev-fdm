@@ -1173,7 +1173,8 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
               onChange: '&',
               showUpdate: '=',
               language: '=',
-              colNumber: '='
+              colNumber: '=',
+              onPictureDeleted: '&'
             },
             template:
                 '<ul class="picture-list row">' +
@@ -1232,6 +1233,7 @@ module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($tim
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
+              $scope.onPictureDeleted();
             };
             $scope.onUpdate = function (params) {
                 // Not implemented yet
@@ -1928,7 +1930,8 @@ angular.module('ev-fdm')
                 editable: '=',
                 className: '@',
                 maxElements: '=',
-                maxAlertMessage: '@'
+                maxAlertMessage: '@',
+                onTagDeleted: '&'
             },
             replace: true,
             template:
@@ -1948,6 +1951,7 @@ angular.module('ev-fdm')
 
                 $scope.remove = function (index) {
                     $scope.elements.splice(index, 1);
+                    $scope.onTagDeleted();
                 };
             }
         };

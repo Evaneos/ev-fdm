@@ -28,7 +28,8 @@ angular.module('ev-upload')
                 url: '@',
                 language: '=',
                 maxFiles: '@',
-                addPicture: '&'
+                addPicture: '&',
+                onPictureAdded: '&'
             },
             template:
             '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
@@ -107,6 +108,7 @@ angular.module('ev-upload')
                         }
 
                         $scope.pictures.unshift(pictureData);
+                        $scope.onPictureAdded();
                     };
                 }
             }
