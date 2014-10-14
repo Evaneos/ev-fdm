@@ -108,6 +108,10 @@ angular.module('ev-fdm')
                     element.width(ui.size.width);
                     stylesCache[panel.panelName] = ui.size.width;
                     updateLayout(self, containers[id]);
+                })
+                .on('resize', function () {
+                    // Prevent jquery ui to do weird things 
+                    return false;
                 });
 
                 addToDom(panel, id);

@@ -1,3 +1,5 @@
+@import "variables.less";
+
 .ev-panels-wrapper {
     height: 100%;
     width: 100%;
@@ -10,12 +12,12 @@
     }
     .ev-panel {
         display: table-cell;
-        vertical-align: top;
-        background: @ev-panel-bg;
+        vertical-align: bottom;
+        background: @ev-panel-color;
         position: relative;
         box-sizing: border-box;
         &:not(:first-child) {
-            border-left: 1px solid @ev-panel-bg-dark;
+            border-left: 1px solid @ev-panel-dark-color;
         }
 
         .ev-stacked-section {
@@ -30,10 +32,9 @@
     .ev-panel.ev-stacked {
         max-width: @ev-panel-stacked-size;
         vertical-align: middle;
-        background: darken(@ev-panel-bg, 20%);
-
-        // Hide everything that is not the stacked section
-        & > div[ui-view] > *:not(.ev-stacked-section) {
+        background: @ev-panel-dark-color;        
+        // Hide everything that FOLLOW the stacked section
+        .ev-stacked-section ~ * {
             display: none;
         }
 
@@ -42,28 +43,12 @@
             display: block;
             transform: rotate(-90deg);
             white-space: nowrap;
-            text-transform: uppercase;
-            color: @gray-dark;
-            &:hover {
-                color: @gray-darker;
-            }
         }
-    }
-
-
-    &.stacked-add.stacked-add-active,
-    &.stacked-remove {
-        max-width: 30px;
-    }
-
-    &.stacked-add,
-    &.stacked-remove.stacked-remove-active {
-        max-width: 1000px;
     }
 }
 
 .ev-panel-bg {
-  background-color: @ev-panel-bg;
+    background-color: @ev-panel-color;
 }
 
 // Resizable stuff
@@ -88,6 +73,6 @@
 }
 
 .ui-resizable-helper {
-    border: 2px dotted #e5d8ca;
-    background-color: rgba(229, 216, 202,0.3);
+    border: 2px dotted @ev-panel-dark-color;
+    background-color: fade(@ev-panel-dark-color, 30%);
 }
