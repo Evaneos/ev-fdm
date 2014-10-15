@@ -22,6 +22,7 @@
         background: @ev-panel-color;
         position: relative;
         box-sizing: border-box;
+
         &:not(:first-child) {
             border-left: 1px solid @ev-panel-dark-color;
         }
@@ -32,6 +33,14 @@
 
         .ev-stacked-hide {
             display: block;
+        }
+
+        // Close button
+        .close {
+            right: 0;
+            font-size: 2em;
+            padding: @ev-panel-padding;
+            position: absolute;
         }
     }
 

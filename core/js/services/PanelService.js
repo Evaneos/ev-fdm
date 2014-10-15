@@ -22,14 +22,14 @@ angular.module('ev-fdm')
                     updateLayout(null, container);
                 });
             } else {
-                var beforePanel = getBeforePanel(panel.index, containerId);
-                    $animate.move(panel.element, container, beforePanel, function () {
+                var beforePanel = getBeforePanelElm(panel.index, containerId);
+                    $animate.move(panel.element, container, beforePanel.element, function () {
                         updateLayout(null, container);
                 });
             }
         };
 
-        function getBeforePanel(index, containerId) {
+        function getBeforePanelElm(index, containerId) {
             var beforePanel = null;
             var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
                 return panelsList[containerId][panelName];
@@ -48,7 +48,7 @@ angular.module('ev-fdm')
                     }
                     return !isBeforePanel;
                 });
-            return beforePanel || panels[0];
+            return (beforePanel || panels[0]).element;
         }
 
         /**
@@ -79,19 +79,20 @@ angular.module('ev-fdm')
             if (panels[name]) {
                 return panels[name];
             }
-
-            // We call it *THE BEAST*.
-            var element          = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
-                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '"></div>');
+            
+            // In order to have a pane of height 100%, we are obliged to wrapp the panel content inside a 
+            // div with height 100%
+            var element = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
+                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
+                    '<div style="height: 100%;"></div></div>');
             var templatePromises = getTemplatePromise(panel);
-            panels[name]         = panel;
-            panel.element      = element;
+            panels[name] = panel;
+            panel.element = element;
 
             return templatePromises.then(function(template) {
-                element.html(template);
-                element          = $compile(element)($rootScope.$new());
+                element.children().html(template);
+                element = $compile(element)($rootScope.$new());
                 panel.element  = element;
-
                 element.resizable({
                     handles: "e",
                     helper: "ui-resizable-helper",
