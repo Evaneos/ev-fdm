@@ -68,12 +68,14 @@ function EvMenuDirective(menuManager) {
     return {
         restrict: 'E',
         replace: true,
-        template:   '<ul class="lisette-module-tabs nav nav-tabs" ng-cloak>' +
+        template:   '<ul class="module-tabs nav nav-tabs" ng-cloak>' +
                         '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
                     '</ul>',
         controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
+            console.warn('%c [Phoenix team] %c Remove evMenuDirective, please', 'background: #c0392b; color:white', 'background: #e67e22; color: white');
+
             $scope.tabs = menuManager.tabs;
 
             if($rootScope['evmenu-state']) {
@@ -83,11 +85,10 @@ function EvMenuDirective(menuManager) {
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);
-            }
+            };
         }]
-    }
-
-};
+    };
+}
 
 angular.module('ev-fdm')
     .provider('menuManager', [MenuManagerProvider])
