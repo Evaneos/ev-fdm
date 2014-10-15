@@ -75,7 +75,13 @@
   background-clip:         padding-box;
 }
 
-
+.transform(@string){
+  -webkit-transform: @string;
+  -moz-transform:    @string;
+  -ms-transform:     @string;
+  -o-transform:      @string;
+  transform:         @string;
+}
 
 /*
  *  Mixin for styling placeholder inside input (cross-browser)
@@ -125,3 +131,4 @@
     @rules();
   }
 }
+
