@@ -84,7 +84,7 @@ angular.module('ev-fdm')
             // div with height 100%
             var element = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
                     name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
-                    '<div style="height: 100%;"></div></div>');
+                    '<div class="clearfix"></div></div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
             panel.element = element;
@@ -138,11 +138,11 @@ angular.module('ev-fdm')
             var panels = panelsList[containerId];
 
             if (!name || !panels[name]) {
-                console.log("Panel not found for:" + name);
+                console.log("Panel not found for: " + name);
             }
 
             var element  = panels[name].element;
-            panels[name] = null;
+            delete panels[name];
             $animate.leave(element, function() {
                 updateLayout(null, containerId);
             });

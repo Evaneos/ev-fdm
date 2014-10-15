@@ -44,6 +44,10 @@
         }
     }
 
+    .ev-panel:not(.ev-stacked) > div {
+        height: 100%;
+    } 
+
     /*********************************************************
      * STACKED STATE
      ********************************************************/
@@ -51,7 +55,7 @@
     .ev-panel.ev-stacked {
         max-width: @ev-panel-stacked-size;
         min-width: inherit;
-        vertical-align: bottom;
+        vertical-align: middle;
         background: @ev-panel-dark-color;
         > * {
             .transform(rotate(-90deg));
