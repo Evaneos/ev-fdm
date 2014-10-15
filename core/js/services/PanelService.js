@@ -19,12 +19,12 @@ angular.module('ev-fdm')
             // If no panel index, or no panel inside the container, it is added at the end
             if (!panel.index || !container.children().length) {
                 $animate.move(panel.element, container, null, function () {
-                    updateLayout(null, container);
+                    updateLayout(null, containerId);
                 });
             } else {
                 var beforePanel = getBeforePanelElm(panel.index, containerId);
                     $animate.move(panel.element, container, beforePanel.element, function () {
-                        updateLayout(null, container);
+                        updateLayout(null, containerId);
                 });
             }
         };
@@ -108,7 +108,7 @@ angular.module('ev-fdm')
                     afterPanel.width(afterPanel.width() - delta);
                     element.width(ui.size.width);
                     stylesCache[panel.panelName] = ui.size.width;
-                    updateLayout(self, containers[id]);
+                    updateLayout(self, id);
                 })
                 .on('resize', function () {
                     // Prevent jquery ui to do weird things 
@@ -121,8 +121,14 @@ angular.module('ev-fdm')
         };
 
 
-        this.close = function(name, containerId) {
+        this.getPanels = function (containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            return panelsList[containerId];
+        };
 
+        this.close = function(name, containerId) {
             // Change panelName to panel-name
             name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
@@ -137,8 +143,7 @@ angular.module('ev-fdm')
 
             var element  = panels[name].element;
             panels[name] = null;
-
-            $animate.leave(element).then(function() {
+            $animate.leave(element, function() {
                 updateLayout(null, containerId);
             });
         };          
@@ -197,13 +202,14 @@ angular.module('ev-fdm')
         }
 
        
-        function updateLayout(element, container) {
-            if (!container) {
+        function updateLayout(element, containerId) {
+            if (!containerId) {
                 Object.keys(containers).map(function (id) {
-                    updateLayout(null, containers[id]);
+                    updateLayout(null, id);
                 });
                 return this;
             }
+            var container = containers[containerId];
             var panelElements = angular.element(container).children('.ev-panel');
             
             if (element) {
