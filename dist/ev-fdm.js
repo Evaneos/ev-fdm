@@ -1429,7 +1429,7 @@ angular.module('ev-fdm').directive('body', [
                         message: t('Unable to open this transaction!')
                       }
                  */
-                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
+                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error) {
                     if (console.error) {
                         console.error(
                             'toState=', toState,
@@ -1871,7 +1871,8 @@ angular.module('ev-fdm')
                     };
 
                     $scope.isShowed = function (pane) {
-                        return pane.tabShow == null || !!pane.tabShow;
+    
+                        return pane.alwaysShow || !!pane.tabShow;
                     };
                 },
                 template:
@@ -1903,6 +1904,12 @@ angular.module('ev-fdm')
                     tabShow: '='
                 },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+
+                    scope.alwaysShow = true;
+                    if(angular.isDefined(attrs.tabShow)) {
+                        scope.alwaysShow = false;
+                    }
+
                     tabsCtrl.addPane(scope);
                     transcludeFn(function(clone, transcludedScope) {
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
