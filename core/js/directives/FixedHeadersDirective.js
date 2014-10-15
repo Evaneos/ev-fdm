@@ -42,7 +42,8 @@ angular.module('ev-fdm')
                 .floatThead({
                     scrollContainer: function($table){
                         return $table.closest('.ev-fixed-header-table-container');
-                    }
+                    },
+                    zIndex: 999
                 });
             angular.element('.table-container').css('overflow', 'hidden');
 
