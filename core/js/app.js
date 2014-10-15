@@ -32,15 +32,6 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
     });
 }])
 
-/**
- * Define a default error state for our app
- */
-.config(['$stateProvider', function($stateProvider) {
-    $stateProvider.state('ev-error', {
-        templateUrl: 'ev-error.html'
-    });
-}])
-
 .config(['RestangularProvider', function(restangularProvider) {
 
 }])
