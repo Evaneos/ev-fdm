@@ -1,6 +1,6 @@
 'use strict';
 
-function AjaxStorage($http, $q, $cacheFactory, $log) {
+function AjaxStorage($http, $q, $cacheFactory, utilService, $log) {
 
     var httpCache = $cacheFactory('customHttpCache');
 
@@ -16,7 +16,7 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
         }
 
         // Add the request id... Ah, history...
-        options.id = Fanny.Utils.generateId ('proxy:request:');
+        options.id = utilService.generateId('proxy:request:');
         var requestConfig = {
             url         : '/backoffice/common/xhr',
             method      : 'POST',
@@ -56,9 +56,9 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
     return {
         launchRequest: launchRequest
-    }
+    };
 
 }
 
 angular.module('ev-fdm')
-    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
+    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
