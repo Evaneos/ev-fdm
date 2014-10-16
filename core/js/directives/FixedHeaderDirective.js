@@ -8,7 +8,7 @@
                     var header = $element.find('>.ev-header');
                     var body   = $element.find('>.ev-body');
                     body.css({'overflow-y': 'auto'});
-                    header.css({'overflow-y': 'auto'});
+                    header.css({'min-height': '1px'});
 
                     // Compute and return the height available for the element's body
                     var getBodyHeight = function() {

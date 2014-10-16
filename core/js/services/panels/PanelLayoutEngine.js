@@ -24,13 +24,18 @@ angular.module('ev-fdm')
     function getDataFromPanels(panels, containerWidth) {
         var datas = [];
 
-
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
-
+            // If no min width / max width attribute we set them (in a next )
+            if (angular.isUndefined(panelElement.attr('data-min-width'))) {
+                panelElement.attr('data-min-width', panelElement.css('min-width') || STACKED_WIDTH * 2);
+            }
+            if (angular.isUndefined(panelElement.attr('data-max-width'))) {
+                panelElement.attr('data-max-width', panelElement.css('max-width'));
+            }
             var data = {
-                minWidth: parseInt(panelElement.css('min-width')) || STACKED_WIDTH * 2,
-                maxWidth: parseInt(panelElement.css('max-width')) || containerWidth,
+                minWidth: parseInt(panelElement.attr('data-min-width')),
+                maxWidth: parseInt(panelElement.attr('data-max-width')) || containerWidth,
                 stacked:  panelElement.hasClass('ev-stacked'),
                 width:    panelElement.outerWidth(),
                 stackedWidth: (containerWidth < MOBILE_WIDTH) ? 0 : STACKED_WIDTH
@@ -262,15 +267,15 @@ angular.module('ev-fdm')
      */
     function resizeAndStackPanels(panels, dataPanels, containerWidth) {
 
+            console.log(dataPanels, containerWidth);
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
                 dataPanel = dataPanels[i];
-
             if (!element) {
                 console.log('no element for this panel)');
                 return;
             }
-            console.log(dataPanels);
+            // console.log(containerWidth, dataPanels);
             if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'ev-stacked');
             } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
