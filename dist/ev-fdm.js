@@ -1871,7 +1871,6 @@ angular.module('ev-fdm')
                     };
 
                     $scope.isShowed = function (pane) {
-    
                         return pane.alwaysShow || !!pane.tabShow;
                     };
                 },
@@ -2402,6 +2401,19 @@ angular.module('ev-fdm')
             };
     }]);
 
+angular.module('cotcot')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
 'use strict';
 
 angular.module('ev-fdm')
