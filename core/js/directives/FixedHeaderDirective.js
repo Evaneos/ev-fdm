@@ -23,23 +23,12 @@
                         body.hide();
                         body.height(getBodyHeight());
                         body.show();
-
-                        if ($attrs.refreshIdentifier) {
-                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
-                        }
                     };
 
 
                     $scope.$watch(function() {
                         return getBodyHeight();
                     }, refreshDimensions);
-
-                    $(window).bind('resize', refreshDimensions);
-
-                    if ($attrs.refreshOn) {
-                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
-                    }
-
                 }
             };
         });

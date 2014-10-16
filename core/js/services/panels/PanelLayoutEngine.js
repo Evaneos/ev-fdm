@@ -7,7 +7,8 @@ angular.module('ev-fdm')
  */
 .service('PanelLayoutEngine', ['$animate', '$rootScope', function($animate, $rootScope) {
 
-    var STACKED_WIDTH = 35;
+    const STACKED_WIDTH = 35;
+    const MOBILE_WIDTH = 700;
 
     /**************************
      *           #1           *
@@ -23,15 +24,16 @@ angular.module('ev-fdm')
     function getDataFromPanels(panels, containerWidth) {
         var datas = [];
 
+
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
 
             var data = {
-                minWidth: parseInt(panelElement.css('min-width')) || STACKED_WIDTH + 1,
+                minWidth: parseInt(panelElement.css('min-width')) || STACKED_WIDTH * 2,
                 maxWidth: parseInt(panelElement.css('max-width')) || containerWidth,
                 stacked:  panelElement.hasClass('ev-stacked'),
                 width:    panelElement.outerWidth(),
-                stackedWidth: STACKED_WIDTH
+                stackedWidth: (containerWidth < MOBILE_WIDTH) ? 0 : STACKED_WIDTH
             };
             if (data.width < data.minWidth) {
                 data.width = data.minWidth;
@@ -227,11 +229,23 @@ angular.module('ev-fdm')
         var result = updateStackState(datas, limit);
         datas      = result.datas;
 
-        // If we don't need to stack all the panels (which is a specific case not handled here)
         if(result.nbStacked !== datas.length) {
+            // If we don't need to stack all the panels
             datas = updateSize(datas, limit);
+        } else {
+            // If we need to stack all the panels
+            // We don't stack the last one, but we hide all the stacked panels
+            var lastPanel = datas[datas.length - 1];
+
+            if (lastPanel.stacked === true) {
+                lastPanel.stacked = false;
+                lastPanel.width = limit - datas.reduce(function (totalStackedWidth, panel) {
+                    return totalStackedWidth + panel.stackedWidth;
+                }, 0);
+            }
         }
 
+        
         return datas;
     }
 
@@ -247,16 +261,6 @@ angular.module('ev-fdm')
      * @param  {Int}     containerWidth the containerWidth
      */
     function resizeAndStackPanels(panels, dataPanels, containerWidth) {
-        // If we need to stack all the panels
-        // We don't stack the last one, but we hide all the stacked panels
-        var isMobile  = false;
-        var lastPanel = dataPanels[dataPanels.length - 1];
-
-        if (lastPanel.stacked === true) {
-            lastPanel.stacked = false;
-            lastPanel.width = containerWidth;
-            isMobile = true;
-        }
 
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
@@ -266,18 +270,18 @@ angular.module('ev-fdm')
                 console.log('no element for this panel)');
                 return;
             }
-
+            console.log(dataPanels);
             if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'ev-stacked');
-                $animate.removeClass(element, 'ev-stacked-mobile');
             } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
                 $animate.addClass(element, 'ev-stacked');
-
-                if (isMobile) {
-                    $animate.addClass(element, 'ev-stacked-mobile');
-                }
             }
-            element.outerWidth(dataPanel.width + "px");
+            if (dataPanel.width === 0) {
+                element.hide();
+            } else {
+                element.show();
+                element.outerWidth(dataPanel.width);
+            }
         });
     }
 

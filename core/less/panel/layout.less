@@ -7,8 +7,10 @@
     max-width: 100%;
 
     .ev-panels-container {
+        // overflow: hidden;
         display: table;
         height: 100%;
+        table-layout: fixed;
         width: 100%;
     }
 
@@ -22,6 +24,8 @@
         background: @ev-panel-color;
         position: relative;
         box-sizing: border-box;
+        // overflow-y: hidden;
+        // overflow-x: visible;
 
         &:not(:first-child) {
             border-left: 1px solid @ev-panel-dark-color;
@@ -90,6 +94,7 @@
 
 .ev-panel > .ui-resizable-handle {
     background: transparent;
+    position: absolute;
     right: -@ev-panel-padding / 2 ;
     top: 0;
     bottom: 0;

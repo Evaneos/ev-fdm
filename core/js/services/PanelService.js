@@ -114,7 +114,7 @@ angular.module('ev-fdm')
                     // Prevent jquery ui to do weird things 
                     return false;
                 });
-
+                console.log('yo');
                 addToDom(panel, id);
                 return panel;
             });
@@ -179,7 +179,7 @@ angular.module('ev-fdm')
             }
             timerWindowResize = $timeout(function() {
                 updateLayout();
-            }, 100);
+            }, 200);
         });         
 
         function getStylesFromCache(name, options) {
@@ -203,6 +203,7 @@ angular.module('ev-fdm')
 
        
         function updateLayout(element, containerId) {
+            console.log('yipee')
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
                     updateLayout(null, id);
@@ -222,7 +223,7 @@ angular.module('ev-fdm')
                     }
                 }
             }
-            var containerWidth = container.parent().innerWidth();
+            var containerWidth = container.parent().width();
             panelLayoutEngine.checkStacking(panelElements, containerWidth);
         }
 
