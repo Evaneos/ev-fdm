@@ -175,6 +175,14 @@ angular.module('ev-fdm')
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
 
+            if (typeof elementName === 'object') {
+                defaultReverseSort = elementName.defaultReverseSort;
+                defaultSortKey = elementName.defaultSortKey;
+                elements = elementName.elements;
+                activeIdSelector = elementName.activeIdSelector;
+                elementName = elementName.elementName;
+            }
+
             /*
                 Properties
              */
@@ -279,11 +287,10 @@ angular.module('ev-fdm')
 
             var activeIdKey = this.activeIdSelector ? this.activeIdSelector : 'id';
 
-            if(angular.isDefined($state.params.id)) {
+            if(angular.isDefined($state.params[activeIdKey])) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    console.log(elementId);
-                    if (elementId == $state.params.id) {
+                    if (elementId == $state.params[activeIdKey]) {
                         self.$scope.activeElement = element;
                     }
                 });

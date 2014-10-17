@@ -175,6 +175,14 @@ angular.module('ev-fdm')
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
 
+            if (typeof elementName === 'object') {
+                defaultReverseSort = elementName.defaultReverseSort;
+                defaultSortKey = elementName.defaultSortKey;
+                elements = elementName.elements;
+                activeIdSelector = elementName.activeIdSelector;
+                elementName = elementName.elementName;
+            }
+
             /*
                 Properties
              */
