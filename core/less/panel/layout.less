@@ -1,5 +1,5 @@
 @import "variables.less";
-@import "../common/mixins.less";
+@import "../mixins/mixins.less";
 
 .ev-panels-wrapper {
     height: 100%;
@@ -31,13 +31,6 @@
             border-left: 1px solid @ev-panel-dark-color;
         }
 
-        .ev-stacked-show {
-            display: none;
-        }
-
-        .ev-stacked-hide {
-            display: block;
-        }
 
         // Close button
         .close {
@@ -48,9 +41,15 @@
         }
     }
 
-    .ev-panel:not(.ev-stacked) > div {
-        height: 100%;
-    } 
+
+    .ev-panel:not(.ev-stacked) {
+        .ev-stacked-show {
+            display: none;
+        }
+        > div {
+            height: 100%;
+        } 
+    }
 
     /*********************************************************
      * STACKED STATE
@@ -68,11 +67,6 @@
         // Hide everything that FOLLOW the stacked section
         .ev-stacked-hide {
             display: none;
-        }
-
-        // Display only the panel-stacked section
-        .ev-stacked-show {
-            display: block;
         }
 
         &:not(:first-child) {
