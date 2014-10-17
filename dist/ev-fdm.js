@@ -172,7 +172,7 @@ angular.module('ev-fdm')
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
 
             /*
@@ -185,6 +185,7 @@ angular.module('ev-fdm')
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
+            this.activeIdSelector = activeIdSelector;
 
             this.updateScope();
 
@@ -276,9 +277,12 @@ angular.module('ev-fdm')
             var self = this;
             this.$scope.activeElement = null;
 
+            var activeIdKey = this.activeIdSelector ? this.activeIdSelector : 'id';
+
             if(angular.isDefined($state.params.id)) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
+                    console.log(elementId);
                     if (elementId == $state.params.id) {
                         self.$scope.activeElement = element;
                     }
