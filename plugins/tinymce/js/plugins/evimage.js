@@ -15,7 +15,7 @@ tinymce.PluginManager.add('evimage', function(editor) {
             data = false;
         }
 
-        editor.settings.evimages(data, function(newAttributes) {
+        editor.settings.evimage(data, function(newAttributes) {
             if (imgElm) {
                 dom.setAttribs(imgElm, newAttributes);
             } else {

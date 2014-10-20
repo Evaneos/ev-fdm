@@ -4338,16 +4338,6 @@ angular.module('ev-tinymce', [])
     }]);
 }) (window.tinyMCE);
 
-/**
- * plugin.js
- *
- * Copyright, Moxiecode Systems AB
- * Released under LGPL License.
- *
- * License: http://www.tinymce.com/license
- * Contributing: http://www.tinymce.com/contributing
- */
-
 /*global tinymce:true */
 
 tinymce.PluginManager.add('evimage', function(editor) {
@@ -4365,10 +4355,11 @@ tinymce.PluginManager.add('evimage', function(editor) {
             data = false;
         }
 
-        editor.settings.evimages(data, function(newAttributes) {
+        editor.settings.evimage(data, function(newAttributes) {
             if (imgElm) {
                 dom.setAttribs(imgElm, newAttributes);
             } else {
+                console.log('new image', newAttributes);
                 editor.insertContent(dom.create('img', newAttributes));
             }
         });
