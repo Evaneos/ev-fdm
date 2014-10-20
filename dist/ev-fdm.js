@@ -172,8 +172,16 @@ angular.module('ev-fdm')
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
+
+            if (typeof elementName === 'object') {
+                defaultReverseSort = elementName.defaultReverseSort;
+                defaultSortKey = elementName.defaultSortKey;
+                elements = elementName.elements;
+                activeIdSelector = elementName.activeIdSelector;
+                elementName = elementName.elementName;
+            }
 
             /*
                 Properties
@@ -185,6 +193,7 @@ angular.module('ev-fdm')
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
+            this.activeIdSelector = activeIdSelector;
 
             this.updateScope();
 
@@ -276,10 +285,12 @@ angular.module('ev-fdm')
             var self = this;
             this.$scope.activeElement = null;
 
-            if(angular.isDefined($state.params.id)) {
+            var activeIdKey = this.activeIdSelector ? this.activeIdSelector : 'id';
+
+            if(angular.isDefined($state.params[activeIdKey])) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    if (elementId == $state.params.id) {
+                    if (elementId == $state.params[activeIdKey]) {
                         self.$scope.activeElement = element;
                     }
                 });
@@ -1933,6 +1944,7 @@ angular.module('ev-fdm')
             restrict: 'EA',
             scope: {
                 elements: '=',
+                displayElement: '=',
                 editable: '=',
                 className: '@',
                 maxElements: '=',
@@ -1944,7 +1956,7 @@ angular.module('ev-fdm')
                 '<ul class="list-inline {{ className }}">' +
                     '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
-                            '{{ element.name }}' +
+                            '{{ displayElement(element) }}' +
                             '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
@@ -1954,6 +1966,9 @@ angular.module('ev-fdm')
                     '</li>' +
                 '</ul>',
             link: function ($scope, elem, attrs) {
+                $scope.displayElement = $scope.displayElement || function(element) {
+                    return element.name;
+                };
 
                 $scope.remove = function (index) {
                     $scope.elements.splice(index, 1);
@@ -2401,6 +2416,19 @@ angular.module('ev-fdm')
             };
     }]);
 
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -4359,7 +4387,6 @@ tinymce.PluginManager.add('evimage', function(editor) {
             if (imgElm) {
                 dom.setAttribs(imgElm, newAttributes);
             } else {
-                console.log('new image', newAttributes);
                 editor.insertContent(dom.create('img', newAttributes));
             }
         });
@@ -4501,6 +4528,7 @@ angular.module('ev-upload')
 }]);
 }) ();
 
+/* jshint maxlen: 200 */
 ; (function () {
 'use strict';
 angular.module('ev-upload')
@@ -4521,11 +4549,12 @@ angular.module('ev-upload')
             restrict: 'AE',
             scope: {
                 pictures: '=',
+                addPicture: '=',
                 url: '@',
                 language: '='
             },
             template:
-            '<ev-upload settings="settings" file-success="addPicture(file)"' +
+            '<ev-upload settings="settings" file-success="pictureUploaded(file)"' +
                 'class="ev-picture-upload" upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
@@ -4568,6 +4597,14 @@ angular.module('ev-upload')
             controller: function ($scope) {
 
                 $scope.uploading = false;
+                if ($scope.pictures) {
+                    if (console.log) {
+                        console.log('attribute pictures in ev-picture-upload is deprecated: use add-picture="pictures.unshift"');
+                    }
+                    $scope.addPicture = function(picture) {
+                        $scope.pictures.unshift(picture);
+                    };
+                }
                 $scope.pictures = $scope.pictures || [];
 
                 $scope.$watch('url', function (url) {
@@ -4625,19 +4662,19 @@ angular.module('ev-upload')
                         });
                 };
 
-                $scope.addPicture = function(picture) {
-                    var pictureData = picture.data[0];
+                $scope.pictureUploaded = function(pictureUploaded) {
+                    var picture = pictureUploaded.data[0];
 
                     if($scope.language) {
-                        if (Array.isArray(pictureData.legend)) {
-                            pictureData.legend = {};
+                        if (Array.isArray(picture.legend)) {
+                            picture.legend = {};
                         }
-                        if (!pictureData.legend[$scope.language]) {
-                            pictureData.legend[$scope.language] = { name: '' };
+                        if (!picture.legend[$scope.language]) {
+                            picture.legend[$scope.language] = { name: '' };
                         }
                     }
 
-                    $scope.pictures.unshift(pictureData);
+                    $scope.addPicture(picture);
                 };
             }
         };
