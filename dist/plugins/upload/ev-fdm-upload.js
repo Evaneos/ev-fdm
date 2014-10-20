@@ -116,6 +116,7 @@ angular.module('ev-upload')
 }]);
 }) ();
 
+/* jshint maxlen: 200 */
 ; (function () {
 'use strict';
 angular.module('ev-upload')
@@ -136,11 +137,12 @@ angular.module('ev-upload')
             restrict: 'AE',
             scope: {
                 pictures: '=',
+                addPicture: '=',
                 url: '@',
                 language: '='
             },
             template:
-            '<ev-upload settings="settings" file-success="addPicture(file)"' +
+            '<ev-upload settings="settings" file-success="pictureUploaded(file)"' +
                 'class="ev-picture-upload" upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
@@ -183,6 +185,14 @@ angular.module('ev-upload')
             controller: function ($scope) {
 
                 $scope.uploading = false;
+                if ($scope.pictures) {
+                    if (console.log) {
+                        console.log('attribute pictures in ev-picture-upload is deprecated: use add-picture="pictures.unshift"');
+                    }
+                    $scope.addPicture = function(picture) {
+                        $scope.pictures.unshift(picture);
+                    };
+                }
                 $scope.pictures = $scope.pictures || [];
 
                 $scope.$watch('url', function (url) {
@@ -240,19 +250,19 @@ angular.module('ev-upload')
                         });
                 };
 
-                $scope.addPicture = function(picture) {
-                    var pictureData = picture.data[0];
+                $scope.pictureUploaded = function(pictureUploaded) {
+                    var picture = pictureUploaded.data[0];
 
                     if($scope.language) {
-                        if (Array.isArray(pictureData.legend)) {
-                            pictureData.legend = {};
+                        if (Array.isArray(picture.legend)) {
+                            picture.legend = {};
                         }
-                        if (!pictureData.legend[$scope.language]) {
-                            pictureData.legend[$scope.language] = { name: '' };
+                        if (!picture.legend[$scope.language]) {
+                            picture.legend[$scope.language] = { name: '' };
                         }
                     }
 
-                    $scope.pictures.unshift(pictureData);
+                    $scope.addPicture(picture);
                 };
             }
         };
