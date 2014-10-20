@@ -136,7 +136,6 @@ angular.module('ev-upload')
         return {
             restrict: 'AE',
             scope: {
-                pictures: '=',
                 addPicture: '=',
                 url: '@',
                 language: '='
@@ -185,16 +184,6 @@ angular.module('ev-upload')
             controller: function ($scope) {
 
                 $scope.uploading = false;
-                if ($scope.pictures) {
-                    if (console.log) {
-                        console.log('attribute pictures in ev-picture-upload is deprecated: use add-picture="pictures.unshift"');
-                    }
-                    $scope.addPicture = function(picture) {
-                        $scope.pictures.unshift(picture);
-                    };
-                }
-                $scope.pictures = $scope.pictures || [];
-
                 $scope.$watch('url', function (url) {
                     $scope.settings.url = url;
                 });
