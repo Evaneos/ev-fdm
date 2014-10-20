@@ -6,7 +6,8 @@ angular.module('ev-fdm')
             restrict: 'EA',
             scope: {
                 elements: '=',
-                displayElement: '=',
+                trackBy: '=?',
+                displayElement: '=?',
                 editable: '=',
                 className: '@',
                 maxElements: '=',
@@ -16,7 +17,7 @@ angular.module('ev-fdm')
             replace: true,
             template:
                 '<ul class="list-inline {{ className }}">' +
-                    '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
+                    '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
                             '{{ displayElement(element) }}' +
                             '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
@@ -28,6 +29,9 @@ angular.module('ev-fdm')
                     '</li>' +
                 '</ul>',
             link: function ($scope, elem, attrs) {
+                $scope.trackBy = $scope.trackBy || function(element) {
+                    return element.name;
+                };
                 $scope.displayElement = $scope.displayElement || function(element) {
                     return element.name;
                 };
