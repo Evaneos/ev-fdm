@@ -13,15 +13,16 @@ var module = angular.module('ev-fdm')
                 onPageChange: '='
             },
 
-            link : function (scope){
+            link: function (scope){
                 scope.paginationButtons = [];
                 scope.prevClass = '';
                 scope.nextClass = '';
 
-                if (!scope.currPage) scope.currPage = 1;
-                if (!scope.nbPage)   scope.nbPage   = 1;
+                scope.currPage = scope.currPage || 1;
+                scope.nbPage   = scope.nbPage   || 1;
 
                 scope.generateButtons = function () {
+                    var i = 0;
                     var nbAround = 2; // We want to have this amount of links around the current page.
 
                     scope.paginationButtons = [];
@@ -34,7 +35,7 @@ var module = angular.module('ev-fdm')
                     }
 
                     // add the surrounding page numbers
-                    for (var i = nbAround; i > 0; i--) {
+                    for (i = nbAround; i > 0; i--) {
                         if (scope.currPage-i > 1) {
                             scope.paginationButtons.push ({value: scope.currPage-i});
                         }
@@ -46,7 +47,7 @@ var module = angular.module('ev-fdm')
                     }
 
                     // add the surrounding page numbers
-                    for (var i = 1; i <= nbAround; i++) {
+                    for (i = 1; i <= nbAround; i++) {
                         if (scope.currPage+i < scope.nbPage) {
                             scope.paginationButtons.push ({value: scope.currPage+i});
                         }
@@ -63,7 +64,7 @@ var module = angular.module('ev-fdm')
                     }
                     // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
                     // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
-                }
+                };
 
                 scope.previousPage = function (){
                     if (scope.currPage > 1) {
@@ -73,7 +74,7 @@ var module = angular.module('ev-fdm')
                         }
                     }
 
-                }
+                };
 
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
@@ -83,7 +84,7 @@ var module = angular.module('ev-fdm')
                             scope.onPageChange(value);
                         }
                     }
-                }
+                };
 
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
@@ -93,11 +94,11 @@ var module = angular.module('ev-fdm')
                             scope.onPageChange(scope.currPage);
                         }
                     }
-                }
+                };
 
                 scope.$watch('nbPage + currPage', function() {
                     scope.generateButtons ();
                 });
             }
-    };
-}]);
+        };
+    }]);
