@@ -1,4 +1,4 @@
-/*global tinymce:true */
+/* global tinymce:true */
 
 tinymce.PluginManager.add('evelements', function(editor) {
     function setElement(nodeName) {
@@ -7,7 +7,13 @@ tinymce.PluginManager.add('evelements', function(editor) {
             if (elm && elm.nodeName.toLowerCase() === nodeName) {
                 dom.remove(elm, true);
             } else {
-                editor.insertContent(dom.createHTML(nodeName, {}, dom.encode(editor.selection.getContent())));
+                editor.insertContent(
+                    dom.createHTML(
+                        nodeName,
+                        {},
+                        dom.encode(editor.selection.getContent({format: 'text'}))
+                    )
+                );
             }
         };
     }
