@@ -2,24 +2,24 @@
 
 tinymce.PluginManager.add('evimage', function(editor) {
     function showDialog() {
-        var data, dom = editor.dom, imgElm = editor.selection.getNode();
+        var dom = editor.dom, 
+            node = editor.selection.getNode(),
+            attributes = null;
 
-        if (imgElm) {
-            data = {
-                src: dom.getAttrib(imgElm, 'src'),
-                alt: dom.getAttrib(imgElm, 'alt'),
-                "class": dom.getAttrib(imgElm, 'class'),
-                dataPictureId: dom.getAttrib(imgElm, 'data-picture-id')
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                dataPictureId: dom.getAttrib(node, 'data-picture-id')
             };
-        } else {
-            data = false;
         }
 
-        editor.settings.evimage(data, function(newAttributes) {
-            if (imgElm) {
-                dom.setAttribs(imgElm, newAttributes);
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.setAttribs(node, attributesNew);
             } else {
-                editor.insertContent(dom.create('img', newAttributes));
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew)); 
             }
         });
     }
