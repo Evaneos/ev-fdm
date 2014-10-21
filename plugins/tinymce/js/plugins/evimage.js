@@ -4,7 +4,7 @@ tinymce.PluginManager.add('evimage', function(editor) {
     function showDialog() {
         var data, dom = editor.dom, imgElm = editor.selection.getNode();
 
-        if (imgElm) {
+        if (imgElm && imgElm.nodeName.toLowerCase() === 'img') {
             data = {
                 src: dom.getAttrib(imgElm, 'src'),
                 alt: dom.getAttrib(imgElm, 'alt'),
