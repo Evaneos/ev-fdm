@@ -229,11 +229,35 @@ angular.module('ev-tinymce', [])
 
 /*global tinymce:true */
 
+tinymce.PluginManager.add('evelements', function(editor) {
+    function setElement(nodeName) {
+        return function() {
+            var dom = editor.dom, elm = editor.selection.getNode();
+            if (elm && elm.nodeName.toLowerCase() === nodeName) {
+                dom.remove(elm, true);
+            } else {
+                editor.insertContent(dom.createHTML(nodeName, {}, dom.encode(editor.selection.getContent())));
+            }
+        };
+    }
+
+    editor.settings.evelements.split(' ').forEach(function(elementName) {
+        editor.addButton('ev' + elementName, {
+            text: elementName,
+            tooltip: 'Set this text as ' + elementName,
+            onclick: setElement(elementName),
+            stateSelector: elementName
+        });
+    });
+});
+
+/*global tinymce:true */
+
 tinymce.PluginManager.add('evimage', function(editor) {
     function showDialog() {
         var data, dom = editor.dom, imgElm = editor.selection.getNode();
 
-        if (imgElm) {
+        if (imgElm && imgElm.nodeName.toLowerCase() === 'img') {
             data = {
                 src: dom.getAttrib(imgElm, 'src'),
                 alt: dom.getAttrib(imgElm, 'alt'),
