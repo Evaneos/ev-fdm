@@ -1,32 +1,17 @@
 @import "variables.less";
 @import "../mixins/mixins.less";
 
-.ev-panels-wrapper {
-    height: 100%;
-    width: 100%;
-    max-width: 100%;
+@import "../utils/layout.less";
 
-    .ev-panels-container {
-        // overflow: hidden;
-        display: table;
-        height: 100%;
-        table-layout: fixed;
-        width: 100%;
-    }
-
+.ev-panels-container {
+    background: @ev-panel-dark-color;
+    .flexbox();
+    .align-items(stretch);
     /*********************************************************
      * NORMAL STATE
      ********************************************************/
 
     .ev-panel {
-        display: table-cell;
-        vertical-align: top;
-        background: @ev-panel-color;
-        position: relative;
-        box-sizing: border-box;
-        // overflow-y: hidden;
-        // overflow-x: visible;
-
         &:not(:first-child) {
             border-left: 1px solid @ev-panel-dark-color;
         }
@@ -43,12 +28,11 @@
 
 
     .ev-panel:not(.ev-stacked) {
+        height: inherit;
+        background: @ev-panel-color;
         .ev-stacked-show {
             display: none;
         }
-        > div {
-            height: 100%;
-        } 
     }
 
     /*********************************************************
@@ -58,8 +42,8 @@
     .ev-panel.ev-stacked {
         max-width: @ev-panel-stacked-size;
         min-width: 0;
-        vertical-align: middle;
-        background: @ev-panel-dark-color;
+        .align-self(center);
+
         > * {
             .transform(rotate(-90deg));
             white-space: nowrap;

@@ -80,17 +80,15 @@ angular.module('ev-fdm')
                 return panels[name];
             }
             
-            // In order to have a pane of height 100%, we are obliged to wrapp the panel content inside a 
-            // div with height 100%
             var element = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
                     name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
-                    '<div class="clearfix"></div></div>');
+                    '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
             panel.element = element;
 
             return templatePromises.then(function(template) {
-                element.children().html(template);
+                element.html(template);
                 element = $compile(element)($rootScope.$new());
                 panel.element  = element;
                 element.resizable({
@@ -223,7 +221,7 @@ angular.module('ev-fdm')
                     }
                 }
             }
-            var containerWidth = container.parent().width();
+            var containerWidth = container.width();
             panelLayoutEngine.checkStacking(panelElements, containerWidth);
         }
 
@@ -234,9 +232,9 @@ angular.module('ev-fdm')
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="ev-panels-wrapper"><div class="ev-panels-container"></div></div>',
+            template: '<div class="ev-panels-container"></div>',
             link: function (scope, element, attrs) {
-              panelService.registerContainer(element.children(), attrs.id);
+              panelService.registerContainer(element, attrs.id);
             }
         };
     }]);

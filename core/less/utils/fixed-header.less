@@ -4,12 +4,22 @@
     .flexbox();
     .flex-direction(column);
     overflow-y: auto;
+    max-height: inherit;
     height: 100%;
+}
+
+.ev-header {
+	.flex-shrink(0);
 }
 
 .ev-body {
     overflow-y: auto;
-    height: 100%;
+    position: relative;
     .flex(2009, 1);
     .flex(2013, auto);
 }
+
+// // Little (and only) hack to make the flexbox inside flexbox working in firefox AND chrome
+// .ev-panel .ev-fixed-header {
+//     overflow-y: hidden;
+// }
