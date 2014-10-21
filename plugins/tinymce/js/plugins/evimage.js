@@ -5,7 +5,7 @@ tinymce.PluginManager.add('evimage', function(editor) {
         var dom = editor.dom, 
             node = editor.selection.getNode(),
             attributes = null;
-
+            
         if (node && node.getAttribute('data-picture-id')) {
             attributes = {
                 src: dom.getAttrib(node, 'src'),

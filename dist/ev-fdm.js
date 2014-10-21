@@ -1944,8 +1944,8 @@ angular.module('ev-fdm')
             restrict: 'EA',
             scope: {
                 elements: '=',
-                trackBy: '&',
-                displayElement: '&',
+                trackBy: '=?',
+                displayElement: '=?',
                 editable: '=',
                 className: '@',
                 maxElements: '=',
@@ -1967,10 +1967,10 @@ angular.module('ev-fdm')
                     '</li>' +
                 '</ul>',
             link: function ($scope, elem, attrs) {
-                $scope.trackBy = $scope.trackBy() || function(element) {
+                $scope.trackBy = $scope.trackBy || function(element) {
                     return element.name;
                 };
-                $scope.displayElement = $scope.displayElement() || function(element) {
+                $scope.displayElement = $scope.displayElement || function(element) {
                     return element.name;
                 };
 
@@ -4372,26 +4372,50 @@ angular.module('ev-tinymce', [])
 
 /*global tinymce:true */
 
+tinymce.PluginManager.add('evelements', function(editor) {
+    function setElement(nodeName) {
+        return function() {
+            var dom = editor.dom, elm = editor.selection.getNode();
+            if (elm && elm.nodeName.toLowerCase() === nodeName) {
+                dom.remove(elm, true);
+            } else {
+                editor.insertContent(dom.createHTML(nodeName, {}, dom.encode(editor.selection.getContent())));
+            }
+        };
+    }
+
+    editor.settings.evelements.split(' ').forEach(function(elementName) {
+        editor.addButton('ev' + elementName, {
+            text: elementName,
+            tooltip: 'Set this text as ' + elementName,
+            onclick: setElement(elementName),
+            stateSelector: elementName
+        });
+    });
+});
+
+/*global tinymce:true */
+
 tinymce.PluginManager.add('evimage', function(editor) {
     function showDialog() {
-        var data, dom = editor.dom, imgElm = editor.selection.getNode();
-
-        if (imgElm) {
-            data = {
-                src: dom.getAttrib(imgElm, 'src'),
-                alt: dom.getAttrib(imgElm, 'alt'),
-                "class": dom.getAttrib(imgElm, 'class'),
-                dataPictureId: dom.getAttrib(imgElm, 'data-picture-id')
+        var dom = editor.dom, 
+            node = editor.selection.getNode(),
+            attributes = null;
+            
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                dataPictureId: dom.getAttrib(node, 'data-picture-id')
             };
-        } else {
-            data = false;
         }
 
-        editor.settings.evimage(data, function(newAttributes) {
-            if (imgElm) {
-                dom.setAttribs(imgElm, newAttributes);
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.setAttribs(node, attributesNew);
             } else {
-                editor.insertContent(dom.create('img', newAttributes));
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew)); 
             }
         });
     }
