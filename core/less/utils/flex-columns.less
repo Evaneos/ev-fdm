@@ -1,0 +1,15 @@
+@import (reference) "../mixins/mixins.less";
+@import (reference) "layout.less";
+
+/* Allows for layout of same size columns with a max width */
+
+.ev-flex-columns {
+    .full-height();
+    .flexbox();
+    .align-items(stretch);
+    & > * {
+        .flex(2009, 1);
+        .flex(2013, auto);
+        height: inherit;
+    }
+}

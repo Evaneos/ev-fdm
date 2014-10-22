@@ -1,5 +1,7 @@
 @import (reference) "../mixins/mixins.less";
 
+/* Allows for fixed header of unknown height behaviour */
+
 .ev-fixed-header {
     .flexbox();
     .flex-direction(column);
@@ -18,8 +20,3 @@
     .flex(2009, 1);
     .flex(2013, auto);
 }
-
-// // Little (and only) hack to make the flexbox inside flexbox working in firefox AND chrome
-// .ev-panel .ev-fixed-header {
-//     overflow-y: hidden;
-// }

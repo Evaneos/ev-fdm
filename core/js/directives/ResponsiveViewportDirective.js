@@ -11,8 +11,8 @@ angular.module('ev-fdm')
     .provider('evResponsiveViewport', function () {
         var breakpoints = {
             300: 'ev-viewport-xs',
-            600: 'ev-viewport-sm',
-            1000: 'ev-viewport-md'
+            450: 'ev-viewport-sm',
+            700: 'ev-viewport-md'
         };
         this.$get =function () {
             return breakpoints;

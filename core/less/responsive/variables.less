@@ -9,12 +9,19 @@
         @num-columns:       12;
 //  Gutter width:
         @grid-gutter-width: 20px;
-
+/*
+    Breakpoints
+    -----------
+    Breapoints values between different sizes.
+*/
+        @breakpoint-sm:     300px;
+        @breakpoint-md:     450px;
+        @breakpoint-lg:     700px;
 /*
     Container
     ---------
     The size of the container class based on the viewport type (xs, sm, md, lg)
 */
-        @container-sm:      ((720px + @grid-gutter-width));
-        @container-md:      ((940px + @grid-gutter-width));
-        @container-lg:      ((1140px + @grid-gutter-width));
+        @container-sm:      ((@breakpoint-sm + @grid-gutter-width));
+        @container-md:      ((@breakpoint-md + @grid-gutter-width));
+        @container-lg:      ((@breakpoint-lg + @grid-gutter-width));
