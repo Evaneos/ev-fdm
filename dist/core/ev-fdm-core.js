@@ -32,15 +32,6 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
     });
 }])
 
-/**
- * Define a default error state for our app
- */
-.config(['$stateProvider', function($stateProvider) {
-    $stateProvider.state('ev-error', {
-        templateUrl: 'ev-error.html'
-    });
-}])
-
 .config(['RestangularProvider', function(restangularProvider) {
 
 }])
@@ -172,8 +163,16 @@ angular.module('ev-fdm')
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort) {
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
+
+            if (typeof elementName === 'object') {
+                defaultReverseSort = elementName.defaultReverseSort;
+                defaultSortKey = elementName.defaultSortKey;
+                elements = elementName.elements;
+                activeIdSelector = elementName.activeIdSelector;
+                elementName = elementName.elementName;
+            }
 
             /*
                 Properties
@@ -185,6 +184,7 @@ angular.module('ev-fdm')
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
+            this.activeIdSelector = activeIdSelector;
 
             this.updateScope();
 
@@ -276,10 +276,12 @@ angular.module('ev-fdm')
             var self = this;
             this.$scope.activeElement = null;
 
-            if(angular.isDefined($state.params.id)) {
+            var activeIdKey = this.activeIdSelector ? this.activeIdSelector : 'id';
+
+            if(angular.isDefined($state.params[activeIdKey])) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    if (elementId == $state.params.id) {
+                    if (elementId == $state.params[activeIdKey]) {
                         self.$scope.activeElement = element;
                     }
                 });
@@ -288,21 +290,21 @@ angular.module('ev-fdm')
 
         ListController.prototype.toggleView = function(view, element) {
             if (!element) {
-                $state.go(this.goToViewStatePath());
+                $state.go(this.goToViewStatePath(false));
                 return;
             }
 
             var id = restangular.configuration.getIdFromElem(element);
 
             if (!id || $stateParams.id === id) {
-                $state.go(this.goToViewStatePath());
+                $state.go(this.goToViewStatePath(false));
             }
             else {
-                $state.go(this.goToViewStatePath(view), { id: id });
+                $state.go(this.goToViewStatePath(view, element), { id: id });
             }
         };
 
-        ListController.prototype.goToViewStatePath = function(view) {
+        ListController.prototype.goToViewStatePath = function(view, element) {
             return this.elementName + (view ? '.' + view : '');
         };
 
@@ -545,7 +547,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
 
             scope.save = function() {
                 var resultSave = !options.onSave || options.onSave && options.onSave();
-                if (resultSave.then) {
+                if (resultSave && resultSave.then) {
                     resultSave.then(
                         function success() {
                             notificationsService.addSuccess({text: options.successMessage || scope.successMessage });
@@ -669,12 +671,14 @@ function EvMenuDirective(menuManager) {
     return {
         restrict: 'E',
         replace: true,
-        template:   '<ul class="lisette-module-tabs nav nav-tabs" ng-cloak>' +
+        template:   '<ul class="module-tabs nav nav-tabs" ng-cloak>' +
                         '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
                     '</ul>',
         controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
+            console.warn('%c [Phoenix team] %c Remove evMenuDirective, please', 'background: #c0392b; color:white', 'background: #e67e22; color: white');
+
             $scope.tabs = menuManager.tabs;
 
             if($rootScope['evmenu-state']) {
@@ -684,11 +688,10 @@ function EvMenuDirective(menuManager) {
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);
-            }
+            };
         }]
-    }
-
-};
+    };
+}
 
 angular.module('ev-fdm')
     .provider('menuManager', [MenuManagerProvider])
@@ -705,53 +708,6 @@ module.directive('evFilters', function() {
         templateUrl: 'ev-filters.html'
     };
 });
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evFixedHeader', function () {
-            return {
-                link: function($scope, $element, $attrs) {
-                    $element.addClass('full-height');
-                    var header = $element.find('>.ev-header');
-                    var body   = $element.find('>.ev-body');
-                    body.css({'overflow-y': 'auto'});
-                    header.css({'overflow-y': 'auto'});
-
-                    // Compute and return the height available for the element's body
-                    var getBodyHeight = function() {
-                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
-                        // This allows us to remove the padding/etc.. from the measurement
-                        bodyHeight -= body.outerHeight() - body.height();
-
-                        return bodyHeight;
-                    };
-
-                    var refreshDimensions = function() {
-                        body.hide();
-                        body.height(getBodyHeight());
-                        body.show();
-
-                        if ($attrs.refreshIdentifier) {
-                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
-                        }
-                    };
-
-
-                    $scope.$watch(function() {
-                        return getBodyHeight();
-                    }, refreshDimensions);
-
-                    $(window).bind('resize', refreshDimensions);
-
-                    if ($attrs.refreshOn) {
-                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
-                    }
-
-                }
-            };
-        });
-}) ();
-
 angular.module('ev-fdm')
     .directive('evFixedHeaders', ['$timeout', function ($timeout) {
 
@@ -796,7 +752,8 @@ angular.module('ev-fdm')
                 .floatThead({
                     scrollContainer: function($table){
                         return $table.closest('.ev-fixed-header-table-container');
-                    }
+                    },
+                    zIndex: 999
                 });
             angular.element('.table-container').css('overflow', 'hidden');
 
@@ -878,102 +835,6 @@ var module = angular.module('ev-fdm')
 'use strict';
 
 angular.module('ev-fdm')
-    .directive('evModule', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
-
-    var bars = {
-        tabs: {
-            versions: []
-        },
-        topbar: {
-            versions: [ 'size-mini', 'size-default', 'size-big' ]
-        },
-        leftbar: {
-            versions: []
-        },
-        bottombar: {
-            versions: []
-        }
-    };
-
-    /**
-     * Looks inside the module element for any module bar, and populates
-     * required classes for each bar on the module container
-     */
-    function updateBarClasses($moduleEl) {
-        return function() {
-            angular.forEach(bars, function(barConfig, barId) {
-                var $el = $moduleEl.find('.lisette-module-' + barId);
-                var hasClass = 'has-' + barId;
-                $moduleEl.removeClass(
-                    _(barConfig.versions)
-                        .map(function(versionId) {
-                            return barId + '-' + versionId
-                        })
-                        .join(' '));
-                if ($el.length) {
-                    $moduleEl.addClass(hasClass);
-                    angular.forEach(barConfig.versions, function(versionId) {
-                        if ($el.hasClass('version-' + versionId)) {
-                            $moduleEl.addClass(barId + '-' + versionId);
-                        }
-                    });
-                } else {
-                    $moduleEl.removeClass(hasClass);
-                }
-            });
-            $rootScope.$broadcast('module-layout-changed');
-        }
-    };
-
-    return {
-        restrict: 'A',
-        link: function($scope, element, attributes) {
-            element.addClass('lisette-module');
-            $scope.$on('$stateChangeSuccess', function() {
-                $timeout(updateBarClasses(element), 0);
-            });
-            $timeout(updateBarClasses(element), 0);
-        }
-    };
-}
-]);
-'use strict';
-
-angular.module('ev-fdm')
-.directive('evModuleHeader', ['$timeout', function ($timeout) {
-
-    function _sync($wrapper) {
-        var $header = $wrapper.find('.lisette-module-header');
-
-        // make sure the wrapper spans the right height
-        // even when the header is position fixed
-        $wrapper.height($header.height() - 1);
-
-        // declaring affix to bootstrap
-        // bs will watch the scroll for us and add the affix css class to $header
-        $header.affix({
-            offset: {
-                top: 1
-            }
-        });
-    }
-
-    return function($scope, element, attrs) {
-        var $wrapper = $(element);
-        $timeout(function() {
-            _sync($wrapper);
-        }, 0, false);
-        $(window).on('resize', function() {
-            _sync($wrapper);
-        });
-        $scope.$on('itemsLoaded', function() {
-            _sync($wrapper);
-        });
-    };
-}]);
-'use strict';
-
-angular.module('ev-fdm')
     .directive('mouseFollower', ['$document', function ($document) {
         return {
             restrict: 'A',
@@ -1006,15 +867,16 @@ var module = angular.module('ev-fdm')
                 onPageChange: '='
             },
 
-            link : function (scope){
+            link: function (scope){
                 scope.paginationButtons = [];
                 scope.prevClass = '';
                 scope.nextClass = '';
 
-                if (!scope.currPage) scope.currPage = 1;
-                if (!scope.nbPage)   scope.nbPage   = 1;
+                scope.currPage = scope.currPage || 1;
+                scope.nbPage   = scope.nbPage   || 1;
 
                 scope.generateButtons = function () {
+                    var i = 0;
                     var nbAround = 2; // We want to have this amount of links around the current page.
 
                     scope.paginationButtons = [];
@@ -1027,7 +889,7 @@ var module = angular.module('ev-fdm')
                     }
 
                     // add the surrounding page numbers
-                    for (var i = nbAround; i > 0; i--) {
+                    for (i = nbAround; i > 0; i--) {
                         if (scope.currPage-i > 1) {
                             scope.paginationButtons.push ({value: scope.currPage-i});
                         }
@@ -1039,7 +901,7 @@ var module = angular.module('ev-fdm')
                     }
 
                     // add the surrounding page numbers
-                    for (var i = 1; i <= nbAround; i++) {
+                    for (i = 1; i <= nbAround; i++) {
                         if (scope.currPage+i < scope.nbPage) {
                             scope.paginationButtons.push ({value: scope.currPage+i});
                         }
@@ -1056,7 +918,7 @@ var module = angular.module('ev-fdm')
                     }
                     // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
                     // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
-                }
+                };
 
                 scope.previousPage = function (){
                     if (scope.currPage > 1) {
@@ -1066,7 +928,7 @@ var module = angular.module('ev-fdm')
                         }
                     }
 
-                }
+                };
 
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
@@ -1076,7 +938,7 @@ var module = angular.module('ev-fdm')
                             scope.onPageChange(value);
                         }
                     }
-                }
+                };
 
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
@@ -1086,14 +948,14 @@ var module = angular.module('ev-fdm')
                             scope.onPageChange(scope.currPage);
                         }
                     }
-                }
+                };
 
                 scope.$watch('nbPage + currPage', function() {
                     scope.generateButtons ();
                 });
             }
-    };
-}]);
+        };
+    }]);
 (function () {
     'use strict';
     var module = angular.module('ev-fdm')
@@ -1107,7 +969,8 @@ var module = angular.module('ev-fdm')
               onChange: '&',
               showUpdate: '=',
               language: '=',
-              colNumber: '='
+              colNumber: '=',
+              onPictureDeleted: '&'
             },
             template:
                 '<ul class="picture-list row">' +
@@ -1166,6 +1029,7 @@ var module = angular.module('ev-fdm')
           if (!attrs.onDelete) {
             $scope.onDelete = function (params) {
               $scope.pictures.splice(params.index, 1);
+              $scope.onPictureDeleted();
             };
             $scope.onUpdate = function (params) {
                 // Not implemented yet
@@ -1361,7 +1225,7 @@ angular.module('ev-fdm').directive('body', [
                         message: t('Unable to open this transaction!')
                       }
                  */
-                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
+                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error) {
                     if (console.error) {
                         console.error(
                             'toState=', toState,
@@ -1402,8 +1266,8 @@ angular.module('ev-fdm')
     .provider('evResponsiveViewport', function () {
         var breakpoints = {
             300: 'ev-viewport-xs',
-            600: 'ev-viewport-sm',
-            1000: 'ev-viewport-md'
+            450: 'ev-viewport-sm',
+            700: 'ev-viewport-md'
         };
         this.$get =function () {
             return breakpoints;
@@ -1876,11 +1740,11 @@ angular.module('ev-fdm')
                     };
 
                     $scope.isShowed = function (pane) {
-                        return pane.tabShow == null || !!pane.tabShow;
+                        return pane.alwaysShow || !!pane.tabShow;
                     };
                 },
                 template:
-                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
+                    '<div class="tabbable ev-fixed-header">' +
                         '<ul class="nav nav-tabs ev-header">' +
                             '<li ng-repeat="pane in panes | filter:isShowed" ' +
                                 'ng-class="{active:pane.selected}" '+
@@ -1908,6 +1772,12 @@ angular.module('ev-fdm')
                     tabShow: '='
                 },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+
+                    scope.alwaysShow = true;
+                    if(angular.isDefined(attrs.tabShow)) {
+                        scope.alwaysShow = false;
+                    }
+
                     tabsCtrl.addPane(scope);
                     transcludeFn(function(clone, transcludedScope) {
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
@@ -1932,17 +1802,20 @@ angular.module('ev-fdm')
             restrict: 'EA',
             scope: {
                 elements: '=',
+                trackBy: '=?',
+                displayElement: '=?',
                 editable: '=',
                 className: '@',
                 maxElements: '=',
-                maxAlertMessage: '@'
+                maxAlertMessage: '@',
+                onTagDeleted: '&'
             },
             replace: true,
             template:
                 '<ul class="list-inline {{ className }}">' +
-                    '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
+                    '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
-                            '{{ element.name }}' +
+                            '{{ displayElement(element) }}' +
                             '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
@@ -1952,9 +1825,16 @@ angular.module('ev-fdm')
                     '</li>' +
                 '</ul>',
             link: function ($scope, elem, attrs) {
+                $scope.trackBy = $scope.trackBy || function(element) {
+                    return element.name;
+                };
+                $scope.displayElement = $scope.displayElement || function(element) {
+                    return element.name;
+                };
 
                 $scope.remove = function (index) {
                     $scope.elements.splice(index, 1);
+                    $scope.onTagDeleted();
                 };
             }
         };
@@ -2151,165 +2031,6 @@ angular.module('ev-fdm')
             return config;
         };
     }]);
-
-if(typeof(Fanny) == 'undefined') {
-    Fanny = {}
-};
-
-Fanny.Utils = {
-    generatedIds : {},
-    generateId : function(prefix) {
-        var id = prefix + Math.random() * 10000;
-        if(typeof(this.generatedIds[id] != 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = generateId(prefix);
-        }
-        return id;
-    },
-    convertNumberToString : function(number, nbDecimals, intMinLength) {
-        var thousandsSep = ' ';
-        var decimalSep   = ',';
-        var numberStr    = '';
-        var numberArray  = [];
-        var integer      = '';
-        var decimals     = '';
-        var result       = '';
-        
-        if(typeof(nbDecimals) == 'undefined') {
-            nbDecimals = 2;
-        }
-        
-        numberStr = number + '';
-        numberArray = numberStr.split('.');
-        if(numberArray.length < 1 && numberArray.length > 2) {
-            throw new Error('Invalid number');
-            return false;
-        }
-        
-        integer = numberArray[0];
-        
-        if(numberArray.length == 1) {
-            decimals = '';
-            for(var i = 0; i < nbDecimals; i++) {
-                decimals += '0';
-            }
-        } else {
-            decimals = numberArray[1];
-            if(decimals.length > nbDecimals) {
-                decimals = decimals.substring(0, 2);
-            } else {
-                while(decimals.length < nbDecimals) {
-                    decimals += '0';
-                }
-            }
-        }
-        for(var i = 0; i < integer.length; i++) {
-            if(i % 3 == 0 && i != 0) {
-                result = thousandsSep + result;
-            }
-            result = integer[integer.length - i - 1] + result;
-        }
-        if(result == '') {
-            result = '' + 0;
-        }
-        
-        for(var i = result.length; i < intMinLength; i++) {
-            result = '0' + result;
-        }
-        
-        if(decimals.length > 0) {
-            result += decimalSep + decimals;
-        }
-        return result;
-    },
-    stringToVar : function(string) {
-        if(typeof(string) != 'string') {
-            throw new Error('Not a string');
-            return;
-        }
-        if(!isNaN(string)) {
-            return parseInt(string);
-        }
-        var _exploded = string.split('.');
-        var _result = window;
-        for (var index = 0; index < _exploded.length; index++) {
-            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
-                _result = _result[_exploded[index]];
-            } else {
-                throw new Error('No corresponding var found for ' + string);
-                return;
-            }
-        }
-        return _result;
-    },
-    formatDate : function(date) {
-        if(!date || typeof(date) != 'object') {
-            return '';
-        }
-        var year = date.getFullYear();
-        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
-        var day = this.convertNumberToString(date.getDate(), 0, 2);
-        return year + '-' + month + '-' + day;
-    },
-    Renderers : {
-        date : function(date) {
-            var _date     = null;
-            var _splitted = null;
-            var _obj      = null;
-            if(date && typeof(date) == 'object') {
-                _date = date.date;
-            } else {
-                _date = date;
-            }
-            if(typeof(_date) == 'string' && _date) {
-                _date = _date.split(' ')[0];
-                _splitted = _date.split('-');
-                if (_splitted.length === 3) {
-                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
-                }
-                else {
-                    return '';
-                }
-            } else {
-                return '';
-            }
-        },
-        amounts : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2);
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-            
-        },
-        money : function(number, row) {
-            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        euros : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        upper : function(string) {
-            if(typeof(string) == 'string') {
-                return string.toUpperCase();
-            } else {
-                return string;
-            }
-        }
-    }
-}
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -2398,6 +2119,19 @@ angular.module('ev-fdm')
             };
     }]);
 
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
 'use strict';
 
 angular.module('ev-fdm')
@@ -2701,17 +2435,17 @@ angular.module('ev-fdm')
             // If no panel index, or no panel inside the container, it is added at the end
             if (!panel.index || !container.children().length) {
                 $animate.move(panel.element, container, null, function () {
-                    updateLayout(null, container);
+                    updateLayout(null, containerId);
                 });
             } else {
-                var beforePanel = getBeforePanel(panel.index, containerId);
-                    $animate.move(panel.element, container, beforePanel, function () {
-                        updateLayout(null, container);
+                var beforePanel = getBeforePanelElm(panel.index, containerId);
+                    $animate.move(panel.element, container, beforePanel.element, function () {
+                        updateLayout(null, containerId);
                 });
             }
         };
 
-        function getBeforePanel(index, containerId) {
+        function getBeforePanelElm(index, containerId) {
             var beforePanel = null;
             var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
                 return panelsList[containerId][panelName];
@@ -2730,7 +2464,7 @@ angular.module('ev-fdm')
                     }
                     return !isBeforePanel;
                 });
-            return beforePanel || panels[0];
+            return (beforePanel || panels[0]).element;
         }
 
         /**
@@ -2761,19 +2495,18 @@ angular.module('ev-fdm')
             if (panels[name]) {
                 return panels[name];
             }
-
-            // We call it *THE BEAST*.
-            var element          = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
-                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '"></div>');
+            
+            var element = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
+                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
+                    '</div>');
             var templatePromises = getTemplatePromise(panel);
-            panels[name]         = panel;
-            panel.element      = element;
+            panels[name] = panel;
+            panel.element = element;
 
             return templatePromises.then(function(template) {
                 element.html(template);
-                element          = $compile(element)($rootScope.$new());
+                element = $compile(element)($rootScope.$new());
                 panel.element  = element;
-
                 element.resizable({
                     handles: "e",
                     helper: "ui-resizable-helper",
@@ -2789,21 +2522,27 @@ angular.module('ev-fdm')
                     afterPanel.width(afterPanel.width() - delta);
                     element.width(ui.size.width);
                     stylesCache[panel.panelName] = ui.size.width;
-                    updateLayout(self, containers[id]);
+                    updateLayout(self, id);
                 })
                 .on('resize', function () {
                     // Prevent jquery ui to do weird things 
                     return false;
                 });
-
+                console.log('yo');
                 addToDom(panel, id);
                 return panel;
             });
         };
 
 
-        this.close = function(name, containerId) {
+        this.getPanels = function (containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            return panelsList[containerId];
+        };
 
+        this.close = function(name, containerId) {
             // Change panelName to panel-name
             name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
@@ -2813,13 +2552,12 @@ angular.module('ev-fdm')
             var panels = panelsList[containerId];
 
             if (!name || !panels[name]) {
-                console.log("Panel not found for:" + name);
+                console.log("Panel not found for: " + name);
             }
 
             var element  = panels[name].element;
-            panels[name] = null;
-
-            $animate.leave(element).then(function() {
+            delete panels[name];
+            $animate.leave(element, function() {
                 updateLayout(null, containerId);
             });
         };          
@@ -2855,7 +2593,7 @@ angular.module('ev-fdm')
             }
             timerWindowResize = $timeout(function() {
                 updateLayout();
-            }, 100);
+            }, 200);
         });         
 
         function getStylesFromCache(name, options) {
@@ -2878,13 +2616,15 @@ angular.module('ev-fdm')
         }
 
        
-        function updateLayout(element, container) {
-            if (!container) {
+        function updateLayout(element, containerId) {
+            console.log('yipee')
+            if (!containerId) {
                 Object.keys(containers).map(function (id) {
-                    updateLayout(null, containers[id]);
+                    updateLayout(null, id);
                 });
                 return this;
             }
+            var container = containers[containerId];
             var panelElements = angular.element(container).children('.ev-panel');
             
             if (element) {
@@ -2897,7 +2637,7 @@ angular.module('ev-fdm')
                     }
                 }
             }
-            var containerWidth = container.parent().innerWidth();
+            var containerWidth = container.width();
             panelLayoutEngine.checkStacking(panelElements, containerWidth);
         }
 
@@ -2908,9 +2648,9 @@ angular.module('ev-fdm')
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="ev-panels-wrapper"><div class="ev-panels-container"></div></div>',
+            template: '<div class="ev-panels-container"></div>',
             link: function (scope, element, attrs) {
-              panelService.registerContainer(element.children(), attrs.id);
+              panelService.registerContainer(element, attrs.id);
             }
         };
     }]);
@@ -3132,6 +2872,26 @@ module.service('SortService', [function() {
 }]);
 'use strict';
 
+var module = angular.module('ev-fdm');
+
+module.service('UtilService', [function() {
+    this.generatedIds = {};
+
+    this.generateId = function(prefix) {
+        var id = prefix + Math.random() * 10000;
+
+        if(typeof(this.generatedIds[id] !== 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = this.generateId(prefix);
+        }
+
+        return id;
+    };
+}]);
+
+'use strict';
+
 /* Services */
 var module = angular.module('ev-fdm');
 
@@ -3139,7 +2899,7 @@ var AbstractAutocompleteStorage = function (AbstractStorage, $timeout) {
     _.extend (this, AbstractStorage);
     this.AbstractStorage = AbstractStorage;
     this.$timeout = $timeout;
-}
+};
 
 AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (searchCallback, matchingCallback, minLength) {
     var me = this;
@@ -3170,7 +2930,7 @@ AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (sea
 
         }
     };
-}
+};
 
 // Demonstrate how to register services
 // In this case it is a simple value service.
@@ -3178,7 +2938,7 @@ module.service('AbstractAutocompleteStorage', ['Storage', '$timeout', AbstractAu
 
 'use strict';
 
-function AjaxStorage($http, $q, $cacheFactory, $log) {
+function AjaxStorage($http, $q, $cacheFactory, utilService, $log) {
 
     var httpCache = $cacheFactory('customHttpCache');
 
@@ -3194,7 +2954,7 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
         }
 
         // Add the request id... Ah, history...
-        options.id = Fanny.Utils.generateId ('proxy:request:');
+        options.id = utilService.generateId('proxy:request:');
         var requestConfig = {
             url         : '/backoffice/common/xhr',
             method      : 'POST',
@@ -3234,12 +2994,12 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
     return {
         launchRequest: launchRequest
-    }
+    };
 
 }
 
 angular.module('ev-fdm')
-    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
+    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
     .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
@@ -3420,8 +3180,7 @@ function Storage(AjaxStorage) {
             get: function(options) {
                 return AjaxStorage.launchRequest(options);
             }
-
-        }
+        };
 }
 
 module.service('Storage', ['AjaxStorage', Storage]);
@@ -3746,7 +3505,8 @@ angular.module('ev-fdm')
  */
 .service('PanelLayoutEngine', ['$animate', '$rootScope', function($animate, $rootScope) {
 
-    var STACKED_WIDTH = 35;
+    const STACKED_WIDTH = 35;
+    const MOBILE_WIDTH = 700;
 
     /**************************
      *           #1           *
@@ -3764,13 +3524,19 @@ angular.module('ev-fdm')
 
         angular.forEach(panels, function(panelDom) {
             var panelElement = angular.element(panelDom);
-
+            // If no min width / max width attribute we set them (in a next )
+            if (angular.isUndefined(panelElement.attr('data-min-width'))) {
+                panelElement.attr('data-min-width', panelElement.css('min-width') || STACKED_WIDTH * 2);
+            }
+            if (angular.isUndefined(panelElement.attr('data-max-width'))) {
+                panelElement.attr('data-max-width', panelElement.css('max-width'));
+            }
             var data = {
-                minWidth: parseInt(panelElement.css('min-width')) || STACKED_WIDTH + 1,
-                maxWidth: parseInt(panelElement.css('max-width')) || containerWidth,
+                minWidth: parseInt(panelElement.attr('data-min-width')),
+                maxWidth: parseInt(panelElement.attr('data-max-width')) || containerWidth,
                 stacked:  panelElement.hasClass('ev-stacked'),
                 width:    panelElement.outerWidth(),
-                stackedWidth: STACKED_WIDTH
+                stackedWidth: (containerWidth < MOBILE_WIDTH) ? 0 : STACKED_WIDTH
             };
             if (data.width < data.minWidth) {
                 data.width = data.minWidth;
@@ -3966,11 +3732,23 @@ angular.module('ev-fdm')
         var result = updateStackState(datas, limit);
         datas      = result.datas;
 
-        // If we don't need to stack all the panels (which is a specific case not handled here)
         if(result.nbStacked !== datas.length) {
+            // If we don't need to stack all the panels
             datas = updateSize(datas, limit);
+        } else {
+            // If we need to stack all the panels
+            // We don't stack the last one, but we hide all the stacked panels
+            var lastPanel = datas[datas.length - 1];
+
+            if (lastPanel.stacked === true) {
+                lastPanel.stacked = false;
+                lastPanel.width = limit - datas.reduce(function (totalStackedWidth, panel) {
+                    return totalStackedWidth + panel.stackedWidth;
+                }, 0);
+            }
         }
 
+        
         return datas;
     }
 
@@ -3986,37 +3764,27 @@ angular.module('ev-fdm')
      * @param  {Int}     containerWidth the containerWidth
      */
     function resizeAndStackPanels(panels, dataPanels, containerWidth) {
-        // If we need to stack all the panels
-        // We don't stack the last one, but we hide all the stacked panels
-        var isMobile  = false;
-        var lastPanel = dataPanels[dataPanels.length - 1];
 
-        if (lastPanel.stacked === true) {
-            lastPanel.stacked = false;
-            lastPanel.width = containerWidth;
-            isMobile = true;
-        }
-
+            console.log(dataPanels, containerWidth);
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
                 dataPanel = dataPanels[i];
-
             if (!element) {
                 console.log('no element for this panel)');
                 return;
             }
-
+            // console.log(containerWidth, dataPanels);
             if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'ev-stacked');
-                $animate.removeClass(element, 'ev-stacked-mobile');
             } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
                 $animate.addClass(element, 'ev-stacked');
-
-                if (isMobile) {
-                    $animate.addClass(element, 'ev-stacked-mobile');
-                }
             }
-            element.outerWidth(dataPanel.width + "px");
+            if (dataPanel.width === 0) {
+                element.hide();
+            } else {
+                element.show();
+                element.outerWidth(dataPanel.width);
+            }
         });
     }
 

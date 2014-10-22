@@ -35,7 +35,7 @@ angular.module('ev-fdm').directive('body', [
                         message: t('Unable to open this transaction!')
                       }
                  */
-                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, error) {
+                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error) {
                     if (console.error) {
                         console.error(
                             'toState=', toState,

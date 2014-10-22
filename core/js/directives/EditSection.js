@@ -38,7 +38,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
 
             scope.save = function() {
                 var resultSave = !options.onSave || options.onSave && options.onSave();
-                if (resultSave.then) {
+                if (resultSave && resultSave.then) {
                     resultSave.then(
                         function success() {
                             notificationsService.addSuccess({text: options.successMessage || scope.successMessage });

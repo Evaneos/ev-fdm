@@ -6,17 +6,20 @@ angular.module('ev-fdm')
             restrict: 'EA',
             scope: {
                 elements: '=',
+                trackBy: '=?',
+                displayElement: '=?',
                 editable: '=',
                 className: '@',
                 maxElements: '=',
-                maxAlertMessage: '@'
+                maxAlertMessage: '@',
+                onTagDeleted: '&'
             },
             replace: true,
             template:
                 '<ul class="list-inline {{ className }}">' +
-                    '<li ng-repeat="element in elements track by element.name" class="ev-animate-tag-list">' +
+                    '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
-                            '{{ element.name }}' +
+                            '{{ displayElement(element) }}' +
                             '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
@@ -26,9 +29,16 @@ angular.module('ev-fdm')
                     '</li>' +
                 '</ul>',
             link: function ($scope, elem, attrs) {
+                $scope.trackBy = $scope.trackBy || function(element) {
+                    return element.name;
+                };
+                $scope.displayElement = $scope.displayElement || function(element) {
+                    return element.name;
+                };
 
                 $scope.remove = function (index) {
                     $scope.elements.splice(index, 1);
+                    $scope.onTagDeleted();
                 };
             }
         };

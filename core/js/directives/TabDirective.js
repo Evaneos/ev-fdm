@@ -58,7 +58,7 @@
                     };
 
                     $scope.isShowed = function (pane) {
-                        return pane.tabShow == null || !!pane.tabShow;
+                        return pane.alwaysShow || !!pane.tabShow;
                     };
                 },
                 template:
@@ -90,6 +90,12 @@
                     tabShow: '='
                 },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+
+                    scope.alwaysShow = true;
+                    if(angular.isDefined(attrs.tabShow)) {
+                        scope.alwaysShow = false;
+                    }
+
                     tabsCtrl.addPane(scope);
                     transcludeFn(function(clone, transcludedScope) {
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
