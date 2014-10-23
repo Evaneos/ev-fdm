@@ -2496,7 +2496,7 @@ angular.module('ev-fdm')
                 return panels[name];
             }
             
-            var element = angular.element('<div class="ev-panel container-fluid ev-panel-' + 
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
                     name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
