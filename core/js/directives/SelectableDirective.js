@@ -148,49 +148,61 @@ angular.module('ev-fdm')
             }]
         };
     }])
-    .directive('selectable', ['$parse', function($parse) {
-      return {
-          restrict: 'A',
-          require: ['^selectableSet', '?ngModel'],
-          link: function(scope, element, attr, ctrls) {
+    .directive('selectable', ['$parse',
+        function($parse) {
+            return {
+                restrict: 'A',
+                require: ['^selectableSet', '?ngModel'],
+                link: function(scope, element, attr, ctrls) {
 
-              var currentElementGetter = $parse(attr.selectable);
-              var currentElement = currentElementGetter(scope);
+                    var currentElementGetter = $parse(attr.selectable);
+                    var currentElement = currentElementGetter(scope);
 
-              var ctrl = ctrls[0],
-                  modelCtrl = ctrls[1];
+                    var ctrl = ctrls[0],
+                        modelCtrl = ctrls[1];
 
-              ctrl.registerElement(currentElement);
+                    ctrl.registerElement(currentElement);
 
-              scope.$on('$destroy', function() {
-                  ctrl.unregisterElement(currentElement);
-              });
+                    scope.$on('$destroy', function() {
+                        ctrl.unregisterElement(currentElement);
+                    });
 
-              scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
-                scope.selected = ctrl.isElementSelected(currentElement);
-                if(modelCtrl) {
-                  modelCtrl.$setViewValue(scope.selected);
+                    scope.$watch(function() {
+                        return ctrl.isElementSelected(currentElement);
+                    }, function() {
+                        scope.selected = ctrl.isElementSelected(currentElement);
+                        if (modelCtrl) {
+                            modelCtrl.$setViewValue(scope.selected);
+                        }
+                    });
+
+                    var clicks = 0, timeout;
+                    element.on('click', function(event) {
+                        if (timeout) {
+                            clearTimeout(timeout);
+                        }
+                        timeout = setTimeout(function() {
+                            clicks = 0;
+                        }, 800);
+                        if (clicks++ === 0) {
+                            scope.$apply(function() {
+                                handleClick(event);
+                            });
+                        }
+                    });
+
+                    function handleClick(event) {
+                        if (event.shiftKey) {
+                            ctrl.shiftedClick(currentElement, scope.$index);
+                        } else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
+                            ctrl.toggleSelection(currentElement, scope.$index);
+                        }
+                    }
+
                 }
-              });
-
-              element.on('click', function(event) {
-                  scope.$apply(function() {
-                      handleClick(event);
-                  });
-              });
-
-              function handleClick(event) {
-                  if (event.shiftKey) {
-                      ctrl.shiftedClick(currentElement, scope.$index);
-                  }
-                  else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
-                      ctrl.toggleSelection(currentElement, scope.$index);
-                  }
-              }
-
-          }
-      };
-  }])
+            };
+        }
+    ])
     .directive('selectBox', function() {
         return {
             restrict: 'E',

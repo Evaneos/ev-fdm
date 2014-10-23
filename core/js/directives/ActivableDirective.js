@@ -16,7 +16,7 @@ angular.module('ev-fdm').directive('activableSet', function() {
                 self.activeElement = newActiveElement;
             });
 
-           this.toggleActive = function(value) {
+            this.toggleActive = function(value) {
                 if(value !== this.activeElement) {
                     if (activeElementSet) {
                         activeElementSet($scope, value);
@@ -33,7 +33,7 @@ angular.module('ev-fdm').directive('activableSet', function() {
                 }
 
                 $scope.$eval($attrs.activeChange);
-           };
+            };
 
         }]
     };
@@ -49,7 +49,7 @@ angular.module('ev-fdm').directive('activable', ['$parse', function($parse) {
 
 
             scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
-              currentElement = newCurrentElement;
+                currentElement = newCurrentElement;
             });
 
             scope.$watch(
@@ -64,11 +64,20 @@ angular.module('ev-fdm').directive('activable', ['$parse', function($parse) {
                 }
             );
 
+            var clicks = 0, timeout;
             element.on('click', function(event) {
-                if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
-                    scope.$apply(function() {
-                        ctrl.toggleActive(currentElement);
-                    });
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+                timeout = setTimeout(function() {
+                    clicks = 0;
+                }, 800);
+                if (clicks++ === 0) {
+                    if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
+                        scope.$apply(function() {
+                            ctrl.toggleActive(currentElement);
+                        });
+                    }
                 }
             });
         }
