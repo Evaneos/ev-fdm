@@ -1265,9 +1265,9 @@ angular.module('ev-fdm').directive('body', [
 angular.module('ev-fdm')
     .provider('evResponsiveViewport', function () {
         var breakpoints = {
-            300: 'ev-viewport-xs',
-            450: 'ev-viewport-sm',
-            700: 'ev-viewport-md'
+            400: 'ev-viewport-xs',
+            600: 'ev-viewport-sm',
+            900: 'ev-viewport-md'
         };
         this.$get =function () {
             return breakpoints;
