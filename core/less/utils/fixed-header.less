@@ -6,7 +6,6 @@
     .flexbox();
     .flex-direction(column);
     overflow-y: auto;
-    max-height: inherit;
     height: 100%;
 }
 
@@ -19,4 +18,14 @@
     position: relative;
     .flex(2009, 1);
     .flex(2013, auto);
+}
+
+
+// Inside flexbox, we need to have absolute for height 100% 
+.ev-body .ev-fixed-header {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
 }
