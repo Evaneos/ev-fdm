@@ -10,52 +10,53 @@
     /*********************************************************
      * NORMAL STATE
      ********************************************************/
+}
 
-    .ev-panel {
-        &:not(:first-child) {
-            border-left: 1px solid @ev-panel-dark-color;
-        }
-
-
-        // Close button
-        .close {
-            right: 0;
-            font-size: 2em;
-            padding: @ev-panel-padding;
-            position: absolute;
-        }
+.ev-panel {
+    min-width: @ev-panel-min-width;
+    &:not(:first-child) {
+        border-left: 1px solid @ev-panel-dark-color;
     }
 
 
-    .ev-panel:not(.ev-stacked) {
-        height: inherit;
-        background: @ev-panel-color;
-        .ev-stacked-show {
-            display: none;
-        }
+    // Close button
+    .close {
+        right: 0;
+        font-size: 2em;
+        padding: @ev-panel-padding;
+        position: absolute;
     }
+}
+
+
+.ev-panel:not(.ev-stacked) {
+    height: inherit;
+    background: @ev-panel-color;
+    .ev-stacked-show {
+        display: none;
+    }
+}
 
     /*********************************************************
      * STACKED STATE
      ********************************************************/
 
-    .ev-panel.ev-stacked {
-        max-width: @ev-panel-stacked-size;
-        min-width: 0;
-        .align-self(center);
+.ev-panel.ev-stacked {
+    max-width: @ev-panel-stacked-size;
+    min-width: 0;
+    .align-self(center);
 
-        > * {
-            .transform(rotate(-90deg));
-            white-space: nowrap;
-        }
-        // Hide everything that FOLLOW the stacked section
-        .ev-stacked-hide {
-            display: none;
-        }
+    > * {
+        .transform(rotate(-90deg));
+        white-space: nowrap;
+    }
+    // Hide everything that FOLLOW the stacked section
+    .ev-stacked-hide {
+        display: none;
+    }
 
-        &:not(:first-child) {
-            border-left: 1px solid @ev-panel-color;
-        }
+    &:not(:first-child) {
+        border-left: 1px solid @ev-panel-color;
     }
 }
 
