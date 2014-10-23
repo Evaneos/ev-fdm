@@ -106,6 +106,7 @@ angular.module('ev-tinymce', [])
                     if (hasFocus) {
                         if (currentText === attrs.placeholder) {
                             editor.setContent('');
+                            editor.selection.setCursorLocation();
                         }
                     } else {
                         if (newText !== attrs.placeholder) {
@@ -196,14 +197,18 @@ angular.module('ev-tinymce', [])
                         }
                     });
                     editor.on('blur', function(e) {
-                        hasFocus = false;
+                        if (hasFocus) {
+                            hasFocus = false;
+                            updateView();
+                        }
                         tinyElm.blur();
-                        updateView();
                     });
 
                     editor.on('focus', function (e) {
-                        hasFocus = true;
-                        updateView();
+                        if (!hasFocus) {
+                            hasFocus = true;
+                            updateView();
+                        }
                     });
                 };
 

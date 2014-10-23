@@ -2111,6 +2111,13 @@ angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
         return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProvider = dataProvider.dataProvider;
+            }
             var oldQueryTerm = '',
                 filterTextTimeout;
 
@@ -2174,6 +2181,7 @@ angular.module('ev-fdm')
             return config;
         };
     }]);
+
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -4250,6 +4258,7 @@ angular.module('ev-tinymce', [])
                     if (hasFocus) {
                         if (currentText === attrs.placeholder) {
                             editor.setContent('');
+                            editor.setCursorLocation();
                         }
                     } else {
                         if (newText !== attrs.placeholder) {
@@ -4340,14 +4349,18 @@ angular.module('ev-tinymce', [])
                         }
                     });
                     editor.on('blur', function(e) {
-                        hasFocus = false;
+                        if (hasFocus) {
+                            hasFocus = false;
+                            updateView();
+                        }
                         tinyElm.blur();
-                        updateView();
                     });
 
                     editor.on('focus', function (e) {
-                        hasFocus = true;
-                        updateView();
+                        if (!hasFocus) {
+                            hasFocus = true;
+                            updateView();
+                        }
                     });
                 };
 
