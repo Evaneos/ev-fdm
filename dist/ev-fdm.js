@@ -361,7 +361,8 @@ angular.module('ev-fdm')
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                communicationService.emit('common::filters.changed', this.$scope.filters);
+                Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
+                communicationService.emit.apply(this, arguments);
             }.bind(this);
         }
 
@@ -1944,8 +1945,8 @@ angular.module('ev-fdm')
             restrict: 'EA',
             scope: {
                 elements: '=',
-                trackBy: '&',
-                displayElement: '&',
+                trackBy: '=?',
+                displayElement: '=?',
                 editable: '=',
                 className: '@',
                 maxElements: '=',
@@ -1967,10 +1968,10 @@ angular.module('ev-fdm')
                     '</li>' +
                 '</ul>',
             link: function ($scope, elem, attrs) {
-                $scope.trackBy = $scope.trackBy() || function(element) {
+                $scope.trackBy = $scope.trackBy || function(element) {
                     return element.name;
                 };
-                $scope.displayElement = $scope.displayElement() || function(element) {
+                $scope.displayElement = $scope.displayElement || function(element) {
                     return element.name;
                 };
 
@@ -2456,8 +2457,8 @@ module.service('communicationService', ['$rootScope', function($rootScope) {
     /**
      * Emit an event
      */
-    var emit = function(eventName, params) {
-        $rootScope.$emit(eventName, params);
+    var emit = function(eventName, args) {
+        $rootScope.$emit.apply($rootScope, arguments);
     };
 
     /**

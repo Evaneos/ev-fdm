@@ -5,7 +5,8 @@ angular.module('ev-fdm')
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                communicationService.emit('common::filters.changed', this.$scope.filters);
+                Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
+                communicationService.emit.apply(this, arguments);
             }.bind(this);
         }
 
