@@ -5,8 +5,8 @@
 .ev-fixed-header {
     .flexbox();
     .flex-direction(column);
+    height: inherit;
     overflow-y: auto;
-    height: 100%;
 }
 
 .ev-header {
@@ -21,19 +21,11 @@
 }
 
 
-// Inside flexbox, we need to have absolute for height 100% 
-.ev-body .ev-fixed-header {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-}
-
+// Inside vertical flexbox, we need to have absolute for height 100% 
 .ev-body > .full-height {
     position: absolute;
     top: 0;
     bottom: 0;
     right: 0;
-    left: 0;   
+    left: 0;
 }
