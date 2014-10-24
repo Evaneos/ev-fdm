@@ -201,6 +201,10 @@ angular.module('ev-fdm')
                 Pagination method that should be called from the template
              */
             this.$scope.changePage = function(newPage) {
+
+                Array.prototype.unshift.call(arguments, 'common::pagination.changed');
+                communicationService.emit.apply(this, arguments);
+                
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -213,7 +217,7 @@ angular.module('ev-fdm')
 
                 Array.prototype.unshift.call(arguments, 'common::sort.changed', self.sortKey, self.reverseSort);
                 communicationService.emit.apply(this, arguments);
-                
+
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -2115,6 +2119,13 @@ angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
         return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProvider = dataProvider.dataProvider;
+            }
             var oldQueryTerm = '',
                 filterTextTimeout;
 
@@ -2178,6 +2189,7 @@ angular.module('ev-fdm')
             return config;
         };
     }]);
+
 
 if(typeof(Fanny) == 'undefined') {
     Fanny = {}
@@ -4254,6 +4266,7 @@ angular.module('ev-tinymce', [])
                     if (hasFocus) {
                         if (currentText === attrs.placeholder) {
                             editor.setContent('');
+                            editor.selection.setCursorLocation();
                         }
                     } else {
                         if (newText !== attrs.placeholder) {
@@ -4344,14 +4357,18 @@ angular.module('ev-tinymce', [])
                         }
                     });
                     editor.on('blur', function(e) {
-                        hasFocus = false;
+                        if (hasFocus) {
+                            hasFocus = false;
+                            updateView();
+                        }
                         tinyElm.blur();
-                        updateView();
                     });
 
                     editor.on('focus', function (e) {
-                        hasFocus = true;
-                        updateView();
+                        if (!hasFocus) {
+                            hasFocus = true;
+                            updateView();
+                        }
                     });
                 };
 
