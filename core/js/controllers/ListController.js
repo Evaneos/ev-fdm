@@ -30,6 +30,10 @@ angular.module('ev-fdm')
                 Pagination method that should be called from the template
              */
             this.$scope.changePage = function(newPage) {
+
+                Array.prototype.unshift.call(arguments, 'common::pagination.changed');
+                communicationService.emit.apply(this, arguments);
+                
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -39,6 +43,10 @@ angular.module('ev-fdm')
             this.$scope.sortChanged = function() {
                 self.sortKey = self.$scope.sortKey;
                 self.reverseSort = self.$scope.reverseSort;
+
+                Array.prototype.unshift.call(arguments, 'common::sort.changed', self.sortKey, self.reverseSort);
+                communicationService.emit.apply(this, arguments);
+
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
 

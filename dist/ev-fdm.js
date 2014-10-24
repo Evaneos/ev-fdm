@@ -210,6 +210,10 @@ angular.module('ev-fdm')
             this.$scope.sortChanged = function() {
                 self.sortKey = self.$scope.sortKey;
                 self.reverseSort = self.$scope.reverseSort;
+
+                Array.prototype.unshift.call(arguments, 'common::sort.changed', self.sortKey, self.reverseSort);
+                communicationService.emit.apply(this, arguments);
+                
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -1076,7 +1080,7 @@ var module = angular.module('ev-fdm')
                     if (scope.currPage > 1) {
                         scope.currPage--;
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
+                            scope.onPageChange(scope.currPage, 'previousPage');
                         }
                     }
 
@@ -1097,7 +1101,7 @@ var module = angular.module('ev-fdm')
                         scope.currPage++;
                         
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
+                            scope.onPageChange(scope.currPage, 'nextPage');
                         }
                     }
                 }
