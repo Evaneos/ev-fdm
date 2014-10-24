@@ -5,9 +5,12 @@
 
 .ev-flex-columns {
     .full-height();
+    .full-width();
     .flexbox();
     .align-items(stretch);
+    .flex-wrap(wrap);
     & > * {
+    	.flex-shrink(0);
         overflow-y: auto;
     }
 
