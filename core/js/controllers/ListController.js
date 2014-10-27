@@ -8,7 +8,7 @@ angular.module('ev-fdm')
                 defaultReverseSort = elementName.defaultReverseSort;
                 defaultSortKey = elementName.defaultSortKey;
                 elements = elementName.elements;
-                activeIdSelector = elementName.activeIdSelector;
+                activeIdSelector = elementName.activeIdSelector || 'id';
                 elementName = elementName.elementName;
             }
 
@@ -22,7 +22,7 @@ angular.module('ev-fdm')
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
-            this.activeIdSelector = activeIdSelector;
+            this.activeIdSelector = activeIdSelector || 'id';
 
             this.updateScope();
 
@@ -33,7 +33,7 @@ angular.module('ev-fdm')
 
                 Array.prototype.unshift.call(arguments, 'common::pagination.changed');
                 communicationService.emit.apply(this, arguments);
-                
+
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -122,20 +122,19 @@ angular.module('ev-fdm')
             var self = this;
             this.$scope.activeElement = null;
 
-            var activeIdKey = this.activeIdSelector ? this.activeIdSelector : 'id';
-
-            if(angular.isDefined($state.params[activeIdKey])) {
+            if(angular.isDefined($state.params[this.activeIdSelector])) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    if (elementId == $state.params[activeIdKey]) {
+                    if (elementId == $state.params[self.activeIdSelector]) {
                         self.$scope.activeElement = element;
                     }
                 });
             }
         };
 
-        ListController.prototype.toggleView = function(view, element) {
+        ListController.prototype.toggleView = function(view, element, routingArgs) {
             if (!element) {
+                communicationService.emit('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
                 return;
             }
@@ -143,10 +142,18 @@ angular.module('ev-fdm')
             var id = restangular.configuration.getIdFromElem(element);
 
             if (!id || $stateParams.id === id) {
+                communicationService.emit('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
             }
             else {
-                $state.go(this.goToViewStatePath(view, element), { id: id });
+                var params = {};
+                params[this.activeIdSelector] = id;
+
+                angular.extend(params, routingArgs);
+
+                communicationService.emit('common::list.toggleView', view, 'open');
+                
+                $state.go(this.goToViewStatePath(view, element), params);
             }
         };
 
