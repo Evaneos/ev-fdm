@@ -671,7 +671,7 @@ function EvMenuDirective(menuManager) {
     return {
         restrict: 'E',
         replace: true,
-        template:   '<ul class="module-tabs nav nav-tabs" ng-cloak>' +
+        template:   '<ul class="module-tabs ev-header nav nav-tabs" ng-cloak>' +
                         '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
