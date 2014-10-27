@@ -202,9 +202,11 @@ angular.module('ev-fdm')
              */
             this.$scope.changePage = function(newPage) {
 
-                Array.prototype.unshift.call(arguments, 'common::pagination.changed');
-                communicationService.emit.apply(this, arguments);
+                var eventArgs = angular.copy(arguments);
 
+                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed');
+                communicationService.emit.apply(this, eventArgs);
+  
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -215,8 +217,10 @@ angular.module('ev-fdm')
                 self.sortKey = self.$scope.sortKey;
                 self.reverseSort = self.$scope.reverseSort;
 
-                Array.prototype.unshift.call(arguments, 'common::sort.changed', self.sortKey, self.reverseSort);
-                communicationService.emit.apply(this, arguments);
+                var eventArgs = angular.copy(arguments);
+
+                Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
+                communicationService.emit.apply(this, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
@@ -264,6 +268,7 @@ angular.module('ev-fdm')
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
             this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                console.log('HUHUHU');
                 this.elements = elements;
                 this.updateScope();
             }.bind(this));
@@ -322,6 +327,8 @@ angular.module('ev-fdm')
 
                 angular.extend(params, routingArgs);
 
+                communicationService.emit('common::list.toggleView', view, 'open');
+                
                 $state.go(this.goToViewStatePath(view, element), params);
             }
         };
