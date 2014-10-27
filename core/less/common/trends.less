@@ -1,39 +1,31 @@
 .trend {
-    i {
-        margin-right: 10px;
-        margin-left: -10px;
-    }
-    // icons are injected in icons.less
 
-    &.reverse {
-        &.up {
-            color: @brand-warning;
-        }
-        &.down {
-            color: @brand-success;
-        }
-    }
-    &.up {
+    &.trend-up {
         color: @brand-success;
     }
-    &.down {
+
+    &.trend-down {
         color: @brand-warning;
     }
 
-    &.equal {
+    &.trend-equal {
         color: @gray-dark;
-        i {
-            margin-right: 0px;
-            &:before {
-                // content: '=';
-                // font-family: Arial;
-                // font-weight: bold;
-            }
+    }
+
+    &.trend-reverse {
+        &.trend-up {
+            color: @brand-warning;
+        }
+
+        &.trend-down {
+            color: @brand-success;
         }
     }
+
     .loading-dots {
         display: none;
     }
+
     &.promise-resolving {
         .loading-dots {
             display: inline-block;
