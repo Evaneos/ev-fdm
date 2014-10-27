@@ -193,9 +193,11 @@ angular.module('ev-fdm')
              */
             this.$scope.changePage = function(newPage) {
 
-                Array.prototype.unshift.call(arguments, 'common::pagination.changed');
-                communicationService.emit.apply(this, arguments);
+                var eventArgs = angular.copy(arguments);
 
+                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed');
+                communicationService.emit.apply(this, eventArgs);
+  
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -206,8 +208,10 @@ angular.module('ev-fdm')
                 self.sortKey = self.$scope.sortKey;
                 self.reverseSort = self.$scope.reverseSort;
 
-                Array.prototype.unshift.call(arguments, 'common::sort.changed', self.sortKey, self.reverseSort);
-                communicationService.emit.apply(this, arguments);
+                var eventArgs = angular.copy(arguments);
+
+                Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
+                communicationService.emit.apply(this, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
