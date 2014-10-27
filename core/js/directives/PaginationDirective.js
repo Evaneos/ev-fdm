@@ -68,9 +68,10 @@ var module = angular.module('ev-fdm')
 
                 scope.previousPage = function (){
                     if (scope.currPage > 1) {
+                        var oldPage = scope.currPage;
                         scope.currPage--;
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
+                            scope.onPageChange(scope.currPage, oldPage, 'previousPage');
                         }
                     }
 
@@ -78,20 +79,22 @@ var module = angular.module('ev-fdm')
 
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
+                         var oldPage = scope.currPage;
                         scope.currPage = value;
 
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(value);
+                            scope.onPageChange(value, oldPage);
                         }
                     }
                 };
 
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
+                        var oldPage = scope.currPage;
                         scope.currPage++;
 
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
+                            scope.onPageChange(scope.currPage, oldPage, 'nextPage');
                         }
                     }
                 };

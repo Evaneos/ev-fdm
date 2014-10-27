@@ -13,8 +13,8 @@ module.service('communicationService', ['$rootScope', function($rootScope) {
     /**
      * Emit an event
      */
-    var emit = function(eventName, params) {
-        $rootScope.$emit(eventName, params);
+    var emit = function(eventName, args) {
+        $rootScope.$emit.apply($rootScope, arguments);
     };
 
     /**

@@ -170,7 +170,7 @@ angular.module('ev-fdm')
                 defaultReverseSort = elementName.defaultReverseSort;
                 defaultSortKey = elementName.defaultSortKey;
                 elements = elementName.elements;
-                activeIdSelector = elementName.activeIdSelector;
+                activeIdSelector = elementName.activeIdSelector || 'id';
                 elementName = elementName.elementName;
             }
 
@@ -184,7 +184,7 @@ angular.module('ev-fdm')
             this.defaultReverseSort = defaultReverseSort;
             this.sortKey = this.defaultSortKey;
             this.reverseSort = this.defaultReverseSort;
-            this.activeIdSelector = activeIdSelector;
+            this.activeIdSelector = activeIdSelector || 'id';
 
             this.updateScope();
 
@@ -192,6 +192,10 @@ angular.module('ev-fdm')
                 Pagination method that should be called from the template
              */
             this.$scope.changePage = function(newPage) {
+
+                Array.prototype.unshift.call(arguments, 'common::pagination.changed');
+                communicationService.emit.apply(this, arguments);
+
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -201,6 +205,10 @@ angular.module('ev-fdm')
             this.$scope.sortChanged = function() {
                 self.sortKey = self.$scope.sortKey;
                 self.reverseSort = self.$scope.reverseSort;
+
+                Array.prototype.unshift.call(arguments, 'common::sort.changed', self.sortKey, self.reverseSort);
+                communicationService.emit.apply(this, arguments);
+
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -276,20 +284,19 @@ angular.module('ev-fdm')
             var self = this;
             this.$scope.activeElement = null;
 
-            var activeIdKey = this.activeIdSelector ? this.activeIdSelector : 'id';
-
-            if(angular.isDefined($state.params[activeIdKey])) {
+            if(angular.isDefined($state.params[this.activeIdSelector])) {
                 angular.forEach(this.elements, function(element) {
                     var elementId = restangular.configuration.getIdFromElem(element);
-                    if (elementId == $state.params[activeIdKey]) {
+                    if (elementId == $state.params[self.activeIdSelector]) {
                         self.$scope.activeElement = element;
                     }
                 });
             }
         };
 
-        ListController.prototype.toggleView = function(view, element) {
+        ListController.prototype.toggleView = function(view, element, routingArgs) {
             if (!element) {
+                communicationService.emit('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
                 return;
             }
@@ -297,10 +304,18 @@ angular.module('ev-fdm')
             var id = restangular.configuration.getIdFromElem(element);
 
             if (!id || $stateParams.id === id) {
+                communicationService.emit('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
             }
             else {
-                $state.go(this.goToViewStatePath(view, element), { id: id });
+                var params = {};
+                params[this.activeIdSelector] = id;
+
+                angular.extend(params, routingArgs);
+
+                communicationService.emit('common::list.toggleView', view, 'open');
+                
+                $state.go(this.goToViewStatePath(view, element), params);
             }
         };
 
@@ -352,7 +367,8 @@ angular.module('ev-fdm')
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
-                communicationService.emit('common::filters.changed', this.$scope.filters);
+                Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
+                communicationService.emit.apply(this, arguments);
             }.bind(this);
         }
 
@@ -922,9 +938,10 @@ var module = angular.module('ev-fdm')
 
                 scope.previousPage = function (){
                     if (scope.currPage > 1) {
+                        var oldPage = scope.currPage;
                         scope.currPage--;
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
+                            scope.onPageChange(scope.currPage, oldPage, 'previousPage');
                         }
                     }
 
@@ -932,20 +949,22 @@ var module = angular.module('ev-fdm')
 
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
+                         var oldPage = scope.currPage;
                         scope.currPage = value;
 
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(value);
+                            scope.onPageChange(value, oldPage);
                         }
                     }
                 };
 
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
+                        var oldPage = scope.currPage;
                         scope.currPage++;
 
                         if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage);
+                            scope.onPageChange(scope.currPage, oldPage, 'nextPage');
                         }
                     }
                 };
@@ -956,6 +975,7 @@ var module = angular.module('ev-fdm')
             }
         };
     }]);
+
 (function () {
     'use strict';
     var module = angular.module('ev-fdm')
@@ -1968,6 +1988,13 @@ angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
         return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProvider = dataProvider.dataProvider;
+            }
             var oldQueryTerm = '',
                 filterTextTimeout;
 
@@ -2031,6 +2058,7 @@ angular.module('ev-fdm')
             return config;
         };
     }]);
+
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -2155,8 +2183,8 @@ module.service('communicationService', ['$rootScope', function($rootScope) {
     /**
      * Emit an event
      */
-    var emit = function(eventName, params) {
-        $rootScope.$emit(eventName, params);
+    var emit = function(eventName, args) {
+        $rootScope.$emit.apply($rootScope, arguments);
     };
 
     /**

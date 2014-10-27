@@ -3,6 +3,13 @@ angular.module('ev-fdm')
     .factory('Select2Configuration', ['$timeout', function($timeout) {
 
         return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProvider = dataProvider.dataProvider;
+            }
             var oldQueryTerm = '',
                 filterTextTimeout;
 
