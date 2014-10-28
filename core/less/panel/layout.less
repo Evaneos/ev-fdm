@@ -41,7 +41,7 @@
 
 .ev-panel.ev-stacked {
     max-width: @ev-panel-stacked-size;
-    min-width: 0;
+    min-width: @ev-panel-stacked-size;
     .align-self(center);
 
     > * {
@@ -55,6 +55,13 @@
 
     &:not(:first-child) {
         border-left: 1px solid @ev-panel-color;
+    }
+}
+
+// Hide in mobile
+@media (max-width: 700px) {
+    .ev-panel.ev-stacked {
+        display: none;
     }
 }
 
