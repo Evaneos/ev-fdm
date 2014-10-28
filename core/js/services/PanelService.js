@@ -201,7 +201,6 @@ angular.module('ev-fdm')
 
        
         function updateLayout(element, containerId) {
-            console.log('yipee')
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
                     updateLayout(null, id);

@@ -267,7 +267,6 @@ angular.module('ev-fdm')
      */
     function resizeAndStackPanels(panels, dataPanels, containerWidth) {
 
-            console.log(dataPanels, containerWidth);
         angular.forEach(panels, function(domElement, i) {
             var element   = angular.element(domElement),
                 dataPanel = dataPanels[i];
@@ -275,7 +274,6 @@ angular.module('ev-fdm')
                 console.log('no element for this panel)');
                 return;
             }
-            // console.log(containerWidth, dataPanels);
             if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
                 $animate.removeClass(element, 'ev-stacked');
             } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
