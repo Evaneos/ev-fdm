@@ -8,8 +8,6 @@ angular.module('ev-fdm')
 
         var containers   = {};
         var panelsList   = {};
-        var stylesCache  = window.stylesCache = {};
-        var self         = this;
         
         var addToDom = function (panel, containerId) {
             var container = containers[containerId];
@@ -82,7 +80,7 @@ angular.module('ev-fdm')
             }
             
             var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
+                    name + '" ev-responsive-viewport>' + 
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
@@ -92,27 +90,33 @@ angular.module('ev-fdm')
                 element.html(template);
                 element = $compile(element)($rootScope.$new());
                 panel.element  = element;
-                element.resizable({
-                    handles: "e",
-                    helper: "ui-resizable-helper",
-                });
+                // element.resizable({
+                //     handles: "e",
+                //     helper: "ui-resizable-helper",
+                // });
                 
-                element.on('resizestop', function(event, ui) {
-                    // resizable plugin does an unwanted height resize
-                    // so we cancel the height set.
-                    $(this).css("height","");
+                // element.on('resizestop', function(event, ui) {
+                //     // resizable plugin does an unwanted height resize
+                //     // so we cancel the height set.
+                //     // $(this).css("height","");
+                //     // debugger;
+                //     // var afterPanel = element.next('.ev-panel');
+                //     // var delta = ui.size.width - ui.originalSize.width;
 
-                    var afterPanel = element.next('.ev-panel');
-                    var delta = ui.size.width - ui.originalSize.width;
-                    afterPanel.width(afterPanel.width() - delta);
-                    element.width(ui.size.width);
-                    stylesCache[panel.panelName] = ui.size.width;
-                    updateLayout(self, id);
-                })
-                .on('resize', function () {
-                    // Prevent jquery ui to do weird things 
-                    return false;
-                });
+                //     // var afterPanelInitialWidth = afterPanel.width();
+                //     // afterPanel.width(afterPanelInitialWidth - delta);
+                //     // // We then compute the effective delta (maybe less than the theorical one because of max/min width).
+                //     // var effectiveDelta =  afterPanelInitialWidth - afterPanel.width();
+                //     // // Then, we compute the correction to apply to the current panel
+                //     // var newWidth = ui.originalSize.width + effectiveDelta;
+
+                //     // element.width(newWidth);
+                //     $rootScope.$broadcast('module-layout-changed');
+                // })
+                // .on('resize', function () {
+                //     // Prevent jquery ui to do weird things 
+                //     return false;
+                // });
                 addToDom(panel, id);
                 return panel;
             });
@@ -180,14 +184,6 @@ angular.module('ev-fdm')
             }, 200);
         });         
 
-        function getStylesFromCache(name, options) {
-            var savedWidth = stylesCache[name];
-            if (savedWidth) {
-                return 'width: ' + savedWidth + 'px;';
-            }
-
-            return '';
-        }
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
@@ -227,8 +223,10 @@ angular.module('ev-fdm')
         function checkStacking(panels, container) {
             panels.forEach(function (panel) {
                 angular.element(panel).removeClass('ev-stacked');
+                // We reset the width each time we update the layout
+                angular.element(panel).css('width', null);
             });
-            // Check if number of panels > NUM STACKED MAX
+            // We stack panels until there is only three left
             if (panels.length > MAX_VISIBLE_PANEL) {
                 panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
                     angular.element(panel).addClass('ev-stacked');
@@ -236,11 +234,12 @@ angular.module('ev-fdm')
             }
             // Starting from the first non stack panel, 
             var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
-            // Stack until overflow does not exists anymore (or we run out of panels)
-            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length) {
+            // Stack until overflow does not exists anymore (or we arrive to the last panel)
+            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
                 angular.element(panels[i]).addClass('ev-stacked');
                 i ++;
             }
+            $rootScope.$broadcast('module-layout-changed');
         }
 
         return this;
