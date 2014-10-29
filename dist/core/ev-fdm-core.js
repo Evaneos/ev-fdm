@@ -2381,16 +2381,15 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
 }]);
 
 const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
+const MAX_VISIBLE_PANEL = 3;
 
 angular.module('ev-fdm')
     .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
-        '$window', 'PanelLayoutEngine', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
-            $window, panelLayoutEngine) {
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+            $window) {
 
         var containers   = {};
         var panelsList   = {};
-        var stylesCache  = window.stylesCache = {};
-        var self         = this;
         
         var addToDom = function (panel, containerId) {
             var container = containers[containerId];
@@ -2463,7 +2462,7 @@ angular.module('ev-fdm')
             }
             
             var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport style="' + getStylesFromCache(name, panel) + '">' + 
+                    name + '" ev-responsive-viewport>' + 
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
@@ -2473,28 +2472,6 @@ angular.module('ev-fdm')
                 element.html(template);
                 element = $compile(element)($rootScope.$new());
                 panel.element  = element;
-                element.resizable({
-                    handles: "e",
-                    helper: "ui-resizable-helper",
-                });
-                
-                element.on('resizestop', function(event, ui) {
-                    // resizable plugin does an unwanted height resize
-                    // so we cancel the height set.
-                    $(this).css("height","");
-
-                    var afterPanel = element.next('.ev-panel');
-                    var delta = ui.size.width - ui.originalSize.width;
-                    afterPanel.width(afterPanel.width() - delta);
-                    element.width(ui.size.width);
-                    stylesCache[panel.panelName] = ui.size.width;
-                    updateLayout(self, id);
-                })
-                .on('resize', function () {
-                    // Prevent jquery ui to do weird things 
-                    return false;
-                });
-                console.log('yo');
                 addToDom(panel, id);
                 return panel;
             });
@@ -2518,7 +2495,7 @@ angular.module('ev-fdm')
             var panels = panelsList[containerId];
 
             if (!name || !panels[name]) {
-                console.log("Panel not found for: " + name);
+                console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
             var element  = panels[name].element;
@@ -2562,14 +2539,6 @@ angular.module('ev-fdm')
             }, 200);
         });         
 
-        function getStylesFromCache(name, options) {
-            var savedWidth = stylesCache[name];
-            if (savedWidth) {
-                return 'width: ' + savedWidth + 'px;';
-            }
-
-            return '';
-        }
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
@@ -2583,7 +2552,6 @@ angular.module('ev-fdm')
 
        
         function updateLayout(element, containerId) {
-            console.log('yipee')
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
                     updateLayout(null, id);
@@ -2591,20 +2559,32 @@ angular.module('ev-fdm')
                 return this;
             }
             var container = containers[containerId];
-            var panelElements = angular.element(container).children('.ev-panel');
+            var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
             
-            if (element) {
-                for (var i = 0; i < panelElements.length; i++) {
-                    var current = panelElements[i];
-                    if (element == current) {
-                        panelElements.splice(i, 1);
-                        panelElements.push(element);
-                        break;
-                    }
-                }
+
+            checkStacking(panelElements, container);
+        }
+
+        function checkStacking(panels, container) {
+            panels.forEach(function (panel) {
+                angular.element(panel).removeClass('ev-stacked');
+                // We reset the width each time we update the layout
+                angular.element(panel).css('width', null);
+            });
+            // We stack panels until there is only three left
+            if (panels.length > MAX_VISIBLE_PANEL) {
+                panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
+                    angular.element(panel).addClass('ev-stacked');
+                });
             }
-            var containerWidth = container.width();
-            panelLayoutEngine.checkStacking(panelElements, containerWidth);
+            // Starting from the first non stack panel, 
+            var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
+            // Stack until overflow does not exists anymore (or we arrive to the last panel)
+            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
+                angular.element(panels[i]).addClass('ev-stacked');
+                i ++;
+            }
+            $rootScope.$broadcast('module-layout-changed');
         }
 
         return this;
@@ -2621,172 +2601,6 @@ angular.module('ev-fdm')
         };
     }]);
 
-var module = angular.module('ev-fdm');
-
-var SidonieModalService = function($modal, $animate, $log) {
-
-    // main object containing all opened modals
-    var regions = {};
-    regions[ SidonieModalService.REGION_RIGHT ] = { multi: false, opened: [ ] };
-    regions[ SidonieModalService.REGION_MIDDLE ] = { multi: false, opened: [ ] };
-
-
-    // --------------------------------------------------------
-    // 'PUBLIC' FUNCTIONS
-    // --------------------------------------------------------
-
-    /**
-     * Makes sure that:
-     * - the current opened popup in that region is not locked for edition
-     * - the current opened popup is not already of that type (in that case, do not open a new popup)
-     *
-     * @param  region
-     * @param  modalType
-     * @param  options
-     * @return the modal instance if success, false if cancelled by a locked popup
-     */
-    function open(region, modalType, options) {
-        var regionSpecs = getRegionSpecs(region);
-        var isMulti = regionSpecs.multi;
-        var openedModals = regionSpecs.opened;
-
-        if (!options.windowClass) {
-            options.windowClass = ' fade ';
-        }
-        options.windowClass += ' ' + region;
-        if (!options.templateUrl && !options.template) {
-            options.templateUrl = modalType + '.phtml';
-        }
-
-        options.backdrop = (region == SidonieModalService.REGION_MIDDLE);
-
-        if (isMulti) {
-            throw new Error('Multi not implemented yet');
-        } else {
-            if (openedModals.length) {
-                var openedModal = openedModals[openedModals.length - 1];
-                // current opened modal cannot be closed / updated
-                if (openedModal.status == SidonieModalService.STATUS_LOCKED) {
-                    $log.warn('Open modal aborted due to ' + openedModal.sidonieModalType + '\'s locked status');
-                    highlightModal(openedModal);
-                    return false;
-                // current opened modal has to be replaced
-                } else if (openedModal.sidonieModalType != modalType) {
-                    // close and open a new one
-                    openedModal.modal('hide');
-                    var modal = $modal.open(options);
-                    modal.sidonieModalType = modalType;
-                    modal.result.finally(handleModalClosing(region, modal));
-                    regionSpecs.opened = [ modal ];
-                    return modal;
-                // current opened modal can be kept and content updated
-                } else {
-                    return openedModal;
-                }
-            } else {
-                // simply open a new popup
-                var modal = $modal.open(options);
-                modal.sidonieModalType = modalType;
-                modal.result.finally(handleModalClosing(region, modal));
-                regionSpecs.opened = [ modal ];
-                return modal;
-            }
-        }
-    }
-
-    /**
-     * Closes all currently opened modals, making sure
-     * they are ALL not locked
-     * @return true if success, locked popup if not
-     */
-    function closeAll() {
-        // check if all popups are ready to be closed
-        var cancelled = false;
-        angular.forEach(regions, function(regionSpecs, region) {
-            angular.forEach(regionSpecs.opened, function(modal) {
-                if (cancelled) return;
-                if (modal.status == SidonieModalService.STATUS_LOCKED) {
-                    highlightModal(modal);
-                    $log.warn('Open modal aborted due to ' + modal.sidonieModalType + '\'s locked status');
-                    cancelled = modal;
-                }
-            });
-        });
-        if (cancelled) return cancelled;
-        // actually close all the popups
-        angular.forEach(regions, function(regionSpecs, region) {
-            angular.forEach(regionSpecs.opened, function(modal) {
-                try {
-                    modal.close();
-                } catch(e) {}
-            });
-        });
-        return true;
-    }
-
-    /**
-     * Returns the latest modal of that region
-     */
-    function get(region, modalType) {
-        var regionSpecs = getRegionSpecs(region);
-        if (regionSpecs.modals.length) {
-            var modal = regionSpecs.modals[regionSpecs.modals.length - 1];
-            if (!modalType || modal.sidonieModalType == modalType) {
-                return modal;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    // --------------------------------------------------------
-    // 'PRIVATE' FUNCTIONS
-    // --------------------------------------------------------
-
-    function getRegionSpecs(region) {
-        var regionSpecs = regions[region];
-        if (typeof(regionSpecs) == 'undefined') {
-            throw new Error('Unknown region ' + region);
-        }
-        return regionSpecs;
-    }
-
-    function handleModalClosing(region, modal) {
-        return function(result) {
-            var regionSpecs = getRegionSpecs(region);
-            angular.forEach(regionSpecs.opened, function(_modal) {
-                if (modal == _modal) {
-                    regionSpecs.opened = _(regionSpecs.opened).without(modal);
-                }
-            });
-        }
-    }
-
-    function highlightModal(modal) {
-        $animate.addClass(modal, 'modal-locked', function() {
-            $animate.removeClass(modal, 'modal-locked');
-        });
-    }
-
-    return {
-        open: open,
-        openRight: function(modalType, options) {
-            open(SidonieModalService.REGION_RIGHT, modalType, options);
-        },
-        openMiddle: function(modalType, options) {
-            open(SidonieModalService.REGION_MIDDLE, modalType, options);
-        },
-        get: get,
-        closeAll: closeAll
-    }
-}
-
-SidonieModalService.STATUS_LOCKED = 'locked';
-SidonieModalService.REGION_RIGHT = 'right';
-SidonieModalService.REGION_MIDDLE = 'middle';
-
-
-module.service('SidonieModalService', [ '$modal', '$animate', '$log', SidonieModalService ]);
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -3462,326 +3276,3 @@ angular.module('ev-fdm')
         }
     }
 });
-
-
-angular.module('ev-fdm')
-
-/**
- * STACKING AND PANELS SIZE MANAGEMENT
- */
-.service('PanelLayoutEngine', ['$animate', '$rootScope', function($animate, $rootScope) {
-
-    const STACKED_WIDTH = 35;
-    const MOBILE_WIDTH = 700;
-
-    /**************************
-     *           #1           *
-     *  Extract panels infos  *
-     **************************/
-
-    /**
-     * Extract all useful panels informations
-     * The (min-/max-/stacked-)width and the stacked state
-     * @param  {Array} panels the panels
-     * @return {Array}        Array containing the extracted values
-     */
-    function getDataFromPanels(panels, containerWidth) {
-        var datas = [];
-
-        angular.forEach(panels, function(panelDom) {
-            var panelElement = angular.element(panelDom);
-            // If no min width / max width attribute we set them (in a next )
-            if (angular.isUndefined(panelElement.attr('data-min-width'))) {
-                panelElement.attr('data-min-width', panelElement.css('min-width') || STACKED_WIDTH * 2);
-            }
-            if (angular.isUndefined(panelElement.attr('data-max-width'))) {
-                panelElement.attr('data-max-width', panelElement.css('max-width'));
-            }
-            var data = {
-                minWidth: parseInt(panelElement.attr('data-min-width')),
-                maxWidth: parseInt(panelElement.attr('data-max-width')) || containerWidth,
-                stacked:  panelElement.hasClass('ev-stacked'),
-                width:    panelElement.outerWidth(),
-                stackedWidth: (containerWidth < MOBILE_WIDTH) ? 0 : STACKED_WIDTH
-            };
-            if (data.width < data.minWidth) {
-                data.width = data.minWidth;
-            }
-
-            if (data.width > data.maxWidth && data.maxWidth > 0) {
-                data.width = data.maxWidth;
-            }
-            datas.push(data);
-        });
-
-        return datas;
-    }
-
-    /**************************
-     *           #2           *
-     *      Compute datas     *
-     **************************/
-
-    /**
-     * Count the minimal number of panels that need to be stacked
-     */
-    function countMinStacked(datas, limit) {
-        var minStacked = 0;
-        var i = 0;
-        var j = 0;
-        var datasLength = datas.length;
-        var totalMinWidth = 0;
-        var data = null;
-
-        for (; i < datasLength; i++) {
-            totalMinWidth = 0;
-
-            for(j = 0; j < datasLength; j++) {
-                data = datas[j];
-
-                if (j < i) {
-                    totalMinWidth += data.stackedWidth;
-                    continue;
-                }
-
-                var width = data.minWidth;
-                if(width < data.stackedWidth) {
-                    width = data.stackedWidth;
-                }
-
-                totalMinWidth += width;
-            }
-
-            if (totalMinWidth > limit) {
-                minStacked++;
-            }
-        }
-
-        return minStacked;
-    }
-
-    /**
-     * Count the maximal number of panels that can be stacked
-     */
-    function countMaxStacked(datas, limit) {
-        var maxStacked = datas.length;
-        var datasLength = datas.length;
-        var i = datasLength;
-        var j = 0;
-        var totalMaxWidth = 0;
-        var data = null;
-
-        for (; i > 0; i--) {
-            totalMaxWidth = 0;
-
-            for(j = 0; j < datasLength; j++) {
-                data = datas[j];
-
-                if (j < i) {
-                    totalMaxWidth += data.stackedWidth;
-                    continue;
-                }
-
-                var width = data.maxWidth;
-                if(width < data.stackedWidth) {
-                    width = data.stackedWidth;
-                }
-
-                totalMaxWidth += width;
-            }
-
-            if (totalMaxWidth < limit) {
-                maxStacked--;
-            }
-        }
-
-        return maxStacked;
-    }
-
-    /**
-     * For each panels, test if he needs to be stacked
-     */
-    function updateStackState(datas,limit) {
-        var minStacked = countMinStacked(datas, limit);
-        var maxStacked = countMaxStacked(datas, limit);
-
-        angular.forEach(datas, function(element) {
-            element.stacked = false;
-        });
-
-        var nbStacked = minStacked;
-
-        /**
-         * Specific rule where, for more readability, we stack a panel.
-         */
-        if (((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
-            nbStacked = datas.length - 3;
-        }
-
-        var i = 0;
-        for(; i < nbStacked; i++) {
-            datas[i].stacked = true;
-        }
-
-        return {
-            nbStacked: nbStacked,
-            datas: datas
-        };
-    }
-
-    /**
-     * Update the size of each panels
-     */
-    function updateSize(datas, limit) {
-        var totalWidth = 0;
-
-        angular.forEach(datas, function(data) {
-            // Ensures the width aren't below the min
-            if (data.width < data.minWidth) {
-                data.width = data.minWidth;
-            }
-
-            totalWidth += data.stacked ? data.stackedWidth : data.width;
-        });
-
-        // Delta is the gap we have to reach the limit
-        var delta = limit - totalWidth,
-            datasLength = datas.length,
-            data = null;
-
-        for (var i = 0; i < datasLength; i++) {
-            data = datas[i];
-
-            if (data.stacked) {
-                data.width = data.stackedWidth;
-                continue;
-            }
-
-            // Try to add all the delta at once
-            var oldWidth = data.width;
-            var newWidth = data.width + delta;
-
-            // Check limit
-            if (data.minWidth > newWidth) {
-                data.width = data.minWidth;
-            }
-
-            // Check limit
-            else if (data.maxWidth !== 0 && data.maxWidth < newWidth) {
-                data.width = data.maxWidth;
-            } else {
-                data.width = data.width + delta;
-            }
-
-            delta = delta - (data.width - oldWidth);
-
-            // Break if there is no more delta
-            if (delta === 0) {
-                break;
-            }
-        }
-
-        // if (delta !== 0) {
-        //     return false;
-        // }
-
-        return datas;
-    }
-
-    /**
-     * Calculate datas from the dataPanels received accordingly to a max width
-     * @param  {Array}  datas Panels data
-     * @param  {Int}    limit limit width]
-     * @return {Array}  datas computed
-     */
-    function calculateStackingFromData(datas, limit) {
-        var result = updateStackState(datas, limit);
-        datas      = result.datas;
-
-        if(result.nbStacked !== datas.length) {
-            // If we don't need to stack all the panels
-            datas = updateSize(datas, limit);
-        } else {
-            // If we need to stack all the panels
-            // We don't stack the last one, but we hide all the stacked panels
-            var lastPanel = datas[datas.length - 1];
-
-            if (lastPanel.stacked === true) {
-                lastPanel.stacked = false;
-                lastPanel.width = limit - datas.reduce(function (totalStackedWidth, panel) {
-                    return totalStackedWidth + panel.stackedWidth;
-                }, 0);
-            }
-        }
-
-        
-        return datas;
-    }
-
-    /*****************************
-     *           #3              *
-     * Apply new datas to panels *
-     *****************************/
-
-     /**
-     * Apply our results to the panels
-     * @param  {Array}   panels      the panels
-     * @param  {Array}   dataPanels  the datas we want to apply
-     * @param  {Int}     containerWidth the containerWidth
-     */
-    function resizeAndStackPanels(panels, dataPanels, containerWidth) {
-
-            console.log(dataPanels, containerWidth);
-        angular.forEach(panels, function(domElement, i) {
-            var element   = angular.element(domElement),
-                dataPanel = dataPanels[i];
-            if (!element) {
-                console.log('no element for this panel)');
-                return;
-            }
-            // console.log(containerWidth, dataPanels);
-            if (element.hasClass('ev-stacked') && !dataPanel.stacked) {
-                $animate.removeClass(element, 'ev-stacked');
-            } else if (!element.hasClass('ev-stacked') && dataPanel.stacked) {
-                $animate.addClass(element, 'ev-stacked');
-            }
-            if (dataPanel.width === 0) {
-                element.hide();
-            } else {
-                element.show();
-                element.outerWidth(dataPanel.width);
-            }
-        });
-    }
-
-    /**************************
-     *         MAIN           *
-     **************************/
-
-    /**
-     * Check the stacking and so on
-     */
-    function checkStacking(panels, containerWidth) {
-        // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels, containerWidth);
-
-        // #2 - We compute these new data with our specifics rules (agnostic algorithm)
-        var dataPanels    = calculateStackingFromData(rawDataPanels, containerWidth);
-
-        // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, containerWidth);
-
-        $rootScope.$broadcast('module-layout-changed');
-    }
-
-
-    /**
-     * The panelLayoutEngine
-     * @type {Object}
-     */
-    var panelLayoutEngine = {
-        checkStacking: checkStacking
-    };
-
-    return panelLayoutEngine;
-}]);
