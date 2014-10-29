@@ -12,6 +12,7 @@
 }
 
 .ev-panel {
+    position: relative;
     min-width: @ev-panel-min-width;
     &:not(:first-child) {
         border-left: 1px solid @ev-panel-dark-color;
@@ -68,37 +69,3 @@
 .ev-panel-bg {
     background-color: @ev-panel-color;
 }
-
-// Resizable stuff
-
-
-/*********************************************************
- * RESIZABLE HANDLER
- ********************************************************/
-
-.ev-panel {
-    & > .ui-resizable-handle {
-        background: transparent;
-        position: absolute;
-        right: -@ev-panel-padding / 2 ;
-        top: 0;
-        bottom: 0;
-        width: @ev-panel-padding;
-        height: auto;
-    }
-
-    &.ev-stacked .ui-resizable-handle,
-    &:last-child .ui-resizable-handle {
-        display: none !important;   // Mandatory here since a display: block is added by jQuery to the element
-    }
-
-    .ui-resizable-helper {
-        border: 2px dotted @ev-panel-dark-color;
-        background-color: fade(@ev-panel-dark-color, 30%);
-    }
-    
-    .ui-resizable-e {
-        cursor: col-resize;        
-    }
-}
-

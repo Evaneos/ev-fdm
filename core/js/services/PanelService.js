@@ -90,33 +90,6 @@ angular.module('ev-fdm')
                 element.html(template);
                 element = $compile(element)($rootScope.$new());
                 panel.element  = element;
-                // element.resizable({
-                //     handles: "e",
-                //     helper: "ui-resizable-helper",
-                // });
-                
-                // element.on('resizestop', function(event, ui) {
-                //     // resizable plugin does an unwanted height resize
-                //     // so we cancel the height set.
-                //     // $(this).css("height","");
-                //     // debugger;
-                //     // var afterPanel = element.next('.ev-panel');
-                //     // var delta = ui.size.width - ui.originalSize.width;
-
-                //     // var afterPanelInitialWidth = afterPanel.width();
-                //     // afterPanel.width(afterPanelInitialWidth - delta);
-                //     // // We then compute the effective delta (maybe less than the theorical one because of max/min width).
-                //     // var effectiveDelta =  afterPanelInitialWidth - afterPanel.width();
-                //     // // Then, we compute the correction to apply to the current panel
-                //     // var newWidth = ui.originalSize.width + effectiveDelta;
-
-                //     // element.width(newWidth);
-                //     $rootScope.$broadcast('module-layout-changed');
-                // })
-                // .on('resize', function () {
-                //     // Prevent jquery ui to do weird things 
-                //     return false;
-                // });
                 addToDom(panel, id);
                 return panel;
             });
@@ -140,7 +113,7 @@ angular.module('ev-fdm')
             var panels = panelsList[containerId];
 
             if (!name || !panels[name]) {
-                console.log("Panel not found for: " + name);
+                console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
             var element  = panels[name].element;
@@ -206,16 +179,6 @@ angular.module('ev-fdm')
             var container = containers[containerId];
             var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
             
-            if (element) {
-                for (var i = 0; i < panelElements.length; i++) {
-                    var current = panelElements[i];
-                    if (element == current) {
-                        panelElements.splice(i, 1);
-                        panelElements.push(element);
-                        break;
-                    }
-                }
-            }
 
             checkStacking(panelElements, container);
         }
