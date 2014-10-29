@@ -62,104 +62,6 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 
 }]);
 
-'use strict';
-
-angular.module('ev-fdm')
-   .animation('.ev-animate-picture-list', function() {
-
-    return {
-      enter : function(element, done) {
-            var width = element.width();
-            element.css('opacity', 0);
-            jQuery(element).animate({
-                opacity: 1
-            }, 300, done);
-
-            return function(isCancelled) {
-                if(isCancelled) {
-                    jQuery(element).stop();
-                }
-            };
-        },
-        leave : function(element, done) {
-            element.css('opacity', 1);
-
-            jQuery(element).animate({
-                opacity: 0.3
-            }, 300, done);
-
-            return function(isCancelled) {
-              if(isCancelled) {
-                jQuery(element).stop();
-              }
-            };
-        },
-        move : function(element, done) {
-          element.css('opacity', 0);
-          jQuery(element).animate({
-              opacity: 1
-          }, done);
-
-          return function(isCancelled) {
-              if(isCancelled) {
-                  jQuery(element).stop();
-              }
-          };
-        },
-
-        // you can also capture these animation events
-        addClass : function(element, className, done) {},
-        removeClass : function(element, className, done) {}
-    };
-});
-
-angular.module('ev-fdm')
-    .animation('.ev-animate-tag-list', function() {
-        return {
-          enter : function(element, done) {
-                element.css('opacity', 0);
-                jQuery(element).animate({
-                    opacity: 1
-                }, 300, done);
-
-                return function(isCancelled) {
-                    if(isCancelled) {
-                        jQuery(element).stop();
-                    }
-                };
-            },
-            leave : function(element, done) {
-                element.css('opacity', 1);
-
-                jQuery(element).animate({
-                    opacity: 0.3
-                }, 300, done);
-
-                return function(isCancelled) {
-                  if(isCancelled) {
-                    jQuery(element).stop();
-                  }
-                };
-            },
-            move : function(element, done) {
-              element.css('opacity', 0);
-              jQuery(element).animate({
-                  opacity: 1
-              }, done);
-
-              return function(isCancelled) {
-                  if(isCancelled) {
-                      jQuery(element).stop();
-                  }
-              };
-            },
-
-            // you can also capture these animation events
-            addClass : function(element, className, done) {},
-            removeClass : function(element, className, done) {}
-        };
-    });
-
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
@@ -378,6 +280,104 @@ angular.module('ev-fdm')
 
         return SearchController;
     }]);
+
+'use strict';
+
+angular.module('ev-fdm')
+   .animation('.ev-animate-picture-list', function() {
+
+    return {
+      enter : function(element, done) {
+            var width = element.width();
+            element.css('opacity', 0);
+            jQuery(element).animate({
+                opacity: 1
+            }, 300, done);
+
+            return function(isCancelled) {
+                if(isCancelled) {
+                    jQuery(element).stop();
+                }
+            };
+        },
+        leave : function(element, done) {
+            element.css('opacity', 1);
+
+            jQuery(element).animate({
+                opacity: 0.3
+            }, 300, done);
+
+            return function(isCancelled) {
+              if(isCancelled) {
+                jQuery(element).stop();
+              }
+            };
+        },
+        move : function(element, done) {
+          element.css('opacity', 0);
+          jQuery(element).animate({
+              opacity: 1
+          }, done);
+
+          return function(isCancelled) {
+              if(isCancelled) {
+                  jQuery(element).stop();
+              }
+          };
+        },
+
+        // you can also capture these animation events
+        addClass : function(element, className, done) {},
+        removeClass : function(element, className, done) {}
+    };
+});
+
+angular.module('ev-fdm')
+    .animation('.ev-animate-tag-list', function() {
+        return {
+          enter : function(element, done) {
+                element.css('opacity', 0);
+                jQuery(element).animate({
+                    opacity: 1
+                }, 300, done);
+
+                return function(isCancelled) {
+                    if(isCancelled) {
+                        jQuery(element).stop();
+                    }
+                };
+            },
+            leave : function(element, done) {
+                element.css('opacity', 1);
+
+                jQuery(element).animate({
+                    opacity: 0.3
+                }, 300, done);
+
+                return function(isCancelled) {
+                  if(isCancelled) {
+                    jQuery(element).stop();
+                  }
+                };
+            },
+            move : function(element, done) {
+              element.css('opacity', 0);
+              jQuery(element).animate({
+                  opacity: 1
+              }, done);
+
+              return function(isCancelled) {
+                  if(isCancelled) {
+                      jQuery(element).stop();
+                  }
+              };
+            },
+
+            // you can also capture these animation events
+            addClass : function(element, className, done) {},
+            removeClass : function(element, className, done) {}
+        };
+    });
 
 'use strict';
 
@@ -1146,6 +1146,99 @@ angular.module('ev-fdm').directive('promise', [
             };
         }]);
 }());
+'use strict';
+
+
+angular.module('ev-fdm')
+    .directive('evResizableColumn', ['$window', '$rootScope', function($window, $rootScope) {
+
+        function getLimitWidth(elm, minOrMax) {
+            var limitWidth  = elm.css(minOrMax + '-width').replace('px', '');
+            return (limitWidth !== "none") ? limitWidth : null;
+        }
+        function getMinDelta (elm, width) {
+            return (getLimitWidth(elm, 'min') || 0) - width; 
+        }
+
+        function getMaxDelta (elm, width) {
+            return (getLimitWidth(elm, 'max') || Number.POSITIVE_INFINITY) - width; 
+        }
+        return {
+            restrict: 'A',
+            scope: false,
+            link: function (scope, elm, attr) {
+                var handleElm = angular.element('<div class="ev-resizable-column-handle"></div>'); 
+                elm.append(handleElm);
+                handleElm.on('mousedown', function (event) {
+                    var x1 = event.pageX;
+                    document.body.style.cursor = "ew-resize";
+                    event.stopPropagation();
+                    var nextElm = elm.next();
+
+                    elm.addClass('unselectable');
+                    nextElm.addClass('unselectable');
+                    
+
+                    var elmWidth = elm.outerWidth();
+                    var nextElmWidth = nextElm.outerWidth();
+                    
+                    // COMPUTE MAX AND MIN DELTA (reset min width)
+                    nextElm.css('min-width', '');
+                    elm.css('min-width', '');
+
+                    var maxDelta = Math.min(getMaxDelta(elm, elmWidth), -getMinDelta(nextElm, nextElmWidth));
+                    var minDelta = Math.max(getMinDelta(elm, elmWidth), -getMaxDelta(nextElm, nextElmWidth));
+
+                    // Reassign min width
+                    nextElm.css('min-width', nextElmWidth);
+                    elm.css('min-width', elmWidth);
+
+                    // Creating the helper
+                    var helper = angular.element('<div class="ev-resizable-helper"></div>');
+                    helper.css('min-width', elmWidth + minDelta);
+                    helper.css('max-width', elmWidth + maxDelta);
+                    helper.width(elmWidth);
+                    elm.append(helper);
+
+
+                    var onMousemove = function (event) {
+                        var delta = event.pageX - x1;
+                        helper.width(elmWidth + delta);
+                    };
+
+                    var onMouseup = function (event) {
+                        document.body.style.cursor = null;
+                        var delta = event.pageX - x1;
+                        // Bound the delta based on min/max width of the two columns 
+                        if (delta > 0) {
+                            delta = Math.min(delta, maxDelta);
+                        } else {
+                            delta = Math.max(delta, minDelta);
+                        }
+
+                        // Apply new width
+                        // NB: as we are dealing with flexbox we are obliged to use minWidth
+                        elm.css('minWidth', elmWidth + delta);
+                        nextElm.css('minWidth', nextElmWidth - delta);
+
+                        // Remove helpers
+                        helper.remove();
+
+                        $window.removeEventListener('mouseup', onMouseup);  
+                        $window.removeEventListener('mousemove', onMousemove);  
+
+                        elm.removeClass('unselectable');
+                        nextElm.removeClass('unselectable');
+                        $rootScope.$broadcast('module-layout-changed');
+                    };
+
+                    $window.addEventListener('mouseup', onMouseup);  
+                    $window.addEventListener('mousemove', onMousemove);
+                });
+
+            }
+        };
+    }]);
 'use strict';
 
 angular.module('ev-fdm').directive('body', [
@@ -2462,7 +2555,7 @@ angular.module('ev-fdm')
             }
             
             var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport>' + 
+                    name + '" ev-responsive-viewport ev-resizable-column>' + 
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
@@ -2569,7 +2662,7 @@ angular.module('ev-fdm')
             panels.forEach(function (panel) {
                 angular.element(panel).removeClass('ev-stacked');
                 // We reset the width each time we update the layout
-                angular.element(panel).css('width', null);
+                angular.element(panel).css('minWidth', '');
             });
             // We stack panels until there is only three left
             if (panels.length > MAX_VISIBLE_PANEL) {
