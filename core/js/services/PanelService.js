@@ -80,7 +80,7 @@ angular.module('ev-fdm')
             }
             
             var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport>' + 
+                    name + '" ev-responsive-viewport ev-resizable-column>' + 
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
@@ -187,7 +187,7 @@ angular.module('ev-fdm')
             panels.forEach(function (panel) {
                 angular.element(panel).removeClass('ev-stacked');
                 // We reset the width each time we update the layout
-                angular.element(panel).css('width', null);
+                angular.element(panel).css('minWidth', '');
             });
             // We stack panels until there is only three left
             if (panels.length > MAX_VISIBLE_PANEL) {

@@ -69,3 +69,19 @@
 .ev-panel-bg {
     background-color: @ev-panel-color;
 }
+
+// Resizable stuff
+
+
+/*********************************************************
+ * RESIZABLE HANDLER
+ ********************************************************/
+
+.ev-panel.ev-stacked .ev-resizable-column-handle {
+    display: none;
+}
+
+.ev-panel > .ev-resizable-helper {
+    border: 2px dotted @ev-panel-dark-color;
+    background-color: fade(@ev-panel-dark-color, 30%);
+}
