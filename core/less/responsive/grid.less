@@ -75,7 +75,12 @@
     .column('@{size}-offset', {
         margin-left: percentage((@index / @num-columns));
     });
-    // TODO add pull and push behaviour to be iso bootstrap ?
+    .column('@{size}-pull', {
+        right: percentage((@index / @num-columns));
+    });
+    .column('@{size}-push', {
+        left: percentage((@index / @num-columns));
+    });
 };
 
 // Extra small grid
