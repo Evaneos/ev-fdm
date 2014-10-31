@@ -74,8 +74,6 @@ function EvMenuDirective(menuManager) {
                         '</li>' +
                     '</ul>',
         controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
-            console.warn('%c [Phoenix team] %c Remove evMenuDirective, please', 'background: #c0392b; color:white', 'background: #e67e22; color: white');
-
             $scope.tabs = menuManager.tabs;
 
             if($rootScope['evmenu-state']) {
