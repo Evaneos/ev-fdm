@@ -62,6 +62,104 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 
 }]);
 
+'use strict';
+
+angular.module('ev-fdm')
+   .animation('.ev-animate-picture-list', function() {
+
+    return {
+      enter : function(element, done) {
+            var width = element.width();
+            element.css('opacity', 0);
+            jQuery(element).animate({
+                opacity: 1
+            }, 300, done);
+
+            return function(isCancelled) {
+                if(isCancelled) {
+                    jQuery(element).stop();
+                }
+            };
+        },
+        leave : function(element, done) {
+            element.css('opacity', 1);
+
+            jQuery(element).animate({
+                opacity: 0.3
+            }, 300, done);
+
+            return function(isCancelled) {
+              if(isCancelled) {
+                jQuery(element).stop();
+              }
+            };
+        },
+        move : function(element, done) {
+          element.css('opacity', 0);
+          jQuery(element).animate({
+              opacity: 1
+          }, done);
+
+          return function(isCancelled) {
+              if(isCancelled) {
+                  jQuery(element).stop();
+              }
+          };
+        },
+
+        // you can also capture these animation events
+        addClass : function(element, className, done) {},
+        removeClass : function(element, className, done) {}
+    };
+});
+
+angular.module('ev-fdm')
+    .animation('.ev-animate-tag-list', function() {
+        return {
+          enter : function(element, done) {
+                element.css('opacity', 0);
+                jQuery(element).animate({
+                    opacity: 1
+                }, 300, done);
+
+                return function(isCancelled) {
+                    if(isCancelled) {
+                        jQuery(element).stop();
+                    }
+                };
+            },
+            leave : function(element, done) {
+                element.css('opacity', 1);
+
+                jQuery(element).animate({
+                    opacity: 0.3
+                }, 300, done);
+
+                return function(isCancelled) {
+                  if(isCancelled) {
+                    jQuery(element).stop();
+                  }
+                };
+            },
+            move : function(element, done) {
+              element.css('opacity', 0);
+              jQuery(element).animate({
+                  opacity: 1
+              }, done);
+
+              return function(isCancelled) {
+                  if(isCancelled) {
+                      jQuery(element).stop();
+                  }
+              };
+            },
+
+            // you can also capture these animation events
+            addClass : function(element, className, done) {},
+            removeClass : function(element, className, done) {}
+        };
+    });
+
 angular.module('ev-fdm')
     .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
 
@@ -280,104 +378,6 @@ angular.module('ev-fdm')
 
         return SearchController;
     }]);
-
-'use strict';
-
-angular.module('ev-fdm')
-   .animation('.ev-animate-picture-list', function() {
-
-    return {
-      enter : function(element, done) {
-            var width = element.width();
-            element.css('opacity', 0);
-            jQuery(element).animate({
-                opacity: 1
-            }, 300, done);
-
-            return function(isCancelled) {
-                if(isCancelled) {
-                    jQuery(element).stop();
-                }
-            };
-        },
-        leave : function(element, done) {
-            element.css('opacity', 1);
-
-            jQuery(element).animate({
-                opacity: 0.3
-            }, 300, done);
-
-            return function(isCancelled) {
-              if(isCancelled) {
-                jQuery(element).stop();
-              }
-            };
-        },
-        move : function(element, done) {
-          element.css('opacity', 0);
-          jQuery(element).animate({
-              opacity: 1
-          }, done);
-
-          return function(isCancelled) {
-              if(isCancelled) {
-                  jQuery(element).stop();
-              }
-          };
-        },
-
-        // you can also capture these animation events
-        addClass : function(element, className, done) {},
-        removeClass : function(element, className, done) {}
-    };
-});
-
-angular.module('ev-fdm')
-    .animation('.ev-animate-tag-list', function() {
-        return {
-          enter : function(element, done) {
-                element.css('opacity', 0);
-                jQuery(element).animate({
-                    opacity: 1
-                }, 300, done);
-
-                return function(isCancelled) {
-                    if(isCancelled) {
-                        jQuery(element).stop();
-                    }
-                };
-            },
-            leave : function(element, done) {
-                element.css('opacity', 1);
-
-                jQuery(element).animate({
-                    opacity: 0.3
-                }, 300, done);
-
-                return function(isCancelled) {
-                  if(isCancelled) {
-                    jQuery(element).stop();
-                  }
-                };
-            },
-            move : function(element, done) {
-              element.css('opacity', 0);
-              jQuery(element).animate({
-                  opacity: 1
-              }, done);
-
-              return function(isCancelled) {
-                  if(isCancelled) {
-                      jQuery(element).stop();
-                  }
-              };
-            },
-
-            // you can also capture these animation events
-            addClass : function(element, className, done) {},
-            removeClass : function(element, className, done) {}
-        };
-    });
 
 'use strict';
 
@@ -697,8 +697,6 @@ function EvMenuDirective(menuManager) {
                         '</li>' +
                     '</ul>',
         controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
-            console.warn('%c [Phoenix team] %c Remove evMenuDirective, please', 'background: #c0392b; color:white', 'background: #e67e22; color: white');
-
             $scope.tabs = menuManager.tabs;
 
             if($rootScope['evmenu-state']) {
