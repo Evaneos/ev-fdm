@@ -1,3 +1,5 @@
+@import (reference) "../../buttons/buttons.less";
+
 .modal-backdrop {
     z-index: @zindex-modal-background;
 }
@@ -14,7 +16,7 @@
         }
         .modal-header {
             padding: 9px 16px;
-            background: @gray-lighter;
+            background: @lighter-gray;
             border-bottom: none;
 
             .modal-title {
@@ -37,7 +39,7 @@
                 outline: none;
 
                 &:hover {
-                    color: @gray-dark;
+                    color: @dark-gray;
                 }
             }
         }
@@ -51,7 +53,7 @@
                     margin-left: 0;
                 }
             }
-            background-color: @gray-lighter;
+            background-color: @lighter-gray;
         }
 
         .modal-body.modal-message {
@@ -116,7 +118,7 @@
                 .btn {
                     .btn-danger;
                 }
-                background-color: @gray-lighter;
+                background-color: @lighter-gray;
             }
             .modal-body {
                 text-align: center;
@@ -185,7 +187,7 @@
                 overflow-y: auto;
                 border-radius: 0;
                 box-shadow: none;
-                border-left: 5px solid @gray-lighter;
+                border-left: 5px solid @lighter-gray;
 
                 .modal-header {
                     //position: inherit !important;
@@ -210,7 +212,7 @@
                     }
 
                     hr {
-                        border-top: 2px solid @gray-lighter;
+                        border-top: 2px solid @lighter-gray;
                         margin: 10px -20px;
                     }
 
@@ -225,8 +227,8 @@
                 .modal-footer {
                     position: absolute;
                     bottom: 0; left: 0; right: 0;
-                    border-top: 5px solid @gray-lighter;
-                    background-color: @gray-lighter;
+                    border-top: 5px solid @lighter-gray;
+                    background-color: @lighter-gray;
                 }
             }
         }

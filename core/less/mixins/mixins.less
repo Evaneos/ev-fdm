@@ -20,7 +20,7 @@
  *           }
  *
  *          &-engaged {
- *              background-color: @brand-red;
+ *              background-color: @brand-danger;
  *          }
  *
  *          &-sold {
@@ -34,7 +34,7 @@
  *       <span class="icon icon-tick"></span>
  *    </div>
  */
-.sticker(@size: 14px, @color: @gray-light, @tick-color: white) {
+.sticker(@size: 14px, @color: @light-gray, @tick-color: white) {
     width: @size;
     height: @size;
     border-radius: @size/2;
@@ -86,6 +86,16 @@
   -o-transform:      @string;
   transform:         @string;
 }
+
+
+.transition(@string){
+  -webkit-transform: @string;
+  -moz-transform:    @string;
+  -ms-transform:     @string;
+  -o-transform:      @string;
+  transform:         @string;
+}
+
 
 /*
  *  Mixin for styling placeholder inside input (cross-browser)

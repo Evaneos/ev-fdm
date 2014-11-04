@@ -1,0 +1,136 @@
+@import "variables.less";
+@import (reference) "bower_components/bootstrap/less/buttons.less";
+
+// Buttons
+// 
+// A basic UI component triggering an action. Button styles can be applied to anything with the `.btn` class applied. 
+// However, typically you'll want to apply these to only `<a>` and `<button>` elements for the best rendering.
+// 
+// Styleguide 1
+
+// Base style & state
+// 
+// default      - A button in normal state
+// :hover       - Hover state
+// :active      - Active state
+// .disabled    - Disabled button. If you use `<button>` element, that is acceptable to add disabled attribute instead.
+// 
+// Markup:
+// <button class="btn btn-primary {$modifiers}">Button</button>
+// <button class="btn {$modifiers}">Button</button>
+// 
+// Styleguide 1.1
+.btn {
+    .btn;
+}
+
+// Skins
+// 
+// You can change the color of the button by adding any of these classes
+// 
+// .btn-default    - A neutral button
+// .btn-danger     - A red button, generally used for emphasing dangerous action (with no come back possible)
+// .btn-primary    - A button from the primary color, generally used as a call to action.
+// .btn-info       - A blue button, for quiet actions
+// .btn-success    - A green button, usually used for confirmation actions
+// .btn-warning    - A orange button, can be used for emphazing the consequences of the action. 
+// 
+// Markup: 
+// <button class="btn {$modifiers}">Button</button>
+// 
+// Styleguide 1.2
+
+
+.ev-btn(@color) {
+    background: @color;
+    &:hover {
+        background: lighten(@color, 4%);
+    }
+    &:active {
+        background: darken(@color, 2%);
+    }
+}
+
+.btn-default { .ev-btn(@lighter-gray); }
+.btn-danger { .ev-btn(@brand-danger); }
+.btn-info { .ev-btn(@brand-info); }
+.btn-warning { .ev-btn(@brand-warning); }
+.btn-primary { .ev-btn(@brand-primary); }
+.btn-danger {
+    .ev-btn(@brand-danger);
+    color: #fff;
+    &:hover {
+        color: #fff;
+    }
+}
+
+.btn-primary {
+  border: none;
+}
+
+.btn-primary[disabled] {
+    background-color: @gray;
+}
+
+.btn-default {
+    background: transparent;
+    color: @dark-gray;
+    &:hover {
+        box-shadow: none;
+        border-color: @light-gray;
+    }
+    &:active {
+        box-shadow: none;
+        opacity: .6;
+    }
+    &:focus {
+      background-color: @lighter-gray;
+  }
+}
+
+
+
+.btn-link {
+  text-transform: none;
+  white-space: normal;
+  border: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.btn-link:hover {
+  text-decoration: none;
+}
+
+.dropdown {
+    list-style: none;
+    display: inline-block;
+}
+
+.open .dropdown-toggle.btn-default {
+    background: lighten(@lighter-gray, 4%);
+    border-color: @light-gray;
+}
+
+.dropdown-menu {
+  cursor: pointer;
+  border: 1px solid @light-gray;
+}
+
+// Grey light button without border nor underline
+.btn-light {
+  background-color: transparent;
+  margin: 0;
+  font-size: inherit;
+  padding: 0 3px;
+  color: @gray;
+  border: none;
+  &:hover {
+    box-shadow: none;
+    color: @dark-gray;
+}
+.icon {
+    margin: 0;
+}
+}
