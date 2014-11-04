@@ -1193,15 +1193,15 @@ angular.module('ev-fdm')
 
                     // Creating the helper
                     var helper = angular.element('<div class="ev-resizable-helper"></div>');
-                    helper.css('min-width', elmWidth + minDelta);
-                    helper.css('max-width', elmWidth + maxDelta);
-                    helper.width(elmWidth);
-                    elm.append(helper);
+                    helper.css('min-width', nextElmWidth - maxDelta);
+                    helper.css('max-width', nextElmWidth - minDelta);
+                    helper.width(nextElmWidth);
+                    nextElm.append(helper);
 
 
                     var onMousemove = function (event) {
                         var delta = event.pageX - x1;
-                        helper.width(elmWidth + delta);
+                        helper.width(nextElmWidth - delta);
                     };
 
                     var onMouseup = function (event) {
