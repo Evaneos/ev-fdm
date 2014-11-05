@@ -9,6 +9,6 @@ angular.module('ev-fdm')
                 value: '=',
                 noValue: '@',
             },
-            templateUrl: 'value.phtml'
+            templateUrl: 'ev-value.html'
         };
     });

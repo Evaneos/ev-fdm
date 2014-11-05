@@ -1,0 +1,17 @@
+@import (reference) "../mixins/mixins.less";
+@import (reference) "layout.less";
+
+/* Allows for layout of same size columns with a max width */
+
+.ev-flex-columns {
+    .flexbox();
+    .flex-wrap(wrap);
+    & > * {
+    	.flex-shrink(0);
+        overflow-y: auto;
+    }
+
+    &.ev-align-start  { .align-items(start);  }
+    &.ev-align-center { .align-items(center); }
+    &.ev-align-end    { .align-items(end);    }
+}

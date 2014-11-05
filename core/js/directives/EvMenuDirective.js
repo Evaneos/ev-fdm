@@ -68,7 +68,7 @@ function EvMenuDirective(menuManager) {
     return {
         restrict: 'E',
         replace: true,
-        template:   '<ul class="lisette-module-tabs nav nav-tabs" ng-cloak>' +
+        template:   '<ul class="module-tabs ev-header nav nav-tabs" ng-cloak>' +
                         '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
@@ -83,11 +83,10 @@ function EvMenuDirective(menuManager) {
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);
-            }
+            };
         }]
-    }
-
-};
+    };
+}
 
 angular.module('ev-fdm')
     .provider('menuManager', [MenuManagerProvider])

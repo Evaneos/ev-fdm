@@ -1,0 +1,119 @@
+.navbar {
+    min-height: @menu-height;
+    border: none;
+    margin-bottom: 0;
+    position: absolute;
+    width: 100%;
+
+    #main-menu {
+        position: absolute;
+        left: 87px;
+        right: 300px;
+        text-align: center;
+    }
+
+    .navbar-nav {
+        li {
+            min-width: 115px;
+            display: inline-block;
+            float: none;
+
+            a {
+                padding: 5px 8px 4px 8px;
+            }
+
+            &:hover {
+                background: lighten(@navbar-inverse-bg, 3%);
+            }
+
+            &.active {
+                .caret {
+                    display: inline-block;
+                    position: absolute;
+                    left: 50%;
+                    top: -1px;
+                    margin-left: -7px;
+                    border-top: 5px solid #FFF;
+                    border-right: 7px solid transparent;
+                    border-left: 7px solid transparent;
+                }
+            }
+
+            .icon {
+                display: none;
+            }
+        }
+
+        .caret {
+            display: none;
+        }
+
+        .menu-help {
+            background: @brand-danger;
+
+            a {
+                color: @navbar-inverse-link-active-color;
+                .icon {
+                    display: inline-block;
+                }
+            }
+
+            &:hover {
+                background: lighten(@brand-danger, 5%);
+                a {
+                    color: @navbar-inverse-link-active-color;
+                }
+            }
+        }
+    }
+
+    .navbar-nav .dropdown {
+        li {
+            width: 100%;
+        }
+    }
+
+    .navbar-nav .dropdown-toggle {
+        .caret {
+            display: inline-block;
+        }
+    }
+
+    .dropdown {
+        &.open {
+            background: lighten(@brand-evaneos, 3%);
+        }
+        .caret {
+            margin-left: 5px;
+        }
+        .dropdown-menu {
+            left: -1px;
+            padding: 0;
+            border-top: none;
+            > li {
+                width: 100%;
+                color: @gray-dark;
+                a {
+                    padding: 10px;
+                    span {
+                        display: block;
+                        text-align: left;
+                    }
+                }
+
+                .icon {
+                    display: block;
+                    font-size: 20px;
+                    float: left;
+                    margin-right: 10px;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * SMALL VERSION
+ */
+
+@import "menu-small.less";

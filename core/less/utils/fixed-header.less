@@ -1,0 +1,31 @@
+@import (reference) "../mixins/mixins.less";
+
+/* Allows for fixed header of unknown height behaviour */
+
+.ev-fixed-header {
+    .flexbox();
+    .flex-direction(column);
+    height: inherit;
+    overflow-y: auto;
+}
+
+.ev-header {
+	.flex-shrink(0);
+}
+
+.ev-body {
+    overflow-y: auto;
+    position: relative;
+    .flex(2009, 1);
+    .flex(2013, auto);
+}
+
+
+// Inside vertical flexbox, we need to have absolute for height 100% 
+.ev-body > .full-height {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}

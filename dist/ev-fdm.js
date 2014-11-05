@@ -12,7 +12,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 // just beneath the menu
 .config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
-    cfpLoadingBarProvider.parentSelector = '#lisette-menu';
+    cfpLoadingBarProvider.parentSelector = '#menu';
 }])
 
 .config(['$tooltipProvider', function($tooltipProvider) {
@@ -29,15 +29,6 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
         // Custom event, the tooltip appears when the element has the focus, and disappear when a key
         // in pressed (or the element has blurred).
         'focus-not-typing': 'blur-or-typing'
-    });
-}])
-
-/**
- * Define a default error state for our app
- */
-.config(['$stateProvider', function($stateProvider) {
-    $stateProvider.state('ev-error', {
-        templateUrl: 'ev-error.phtml'
     });
 }])
 
@@ -714,7 +705,7 @@ function EvMenuDirective(menuManager) {
     return {
         restrict: 'E',
         replace: true,
-        template:   '<ul class="lisette-module-tabs nav nav-tabs" ng-cloak>' +
+        template:   '<ul class="module-tabs ev-header nav nav-tabs" ng-cloak>' +
                         '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
                             '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
                         '</li>' +
@@ -729,11 +720,10 @@ function EvMenuDirective(menuManager) {
             $scope.selectTab = function(tab) {
                 menuManager.selectTab(tab);
                 $state.go(tab.state);
-            }
+            };
         }]
-    }
-
-};
+    };
+}
 
 angular.module('ev-fdm')
     .provider('menuManager', [MenuManagerProvider])
@@ -747,121 +737,9 @@ module.directive('evFilters', function() {
         restrict: 'E',
         replace: true,
         transclude: true,
-        templateUrl: 'filters.phtml'
+        templateUrl: 'ev-filters.html'
     };
 });
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evFixedHeader', function () {
-            return {
-                link: function($scope, $element, $attrs) {
-                    $element.addClass('full-height');
-                    var header = $element.find('>.ev-header');
-                    var body   = $element.find('>.ev-body');
-                    body.css({'overflow-y': 'auto'});
-                    header.css({'overflow-y': 'auto'});
-
-                    // Compute and return the height available for the element's body
-                    var getBodyHeight = function() {
-                        var bodyHeight = $element.innerHeight() - header.outerHeight(true);
-                        // This allows us to remove the padding/etc.. from the measurement
-                        bodyHeight -= body.outerHeight() - body.height();
-
-                        return bodyHeight;
-                    };
-
-                    var refreshDimensions = function() {
-                        body.hide();
-                        body.height(getBodyHeight());
-                        body.show();
-
-                        if ($attrs.refreshIdentifier) {
-                            $scope.$broadcast('evFullHeightBody::refresh::' + $attrs.refreshIdentifier);
-                        }
-                    };
-
-
-                    $scope.$watch(function() {
-                        return getBodyHeight();
-                    }, refreshDimensions);
-
-                    $(window).bind('resize', refreshDimensions);
-
-                    if ($attrs.refreshOn) {
-                        $scope.$on('evFullHeightBody::refresh::' + $attrs.refreshOn, refreshDimensions);
-                    }
-
-                }
-            };
-        });
-}) ();
-
-angular.module('ev-fdm')
-    .directive('evFixedHeaders', ['$timeout', function ($timeout) {
-
-    function _sync($table, $scope) {
-        var containerH, containerW,
-            container    = angular.element('.table-container'),
-            subContainer = angular.element('.ev-fixed-header-table-container');
-
-        if (!container.length) {
-            console.log("Table should be wrapped inside a div having 'table-container' class to use evFixedHeaders directive");
-            return;
-        }
-
-        $scope.$watch(function() {
-            containerH = container.height();
-            containerW = container.width();
-            return containerH + "-" + containerW;
-        },
-        function() {
-            subContainer.height(container.height());
-            $table.floatThead('reflow');
-        });
-    }
-
-    function _timeoutSync($table, $scope) {
-        $timeout(function() {
-            _sync($table, $scope);
-        }, 0, false);
-    }
-
-    return {
-        restrict: 'A',
-        replace: false,
-        scope: {
-            rows: '='
-        },
-        link: function ($scope, element, attrs) {
-            var $table = $(element);
-
-            $table
-                .wrap('<div class="ev-fixed-header-table-container"></div>')
-                .floatThead({
-                    scrollContainer: function($table){
-                        return $table.closest('.ev-fixed-header-table-container');
-                    }
-                });
-            angular.element('.table-container').css('overflow', 'hidden');
-
-            $(window).on('resize', function() {
-                _sync($table, $scope);
-            });
-            $scope.$on('module-layout-changed', function() {
-                _timeoutSync($table, $scope);
-            });
-            // watch for raw data changes !
-            $scope.$watch('rows', function() {
-                _timeoutSync($table, $scope);
-            }, true);
-            // wait for end of digest then sync headers
-            _timeoutSync($table, $scope);
-        }
-    };
-
-}]);
-
 'use strict';
 
 var module = angular.module('ev-fdm')
@@ -923,104 +801,6 @@ var module = angular.module('ev-fdm')
 'use strict';
 
 angular.module('ev-fdm')
-    .directive('evModule', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
-
-    var bars = {
-        tabs: {
-            versions: []
-        },
-        topbar: {
-            versions: [ 'size-mini', 'size-default', 'size-big' ]
-        },
-        leftbar: {
-            versions: []
-        },
-        bottombar: {
-            versions: []
-        }
-    };
-
-    /**
-     * Looks inside the module element for any module bar, and populates
-     * required classes for each bar on the module container
-     */
-    function updateBarClasses($moduleEl) {
-        return function() {
-            angular.forEach(bars, function(barConfig, barId) {
-                var $el = $moduleEl.find('.lisette-module-' + barId);
-                var hasClass = 'has-' + barId;
-                $moduleEl.removeClass(
-                    _(barConfig.versions)
-                        .map(function(versionId) {
-                            return barId + '-' + versionId
-                        })
-                        .join(' '));
-                if ($el.length) {
-                    $moduleEl.addClass(hasClass);
-                    angular.forEach(barConfig.versions, function(versionId) {
-                        if ($el.hasClass('version-' + versionId)) {
-                            $moduleEl.addClass(barId + '-' + versionId);
-                        }
-                    });
-                } else {
-                    $moduleEl.removeClass(hasClass);
-                }
-            });
-            $rootScope.$broadcast('module-layout-changed');
-        }
-    };
-
-    return {
-        restrict: 'A',
-        link: function($scope, element, attributes) {
-            element.addClass('lisette-module');
-            $scope.$on('$stateChangeSuccess', function() {
-                $timeout(updateBarClasses(element), 0);
-            });
-            $timeout(updateBarClasses(element), 0);
-        }
-    };
-}
-]);
-'use strict';
-
-angular.module('ev-fdm')
-.directive('evModuleHeader', ['$timeout', function ($timeout) {
-
-    var self = this;
-
-    function _sync($wrapper) {
-        var $header = $wrapper.find('.lisette-module-header');
-
-        // make sure the wrapper spans the right height
-        // even when the header is position fixed
-        $wrapper.height($header.height() - 1);
-
-        // declaring affix to bootstrap
-        // bs will watch the scroll for us and add the affix css class to $header
-        $header.affix({
-            offset: {
-                top: 1 //$('#lisette-menu').attr('data-offset-top')
-            }
-        });
-    }
-
-    return function($scope, element, attrs) {
-        var $wrapper = $(element);
-        $timeout(function() {
-            _sync($wrapper);
-        }, 0, false);
-        $(window).on('resize', function() {
-            _sync($wrapper);
-        });
-        $scope.$on('itemsLoaded', function() {
-            _sync($wrapper);
-        });
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
     .directive('mouseFollower', ['$document', function ($document) {
         return {
             restrict: 'A',
@@ -1046,22 +826,23 @@ var module = angular.module('ev-fdm')
         return {
             restrict: 'AE',
             replace: true,
-            templateUrl: 'pagination.phtml',
+            templateUrl: 'ev-pagination.html',
             scope: {
                 currPage:     '=',
                 nbPage:       '=',
                 onPageChange: '='
             },
 
-            link : function (scope){
+            link: function (scope){
                 scope.paginationButtons = [];
                 scope.prevClass = '';
                 scope.nextClass = '';
 
-                if (!scope.currPage) scope.currPage = 1;
-                if (!scope.nbPage)   scope.nbPage   = 1;
+                scope.currPage = scope.currPage || 1;
+                scope.nbPage   = scope.nbPage   || 1;
 
                 scope.generateButtons = function () {
+                    var i = 0;
                     var nbAround = 2; // We want to have this amount of links around the current page.
 
                     scope.paginationButtons = [];
@@ -1074,7 +855,7 @@ var module = angular.module('ev-fdm')
                     }
 
                     // add the surrounding page numbers
-                    for (var i = nbAround; i > 0; i--) {
+                    for (i = nbAround; i > 0; i--) {
                         if (scope.currPage-i > 1) {
                             scope.paginationButtons.push ({value: scope.currPage-i});
                         }
@@ -1086,7 +867,7 @@ var module = angular.module('ev-fdm')
                     }
 
                     // add the surrounding page numbers
-                    for (var i = 1; i <= nbAround; i++) {
+                    for (i = 1; i <= nbAround; i++) {
                         if (scope.currPage+i < scope.nbPage) {
                             scope.paginationButtons.push ({value: scope.currPage+i});
                         }
@@ -1103,7 +884,7 @@ var module = angular.module('ev-fdm')
                     }
                     // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
                     // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
-                }
+                };
 
                 scope.previousPage = function (){
                     if (scope.currPage > 1) {
@@ -1114,99 +895,36 @@ var module = angular.module('ev-fdm')
                         }
                     }
 
-                }
+                };
 
                 scope.changePage = function (value){
                     if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
                          var oldPage = scope.currPage;
                         scope.currPage = value;
-                        
+
                         if(angular.isFunction(scope.onPageChange)) {
                             scope.onPageChange(value, oldPage);
                         }
                     }
-                }
+                };
 
                 scope.nextPage = function (){
                     if (scope.currPage < scope.nbPage){
                         var oldPage = scope.currPage;
                         scope.currPage++;
-                        
+
                         if(angular.isFunction(scope.onPageChange)) {
                             scope.onPageChange(scope.currPage, oldPage, 'nextPage');
                         }
                     }
-                }
+                };
 
                 scope.$watch('nbPage + currPage', function() {
                     scope.generateButtons ();
                 });
             }
-    };
-}]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('evPanelBreakpoints', [ '$timeout', '$rootScope', function($timeout, $rootScope) {
-
-    var BREAKS = [ 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100 ];
-
-    function getBPMatching(width) {
-        var breakp, index;
-        for (index = 0; index < BREAKS.length; index++) {
-            if (width < BREAKS[index]) {
-                breakp = BREAKS[index];
-                break;
-            }
-        }
-        if (breakp) return index;
-        else return -1;
-    }
-
-    function applyBPAttribute(element, breakpIndex) {
-        var attributeValue = '';
-        if (breakpIndex == -1) {
-            attributeValue = 'max';
-        } else {
-            attributeValue = BREAKS[breakpIndex];
-        }
-        element.attr('data-breakpoint', attributeValue);
-    }
-
-    function updateBreakpoints(element) {
-        var bp = getBPMatching(element.outerWidth());
-        applyBPAttribute(element, bp);
-    }
-
-    return {
-        restrict: 'A',
-        scope: false,
-        replace: true,
-        transclude: true,
-        template: '<div ng-transclude></div>',
-        link: function(scope, element, attrs) {
-            /**
-             * Listener to update the breakpoints properties
-             */
-            element.resizable({
-                handles: "w",
-                helper: "ui-resizable-helper",
-                resize: function(event, ui) {
-                    updateBreakpoints(element);
-                }
-            });
-            $rootScope.$on('module-layout-changed', function() {
-                updateBreakpoints(element);
-            });
-            $timeout(function() {
-                updateBreakpoints(element);
-                // focus a freshly-opened modal
-                element[0].focus();
-            });
-        }
-    };
-}]);
+        };
+    }]);
 
 (function () {
     'use strict';
@@ -1442,6 +1160,99 @@ angular.module('ev-fdm').directive('promise', [
 }());
 'use strict';
 
+
+angular.module('ev-fdm')
+    .directive('evResizableColumn', ['$window', '$rootScope', function($window, $rootScope) {
+
+        function getLimitWidth(elm, minOrMax) {
+            var limitWidth  = elm.css(minOrMax + '-width').replace('px', '');
+            return (limitWidth !== "none") ? limitWidth : null;
+        }
+        function getMinDelta (elm, width) {
+            return (getLimitWidth(elm, 'min') || 0) - width; 
+        }
+
+        function getMaxDelta (elm, width) {
+            return (getLimitWidth(elm, 'max') || Number.POSITIVE_INFINITY) - width; 
+        }
+        return {
+            restrict: 'A',
+            scope: false,
+            link: function (scope, elm, attr) {
+                var handleElm = angular.element('<div class="ev-resizable-column-handle"></div>'); 
+                elm.append(handleElm);
+                handleElm.on('mousedown', function (event) {
+                    var x1 = event.pageX;
+                    document.body.style.cursor = "ew-resize";
+                    event.stopPropagation();
+                    var nextElm = elm.next();
+
+                    elm.addClass('unselectable');
+                    nextElm.addClass('unselectable');
+                    
+
+                    var elmWidth = elm.outerWidth();
+                    var nextElmWidth = nextElm.outerWidth();
+                    
+                    // COMPUTE MAX AND MIN DELTA (reset min width)
+                    nextElm.css('min-width', '');
+                    elm.css('min-width', '');
+
+                    var maxDelta = Math.min(getMaxDelta(elm, elmWidth), -getMinDelta(nextElm, nextElmWidth));
+                    var minDelta = Math.max(getMinDelta(elm, elmWidth), -getMaxDelta(nextElm, nextElmWidth));
+
+                    // Reassign min width
+                    nextElm.css('min-width', nextElmWidth);
+                    elm.css('min-width', elmWidth);
+
+                    // Creating the helper
+                    var helper = angular.element('<div class="ev-resizable-helper"></div>');
+                    helper.css('min-width', nextElmWidth - maxDelta);
+                    helper.css('max-width', nextElmWidth - minDelta);
+                    helper.width(nextElmWidth);
+                    nextElm.append(helper);
+
+
+                    var onMousemove = function (event) {
+                        var delta = event.pageX - x1;
+                        helper.width(nextElmWidth - delta);
+                    };
+
+                    var onMouseup = function (event) {
+                        document.body.style.cursor = null;
+                        var delta = event.pageX - x1;
+                        // Bound the delta based on min/max width of the two columns 
+                        if (delta > 0) {
+                            delta = Math.min(delta, maxDelta);
+                        } else {
+                            delta = Math.max(delta, minDelta);
+                        }
+
+                        // Apply new width
+                        // NB: as we are dealing with flexbox we are obliged to use minWidth
+                        elm.css('minWidth', elmWidth + delta);
+                        nextElm.css('minWidth', nextElmWidth - delta);
+
+                        // Remove helpers
+                        helper.remove();
+
+                        $window.removeEventListener('mouseup', onMouseup);  
+                        $window.removeEventListener('mousemove', onMousemove);  
+
+                        elm.removeClass('unselectable');
+                        nextElm.removeClass('unselectable');
+                        $rootScope.$broadcast('module-layout-changed');
+                    };
+
+                    $window.addEventListener('mouseup', onMouseup);  
+                    $window.addEventListener('mousemove', onMousemove);
+                });
+
+            }
+        };
+    }]);
+'use strict';
+
 angular.module('ev-fdm').directive('body', [
     '$rootScope',
     'NotificationsService',
@@ -1504,6 +1315,79 @@ angular.module('ev-fdm').directive('body', [
         };
     }
 ]);
+
+/*
+    responsive-viewport
+    ===================
+
+    I'm a directive that place the proper class responsive class dependanding on the size of the element I'm attached.
+
+*/
+
+"use strict";
+angular.module('ev-fdm')
+    .provider('evResponsiveViewport', function () {
+        var breakpoints = {
+            400: 'ev-viewport-xs',
+            600: 'ev-viewport-sm',
+            900: 'ev-viewport-md'
+        };
+        this.$get =function () {
+            return breakpoints;
+        };
+
+        this.setXsBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-xs';
+        };
+
+        this.setSmBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-sm';
+        };
+
+        this.setMdBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-md';
+        };
+
+        this.setBreakpoints = function (breaks) {
+            if (breaks.length !== 3) {
+                throw new Error('There should be three breakpoints');
+            }
+            breaks.sort();
+            breakpoints[breaks[0]] = 'ev-viewport-xs';
+            breakpoints[breaks[1]] = 'ev-viewport-sm';
+            breakpoints[breaks[2]] = 'ev-viewport-md';
+        };
+    })
+    .directive('evResponsiveViewport', ['evResponsiveViewport', function (breakpoints) {
+        return {
+            link: function (scope, elm) {
+                var updateViewport = function () {
+
+                    var elmWidth = elm.width();
+                    var _class;
+
+                    var largeViewport = !Object.keys(breakpoints).some(function (breakpoint) {
+                        _class = breakpoints[breakpoint];
+                        return elmWidth < breakpoint;
+                    });
+                    if (largeViewport) {
+                        _class = 'ev-viewport-lg';
+                    }
+
+                    if (!elm.hasClass(_class)) {
+                        Object.keys(breakpoints).forEach(function (key) {
+                                elm.removeClass(breakpoints[key]);
+                            });
+                        elm.removeClass('ev-viewport-lg');
+                        elm.addClass(_class);
+                    }
+                };
+
+                updateViewport();
+                scope.$on('module-layout-changed', updateViewport);
+            }
+        };
+    }]);
 
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
@@ -1923,7 +1807,7 @@ angular.module('ev-fdm')
                     };
                 },
                 template:
-                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
+                    '<div class="tabbable ev-fixed-header">' +
                         '<ul class="nav nav-tabs ev-header">' +
                             '<li ng-repeat="pane in panes | filter:isShowed" ' +
                                 'ng-class="{active:pane.selected}" '+
@@ -2073,7 +1957,7 @@ angular.module('ev-fdm')
                 value: '=',
                 noValue: '@',
             },
-            templateUrl: 'value.phtml'
+            templateUrl: 'ev-value.html'
         };
     });
 'use strict';
@@ -2218,165 +2102,6 @@ angular.module('ev-fdm')
         };
     }]);
 
-
-if(typeof(Fanny) == 'undefined') {
-    Fanny = {}
-};
-
-Fanny.Utils = {
-    generatedIds : {},
-    generateId : function(prefix) {
-        var id = prefix + Math.random() * 10000;
-        if(typeof(this.generatedIds[id] != 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = generateId(prefix);
-        }
-        return id;
-    },
-    convertNumberToString : function(number, nbDecimals, intMinLength) {
-        var thousandsSep = ' ';
-        var decimalSep   = ',';
-        var numberStr    = '';
-        var numberArray  = [];
-        var integer      = '';
-        var decimals     = '';
-        var result       = '';
-        
-        if(typeof(nbDecimals) == 'undefined') {
-            nbDecimals = 2;
-        }
-        
-        numberStr = number + '';
-        numberArray = numberStr.split('.');
-        if(numberArray.length < 1 && numberArray.length > 2) {
-            throw new Error('Invalid number');
-            return false;
-        }
-        
-        integer = numberArray[0];
-        
-        if(numberArray.length == 1) {
-            decimals = '';
-            for(var i = 0; i < nbDecimals; i++) {
-                decimals += '0';
-            }
-        } else {
-            decimals = numberArray[1];
-            if(decimals.length > nbDecimals) {
-                decimals = decimals.substring(0, 2);
-            } else {
-                while(decimals.length < nbDecimals) {
-                    decimals += '0';
-                }
-            }
-        }
-        for(var i = 0; i < integer.length; i++) {
-            if(i % 3 == 0 && i != 0) {
-                result = thousandsSep + result;
-            }
-            result = integer[integer.length - i - 1] + result;
-        }
-        if(result == '') {
-            result = '' + 0;
-        }
-        
-        for(var i = result.length; i < intMinLength; i++) {
-            result = '0' + result;
-        }
-        
-        if(decimals.length > 0) {
-            result += decimalSep + decimals;
-        }
-        return result;
-    },
-    stringToVar : function(string) {
-        if(typeof(string) != 'string') {
-            throw new Error('Not a string');
-            return;
-        }
-        if(!isNaN(string)) {
-            return parseInt(string);
-        }
-        var _exploded = string.split('.');
-        var _result = window;
-        for (var index = 0; index < _exploded.length; index++) {
-            if(_exploded[index].length && typeof(_result[_exploded[index]]) != 'undefined') {
-                _result = _result[_exploded[index]];
-            } else {
-                throw new Error('No corresponding var found for ' + string);
-                return;
-            }
-        }
-        return _result;
-    },
-    formatDate : function(date) {
-        if(!date || typeof(date) != 'object') {
-            return '';
-        }
-        var year = date.getFullYear();
-        var month = this.convertNumberToString(date.getMonth() + 1, 0, 2);
-        var day = this.convertNumberToString(date.getDate(), 0, 2);
-        return year + '-' + month + '-' + day;
-    },
-    Renderers : {
-        date : function(date) {
-            var _date     = null;
-            var _splitted = null;
-            var _obj      = null;
-            if(date && typeof(date) == 'object') {
-                _date = date.date;
-            } else {
-                _date = date;
-            }
-            if(typeof(_date) == 'string' && _date) {
-                _date = _date.split(' ')[0];
-                _splitted = _date.split('-');
-                if (_splitted.length === 3) {
-                    return _splitted[2] + '/' + _splitted[1] + '/' + _splitted[0];
-                }
-                else {
-                    return '';
-                }
-            } else {
-                return '';
-            }
-        },
-        amounts : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2);
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-            
-        },
-        money : function(number, row) {
-            var currency = (row && row.currency && row.currency.symbole) ? row.currency.symbole : '€';
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' ' + currency;
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        euros : function(number) {
-            var res = Fanny.Utils.convertNumberToString(number, 2) + ' €';
-            if(number >= 0) {
-                return res;
-            } else {
-                return $('<span>').addClass('text-orange').html(res)
-            }
-        },
-        upper : function(string) {
-            if(typeof(string) == 'string') {
-                return string.toUpperCase();
-            } else {
-                return string;
-            }
-        }
-    }
-}
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -2760,18 +2485,57 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
     this.type = TYPES;
 }]);
 
-var module = angular.module('ev-fdm');
+const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
+const MAX_VISIBLE_PANEL = 3;
 
-module
-    .service('PanelService', [
-        '$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', '$window', 'PanelLayoutEngine',
-        function($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, $window, panelLayoutEngine) {
+angular.module('ev-fdm')
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+            $window) {
 
-        var container   = null,
-            stylesCache = window.stylesCache = {}
-            self        = this;
+        var containers   = {};
+        var panelsList   = {};
+        
+        var addToDom = function (panel, containerId) {
+            var container = containers[containerId];
+            if (!container || panel.element.parent().length) {
+                return;
+            }
 
-        this.panels = {};
+            // If no panel index, or no panel inside the container, it is added at the end
+            if (!panel.index || !container.children().length) {
+                $animate.move(panel.element, container, null, function () {
+                    updateLayout(null, containerId);
+                });
+            } else {
+                var beforePanel = getBeforePanelElm(panel.index, containerId);
+                    $animate.move(panel.element, container, beforePanel.element, function () {
+                        updateLayout(null, containerId);
+                });
+            }
+        };
+
+        function getBeforePanelElm(index, containerId) {
+            var beforePanel = null;
+            var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
+                return panelsList[containerId][panelName];
+            });
+            panels
+                .filter(function (panel) {
+                    return panel.element.parent().length;
+                })
+                .filter(function (panel) {
+                    return panel.index;
+                })
+                .some(function (insertedPanel) {
+                    var isBeforePanel = insertedPanel.index > index;
+                    if (isBeforePanel) {
+                        beforePanel = insertedPanel;
+                    }
+                    return !isBeforePanel;
+                });
+            return (beforePanel || panels[0]).element;
+        }
 
         /**
          * Panel options are:
@@ -2779,90 +2543,96 @@ module
          * - template or templateURL
          * - index
          */
-        this.open = function(options) {
-            if (!options.name && options.panelName) {
-                console.log("Deprecated: use name instead of panelName")
-                options.name = options.panelName;
+        this.open = function (panel, id) {
+            if (!id) {
+                id = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[id] = panelsList[id] || {};
+
+            if (!panel.name && panel.panelName) {
+                console.log("Deprecated: use name instead of panelName");
+                panel.name = panel.panelName;
             }
 
-            if (!options) {
+            if (!panel) {
                 console.log("A panel must have a name (options.name)");
                 return;
             }
 
-            var name = options.name;
+            // Change panelName to panel-name
+            var name = panel.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 
-            if (self.panels[name]) {
-                var panel        = self.panels[name];
-                panel.index      = options.index;
-
-                var afterIndex   = findAfterElementIndex(options.index),
-                    afterElement = getAfterElement(afterIndex);
-
-                panel.element.css('z-index', 2000 + afterIndex);
-                $animate.move(panel.element, container, afterElement, function() {
-                    updateLayout();
-                });
-
-                return self.panels[name];
+            if (panels[name]) {
+                return panels[name];
             }
-
-            // We call it *THE BEAST*.
-            var element          = angular.element('<div class="ev-panel-placeholder ev-panel-placeholder-' + name + '" ev-panel-breakpoints style="' + getStylesFromCache(name, options) + '"   ><div class="ev-panel" ><div class="ev-panel-inner"><div class="ev-panel-content"></div></div></div></div>'),
-                templatePromises = getTemplatePromise(options);
-            self.panels[name]         = options;
-            options.element      = element;
-            options.element.css('z-index', 2000 + options.index);
+            
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
+                    name + '" ev-responsive-viewport ev-resizable-column>' + 
+                    '</div>');
+            var templatePromises = getTemplatePromise(panel);
+            panels[name] = panel;
+            panel.element = element;
 
             return templatePromises.then(function(template) {
-                element.find('.ev-panel-content').html(template);
-                element          = $compile(element)($rootScope.$new());
-                options.element  = element;
-
-                var afterIndex   = findAfterElementIndex(options.index),
-                    afterElement = getAfterElement(afterIndex);
-
-                element.on('resizestop', function(event, ui) {
-                    // resizable plugin does an unwanted height resize
-                    // so we cancel the height set.
-                    var originalSize = ui.originalSize;
-                    $(this).css("height","");
-
-                    stylesCache[options.panelName] = ui.size.width;
-                    updateLayout(self);
-                }).on('resize', function(event, ui) {
-                    return false;
-                });
-
-                $animate.enter(element, container, afterElement, function() {
-                    updateLayout();
-                });
-
-                return options;
+                element.html(template);
+                element = $compile(element)($rootScope.$new());
+                panel.element  = element;
+                addToDom(panel, id);
+                return panel;
             });
         };
 
-        this.close = function(name) {
-            if (!name || !self.panels[name]) {
-                console.log("Panel not found for:" + name);
+
+        this.getPanels = function (containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            return panelsList[containerId];
+        };
+
+        this.close = function(name, containerId) {
+            // Change panelName to panel-name
+            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[containerId];
+
+            if (!name || !panels[name]) {
+                console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
-            var element  = self.panels[name].element;
-            self.panels[name] = null;
-
+            var element  = panels[name].element;
+            delete panels[name];
             $animate.leave(element, function() {
-                updateLayout();
-            })
-        };
+                updateLayout(null, containerId);
+            });
+        };          
 
         /**
          * Registers a panels container
          *
          * element : DOM element
          */
-        this.registerContainer = function(element) {
-            container = element;
+        this.registerContainer = function(container, containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            if (!containers[containerId]) {
+                containers[containerId] = container;
+                if (!panelsList[containerId]) {
+                    return;
+                }
+
+                Object.keys(panelsList[containerId]).forEach(function (panelName) {
+                    var panel = panelsList[containerId][panelName];
+                    addToDom(panel, containerId);
+                });
+            }
         };
+
+
 
         var timerWindowResize = null;
         angular.element($window).on('resize', function() {
@@ -2870,22 +2640,14 @@ module
                 $timeout.cancel(timerWindowResize);
             }
             timerWindowResize = $timeout(function() {
-                updateLayout()
-            }, 100);
-        });
+                updateLayout();
+            }, 200);
+        });         
 
-        function getStylesFromCache(name, options) {
-            var savedWidth = stylesCache[name];
-            if (savedWidth) {
-                return 'width: ' + savedWidth + 'px;';
-            }
-
-            return '';
-        }
 
         function getTemplatePromise(options) {
             if (options.template || options.templateURL) {
-                return $q.when(options.template)
+                return $q.when(options.template);
             }
 
             return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
@@ -2893,41 +2655,41 @@ module
             });
         }
 
-        function findAfterElementIndex(index) {
-            var insertedPanels = angular.element(container).children(),
-                afterIndex     = index - 1;
-
-            if (!index || index > insertedPanels.length) {
-                afterIndex = insertedPanels.length - 1;
+       
+        function updateLayout(element, containerId) {
+            if (!containerId) {
+                Object.keys(containers).map(function (id) {
+                    updateLayout(null, id);
+                });
+                return this;
             }
-            else if (index < 1) {
-                afterIndex = 0;
-            }
+            var container = containers[containerId];
+            var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
+            
 
-            return afterIndex;
+            checkStacking(panelElements, container);
         }
 
-        function getAfterElement(afterIndex) {
-            var insertedPanels = angular.element(container).children(),
-                domElement     = insertedPanels[afterIndex];
-
-            return domElement ? angular.element(domElement) : null;
-        }
-
-        function updateLayout(element) {
-            var panelElements = angular.element(container).children('.ev-panel-placeholder');
-
-            if (element) {
-                for (var i = 0; i < panelElements.length; i++) {
-                    var current = panelElements[i];
-                    if (element == current) {
-                        panelElements.splice(i, 1);
-                        panelElements.push(element);
-                        break;
-                    }
-                }
+        function checkStacking(panels, container) {
+            panels.forEach(function (panel) {
+                angular.element(panel).removeClass('ev-stacked');
+                // We reset the width each time we update the layout
+                angular.element(panel).css('minWidth', '');
+            });
+            // We stack panels until there is only three left
+            if (panels.length > MAX_VISIBLE_PANEL) {
+                panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
+                    angular.element(panel).addClass('ev-stacked');
+                });
             }
-            panelLayoutEngine.checkStacking(panelElements);
+            // Starting from the first non stack panel, 
+            var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
+            // Stack until overflow does not exists anymore (or we arrive to the last panel)
+            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
+                angular.element(panels[i]).addClass('ev-stacked');
+                i ++;
+            }
+            $rootScope.$broadcast('module-layout-changed');
         }
 
         return this;
@@ -2937,179 +2699,13 @@ module
             restrict: 'AE',
             scope: {},
             replace: true,
-            template: '<div class="ev-panels ev-panels-container lisette-module"><div></div></div>',
+            template: '<div class="ev-panels-container"></div>',
             link: function (scope, element, attrs) {
-              panelService.registerContainer(element);
+              panelService.registerContainer(element, attrs.id);
             }
         };
     }]);
 
-var module = angular.module('ev-fdm');
-
-var SidonieModalService = function($modal, $animate, $log) {
-
-    // main object containing all opened modals
-    var regions = {};
-    regions[ SidonieModalService.REGION_RIGHT ] = { multi: false, opened: [ ] };
-    regions[ SidonieModalService.REGION_MIDDLE ] = { multi: false, opened: [ ] };
-
-
-    // --------------------------------------------------------
-    // 'PUBLIC' FUNCTIONS
-    // --------------------------------------------------------
-
-    /**
-     * Makes sure that:
-     * - the current opened popup in that region is not locked for edition
-     * - the current opened popup is not already of that type (in that case, do not open a new popup)
-     *
-     * @param  region
-     * @param  modalType
-     * @param  options
-     * @return the modal instance if success, false if cancelled by a locked popup
-     */
-    function open(region, modalType, options) {
-        var regionSpecs = getRegionSpecs(region);
-        var isMulti = regionSpecs.multi;
-        var openedModals = regionSpecs.opened;
-
-        if (!options.windowClass) {
-            options.windowClass = ' fade ';
-        }
-        options.windowClass += ' ' + region;
-        if (!options.templateUrl && !options.template) {
-            options.templateUrl = modalType + '.phtml';
-        }
-
-        options.backdrop = (region == SidonieModalService.REGION_MIDDLE);
-
-        if (isMulti) {
-            throw new Error('Multi not implemented yet');
-        } else {
-            if (openedModals.length) {
-                var openedModal = openedModals[openedModals.length - 1];
-                // current opened modal cannot be closed / updated
-                if (openedModal.status == SidonieModalService.STATUS_LOCKED) {
-                    $log.warn('Open modal aborted due to ' + openedModal.sidonieModalType + '\'s locked status');
-                    highlightModal(openedModal);
-                    return false;
-                // current opened modal has to be replaced
-                } else if (openedModal.sidonieModalType != modalType) {
-                    // close and open a new one
-                    openedModal.modal('hide');
-                    var modal = $modal.open(options);
-                    modal.sidonieModalType = modalType;
-                    modal.result.finally(handleModalClosing(region, modal));
-                    regionSpecs.opened = [ modal ];
-                    return modal;
-                // current opened modal can be kept and content updated
-                } else {
-                    return openedModal;
-                }
-            } else {
-                // simply open a new popup
-                var modal = $modal.open(options);
-                modal.sidonieModalType = modalType;
-                modal.result.finally(handleModalClosing(region, modal));
-                regionSpecs.opened = [ modal ];
-                return modal;
-            }
-        }
-    }
-
-    /**
-     * Closes all currently opened modals, making sure
-     * they are ALL not locked
-     * @return true if success, locked popup if not
-     */
-    function closeAll() {
-        // check if all popups are ready to be closed
-        var cancelled = false;
-        angular.forEach(regions, function(regionSpecs, region) {
-            angular.forEach(regionSpecs.opened, function(modal) {
-                if (cancelled) return;
-                if (modal.status == SidonieModalService.STATUS_LOCKED) {
-                    highlightModal(modal);
-                    $log.warn('Open modal aborted due to ' + modal.sidonieModalType + '\'s locked status');
-                    cancelled = modal;
-                }
-            });
-        });
-        if (cancelled) return cancelled;
-        // actually close all the popups
-        angular.forEach(regions, function(regionSpecs, region) {
-            angular.forEach(regionSpecs.opened, function(modal) {
-                try {
-                    modal.close();
-                } catch(e) {}
-            });
-        });
-        return true;
-    }
-
-    /**
-     * Returns the latest modal of that region
-     */
-    function get(region, modalType) {
-        var regionSpecs = getRegionSpecs(region);
-        if (regionSpecs.modals.length) {
-            var modal = regionSpecs.modals[regionSpecs.modals.length - 1];
-            if (!modalType || modal.sidonieModalType == modalType) {
-                return modal;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    // --------------------------------------------------------
-    // 'PRIVATE' FUNCTIONS
-    // --------------------------------------------------------
-
-    function getRegionSpecs(region) {
-        var regionSpecs = regions[region];
-        if (typeof(regionSpecs) == 'undefined') {
-            throw new Error('Unknown region ' + region);
-        }
-        return regionSpecs;
-    }
-
-    function handleModalClosing(region, modal) {
-        return function(result) {
-            var regionSpecs = getRegionSpecs(region);
-            angular.forEach(regionSpecs.opened, function(_modal) {
-                if (modal == _modal) {
-                    regionSpecs.opened = _(regionSpecs.opened).without(modal);
-                }
-            });
-        }
-    }
-
-    function highlightModal(modal) {
-        $animate.addClass(modal, 'modal-locked', function() {
-            $animate.removeClass(modal, 'modal-locked');
-        });
-    }
-
-    return {
-        open: open,
-        openRight: function(modalType, options) {
-            open(SidonieModalService.REGION_RIGHT, modalType, options);
-        },
-        openMiddle: function(modalType, options) {
-            open(SidonieModalService.REGION_MIDDLE, modalType, options);
-        },
-        get: get,
-        closeAll: closeAll
-    }
-}
-
-SidonieModalService.STATUS_LOCKED = 'locked';
-SidonieModalService.REGION_RIGHT = 'right';
-SidonieModalService.REGION_MIDDLE = 'middle';
-
-
-module.service('SidonieModalService', [ '$modal', '$animate', '$log', SidonieModalService ]);
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -3161,6 +2757,26 @@ module.service('SortService', [function() {
 }]);
 'use strict';
 
+var module = angular.module('ev-fdm');
+
+module.service('UtilService', [function() {
+    this.generatedIds = {};
+
+    this.generateId = function(prefix) {
+        var id = prefix + Math.random() * 10000;
+
+        if(typeof(this.generatedIds[id] !== 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = this.generateId(prefix);
+        }
+
+        return id;
+    };
+}]);
+
+'use strict';
+
 /* Services */
 var module = angular.module('ev-fdm');
 
@@ -3168,7 +2784,7 @@ var AbstractAutocompleteStorage = function (AbstractStorage, $timeout) {
     _.extend (this, AbstractStorage);
     this.AbstractStorage = AbstractStorage;
     this.$timeout = $timeout;
-}
+};
 
 AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (searchCallback, matchingCallback, minLength) {
     var me = this;
@@ -3199,7 +2815,7 @@ AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (sea
 
         }
     };
-}
+};
 
 // Demonstrate how to register services
 // In this case it is a simple value service.
@@ -3207,7 +2823,7 @@ module.service('AbstractAutocompleteStorage', ['Storage', '$timeout', AbstractAu
 
 'use strict';
 
-function AjaxStorage($http, $q, $cacheFactory, $log) {
+function AjaxStorage($http, $q, $cacheFactory, utilService, $log) {
 
     var httpCache = $cacheFactory('customHttpCache');
 
@@ -3223,7 +2839,7 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
         }
 
         // Add the request id... Ah, history...
-        options.id = Fanny.Utils.generateId ('proxy:request:');
+        options.id = utilService.generateId('proxy:request:');
         var requestConfig = {
             url         : '/backoffice/common/xhr',
             method      : 'POST',
@@ -3263,12 +2879,12 @@ function AjaxStorage($http, $q, $cacheFactory, $log) {
 
     return {
         launchRequest: launchRequest
-    }
+    };
 
 }
 
 angular.module('ev-fdm')
-    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', '$log', AjaxStorage]);
+    .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
     .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
@@ -3449,8 +3065,7 @@ function Storage(AjaxStorage) {
             get: function(options) {
                 return AjaxStorage.launchRequest(options);
             }
-
-        }
+        };
 }
 
 module.service('Storage', ['AjaxStorage', Storage]);
@@ -3766,331 +3381,6 @@ angular.module('ev-fdm')
         }
     }
 });
-angular.module('ev-fdm')
-
-/**
- * STACKING AND PANELS SIZE MANAGEMENT
- */
-.service('PanelLayoutEngine', ['$animate', '$rootScope', '$window', function($animate, $rootScope, $window) {
-
-    var STACKED_WIDTH = 35;
-
-    /**************************
-     *           #1           *
-     *  Extract panels infos  *
-     **************************/
-
-    /**
-     * Extract all useful panels informations
-     * The (min-/max-/stacked-)width and the stacked state
-     * @param  {Array} panels the panels
-     * @return {Array}        Array containing the extracted values
-     */
-    function getDataFromPanels(panels) {
-        var datas = [];
-
-        angular.forEach(panels, function(panelDom) {
-            var panelElement = angular.element(panelDom);
-
-            var data = {
-                minWidth: parseInt(panelElement.children().first().css('min-width')) || STACKED_WIDTH,
-                maxWidth: parseInt(panelElement.children().first().css('max-width'))
-                    || angular.element($window).innerWidth(),
-                stacked:  panelElement.hasClass('stacked'),
-                width:    panelElement.width(),
-                stackedWidth: STACKED_WIDTH
-            };
-
-            if (data.width < data.minWidth) {
-                data.width = data.minWidth;
-            }
-
-            if (data.width > data.maxWidth && data.maxWidth > 0) {
-                data.width = data.maxWidth;
-            }
-
-            datas.push(data);
-        });
-
-        return datas;
-    }
-
-    /**************************
-     *           #2           *
-     *      Compute datas     *
-     **************************/
-
-    /**
-     * Count the minimal number of panels that need to be stacked
-     */
-    function countMinStacked(datas, limit) {
-        var minStacked = 0;
-        var i = 0;
-        var j = 0;
-        var datasLength = datas.length;
-        var totalMinWidth = 0;
-        var data = null;
-
-        for (; i < datasLength; i++) {
-            totalMinWidth = 0;
-
-            for(j = 0; j < datasLength; j++) {
-                data = datas[j];
-
-                if (j < i) {
-                    totalMinWidth += data.stackedWidth;
-                    continue;
-                }
-
-                var width = data.minWidth;
-                if(width < data.stackedWidth) {
-                    width = data.stackedWidth;
-                }
-
-                totalMinWidth += width;
-            }
-
-            if (totalMinWidth > limit) {
-                minStacked++;
-            }
-        }
-
-        return minStacked;
-    }
-
-    /**
-     * Count the maximal number of panels that can be stacked
-     */
-    function countMaxStacked(datas, limit) {
-        var maxStacked = datas.length;
-        var datasLength = datas.length;
-        var i = datasLength;
-        var j = 0;
-        var totalMaxWidth = 0;
-        var data = null;
-
-        for (; i > 0; i--) {
-            totalMaxWidth = 0;
-
-            for(j = 0; j < datasLength; j++) {
-                data = datas[j];
-
-                if (j < i) {
-                    totalMaxWidth += data.stackedWidth;
-                    continue;
-                }
-
-                var width = data.maxWidth;
-                if(width < data.stackedWidth) {
-                    width = data.stackedWidth;
-                }
-
-                totalMaxWidth += width;
-            }
-
-            if (totalMaxWidth < limit) {
-                maxStacked--;
-            }
-        }
-
-        return maxStacked;
-    }
-
-    /**
-     * For each panels, test if he needs to be stacked
-     */
-    function updateStackState(datas,limit) {
-        var minStacked = countMinStacked(datas, limit);
-        var maxStacked = countMaxStacked(datas, limit);
-
-        angular.forEach(datas, function(element) {
-            element.stacked = false;
-        });
-
-        var nbStacked = minStacked;
-
-        /**
-         * Specific rule where, for more readability, we stack a panel.
-         */
-        if (((datas.length - minStacked) > 3) && (datas.length - maxStacked <= 3)) {
-            nbStacked = datas.length - 3;
-        }
-
-        var i = 0;
-        for(; i < nbStacked; i++) {
-            datas[i].stacked = true;
-        }
-
-        return {
-            nbStacked: nbStacked,
-            datas: datas
-        };
-    }
-
-    /**
-     * Update the size of each panels
-     */
-    function updateSize(datas, limit) {
-        var totalWidth = 0;
-
-        angular.forEach(datas, function(data) {
-            // Ensures the width aren't below the min
-            if (data.width < data.minWidth) {
-                data.width = data.minWidth;
-            }
-
-            totalWidth += data.stacked ? data.stackedWidth : data.width;
-        });
-
-        // Delta is the gap we have to reach the limit
-        var delta = limit - totalWidth,
-            datasLength = datas.length,
-            data = null;
-
-        for (var i = 0; i < datasLength; i++) {
-            data = datas[i];
-
-            if (data.stacked) {
-                data.width = data.stackedWidth;
-                continue;
-            }
-
-            // Try to add all the delta at once
-            var oldWidth = data.width;
-            var newWidth = data.width + delta;
-
-            // Check limit
-            if (data.minWidth > newWidth) {
-                data.width = data.minWidth;
-            }
-
-            // Check limit
-            else if (data.maxWidth !== 0 && data.maxWidth < newWidth) {
-                data.width = data.maxWidth;
-            } else {
-                data.width = data.width + delta;
-            }
-
-            delta = delta - (data.width - oldWidth);
-
-            // Break if there is no more delta
-            if (delta === 0) {
-                break;
-            }
-        }
-
-        // if (delta !== 0) {
-        //     return false;
-        // }
-
-        return datas;
-    }
-
-    /**
-     * Calculate datas from the dataPanels received accordingly to a max width
-     * @param  {Array}  datas Panels data
-     * @param  {Int}    limit limit width]
-     * @return {Array}  datas computed
-     */
-    function calculateStackingFromData(datas, limit) {
-        var result = updateStackState(datas, limit);
-        datas      = result.datas;
-
-        // If we don't need to stack all the panels (which is a specific case not handled here)
-        if(result.nbStacked !== datas.length) {
-            datas = updateSize(datas, limit);
-        }
-
-        return datas;
-    }
-
-    /*****************************
-     *           #3              *
-     * Apply new datas to panels *
-     *****************************/
-
-     /**
-     * Apply our results to the panels
-     * @param  {Array}   panels      the panels
-     * @param  {Array}   dataPanels  the datas we want to apply
-     * @param  {Int}     windowWidth the windowWidth
-     */
-    function resizeAndStackPanels(panels, dataPanels, windowWidth) {
-        // If we need to stack all the panels
-        // We don't stack the last one, but we hide all the stacked panels
-        var isMobile  = false;
-        var lastPanel = dataPanels[dataPanels.length - 1];
-
-        if (lastPanel.stacked === true) {
-            lastPanel.stacked = false;
-            lastPanel.width = windowWidth;
-            isMobile = true;
-        }
-
-        panels.css('left', 0);
-
-        angular.forEach(panels, function(domElement, i) {
-            var element   = angular.element(domElement),
-                dataPanel = dataPanels[i];
-
-            if (!element) {
-                console.log('no element for this panel)');
-                return;
-            }
-
-            if (element.hasClass('stacked') && !dataPanel.stacked) {
-                $animate.removeClass(element, 'stacked');
-                $animate.removeClass(element, 'stacked-mobile');
-            } else if (!element.hasClass('stacked') && dataPanel.stacked) {
-                $animate.addClass(element, 'stacked');
-
-                if (isMobile) {
-                    $animate.addClass(element, 'stacked-mobile');
-                }
-            }
-
-            element.width(dataPanel.width + "px");
-        });
-    }
-
-    /**************************
-     *         MAIN           *
-     **************************/
-
-    /**
-     * Check the stacking and so on
-     */
-    function checkStacking(panels) {
-        var body = angular.element('body');
-        var overflowSetting = body.css('overflow');
-        body.css('overflow', 'hidden');
-        var windowWidth   = angular.element($window).innerWidth();
-        body.css('overflow', overflowSetting);
-
-        // #1 - We extract the data from our panels (width, and so on)
-        var rawDataPanels = getDataFromPanels(panels);
-
-        // #2 - We compute these new data with our specifics rules (agnostic algorithm)
-        var dataPanels    = calculateStackingFromData(rawDataPanels, windowWidth);
-
-        // #3 - We apply these new values to our panels
-        resizeAndStackPanels(panels, dataPanels, windowWidth);
-
-        $rootScope.$broadcast('module-layout-changed');
-    }
-
-
-    /**
-     * The panelLayoutEngine
-     * @type {Object}
-     */
-    var panelLayoutEngine = {
-        checkStacking: checkStacking
-    };
-
-    return panelLayoutEngine;
-}]);
-
 angular.module('ev-leaflet', ['leaflet-directive'])
     .provider('evLeaflet', function() {
         this.$get =function () {

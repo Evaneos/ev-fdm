@@ -7,7 +7,7 @@ var AbstractAutocompleteStorage = function (AbstractStorage, $timeout) {
     _.extend (this, AbstractStorage);
     this.AbstractStorage = AbstractStorage;
     this.$timeout = $timeout;
-}
+};
 
 AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (searchCallback, matchingCallback, minLength) {
     var me = this;
@@ -38,7 +38,7 @@ AbstractAutocompleteStorage.prototype.generateAutocompleteConfig = function (sea
 
         }
     };
-}
+};
 
 // Demonstrate how to register services
 // In this case it is a simple value service.

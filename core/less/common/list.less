@@ -43,7 +43,7 @@
         border-left: @layout-gutter solid transparent;
         cursor: pointer;
         position: relative;
-        height: 71px;
+        // height: 71px;
 
         /**
          * The left section containing informations
@@ -141,20 +141,3 @@
     }
 }
 
-// Responsive lines in a panel
-.ev-panel-placeholder {
-    &[data-breakpoint='min'],
-    &[data-breakpoint='100'],
-    &[data-breakpoint='200'],
-    &[data-breakpoint='300'] {
-        .list-container .list-element {
-            height: auto;
-            .title, .description {
-                display: none;
-            }
-            .icon {
-                display: none;
-            }
-        }
-    }
-}

@@ -12,7 +12,7 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
 // just beneath the menu
 .config(['cfpLoadingBarProvider', function(cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeSpinner = false;
-    cfpLoadingBarProvider.parentSelector = '#lisette-menu';
+    cfpLoadingBarProvider.parentSelector = '#menu';
 }])
 
 .config(['$tooltipProvider', function($tooltipProvider) {
@@ -29,15 +29,6 @@ angular.module('ev-fdm', ['ui.router', 'ui.date', 'chieffancypants.loadingBar',
         // Custom event, the tooltip appears when the element has the focus, and disappear when a key
         // in pressed (or the element has blurred).
         'focus-not-typing': 'blur-or-typing'
-    });
-}])
-
-/**
- * Define a default error state for our app
- */
-.config(['$stateProvider', function($stateProvider) {
-    $stateProvider.state('ev-error', {
-        templateUrl: 'ev-error.phtml'
     });
 }])
 

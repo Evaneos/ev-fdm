@@ -9,8 +9,7 @@ function Storage(AjaxStorage) {
             get: function(options) {
                 return AjaxStorage.launchRequest(options);
             }
-
-        }
+        };
 }
 
 module.service('Storage', ['AjaxStorage', Storage]);

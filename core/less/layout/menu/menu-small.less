@@ -1,54 +1,36 @@
-/**
- * SMALL VERSION OF MENU
- */
-
-#lisette-menu {
-    #small-menu {
-        display: none;
-    }
+#small-menu {
+    display: none;
 }
+
 
 @media (max-width: @screen-desktop) {
 
-    #lisette-menu {
-
-        #lisette-menu-items {
-            display: none;
-        }
-
-        #profile-menu {
+    #menu {
+        #normal-menu {
             display: none;
         }
 
         #small-menu {
             position: absolute;
-            right: 0; top: 0;
+            right: 0;
             display: block;
             margin: 0;
 
+            .caret {
+                display: none;
+            }
+
             .dropdown {
-                width: auto;
                 padding: 0 20px;
 
                 .dropdown-toggle {
                     padding: 0;
-                    .icon-display-inline {
-                        display: inline-block;
-                        float: left;
-                        width: auto;
-                        height: @menu-height;
-                        line-height: @menu-height;
-                        margin: 0;
-                        font-size: 17px;
-                    }
                     span {
-                        display: inline-block;
-                        margin-left: 5px;
                         line-height: @menu-height;
                     }
                 }
                 &.open {
-                    background: #FFF;
+                    background: @body-bg;
                     .dropdown-toggle {
                         color: @brand-evaneos;
                     }
@@ -56,32 +38,23 @@
 
                 .dropdown-menu {
                     position: fixed;
-                    left: 0;
-                    right: 0;
                     bottom: 0;
-                    overflow-y: auto;
                     overflow-x: hidden;
                     background: #FFF;
                     top: @menu-height;
-                    .menu-item {
+                    li {
                         a {
                             border-bottom: 1px solid @gray-light;
-                            color: @gray-dark;
                             .title {
                                 padding: 5px 10px;
-                                font-size: 18px;
-                            }
-                            .icon {
-                                font-size: 20px;
-                                margin-top: 7px;
-                                margin-left: 3px;
                             }
                         }
                         &.active a {
-                            color: @brand-evaneos !important;
+                            color: @brand-evaneos;
                         }
                         &:hover a {
-                            color: @gray-darker !important;
+                            background: @gray-lighter;
+                            color: @gray-darker;
                         }
                     }
                     .divider {

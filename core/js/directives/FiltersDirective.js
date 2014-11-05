@@ -7,6 +7,6 @@ module.directive('evFilters', function() {
         restrict: 'E',
         replace: true,
         transclude: true,
-        templateUrl: 'filters.phtml'
+        templateUrl: 'ev-filters.html'
     };
 });

@@ -1,8 +1,4 @@
-.lisette-module-tabs {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+.module-tabs {
     height: @module-tabs-height;
 
     text-align: center;
@@ -10,6 +6,8 @@
     font-size: 0;
     padding-top: @layout-gutter;
     border: none;
+    background-color: @body-bg;
+    overflow: hidden;
 
     li {
         float: none;
@@ -50,7 +48,7 @@
     }
 }
 
-body.state-resolving .lisette-module-tabs li {
+body.state-resolving .module-tabs li {
 
     a {
         cursor: not-allowed;

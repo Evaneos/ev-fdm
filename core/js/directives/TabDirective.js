@@ -62,7 +62,7 @@
                     };
                 },
                 template:
-                    '<div class="tabbable" ev-fixed-header refresh-on="tab_container">' +
+                    '<div class="tabbable ev-fixed-header">' +
                         '<ul class="nav nav-tabs ev-header">' +
                             '<li ng-repeat="pane in panes | filter:isShowed" ' +
                                 'ng-class="{active:pane.selected}" '+
