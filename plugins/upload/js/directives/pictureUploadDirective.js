@@ -124,16 +124,6 @@ angular.module('ev-upload')
 
                 $scope.pictureUploaded = function(pictureUploaded) {
                     var picture = pictureUploaded.data[0];
-
-                    if($scope.language) {
-                        if (Array.isArray(picture.legend)) {
-                            picture.legend = {};
-                        }
-                        if (!picture.legend[$scope.language]) {
-                            picture.legend[$scope.language] = { name: '' };
-                        }
-                    }
-
                     $scope.addPicture(picture);
                 };
             }
