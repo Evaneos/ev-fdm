@@ -154,16 +154,16 @@ angular.module('ev-upload')
                             '{{ "ou" | i18n }}' +
                         '</td>'+
                         '<td>'+
-                            '<ng-form novalidate name="flickr" ' +
+                            '<form novalidate name="flickr" ' +
                                 'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
                                 '<input name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
-                                    'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" ' +
+                                    'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" required="" ' +
                                     'class="form-control" ng-change="uploadFlickrUrl(flickr)"/>' +
                                 '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
                                     '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
                                         '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
                                 '</div>' +
-                            '</ng-form>' +
+                            '</form>' +
                         '</td></tr></table>'+
                 '</div>' +
                 '<div class="ev-picture-uploading" ng-show="uploading">' +
@@ -182,6 +182,7 @@ angular.module('ev-upload')
                 };
             },
             controller: function ($scope) {
+
                 $scope.uploading = false;
                 $scope.$watch('url', function (url) {
                     $scope.settings.url = url;
@@ -192,9 +193,7 @@ angular.module('ev-upload')
                             https://www.flickr.com/photos/{user-id}/{photo-id}/blabla/1512
                         will not be parsed nicely
                      */
-                    if (!flickrForm.$valid || !$scope.flickrUrl) {
-                        return;
-                    }
+                    if (!flickrForm.$valid) { return; }
                     var flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/ .exec($scope.flickrUrl)[0];
                     var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
                     uploadPromise
