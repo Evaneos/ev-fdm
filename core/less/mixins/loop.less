@@ -8,10 +8,10 @@
 .for-range(@i, @n) when not (@i = @n) {
 	.for-range((@i + (@n - @i) / abs(@n - @i)), @n);
 }
-// ............................................................
-// .for-each
-.for(@array) {.for-impl_(length(@array))}
 
+// 
 
-.for-impl_(@i) when (@i > 1) {.for-impl_((@i - 1))}
-.for-impl_(@i) when (@i > 0) {.-each(extract(@array, @i))}
+.for(@array, @id:default) { .for-impl_(length(@array), @id) }
+.for-impl_(@i, @id) when (@i > 1) { .for-impl_((@i - 1), @id) }
+.for-impl_(@i, @id) when (@i > 0) { .-each(e(extract(@array, @i)), @id); }
+

@@ -29,9 +29,9 @@
 // 
 // Styleguide 3.1.1
 // Loop throught color list and define buttons name on the go.
-.for(@neutral-colors); .-each(@color) {
-    @name: e(@color);
-    .bg-@{name} { background-color: @@name; }
+.for(@neutral-colors, background);
+.-each(@color, background) {
+	.bg-@{color} { background-color: @@color; }
 }
 
 
@@ -49,11 +49,10 @@
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
 // 
 // Styleguide 3.1.2
-.for(@neutral-colors); .-each(@color) {
-    @name: e(@color);
-    .text-@{name} { color: @@name; }
+.for(@neutral-colors, text);
+.-each(@color, text) {
+	.text-@{color} { color: @@color; }
 }
-
 
 // Palette color classes
 // 
@@ -65,9 +64,9 @@
 // 
 // A scale of palette background colors
 // 
-// .bg-orange       - Add a red background
+// .bg-orange       - Add a orange background
 // .bg-pool         - Add a blue background
-// .bg-gold         - Add a orange background
+// .bg-gold         - Add a yellow background
 // .bg-lime         - Add a green background
 // 
 // Markup: 
@@ -75,10 +74,8 @@
 // 
 // Styleguide 3.2.1
 
-.for(@palette-colors); .-each(@color) {
-    @name: e(@color);
-    .bg-@{name} { background-color: @@name; }
-}
+.for(@palette-colors, background);
+
 
 
 
@@ -86,17 +83,14 @@
 // 
 // A scale of palette text colors
 // 
-// .text-orange     - Add a red background
-// .text-pool       - Add a blue background
-// .text-gold       - Add a orange background
-// .text-lime       - Add a green background
+// .text-orange     - Color the text in orange
+// .text-pool       - Color the text in blue
+// .text-gold       - Color the text in yellow
+// .text-lime       - Color the text in green
 // 
 // Markup: 
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
 // 
 // Styleguide 3.2.2
 
-.for(@palette-colors); .-each(@color) {
-    @name: e(@color);
-    .text-@{name} { color: @@name; }
-}
+.for(@palette-colors, text);

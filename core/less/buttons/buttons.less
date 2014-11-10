@@ -47,10 +47,10 @@
     &:active {
         text-decoration: none;
     }
-    // Default values
-    .btn-secondary;
-    .btn-soil;
-    .btn-md;
+    // // Default values
+    // .btn-secondary;
+    // .btn-soil;
+    // .btn-md;
 }
 
 
@@ -75,10 +75,10 @@
 
 
 // Loop throught color list and define buttons name on the go.
-.for(@btn-colors); .-each(@color) {
-    @name: e(@color);
-    .btn-@{name} {
-        .btn-color-variant(@@name);
+.for(@btn-colors);
+.-each(@color, default) {
+    .btn-@{color} {
+        .btn-color-variant(@@color);
     }
 }
 
@@ -96,16 +96,16 @@
 
 .btn-primary { &, &:hover, &:active {
     color: transparent;
-    background-color: auto;
-    border-color: auto;
+    background-color: inherit;
+    border-color: inherit;
 } }
 .btn-secondary { &, &:hover, &:active {
-    color: auto;
+    color: inherit;
     background-color: transparent;
-    border-color: auto;
+    border-color: inherit;
 } }
 .btn-thirdary { &, &:hover, &:active {
-    color: auto;
+    color: inherit;
     background-color: transparent;
     border-color: transparent;
 } }
