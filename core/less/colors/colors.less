@@ -1,77 +1,57 @@
 @import "variables.less";
+@import "../mixins/loop.less";
 
 // Helper classes
 // 
 // Styleguide 3
 
-// Gray colors classes
+// Neutral colors classes
 // 
-// Gray colors are neutral color used when the support should not convey any specific informations.
-// They can be used ad background color or text colors
+// Neutral colors are used when the support should not convey any specific information.
+// They can be used ad background color or text colors. 
+// 
+// You can customize the name and values you need by changing the list of colors in the `colors/variable.less` file.
 // 
 // Styleguide 3.1
 
-// Gray background colors
+// Neutral background colors
 // 
-// A scale of gray background colors
+// A scale of neutral background colors
 // 
-// .bg-gray   	- Add a gray background
-// .bg-light  	- Add a light background
-// .bg-lighter	- Add a lighter background
-// .bg-dark   	- Add a dark background
-// .bg-darker 	- Add a darker background
+// .bg-soil         - Add a soil background
+// .bg-light-soil   - Add a light soil background
+// .bg-bright-soil  - Add a bright soil background
+// .bg-deep-soil    - Add a deep soil background
+// .bg-dark-soil    - Add a dark soil background
 // 
 // Markup: 
 // <div style="height:100px; width: 100px" class="{$modifiers}"></div>
 // 
 // Styleguide 3.1.1
-
-.bg-gray {
-	background-color: @gray;
-}
-.bg-light {
-	background-color: @light-gray;
-}
-.bg-lighter {
-	background-color: @lighter-gray;
-}
-.bg-dark {
-	background-color: @dark-gray;
-}
-.bg-darker {
-	background-color: @darker-gray;
+// Loop throught color list and define buttons name on the go.
+.for(@neutral-colors); .-each(@color) {
+    @name: e(@color);
+    .bg-@{name} { background-color: @@name; }
 }
 
 
-// Gray text colors
+// Soil text colors
 // 
-// A scale of gray text colors
+// A scale of soil text colors
 // 
-// .text-gray   	- Color the text in a gray
-// .text-light  	- Color the text in a light gray
-// .text-lighter	- Color the text in a lighter gray
-// .text-dark   	- Color the text in a dark gray
-// .text-darker 	- Color the text in a darker gray
+// .text-soil           - Color the text in a soil
+// .text-light-soil     - Color the text in a light soil
+// .text-bright-soil    - Color the text in a bright soil
+// .text-deep-soil      - Color the text in a deep soil
+// .text-dark-soil      - Color the text in a dark soil
 // 
 // Markup: 
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
 // 
 // Styleguide 3.1.2
-
-.text-gray {
-	color: @gray;
-}
-.text-light {
-	color: @light-gray;
-}
-.text-lighter {
-	color: @lighter-gray;
-}
-.text-dark {
-	color: @dark-gray;
-}
-.text-darker {
-	color: @darker-gray;
+.for(@neutral-colors); .-each(@color) {
+    @name: e(@color);
+    .text-@{name} { color: @@name; }
 }
 
 
@@ -85,61 +65,38 @@
 // 
 // A scale of palette background colors
 // 
-// .bg-danger       	- Add a red background
-// .bg-info      	- Add a blue background
-// .bg-warning    	- Add a orange background
-// .bg-primary   	- Add a primary background
-// .bg-success     	- Add a green background
+// .bg-orange       - Add a red background
+// .bg-pool         - Add a blue background
+// .bg-gold         - Add a orange background
+// .bg-lime         - Add a green background
 // 
 // Markup: 
 // <div style="height:100px; width: 100px" class="{$modifiers}"></div>
 // 
 // Styleguide 3.2.1
 
-.bg-danger {
-	background-color: @brand-danger;
+.for(@palette-colors); .-each(@color) {
+    @name: e(@color);
+    .bg-@{name} { background-color: @@name; }
 }
-.bg-info {
-	background-color: @brand-info;
-}
-.bg-warning {
-	background-color: @brand-warning;
-}
-.bg-primary {
-	background-color: @brand-primary;
-}
-.bg-success {
-	background-color: @brand-success;
-}
+
 
 
 // Text colors
 // 
 // A scale of palette text colors
 // 
-// .text-danger       	- Add a red background
-// .text-info      	- Add a blue background
-// .text-warning    	- Add a orange background
-// .text-primary   	- Add a primary background
-// .text-success     	- Add a green background
+// .text-orange     - Add a red background
+// .text-pool       - Add a blue background
+// .text-gold       - Add a orange background
+// .text-lime       - Add a green background
 // 
 // Markup: 
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
 // 
 // Styleguide 3.2.2
 
-.text-danger {
-	color: @brand-danger;
-}
-.text-info {
-	color: @brand-info;
-}
-.text-warning {
-	color: @brand-warning;
-}
-.text-primary {
-	color: @brand-primary;
-}
-.text-success {
-	color: @brand-success;
+.for(@palette-colors); .-each(@color) {
+    @name: e(@color);
+    .text-@{name} { color: @@name; }
 }

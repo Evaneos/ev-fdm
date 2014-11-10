@@ -1,4 +1,4 @@
-@import "../variables.less";
+@import "../colors/variables.less";
 
 /*
     Buttons variables
@@ -7,14 +7,26 @@
     Color
     -----
 */
-		@ev-list-border-color: @light-gray;
-		@ev-list-emphasis-color: @brand-primary;
-		@ev-list-emphasis-light-color: fade(@brand-primary, 50%);
+	@btn-colors: 'lime', 'orange', 'soil', 'pool';
+	@btn-darken-factor: 15%;
 
 /*
-    Size
-    ----
+	Size
+	----
 */
-		@ev-list-vertical-padding: 10px;
-		@ev-list-emphasis-size: 3px;
-		@ev-list-separator-size: 3px;
+	@btn-lg-font-size: 	18px;
+	@btn-lg-padding: 	10px 32px;
+	
+	@btn-md-font-size: 	14px;
+	@btn-md-padding: 	6px 24px;
+
+	@btn-sm-font-size: 	12px;
+	@btn-sm-padding: 	5px 20px;
+
+	@btn-xs-font-size: 	10px;
+	@btn-xs-padding: 	4px 16px;
+
+
+	@btn-border-radius: 3px;
+
+

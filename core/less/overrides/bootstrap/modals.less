@@ -1,4 +1,5 @@
 @import (reference) "../../buttons/buttons.less";
+@import "../../colors/variables.less";
 
 .modal-backdrop {
     z-index: @zindex-modal-background;
@@ -16,7 +17,7 @@
         }
         .modal-header {
             padding: 9px 16px;
-            background: @lighter-gray;
+            background: @bright-soil;
             border-bottom: none;
 
             .modal-title {
@@ -28,7 +29,7 @@
             }
             .close {
                 font-size: 32px;
-                color: @gray;
+                color: @soil;
                 opacity: 1;
                 margin-top: 0;
                 margin-right: -14px;
@@ -39,7 +40,7 @@
                 outline: none;
 
                 &:hover {
-                    color: @dark-gray;
+                    color: @deep-soil;
                 }
             }
         }
@@ -53,7 +54,7 @@
                     margin-left: 0;
                 }
             }
-            background-color: @lighter-gray;
+            background-color: @bright-soil;
         }
 
         .modal-body.modal-message {
@@ -63,7 +64,7 @@
         }
         .modal-body h4 {
             margin-top: 10px;
-            color: @gray;
+            color: @soil;
             text-transform: uppercase;
             font-size: 14px;
             margin-bottom: 10px;
@@ -116,9 +117,9 @@
             .modal-footer {
                 text-align: center;
                 .btn {
-                    .btn-danger;
+                    .btn-orange;
                 }
-                background-color: @lighter-gray;
+                background-color: @bright-soil;
             }
             .modal-body {
                 text-align: center;
@@ -187,7 +188,7 @@
                 overflow-y: auto;
                 border-radius: 0;
                 box-shadow: none;
-                border-left: 5px solid @lighter-gray;
+                border-left: 5px solid @bright-soil;
 
                 .modal-header {
                     //position: inherit !important;
@@ -212,7 +213,7 @@
                     }
 
                     hr {
-                        border-top: 2px solid @lighter-gray;
+                        border-top: 2px solid @bright-soil;
                         margin: 10px -20px;
                     }
 
@@ -227,8 +228,8 @@
                 .modal-footer {
                     position: absolute;
                     bottom: 0; left: 0; right: 0;
-                    border-top: 5px solid @lighter-gray;
-                    background-color: @lighter-gray;
+                    border-top: 5px solid @bright-soil;
+                    background-color: @bright-soil;
                 }
             }
         }

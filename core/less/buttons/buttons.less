@@ -1,12 +1,21 @@
 @import "variables.less";
-@import (reference) "bower_components/bootstrap/less/buttons.less";
-
+@import "../mixins/loop.less";
 // Buttons
 // 
 // A basic UI component triggering an action. Button styles can be applied to anything with the `.btn` class applied. 
 // However, typically you'll want to apply these to only `<a>` and `<button>` elements for the best rendering.
 // 
+// There is three types of buttons: 
+// 
+// .btn-primary     - Primary button, used to emphasize the main call to action (usually one per viewport). 
+// .btn-secondary   - Secondary button, normal buttons (default value, this class is optional)
+// .btn-thirdary    - Thirdary button, light button, used generally inline, when you don't want to overload the interface.
+// 
+// Markup:
+// <button class="btn {$modifiers}">Button</button>
+// 
 // Styleguide 1
+
 
 // Base style & state
 // 
@@ -17,120 +26,116 @@
 // 
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
-// <button class="btn {$modifiers}">Button</button>
+// <button class="btn btn-secondary {$modifiers}">Button</button>
+// <button class="btn btn-thirdary {$modifiers}">Button</button>
 // 
 // Styleguide 1.1
+
 .btn {
-    .btn;
+    display: inline-block;
+    text-transform: uppercase;
+    border: none;
+    border-radius: @btn-border-radius;
+    outline: none;
+    cursor: pointer;
+    white-space: nowrap;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+
+    &:hover,
+    &:active {
+        text-decoration: none;
+    }
+    // Default values
+    .btn-secondary;
+    .btn-soil;
+    .btn-md;
 }
 
-// Skins
+
+// Colors
 // 
-// You can change the color of the button by adding any of these classes
+// You can change the color of the button by adding any of these classes. You can customize the list of colored button 
+// you need by changing the list of colors in the `buttons/variable.less` file.
+//  
 // 
-// .btn-default    - A neutral button
-// .btn-danger     - A red button, generally used for emphasing dangerous action (with no come back possible)
-// .btn-primary    - A button from the primary color, generally used as a call to action.
-// .btn-info       - A blue button, for quiet actions
-// .btn-success    - A green button, usually used for confirmation actions
-// .btn-warning    - A orange button, can be used for emphazing the consequences of the action. 
+// .btn-soil    - A button color soil (default value, this class is optional)
+// .btn-orange  - A button color orange
+// .btn-pool    - A button color pool
+// .btn-lime    - A button color lime
 // 
-// Markup: 
-// <button class="btn {$modifiers}">Button</button>
+// Markup:
+// <button class="btn btn-primary {$modifiers}">Button</button>
+// <button class="btn btn-secondary {$modifiers}">Button</button>
+// <button class="btn btn-thirdary {$modifiers}">Button</button>
 // 
 // Styleguide 1.2
 
 
-.ev-btn(@color) {
-    background: @color;
-    &:hover {
-        background: lighten(@color, 4%);
+
+// Loop throught color list and define buttons name on the go.
+.for(@btn-colors); .-each(@color) {
+    @name: e(@color);
+    .btn-@{name} {
+        .btn-color-variant(@@name);
     }
+}
+
+.btn-color-variant(@color) {
+    color: @color;
+    border-color: @color;
+    background-color: @color;
+    &:hover,
     &:active {
-        background: darken(@color, 2%);
+        color: @color;
+        background-color: darken(@color, @btn-darken-factor);
+        border-color: darken(@color, @btn-darken-factor);
     }
 }
 
-.btn-default { .ev-btn(@lighter-gray); }
-.btn-danger { .ev-btn(@brand-danger); }
-.btn-info { .ev-btn(@brand-info); }
-.btn-warning { .ev-btn(@brand-warning); }
-.btn-primary { .ev-btn(@brand-primary); }
-.btn-danger {
-    .ev-btn(@brand-danger);
-    color: #fff;
-    &:hover {
-        color: #fff;
-    }
-}
+.btn-primary { &, &:hover, &:active {
+    color: transparent;
+    background-color: auto;
+    border-color: auto;
+} }
+.btn-secondary { &, &:hover, &:active {
+    color: auto;
+    background-color: transparent;
+    border-color: auto;
+} }
+.btn-thirdary { &, &:hover, &:active {
+    color: auto;
+    background-color: transparent;
+    border-color: transparent;
+} }
 
-.btn-primary {
-  border: none;
-}
-
-.btn-primary[disabled] {
-    background-color: @gray;
-}
-
-.btn-default {
-    background: transparent;
-    color: @dark-gray;
-    &:hover {
-        box-shadow: none;
-        border-color: @light-gray;
-    }
-    &:active {
-        box-shadow: none;
-        opacity: .6;
-    }
-    &:focus {
-      background-color: @lighter-gray;
-  }
-}
+// Size
+// 
+// You can change the size of any button by adding these class.
+//  
+// 
+// .btn-xs    - An extra small button
+// .btn-sm    - A small button
+// .btn-md    - A medium button (default value, this class is optional)
+// .btn-lg    - A large button
+// 
+// Markup:
+// <button class="btn btn-primary {$modifiers}">Button</button>
+// <button class="btn btn-secondary {$modifiers}">Button</button>
+// <button class="btn btn-thirdary {$modifiers}">Button</button>
+// 
+// Styleguide 1.3
 
 
 
-.btn-link {
-  text-transform: none;
-  white-space: normal;
-  border: none;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
+// Sizes variants --------------
+.btn-xs { .btn-size-variant(@btn-xs-font-size, @btn-xs-padding); }
+.btn-sm { .btn-size-variant(@btn-sm-font-size, @btn-sm-padding); }
+.btn-md { .btn-size-variant(@btn-md-font-size, @btn-md-padding); }
+.btn-lg { .btn-size-variant(@btn-lg-font-size, @btn-lg-padding); }
 
-.btn-link:hover {
-  text-decoration: none;
-}
-
-.dropdown {
-    list-style: none;
-    display: inline-block;
-}
-
-.open .dropdown-toggle.btn-default {
-    background: lighten(@lighter-gray, 4%);
-    border-color: @light-gray;
-}
-
-.dropdown-menu {
-  cursor: pointer;
-  border: 1px solid @light-gray;
-}
-
-// Grey light button without border nor underline
-.btn-light {
-  background-color: transparent;
-  margin: 0;
-  font-size: inherit;
-  padding: 0 3px;
-  color: @gray;
-  border: none;
-  &:hover {
-    box-shadow: none;
-    color: @dark-gray;
-}
-.icon {
-    margin: 0;
-}
+.btn-size-variant(@font-size; @padding) {
+    font-size: @font-size;
+    padding: @padding;
 }

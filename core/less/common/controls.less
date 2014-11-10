@@ -1,3 +1,5 @@
+@import "../colors/variables.less";
+
 @check-radio-size: 18px;
 
 .checkradiobox {
@@ -9,14 +11,14 @@
     display: inline-block;
     width: @check-radio-size;
     height: @check-radio-size;
-    border: 1px solid @light-gray;
+    border: 1px solid @light-soil;
     background: #FFF;
     &:hover {
-        border-color: @gray;
+        border-color: @soil;
     }
     &:active {
-        background: @lighter-gray;
-        border-color: @gray;
+        background: @bright-soil;
+        border-color: @soil;
     }
     &.active {
         &:after {
@@ -55,7 +57,7 @@
     }
 
     &[disabled] {
-        color: @gray;
+        color: @soil;
         cursor: default;
 
         &:hover {
@@ -77,7 +79,7 @@ input[type=number] {
 }
 
 input {
-    border: 1px solid @light-gray;
+    border: 1px solid @light-soil;
     padding: 2px 6px;
     border-radius: @border-radius-base;
     outline: none;

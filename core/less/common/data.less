@@ -1,3 +1,4 @@
+@import "../colors/variables.less";
 div.common-data {
 
     @gutter-size: 5px;
@@ -5,11 +6,11 @@ div.common-data {
     > div {
 
         &.common-header {
-            border-bottom: 1px solid @lighter-gray;
+            border-bottom: 1px solid @bright-soil;
 
             > .common-label,
             > .common-value {
-                color: @gray;
+                color: @soil;
                 font-size: 12px;
             }
         }
@@ -20,7 +21,7 @@ div.common-data {
             padding-bottom: @gutter-size;
 
             &.common-label {
-                color: @gray;
+                color: @soil;
                 &:after {
                     content: ":";
                     margin-left: 3px;
@@ -28,7 +29,7 @@ div.common-data {
             }
 
             &.common-value {
-                color: @dark-gray;
+                color: @deep-soil;
             }
         }
     }
@@ -38,10 +39,10 @@ div.common-data {
      */
     &.common-table-mode {
         > div {
-            border-bottom: 1px solid @lighter-gray;
+            border-bottom: 1px solid @bright-soil;
 
             &.common-header {
-                border-bottom: 1px solid @lighter-gray;
+                border-bottom: 1px solid @bright-soil;
             }
 
             > div {

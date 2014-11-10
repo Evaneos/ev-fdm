@@ -1,5 +1,4 @@
-@import (reference) 'flexbox.less';
-
+@import "../colors/variables.less";
 
 /**
  * This file contains useful mixins
@@ -34,7 +33,8 @@
  *       <span class="icon icon-tick"></span>
  *    </div>
  */
-.sticker(@size: 14px, @color: @light-gray, @tick-color: white) {
+// Phoenix TODO: split me between common and ev-fdm
+.sticker(@size: 14px, @color, @tick-color: white) {
     width: @size;
     height: @size;
     border-radius: @size/2;
@@ -145,4 +145,3 @@
     @rules();
   }
 }
-

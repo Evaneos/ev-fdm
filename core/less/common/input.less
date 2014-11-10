@@ -1,3 +1,4 @@
+@import "../colors/variables.less";
 @import "../variables.less";
 
 /* .input-light removes all outline from input leaving just a light bottom border.
@@ -5,9 +6,9 @@
  */
 
 .placeholder-light {
-    color: @gray;
+    color: @soil;
     &:hover {
-      color: @light-gray;
+      color: @light-soil;
     }
 }
 
@@ -23,17 +24,17 @@
   font-weight: inherit;
   font-size: inherit;
   border-radius: 0px;
-  border-bottom: @light-gray 1px solid;
+  border-bottom: @light-soil 1px solid;
 
   .placeholder-style({
-    color: @gray;
+    color: @soil;
   }, {
-    color: @light-gray;
+    color: @light-soil;
   });
 
   &:hover, &:focus {
     outline: none;
-    border-bottom: @light-gray 1px solid;
+    border-bottom: @light-soil 1px solid;
   }
 
   & ~ .input-group-addon {
@@ -55,11 +56,11 @@ textarea, h5, h4, h3, h2, h1 {
 textarea, h5, h4, h3, h2, h1 {
   &.input-inline, & .input-inline {
     display: inline;
-    border-bottom: @light-gray 1px solid;
+    border-bottom: @light-soil 1px solid;
 
     &:hover, &:focus {
       outline: none;
-      border-bottom: @light-gray 1px solid;
+      border-bottom: @light-soil 1px solid;
     }
   }
 }

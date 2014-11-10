@@ -1,3 +1,6 @@
+// [Phoenix team] please, todo something.. Default tabs style should work here
+@import "../../colors/variables.less";
+
 .module-tabs {
     height: @module-tabs-height;
 
@@ -18,7 +21,7 @@
         font-size: 14px;
         a {
             cursor: pointer;
-            color: @gray;
+            color: @soil;
             border: none;
             padding: 8px 20px 6px 20px;
             border-radius: 0;
@@ -27,21 +30,21 @@
 
             &:hover {
                 background: transparent;
-                color: @dark-gray;
+                color: @deep-soil;
                 border: none;
             }
         }
         &.active {
             a {
                 cursor: default;
-                background: @lighter-gray;
+                background: @bright-soil;
                 border: none;
-                color: @dark-gray;
+                color: @deep-soil;
                 border-radius: @border-radius-base @border-radius-base 0 0;
                 &:hover {
                     border: none;
-                    background: @lighter-gray;
-                    color: @dark-gray;
+                    background: @bright-soil;
+                    color: @deep-soil;
                 }
             }
         }

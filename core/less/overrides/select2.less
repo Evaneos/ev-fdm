@@ -1,11 +1,13 @@
-@select2-border-color: @light-gray;
-@select2-color-active: @lighter-gray;
-@select2-border-active-color: @light-gray;
-@select2-border-color-light: @lighter-gray;
+@import "../colors/variables.less";
+
+@select2-border-color: @light-soil;
+@select2-color-active: @bright-soil;
+@select2-border-active-color: @light-soil;
+@select2-border-color-light: @bright-soil;
 
 .select2-container .select2-choice {
     border: 1px solid @select2-border-color;
-    color: @darker-gray;
+    color: @dark-soil;
     border-radius: @border-radius-base;
     background-image: none;
     background: #fff;
@@ -38,7 +40,7 @@
         background: #FFF;
         border-left: 1px solid @select2-border-color-light;
         &:after {
-            color: @gray;
+            color: @soil;
             content: '×';
             font-size: 20px;
             line-height: 32px;
@@ -60,7 +62,7 @@
     border: 1px solid @select2-border-color;
     border-top: none;
     border-radius: 0 0 @border-radius-base @border-radius-base;
-    color: @darker-gray;
+    color: @dark-soil;
     // -webkit-box-shadow: 0 4px 5px rgba(0, 0, 0, .15);
     //         box-shadow: 0 4px 5px rgba(0, 0, 0, .15);
 }
@@ -98,7 +100,7 @@
     line-height: 3.6em;
     font-family: 'icomoon';
     font-size: 9px;
-    color: @gray;
+    color: @soil;
     text-align: center;
     background: transparent;
 }
@@ -142,33 +144,33 @@
 
 .select2-results .select2-highlighted {
     background: @select2-color-active;
-    color: @darker-gray;
+    color: @dark-soil;
 }
 
 .select2-results li em {
-    background: @light-gray;
+    background: @light-soil;
 }
 
 .select2-results .select2-highlighted ul {
-    color: @darker-gray;
+    color: @dark-soil;
 }
 
 
 .select2-results .select2-no-results,
 .select2-results .select2-searching,
 .select2-results .select2-selection-limit {
-    background: @lighter-gray;
+    background: @bright-soil;
 }
 
 /*
 disabled look for disabled choices in the results dropdown
 */
 .select2-results .select2-disabled.select2-highlighted {
-    color: @light-gray;
-    background: @lighter-gray;
+    color: @light-soil;
+    background: @bright-soil;
 }
 .select2-results .select2-disabled {
-    background: @lighter-gray;
+    background: @bright-soil;
 }
 
 .select2-more-results.select2-active {
@@ -176,19 +178,19 @@ disabled look for disabled choices in the results dropdown
 }
 
 .select2-more-results {
-    background: @lighter-gray;
+    background: @bright-soil;
 }
 
 /* disabled styles */
 
 .select2-container.select2-container-disabled .select2-choice {
-    background-color: @lighter-gray;
-    border: 1px solid @light-gray;
-    color: @gray !important;
+    background-color: @bright-soil;
+    border: 1px solid @light-soil;
+    color: @soil !important;
 }
 
 .select2-container.select2-container-disabled .select2-choice .select2-arrow {
-    background-color: @lighter-gray;
+    background-color: @bright-soil;
     background-image: none;
     border-left: 0;
 }
@@ -209,28 +211,28 @@ disabled look for disabled choices in the results dropdown
     border: 1px solid @select2-border-active-color;
 }
 .select2-container-multi .select2-choices .select2-search-field input {
-    color: @darker-gray;
+    color: @dark-soil;
 }
 .select2-default {
-    color: @darker-gray !important;
+    color: @dark-soil !important;
 }
 
 .select2-container-multi .select2-choices .select2-search-choice {
-    color: @darker-gray;
+    color: @dark-soil;
     border: 1px solid @select2-border-color;
-    background: @lighter-gray;
+    background: @bright-soil;
     filter:none;
 }
 .select2-container-multi .select2-choices .select2-search-choice-focus {
-    background: @light-gray;
+    background: @light-soil;
 }
 /* disabled styles */
 .select2-container-multi.select2-container-disabled .select2-choices {
-    background-color: @lighter-gray;
-    border: 1px solid @light-gray;
+    background-color: @bright-soil;
+    border: 1px solid @light-soil;
 }
 
 .select2-container-multi.select2-container-disabled .select2-choices .select2-search-choice {
-    border: 1px solid @light-gray;
-    background-color: @lighter-gray;
+    border: 1px solid @light-soil;
+    background-color: @bright-soil;
 }
