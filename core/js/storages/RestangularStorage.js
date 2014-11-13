@@ -62,6 +62,53 @@ angular.module('ev-fdm')
             return res;
         };
 
+
+        RestangularStorage.updateObjectFromResult = function(object, result) {
+            (function merge(objectData, resultData, resultEmbeds) {
+                if (resultEmbeds) {
+                    resultEmbeds.forEach(function(embedName) {
+                        if (embedName in resultData) {
+                            if (!objectData[embedName]) {
+                                objectData[embedName] = resultData[embedName];
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    resultData[embedName].data,
+                                    resultData[embedName].embeds
+                                );
+                            }
+                            delete resultData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, resultData);
+            })(object, angular.copy(restangular.stripRestangular(result)), result.embeds);
+        };
+        RestangularStorage.prototype.updateObjectFromResult = RestangularStorage.updateObjectFromResult;
+
+        RestangularStorage.updateObjectBeforePatch = function(object, changes) {
+            (function merge(objectData, objectEmbeds, changesData) {
+                if (objectEmbeds) {
+                    objectEmbeds.forEach(function(embedName) {
+                        if (embedName in changesData) {
+                            if (!objectData[embedName]) {
+                                objectData[embedName] = changesData[embedName];
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    objectData[embedName].embeds,
+                                    changesData[embedName].data
+                                );
+                            }
+                            delete changesData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, changesData);
+            })(object, object.embeds, angular.copy(changes));
+        };
+
+
         RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
             var parameters = {};
 
@@ -95,6 +142,10 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.update = function(element, embed) {
             return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
@@ -102,7 +153,11 @@ angular.module('ev-fdm')
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.put(parameters);
+                return element.put(parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
@@ -110,25 +165,37 @@ angular.module('ev-fdm')
             if (!element.patch) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
-            angular.extend(element, changes);
+            RestangularStorage.updateObjectBeforePatch(element, changes);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
         RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
             elements.forEach(function(element) {
-                angular.extend(element, changes);
+                RestangularStorage.updateObjectBeforePatch(element, changes);
             });
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.patch(changes, parameters);
+                return element.patch(changes, parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    })
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
             return this.restangular.all(this.resourceName)
                 .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('created', [element]));
         };
 
@@ -148,6 +215,10 @@ angular.module('ev-fdm')
          */
         RestangularStorage.prototype.save = function(element, embed) {
             return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
@@ -155,7 +226,11 @@ angular.module('ev-fdm')
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.save(parameters);
+                return element.save(parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
