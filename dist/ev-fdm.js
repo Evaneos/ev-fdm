@@ -562,10 +562,6 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             function setEditMode(editMode) {
                 _transcludedScope.edit = options.edit = editMode;
                 _transcludedScope.editform = scope.editform;
-                _transcludedScope.showErrorMessage = function(fieldName, errorName) {
-                    var field = scope.editform[fieldName];
-                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
-                };
             }
 
 
@@ -608,6 +604,10 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             transcludeFn(function(clone, transcludedScope) {
                 // default state
                 transcludedScope.edit = !!options.edit;
+                transcludedScope.showErrorMessage = function(fieldName, errorName) {
+                    var field = scope.editform[fieldName];
+                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
+                };
 
                 // transclude values
                 _transcludedScope = transcludedScope;
@@ -928,7 +928,7 @@ var module = angular.module('ev-fdm')
 
 (function () {
     'use strict';
-    var module = angular.module('ev-fdm')
+    angular.module('ev-fdm')
         .directive('evPictureList', function () {
           return {
             restrict: 'EA',
@@ -4029,16 +4029,6 @@ angular.module('ev-upload')
 
                 $scope.pictureUploaded = function(pictureUploaded) {
                     var picture = pictureUploaded.data[0];
-
-                    if($scope.language) {
-                        if (Array.isArray(picture.legend)) {
-                            picture.legend = {};
-                        }
-                        if (!picture.legend[$scope.language]) {
-                            picture.legend[$scope.language] = { name: '' };
-                        }
-                    }
-
                     $scope.addPicture(picture);
                 };
             }

@@ -33,10 +33,6 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             function setEditMode(editMode) {
                 _transcludedScope.edit = options.edit = editMode;
                 _transcludedScope.editform = scope.editform;
-                _transcludedScope.showErrorMessage = function(fieldName, errorName) {
-                    var field = scope.editform[fieldName];
-                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
-                };
             }
 
 
@@ -79,6 +75,10 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             transcludeFn(function(clone, transcludedScope) {
                 // default state
                 transcludedScope.edit = !!options.edit;
+                transcludedScope.showErrorMessage = function(fieldName, errorName) {
+                    var field = scope.editform[fieldName];
+                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
+                };
 
                 // transclude values
                 _transcludedScope = transcludedScope;
