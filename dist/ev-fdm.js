@@ -161,7 +161,7 @@ angular.module('ev-fdm')
     });
 
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
+    .factory('ListController', ['$rootScope', '$state', '$stateParams', 'Restangular', function($rootScope, $state, $stateParams, restangular) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
@@ -196,7 +196,7 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::pagination.changed');
-                communicationService.emit.apply(this, eventArgs);
+                $rootScope.$broadcast.apply(this, eventArgs);
   
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
@@ -211,7 +211,7 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
-                communicationService.emit.apply(this, eventArgs);
+                $rootScope.$broadcast.emit.apply(this, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
@@ -226,7 +226,7 @@ angular.module('ev-fdm')
             /*
              * Update the view when filter are changed in the SearchController
              */
-            communicationService.on('common::filters.changed', function(event, filters) {
+            $scope.$on('common::filters.changed', function(event, filters) {
                 this.filters = filters;
                 this.sortKey = this.defaultSortKey;
                 this.update(1, this.filters, this.sortKey, this.reverseSort);
@@ -244,15 +244,15 @@ angular.module('ev-fdm')
                 }
             });
 
-            communicationService.on(this.elementName + '::updated', function(event) {
+            $scope.$on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            communicationService.on(this.elementName + '::created', function(event) {
+            $scope.$on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            communicationService.on(this.elementName + '::deleted', function(event) {
+            $scope.$on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
@@ -299,8 +299,9 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.toggleView = function(view, element, routingArgs) {
+
             if (!element) {
-                communicationService.emit('common::list.toggleView', view, 'close');
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
                 return;
             }
@@ -308,7 +309,7 @@ angular.module('ev-fdm')
             var id = restangular.configuration.getIdFromElem(element);
 
             if (!id || $stateParams.id === id) {
-                communicationService.emit('common::list.toggleView', view, 'close');
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
             }
             else {
@@ -317,7 +318,7 @@ angular.module('ev-fdm')
 
                 angular.extend(params, routingArgs);
 
-                communicationService.emit('common::list.toggleView', view, 'open');
+                $rootScope.$broadcast('common::list.toggleView', view, 'open');
                 
                 $state.go(this.goToViewStatePath(view, element), params);
             }
