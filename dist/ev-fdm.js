@@ -211,7 +211,7 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
-                $rootScope.$broadcast.emit.apply(this, eventArgs);
+                $rootScope.$broadcast.apply(this, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
@@ -366,14 +366,14 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['communicationService', function(communicationService) {
+    .factory('SearchController', ['$rootScope', function($rootScope) {
         function SearchController($scope) {
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
                 Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                communicationService.emit.apply(this, arguments);
+                $rootScope.$broadcast.apply(this, arguments);
             }.bind(this);
         }
 
@@ -2212,64 +2212,6 @@ angular.module('ev-fdm')
             return $sce.trustAsHtml(val);
         };
     }]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-/**
- * Communication Service
- * Manage the communication for our app
- */
-module.service('communicationService', ['$rootScope', function($rootScope) {
-
-    var COMMUNICATION_KEY = 'evfdm-communication';
-
-    /**
-     * Emit an event
-     */
-    var emit = function(eventName, args) {
-        $rootScope.$emit.apply($rootScope, arguments);
-    };
-
-    /**
-     * Listen to an event
-     */
-    var on = function(eventName, callback) {
-        $rootScope.$on(eventName, callback);
-    };
-
-    /**
-     * Set a key/value
-     */
-    var set = function(key, value) {
-        if($rootScope[COMMUNICATION_KEY] === undefined) {
-            $rootScope[COMMUNICATION_KEY] = {};
-        }
-
-        $rootScope[COMMUNICATION_KEY][key] = value;
-    };
-
-    /**
-     * Get a value by key
-     */
-    var get = function(key) {
-        var result = null;
-        if($rootScope[COMMUNICATION_KEY] && $rootScope[COMMUNICATION_KEY][key] !== undefined) {
-            result = $rootScope[COMMUNICATION_KEY][key];
-        }
-
-        return result;
-    };
-
-    var communicationService = {
-        emit: emit,
-        on  : on,
-        set : set,
-        get : get
-    };
-
-    return communicationService;
-}]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -2888,7 +2830,7 @@ angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
+    .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
@@ -2897,7 +2839,7 @@ angular.module('ev-fdm')
 
             this.emitEventCallbackCreator = function(eventName, elements) {
                 return function(result) {
-                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    $rootScope.$broadcast(this.resourceName + '::' + eventName, elements);
                     return result;
                 }.bind(this);
             }.bind(this);
