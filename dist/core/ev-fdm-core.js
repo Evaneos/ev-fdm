@@ -366,14 +366,14 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['communicationService', function(communicationService) {
+    .factory('SearchController', ['$rootScope', function($rootScope) {
         function SearchController($scope) {
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
                 Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                communicationService.emit.apply(this, arguments);
+                $rootScope.$broadcast.apply(this, arguments);
             }.bind(this);
         }
 
@@ -2926,7 +2926,7 @@ angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
+    .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
@@ -2935,7 +2935,7 @@ angular.module('ev-fdm')
 
             this.emitEventCallbackCreator = function(eventName, elements) {
                 return function(result) {
-                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    $rootScope.$broadcast(this.resourceName + '::' + eventName, elements);
                     return result;
                 }.bind(this);
             }.bind(this);
