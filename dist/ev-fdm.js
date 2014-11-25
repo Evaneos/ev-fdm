@@ -2504,12 +2504,12 @@ angular.module('ev-fdm')
 
             // If no panel index, or no panel inside the container, it is added at the end
             if (!panel.index || !container.children().length) {
-                $animate.move(panel.element, container, null, function () {
+                $animate.enter(panel.element, container, null, function () {
                     updateLayout(null, containerId);
                 });
             } else {
                 var beforePanel = getBeforePanelElm(panel.index, containerId);
-                    $animate.move(panel.element, container, beforePanel.element, function () {
+                    $animate.enter(panel.element, container, beforePanel.element, function () {
                         updateLayout(null, containerId);
                 });
             }
@@ -2608,7 +2608,7 @@ angular.module('ev-fdm')
             $animate.leave(element, function() {
                 updateLayout(null, containerId);
             });
-        };          
+        };
 
         /**
          * Registers a panels container
