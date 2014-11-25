@@ -1,76 +1,94 @@
 @import "variables.less";
 @import "../mixins/loop.less";
+
 // Buttons
-// 
-// A basic UI component triggering an action. Button styles can be applied to anything with the `.btn` class applied. 
+//
+// A basic UI component triggering an action. Button styles can be applied to anything with the `.btn` class applied.
 // However, typically you'll want to apply these to only `<a>` and `<button>` elements for the best rendering.
-// 
-// There is three types of buttons: 
-// 
-// .btn-primary     - Primary button, used to emphasize the main call to action (usually one per viewport). 
-// .btn-secondary   - Secondary button, normal buttons (default value, this class is optional)
-// .btn-thirdary    - Thirdary button, light button, used generally inline, when you don't want to overload the interface.
-// 
-// Markup:
-// <button class="btn {$modifiers}">Button</button>
-// 
+//
 // Styleguide 1
 
 
+// Default button
+//
+// This is the simplest button use case with no modifiers implied.
+// It can be applied on `button`, `a` and `input[type:submit|type:reset|type:button]` elements.
+//
+// Markup:
+// <button class="btn">Button</button>
+// <a class="btn">Link</a>
+// <input class="btn" type="submit" value="Submit">
+//
+// Styleguide 1.1
+
 // Base style & state
-// 
+//
 // default      - A button in normal state
 // :hover       - Hover state
 // :active      - Active state
 // .disabled    - Disabled button. If you use `<button>` element, that is acceptable to add disabled attribute instead.
-// 
+//
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
 // <button class="btn btn-secondary {$modifiers}">Button</button>
 // <button class="btn btn-thirdary {$modifiers}">Button</button>
-// 
-// Styleguide 1.1
+//
+// Styleguide 1.2
 
+// // Default values
+// .btn-secondary;
+// .btn-soil;
+// .btn-md;
 .btn {
     display: inline-block;
     text-transform: uppercase;
-    border: none;
     border-radius: @btn-border-radius;
     outline: none;
     cursor: pointer;
     white-space: nowrap;
     border-width: 1px;
     border-style: solid;
-    border-color: transparent;
+    white-space: nowrap;
+
+    .btn-color-variant(@soil);
+    .btn-md;
 
     &:hover,
     &:active {
         text-decoration: none;
     }
-    // // Default values
-    // .btn-secondary;
-    // .btn-soil;
-    // .btn-md;
+
+    &.disabled,
+    &[disabled],
+    fieldset[disabled] & {
+        cursor: not-allowed;
+        pointer-events: none; // Future-proof disabling of clicks
+        .opacity(.65);
+    }
 }
 
+// Default value
+.btn:not(.btn-primary):not(.btn-secondary):not(.btn-thirdary) {
+    .btn-secondary;
+}
 
 // Colors
-// 
-// You can change the color of the button by adding any of these classes. You can customize the list of colored button 
+//
+// You can change the color of the button by adding any of these classes. You can customize the list of colored button
 // you need by changing the list of colors in the `buttons/variable.less` file.
-//  
-// 
+//
+//
 // .btn-soil    - A button color soil (default value, this class is optional)
 // .btn-orange  - A button color orange
 // .btn-pool    - A button color pool
 // .btn-lime    - A button color lime
-// 
+//
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
 // <button class="btn btn-secondary {$modifiers}">Button</button>
 // <button class="btn btn-thirdary {$modifiers}">Button</button>
-// 
-// Styleguide 1.2
+//
+// Styleguide 1.3
 
 
 
@@ -86,48 +104,60 @@
     color: @color;
     border-color: @color;
     background-color: @color;
-    &:hover,
+
+    &:hover {
+        color: darken(@color, @btn-darken-hover-factor);
+        background-color: darken(@color, @btn-darken-hover-factor);
+        border-color: darken(@color, @btn-darken-hover-factor);
+    }
+
     &:active {
-        color: @color;
-        background-color: darken(@color, @btn-darken-factor);
-        border-color: darken(@color, @btn-darken-factor);
+        color: darken(@color, @btn-darken-active-factor);
+        background-color: darken(@color, @btn-darken-active-factor);
+        border-color: darken(@color, @btn-darken-active-factor);
     }
 }
 
+// Type
+//
+// There is three types of buttons:
+//
+// .btn-primary     - Primary button, used to emphasize the main call to action (usually one per viewport).
+// .btn-secondary   - Secondary button, normal buttons (default value, this class is optional)
+// .btn-thirdary    - Thirdary button, light button, used generally inline, when you don't want to overload the interface.
+//
+// Markup:
+// <button class="btn {$modifiers}">Button</button>
+//
+// Styleguide 1.4
+
 .btn-primary { &, &:hover, &:active {
-    color: transparent;
-    background-color: inherit;
-    border-color: inherit;
+    color: white;
 } }
 .btn-secondary { &, &:hover, &:active {
-    color: inherit;
     background-color: transparent;
-    border-color: inherit;
 } }
 .btn-thirdary { &, &:hover, &:active {
-    color: inherit;
     background-color: transparent;
     border-color: transparent;
 } }
 
 // Size
-// 
+//
 // You can change the size of any button by adding these class.
-//  
-// 
+//
+//
 // .btn-xs    - An extra small button
 // .btn-sm    - A small button
 // .btn-md    - A medium button (default value, this class is optional)
 // .btn-lg    - A large button
-// 
+//
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
 // <button class="btn btn-secondary {$modifiers}">Button</button>
 // <button class="btn btn-thirdary {$modifiers}">Button</button>
-// 
-// Styleguide 1.3
-
-
+//
+// Styleguide 1.5
 
 // Sizes variants --------------
 .btn-xs { .btn-size-variant(@btn-xs-font-size, @btn-xs-padding); }
