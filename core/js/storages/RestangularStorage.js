@@ -138,11 +138,8 @@ angular.module('ev-fdm')
         }
 
 
-        RestangularStorage.prototype.getFirst = function(number, embed, filters, sortKey, reverseSort) {
-             if(!angular.isNumber(number) || number <= 0) {
-                number = 1;
-            }
-            return getAll.call(this, number, null, embed, filters, sortKey, reverseSort).then(function (result) {
+        RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
+            return getAll.call(this, 1, null, embed, filters, sortKey, reverseSort).then(function (result) {
                 return result[0];
             });
         };
