@@ -2028,14 +2028,14 @@ td.visible-print {
   padding: 6px 24px;
 }
 .btn:hover {
-  color: #74573c;
-  background-color: #74573c;
-  border-color: #74573c;
-}
-.btn:active {
   color: #634a33;
   background-color: #634a33;
   border-color: #634a33;
+}
+.btn:active {
+  color: #533e2a;
+  background-color: #533e2a;
+  border-color: #533e2a;
 }
 .btn:hover,
 .btn:active {
@@ -2060,14 +2060,14 @@ fieldset[disabled] .btn {
   background-color: #33cc99;
 }
 .btn-lime:hover {
-  color: #29a37a;
-  background-color: #29a37a;
-  border-color: #29a37a;
-}
-.btn-lime:active {
   color: #248f6b;
   background-color: #248f6b;
   border-color: #248f6b;
+}
+.btn-lime:active {
+  color: #1f7a5c;
+  background-color: #1f7a5c;
+  border-color: #1f7a5c;
 }
 .btn-orange {
   color: #f79400;
@@ -2075,14 +2075,14 @@ fieldset[disabled] .btn {
   background-color: #f79400;
 }
 .btn-orange:hover {
-  color: #c47500;
-  background-color: #c47500;
-  border-color: #c47500;
-}
-.btn-orange:active {
   color: #ab6600;
   background-color: #ab6600;
   border-color: #ab6600;
+}
+.btn-orange:active {
+  color: #915700;
+  background-color: #915700;
+  border-color: #915700;
 }
 .btn-soil {
   color: #96704d;
@@ -2090,14 +2090,14 @@ fieldset[disabled] .btn {
   background-color: #96704d;
 }
 .btn-soil:hover {
-  color: #74573c;
-  background-color: #74573c;
-  border-color: #74573c;
-}
-.btn-soil:active {
   color: #634a33;
   background-color: #634a33;
   border-color: #634a33;
+}
+.btn-soil:active {
+  color: #533e2a;
+  background-color: #533e2a;
+  border-color: #533e2a;
 }
 .btn-pool {
   color: #4ba6f5;
@@ -2105,14 +2105,14 @@ fieldset[disabled] .btn {
   background-color: #4ba6f5;
 }
 .btn-pool:hover {
-  color: #1b8ef2;
-  background-color: #1b8ef2;
-  border-color: #1b8ef2;
-}
-.btn-pool:active {
   color: #0d81e7;
   background-color: #0d81e7;
   border-color: #0d81e7;
+}
+.btn-pool:active {
+  color: #0b74cf;
+  background-color: #0b74cf;
+  border-color: #0b74cf;
 }
 .btn-primary,
 .btn-primary:hover,
@@ -2145,6 +2145,13 @@ fieldset[disabled] .btn {
 .btn-lg {
   font-size: 18px;
   padding: 10px 32px;
+}
+.btn-block {
+  display: block;
+  width: 100%;
+}
+.btn-block + .btn-block {
+  margin-top: 5px;
 }
 /*
     List variables
@@ -5713,14 +5720,14 @@ select.form-control {
   background-color: #f79400;
 }
 .modal.error .modal-dialog .modal-footer .btn:hover {
-  color: #c47500;
-  background-color: #c47500;
-  border-color: #c47500;
-}
-.modal.error .modal-dialog .modal-footer .btn:active {
   color: #ab6600;
   background-color: #ab6600;
   border-color: #ab6600;
+}
+.modal.error .modal-dialog .modal-footer .btn:active {
+  color: #915700;
+  background-color: #915700;
+  border-color: #915700;
 }
 .modal.error .modal-dialog .modal-body {
   text-align: center;

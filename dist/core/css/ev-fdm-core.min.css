@@ -1780,6 +1780,13 @@ fieldset[disabled] .btn {
   font-size: 18px;
   padding: 10px 32px;
 }
+.btn-block {
+  display: block;
+  width: 100%;
+}
+.btn-block + .btn-block {
+  margin-top: 5px;
+}
 /*
     List variables
     ==============
