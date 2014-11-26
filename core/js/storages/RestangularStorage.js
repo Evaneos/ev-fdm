@@ -62,7 +62,6 @@ angular.module('ev-fdm')
             return res;
         };
 
-
         RestangularStorage.updateObjectFromResult = function(object, result) {
             (function merge(objectData, resultData, resultEmbeds) {
                 if (resultEmbeds) {
@@ -109,11 +108,15 @@ angular.module('ev-fdm')
         };
 
 
-        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+        function getAll(number, page, embed, filters, sortKey, reverseSort) {
             var parameters = {};
 
             if(angular.isNumber(page) && page > 0) {
                 parameters.page = page;
+            }
+
+            if(angular.isNumber(number) && number > 0) {
+                parameters.number = number;
             }
 
             if(angular.isArray(embed) && embed.length) {
@@ -131,9 +134,20 @@ angular.module('ev-fdm')
                 filters = RestangularStorage.buildFilters(filters);
                 angular.extend(parameters, filters);
             }
-
             return this.restangular.all(this.resourceName).getList(parameters);
+        }
+
+
+        RestangularStorage.prototype.getFirst = function(number, embed, filters, sortKey, reverseSort) {
+             if(!angular.isNumber(number) || number <= 0) {
+                number = 1;
+            }
+            return getAll.call(this, number, null, embed, filters, sortKey, reverseSort).then(function (result) {
+                return result[0];
+            });
         };
+
+        RestangularStorage.prototype.getList = getAll.bind(this, null);
 
 
         RestangularStorage.prototype.getById = function(id, embed) {
