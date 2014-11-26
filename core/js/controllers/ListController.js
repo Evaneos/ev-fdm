@@ -32,8 +32,8 @@ angular.module('ev-fdm')
             this.$scope.changePage = function(newPage) {
 
                 var eventArgs = angular.copy(arguments);
-
-                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed');
+                
+                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', self.$scope.currentPage, newPage);
                 $rootScope.$broadcast.apply(this, eventArgs);
   
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);

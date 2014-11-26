@@ -90,19 +90,32 @@
                     tabShow: '='
                 },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
-
                     scope.alwaysShow = true;
                     if(angular.isDefined(attrs.tabShow)) {
                         scope.alwaysShow = false;
                     }
 
-                    tabsCtrl.addPane(scope);
-                    transcludeFn(function(clone, transcludedScope) {
+                    var childScope;
+                    var transclude = function transclude (clone, transcludedScope) {
+                        childScope = transcludedScope;
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
                         transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
-
-                        element.find('.transclude').append(clone);
+                        var el = element.find('.transclude');
+                        el.children().remove();
+                        el.append(clone);
+                    };
+                    scope.$watch('selected', function (selected) {
+                        if (!angular.isDefined(attrs.tabReset)) {
+                            return;
+                        }
+                        if (selected) {
+                            transcludeFn(transclude);
+                        } else if (childScope) {
+                            childScope.$destroy();
+                        }
                     });
+                    tabsCtrl.addPane(scope);
+                    transcludeFn(transclude);
                 },
                 template:
                     '<div class="tab-pane" ng-class="{active: selected}">' +

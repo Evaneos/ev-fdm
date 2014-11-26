@@ -194,8 +194,8 @@ angular.module('ev-fdm')
             this.$scope.changePage = function(newPage) {
 
                 var eventArgs = angular.copy(arguments);
-
-                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed');
+                
+                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', self.$scope.currentPage, newPage);
                 $rootScope.$broadcast.apply(this, eventArgs);
   
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
@@ -563,10 +563,6 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             function setEditMode(editMode) {
                 _transcludedScope.edit = options.edit = editMode;
                 _transcludedScope.editform = scope.editform;
-                _transcludedScope.showErrorMessage = function(fieldName, errorName) {
-                    var field = scope.editform[fieldName];
-                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
-                };
             }
 
 
@@ -609,6 +605,10 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             transcludeFn(function(clone, transcludedScope) {
                 // default state
                 transcludedScope.edit = !!options.edit;
+                transcludedScope.showErrorMessage = function(fieldName, errorName) {
+                    var field = scope.editform[fieldName];
+                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
+                };
 
                 // transclude values
                 _transcludedScope = transcludedScope;
@@ -929,7 +929,7 @@ var module = angular.module('ev-fdm')
 
 (function () {
     'use strict';
-    var module = angular.module('ev-fdm')
+    angular.module('ev-fdm')
         .directive('evPictureList', function () {
           return {
             restrict: 'EA',
@@ -1836,19 +1836,32 @@ angular.module('ev-fdm')
                     tabShow: '='
                 },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
-
                     scope.alwaysShow = true;
                     if(angular.isDefined(attrs.tabShow)) {
                         scope.alwaysShow = false;
                     }
 
-                    tabsCtrl.addPane(scope);
-                    transcludeFn(function(clone, transcludedScope) {
+                    var childScope;
+                    var transclude = function transclude (clone, transcludedScope) {
+                        childScope = transcludedScope;
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
                         transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
-
-                        element.find('.transclude').append(clone);
+                        var el = element.find('.transclude');
+                        el.children().remove();
+                        el.append(clone);
+                    };
+                    scope.$watch('selected', function (selected) {
+                        if (!angular.isDefined(attrs.tabReset)) {
+                            return;
+                        }
+                        if (selected) {
+                            transcludeFn(transclude);
+                        } else if (childScope) {
+                            childScope.$destroy();
+                        }
                     });
+                    tabsCtrl.addPane(scope);
+                    transcludeFn(transclude);
                 },
                 template:
                     '<div class="tab-pane" ng-class="{active: selected}">' +

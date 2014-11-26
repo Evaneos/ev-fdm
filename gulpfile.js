@@ -15,7 +15,7 @@ var jshint = require('gulp-jshint');
 var pkg = require('./package.json');
 var fs = require('fs');
 
-var bowerrc = '';
+var bowerrc;
 try {
     bowerrc = require('./.bowerrc.json');
 } catch (e) {
@@ -287,4 +287,3 @@ gulp.task('watch-copy', tasks);
 
 gulp.task('default', ['js-all', 'less-all', 'copy-all', 'views-all']);
 gulp.task('watch', ['watch-copy', 'watch-less', 'watch-js', 'watch-views']);
-
