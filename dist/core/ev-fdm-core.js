@@ -535,59 +535,63 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
         transclude: true,
         scope: {
             options: '=',
-            title: '@',
-            successMessage: '@',
-            errorMessage: '@'
+            args: '=?',
+            title: '@', // deprecated
+            headerTitle: '@'
         },
 
         template: ''
             + '<form name="editform" novalidate>'
-            + '<div class="edit">'
-                + '<h4 ng-if="title">{{ title }}</h4>'
-                + '<div ng-show="!options.edit">'
-                    + '<span class="icon icon-edit"></span><button class="btn btn-link" ng-click="edit()">Editer</button>'
-                + '</div>'
-                + '<div ng-show="options.edit">'
-                    + '<button class="btn btn-link" ng-click="save()" ng-class="{ disabled: editform.$invalid }"><span class="icon icon-tick"></span></button>&nbsp;'
-                    + '<button class="btn btn-link" ng-click="cancel()"><span class="icon icon-cross"></span></button>'
-                + '</div>'
-            + '</div>'
-            + '<div class="transclude"></div>'
+                + '<header>'
+                    + '<div class="pull-right" ng-hide="edit">'
+                        + '<button class="btn btn-xs btn-link" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
+                        + ' &nbsp; <button class="btn btn-xs  btn-link" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
+                    + '</div>'
+                    + '<div class="pull-right" ng-show="edit">'
+                        + '<button class="btn btn-xs btn-link" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }"><span class="icon icon-tick"></span>Enregistrer</button>'
+                        + ' &nbsp;<button class="btn btn-xs btn-link text-light" ng-click="cancel()"><span class="icon icon-cross"></span>Annuler</button>'
+                    + '</div>'
+                    + '<h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>'
+                + '</header>'
+                + '<div class="transclude"></div>'
             + '</form>',
 
         link: function(scope, element, attrs, controller, transcludeFn) {
             var _transcludedScope = {};
             var options = scope.options;
+            var triedToSave = false;
 
             function setEditMode(editMode) {
-                _transcludedScope.edit = options.edit = editMode;
+                _transcludedScope.edit = editMode;
+                scope.edit = editMode;
                 _transcludedScope.editform = scope.editform;
             }
 
 
-            scope.edit = function() {
-                if (!options.onEdit || options.onEdit && options.onEdit() !== false) {
+            scope.changeToEditMode = function() {
+                if (!options.onEdit || options.onEdit && options.onEdit.apply(null, scope.args || []) !== false) {
                     setEditMode(true);
                 }
             };
 
             scope.save = function() {
                 if (!scope.editform.$valid) {
-                    scope.triedToSave = true;
+                    triedToSave = true;
+                    console.log(scope.editform.$error);
                     return;
                 }
-                var resultSave = !options.onSave || options.onSave && options.onSave();
+                var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
                 if (resultSave && resultSave.then) {
                     resultSave.then(
                         function success() {
-                            notificationsService.addSuccess({text: options.successMessage || scope.successMessage });
+                            notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
                             if (options.success) {
                                 options.success();
                             }
                             setEditMode(false);
                         },
                         function error() {
-                            notificationsService.addError({text: options.errorMessage || scope.errorMessage });
+                            notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
                         }
                     );
                 } else if (resultSave !== false) {
@@ -596,17 +600,38 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             };
 
             scope.cancel = function() {
-                if (!options.onCancel || options.onCancel && options.onCancel() !== false) {
+                if (!options.onCancel || options.onCancel && options.onCancel.apply(null, scope.args || []) !== false) {
                     setEditMode(false);
+                }
+            };
+
+            scope.delete = options.onDelete && function() {
+                var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
+
+                if (result && result.then) {
+                    result.then(
+                        function success() {
+                            notificationsService.addSuccess({ text: attrs.successDeleteMessage });
+                            if (options.success) {
+                                options.success();
+                            }
+                            setEditMode(false);
+                        },
+                        function error() {
+                            notificationsService.addError({ text: attrs.errorDeleteMessage });
+                        }
+                    );
                 }
             };
 
             transcludeFn(function(clone, transcludedScope) {
                 // default state
-                transcludedScope.edit = !!options.edit;
+                transcludedScope.edit = scope.edit = !!attrs.edit;
+
+                // usefull methods
                 transcludedScope.showErrorMessage = function(fieldName, errorName) {
                     var field = scope.editform[fieldName];
-                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
+                    return (triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
                 };
 
                 // transclude values
@@ -2963,6 +2988,53 @@ angular.module('ev-fdm')
             return res;
         };
 
+
+        RestangularStorage.updateObjectFromResult = function(object, result) {
+            (function merge(objectData, resultData, resultEmbeds) {
+                if (resultEmbeds) {
+                    resultEmbeds.forEach(function(embedName) {
+                        if (embedName in resultData) {
+                            if (!objectData[embedName]) {
+                                objectData[embedName] = resultData[embedName];
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    resultData[embedName].data,
+                                    resultData[embedName].embeds
+                                );
+                            }
+                            delete resultData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, resultData);
+            })(object, angular.copy(restangular.stripRestangular(result)), result.embeds);
+        };
+        RestangularStorage.prototype.updateObjectFromResult = RestangularStorage.updateObjectFromResult;
+
+        RestangularStorage.updateObjectBeforePatch = function(object, changes) {
+            (function merge(objectData, objectEmbeds, changesData) {
+                if (objectEmbeds) {
+                    objectEmbeds.forEach(function(embedName) {
+                        if (embedName in changesData) {
+                            if (!objectData[embedName]) {
+                                objectData[embedName] = changesData[embedName];
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    objectData[embedName].embeds,
+                                    changesData[embedName].data
+                                );
+                            }
+                            delete changesData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, changesData);
+            })(object, object.embeds, angular.copy(changes));
+        };
+
+
         RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
             var parameters = {};
 
@@ -2996,6 +3068,10 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.update = function(element, embed) {
             return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
@@ -3003,7 +3079,11 @@ angular.module('ev-fdm')
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.put(parameters);
+                return element.put(parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
@@ -3011,25 +3091,37 @@ angular.module('ev-fdm')
             if (!element.patch) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
-            angular.extend(element, changes);
+            RestangularStorage.updateObjectBeforePatch(element, changes);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
         RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
             elements.forEach(function(element) {
-                angular.extend(element, changes);
+                RestangularStorage.updateObjectBeforePatch(element, changes);
             });
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.patch(changes, parameters);
+                return element.patch(changes, parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    })
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
             return this.restangular.all(this.resourceName)
                 .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('created', [element]));
         };
 
@@ -3049,6 +3141,10 @@ angular.module('ev-fdm')
          */
         RestangularStorage.prototype.save = function(element, embed) {
             return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
@@ -3056,7 +3152,11 @@ angular.module('ev-fdm')
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.save(parameters);
+                return element.save(parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
