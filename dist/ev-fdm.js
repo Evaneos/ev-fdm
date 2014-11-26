@@ -3034,44 +3034,58 @@ angular.module('ev-fdm')
         };
 
 
-        function getAll(number, page, embed, filters, sortKey, reverseSort) {
+        var getAll = function(options) {
             var parameters = {};
 
-            if(angular.isNumber(page) && page > 0) {
-                parameters.page = page;
+            if (angular.isNumber(options.page) && options.page > 0) {
+                parameters.page = options.page;
             }
 
-            if(angular.isNumber(number) && number > 0) {
-                parameters.number = number;
+            if (angular.isNumber(options.number) && options.number > 0) {
+                parameters.number = options.number;
             }
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            if (angular.isArray(options.embed) && options.embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(options.embed.concat(this.defaultEmbed));
             }
-            else if(this.defaultEmbed.length) {
+            else if (this.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
             }
 
-            if(sortKey) {
-                parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
+            if (options.sortKey) {
+                parameters.sortBy = RestangularStorage.buildSortBy(options.sortKey, options.reverseSort);
             }
 
-            if(filters) {
-                filters = RestangularStorage.buildFilters(filters);
+            if (options.filters) {
+                var filters = RestangularStorage.buildFilters(options.filters);
                 angular.extend(parameters, filters);
             }
             return this.restangular.all(this.resourceName).getList(parameters);
-        }
+        };
 
 
         RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
-            return getAll.call(this, 1, null, embed, filters, sortKey, reverseSort).then(function (result) {
+            return getAll.call(this, {
+                number: 1,
+                page: null,
+                embed: embed,
+                filters: filters,
+                sortKey: sortKey,
+                reverseSort: reverseSort
+            }).then(function(result) {
                 return result[0];
             });
         };
 
-        RestangularStorage.prototype.getList = getAll.bind(this, null);
-
+        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+            return getAll.call(this, {
+                page: page,
+                embed: embed,
+                filters: filters,
+                sortKey: sortKey,
+                reverseSort: reverseSort
+            });
+        };
 
         RestangularStorage.prototype.getById = function(id, embed) {
             return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
