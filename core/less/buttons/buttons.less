@@ -151,6 +151,7 @@
 // .btn-sm    - A small button
 // .btn-md    - A medium button (default value, this class is optional)
 // .btn-lg    - A large button
+// .btn-block - A block button having the full width of his parent
 //
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
@@ -168,6 +169,16 @@
 .btn-size-variant(@font-size; @padding) {
     font-size: @font-size;
     padding: @padding;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+// Space out multiple btn block
+.btn-block + .btn-block {
+  margin-top: 5px;
 }
 
 // Icons
