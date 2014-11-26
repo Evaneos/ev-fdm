@@ -252,5 +252,9 @@ angular.module('ev-fdm')
             return this.restangular.one(this.resourceName);
         };
 
+        RestangularStorage.prototype.copy = function(element) {
+            return element.clone();
+        };
+
         return RestangularStorage;
     }]);
