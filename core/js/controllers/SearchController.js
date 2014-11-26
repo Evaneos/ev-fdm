@@ -4,9 +4,9 @@ angular.module('ev-fdm')
             this.$scope = $scope;
             this.$scope.filters = {};
 
-            this.$scope.filtersChanged = function() {
+            $scope.filtersChanged = function() {
                 Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                $rootScope.$broadcast.apply(this, arguments);
+                $rootScope.$broadcast.apply($rootScope, arguments);
             }.bind(this);
         }
 

@@ -196,8 +196,7 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', self.$scope.currentPage, newPage);
-                $rootScope.$broadcast.apply(this, eventArgs);
-
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -211,7 +210,8 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
-                $rootScope.$broadcast.apply(this, eventArgs);
+                $rootScope.$broadcast('common::sort.changed', self.sortKey, self.reverseSort);
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
@@ -371,9 +371,9 @@ angular.module('ev-fdm')
             this.$scope = $scope;
             this.$scope.filters = {};
 
-            this.$scope.filtersChanged = function() {
+            $scope.filtersChanged = function() {
                 Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                $rootScope.$broadcast.apply(this, arguments);
+                $rootScope.$broadcast.apply($rootScope, arguments);
             }.bind(this);
         }
 
