@@ -113,9 +113,10 @@ plugins.forEach(function(name) {
 
 var tasks = plugins.map(function(name) { return 'plugin-' + name + '-js'; });
 tasks.unshift('core-js');
-gulp.task('js-all-before-concat-all', tasks);
-gulp.task('js-all', ['js-concat-core-plugins']);
 
+gulp.task('js-all', tasks, function () {
+    return gulp.start('js-concat-core-plugins');
+});
 
 tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-js'; });
 tasks.unshift('js-all', 'watch-core-js');
