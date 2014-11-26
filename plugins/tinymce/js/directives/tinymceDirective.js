@@ -32,7 +32,7 @@
 
 
 angular.module('ev-tinymce', [])
-    .directive('evTinymce', [function () {
+    .directive('evTinymce', ['$timeout', function($timeout) {
 
         var generatedIds = 0;
         return {
@@ -71,7 +71,7 @@ angular.module('ev-tinymce', [])
                 //  * This part is used for the max-chars attibute.
                 //  * It allows us to easily limit the number of characters typed in the editor
                 //  */
-                options.maxChars = attrs.maxChars || options.maxChars || null;
+                var maxChars = options.maxChars = attrs.maxChars || options.maxChars || null;
                 // // We set the max char warning when the THRESHOLD is reached
                 // // Here, it's 85% of max chars
                 var THRESHOLD = 85;
@@ -94,7 +94,6 @@ angular.module('ev-tinymce', [])
                 var placeholder = false;
                 var currentHtml = '';
                 var currentText = '';
-                var maxChars = options.maxChars;
 
                 var setPlaceholder = function() {
                     var editor = getTinyInstance();
@@ -135,11 +134,13 @@ angular.module('ev-tinymce', [])
                     else if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
                         var shorterText = newText.substr(0, maxChars);
                         // be carefull, setContent call this method again
-                        editor.setContent(shorterText, {format: 'text'});
+                        editor.setContent(shorterText, { format: 'text' });
                     } else if(currentTextOverLimit && newTextOverLimit) {
                         editor.setContent(currentHtml); // be carefull, setContent call this method again
                     } else {
-                        ngModel.$setViewValue(newHtml);
+                        $timeout(function() {
+                            ngModel.$setViewValue(newText === '' || newText === attrs.placeholder ? '' : newHtml);
+                        });
                         currentHtml = newHtml;
                         currentText = newText;
                     }
