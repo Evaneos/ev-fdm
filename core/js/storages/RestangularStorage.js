@@ -250,7 +250,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.copy = function(element) {
-            return element.clone();
+            return this.restangular.copy(element);
         };
 
         return RestangularStorage;
