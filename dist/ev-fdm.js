@@ -161,7 +161,7 @@ angular.module('ev-fdm')
     });
 
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
+    .factory('ListController', ['$rootScope', '$state', '$stateParams', 'Restangular', function($rootScope, $state, $stateParams, restangular) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
@@ -194,9 +194,9 @@ angular.module('ev-fdm')
             this.$scope.changePage = function(newPage) {
 
                 var eventArgs = angular.copy(arguments);
-
+                
                 Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', self.$scope.currentPage, newPage);
-                communicationService.emit.apply(this, eventArgs);
+                $rootScope.$broadcast.apply(this, eventArgs);
   
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
@@ -211,7 +211,7 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
-                communicationService.emit.apply(this, eventArgs);
+                $rootScope.$broadcast.apply(this, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
@@ -226,7 +226,7 @@ angular.module('ev-fdm')
             /*
              * Update the view when filter are changed in the SearchController
              */
-            communicationService.on('common::filters.changed', function(event, filters) {
+            $scope.$on('common::filters.changed', function(event, filters) {
                 this.filters = filters;
                 this.sortKey = this.defaultSortKey;
                 this.update(1, this.filters, this.sortKey, this.reverseSort);
@@ -244,15 +244,15 @@ angular.module('ev-fdm')
                 }
             });
 
-            communicationService.on(this.elementName + '::updated', function(event) {
+            $scope.$on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            communicationService.on(this.elementName + '::created', function(event) {
+            $scope.$on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            communicationService.on(this.elementName + '::deleted', function(event) {
+            $scope.$on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
@@ -299,8 +299,9 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.toggleView = function(view, element, routingArgs) {
+
             if (!element) {
-                communicationService.emit('common::list.toggleView', view, 'close');
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
                 return;
             }
@@ -308,7 +309,7 @@ angular.module('ev-fdm')
             var id = restangular.configuration.getIdFromElem(element);
 
             if (!id || $stateParams.id === id) {
-                communicationService.emit('common::list.toggleView', view, 'close');
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
             }
             else {
@@ -317,7 +318,7 @@ angular.module('ev-fdm')
 
                 angular.extend(params, routingArgs);
 
-                communicationService.emit('common::list.toggleView', view, 'open');
+                $rootScope.$broadcast('common::list.toggleView', view, 'open');
                 
                 $state.go(this.goToViewStatePath(view, element), params);
             }
@@ -365,14 +366,14 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['communicationService', function(communicationService) {
+    .factory('SearchController', ['$rootScope', function($rootScope) {
         function SearchController($scope) {
             this.$scope = $scope;
             this.$scope.filters = {};
 
             this.$scope.filtersChanged = function() {
                 Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                communicationService.emit.apply(this, arguments);
+                $rootScope.$broadcast.apply(this, arguments);
             }.bind(this);
         }
 
@@ -2224,64 +2225,6 @@ angular.module('ev-fdm')
             return $sce.trustAsHtml(val);
         };
     }]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-/**
- * Communication Service
- * Manage the communication for our app
- */
-module.service('communicationService', ['$rootScope', function($rootScope) {
-
-    var COMMUNICATION_KEY = 'evfdm-communication';
-
-    /**
-     * Emit an event
-     */
-    var emit = function(eventName, args) {
-        $rootScope.$emit.apply($rootScope, arguments);
-    };
-
-    /**
-     * Listen to an event
-     */
-    var on = function(eventName, callback) {
-        $rootScope.$on(eventName, callback);
-    };
-
-    /**
-     * Set a key/value
-     */
-    var set = function(key, value) {
-        if($rootScope[COMMUNICATION_KEY] === undefined) {
-            $rootScope[COMMUNICATION_KEY] = {};
-        }
-
-        $rootScope[COMMUNICATION_KEY][key] = value;
-    };
-
-    /**
-     * Get a value by key
-     */
-    var get = function(key) {
-        var result = null;
-        if($rootScope[COMMUNICATION_KEY] && $rootScope[COMMUNICATION_KEY][key] !== undefined) {
-            result = $rootScope[COMMUNICATION_KEY][key];
-        }
-
-        return result;
-    };
-
-    var communicationService = {
-        emit: emit,
-        on  : on,
-        set : set,
-        get : get
-    };
-
-    return communicationService;
-}]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -2900,7 +2843,7 @@ angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
+    .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
@@ -2909,7 +2852,7 @@ angular.module('ev-fdm')
 
             this.emitEventCallbackCreator = function(eventName, elements) {
                 return function(result) {
-                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    $rootScope.$broadcast(this.resourceName + '::' + eventName, elements);
                     return result;
                 }.bind(this);
             }.bind(this);
