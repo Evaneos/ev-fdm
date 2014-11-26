@@ -3,21 +3,21 @@
 
 
 // Lists
-// 
-// Styleguide 2
+//
+// Styleguide 3
 
 // Unstyled list
-// 
+//
 // Remove the default user agent style on list with `.list-unstyled`
 //
 // Markup:
-// <ul class="list-unstyled"> 
+// <ul class="list-unstyled">
 // 	<li> Eggs </li>
 // 	<li> Milk </li>
 // 	<li> Beers </li>
 // </ul>
-// 
-// Styleguide 2.1
+//
+// Styleguide 3.1
 
 .list-unstyled {
 	.list-unstyled;
@@ -25,18 +25,18 @@
 
 
 // Standard list
-// 
-// A standard list in ev-fdm. You can add the base class `.ev-list` to any `div`. All of its direct 
+//
+// A standard list in ev-fdm. You can add the base class `.ev-list` to any `div`. All of its direct
 // children will be styled like list element.
-// 
+//
 // Markup:
-// <ul class="ev-list"> 
+// <ul class="ev-list">
 // 	<li> Eggs </li>
 // 	<li> Milk </li>
 // 	<li> Beers </li>
 // </ul>
-// 
-// Styleguide 2.2.0
+//
+// Styleguide 3.2.0
 
 
 .ev-list {
@@ -52,17 +52,17 @@
 }
 
 // Activable lists
-// 
+//
 // For activable list, you can add the `.ev-list-activable`. This useful with the `activable-set` directive.
-// 
+//
 // Markup:
-// <ul class="ev-list ev-list-activable"> 
+// <ul class="ev-list ev-list-activable">
 // 	<li activable> Eggs </li>
 // 	<li activable class="active"> Milk </li>
 // 	<li activable> Beers </li>
 // </ul>
-// 
-// Styleguide 2.2.1
+//
+// Styleguide 3.2.1
 
 .ev-list.ev-list-activable > * {
 	border-left: @ev-list-emphasis-size solid transparent;
@@ -78,22 +78,22 @@
 }
 
 // Item styling
-// 
+//
 // You can style add any of the following class to a child element of an `ev-list` class
-// 
+//
 // .ev-separator-bottom 	- Add a strong separator to the bottom of the element
 // .ev-separator-top	 	- Add a strong separator to the top of the element
 // .ev-processed			- Use when an element has already been acknowledged by the user
-// .ev-new					- 
-// 
+// .ev-new					-
+//
 // Markup:
-// <ul class="ev-list ev-list-activable"> 
+// <ul class="ev-list ev-list-activable">
 // 	<li> Eggs </li>
 // 	<li> Milk </li>
 // 	<li class="{$modifiers}"> Beers </li>
 // </ul>
-// 
-// Styleguide 2.3
+//
+// Styleguide 3.3
 
 .ev-list {
 	&> .ev-separator-bottom {

@@ -1,33 +1,33 @@
 @import "variables.less";
 @import "../mixins/loop.less";
 
-// Helper classes
-// 
-// Styleguide 3
+// Colors
+//
+// Styleguide 1
 
 // Neutral colors classes
-// 
+//
 // Neutral colors are used when the support should not convey any specific information.
-// They can be used ad background color or text colors. 
-// 
+// They can be used ad background color or text colors.
+//
 // You can customize the name and values you need by changing the list of colors in the `colors/variable.less` file.
-// 
-// Styleguide 3.1
+//
+// Styleguide 1.1
 
 // Neutral background colors
-// 
+//
 // A scale of neutral background colors
-// 
+//
 // .bg-soil         - Add a soil background
 // .bg-light-soil   - Add a light soil background
 // .bg-bright-soil  - Add a bright soil background
 // .bg-deep-soil    - Add a deep soil background
 // .bg-dark-soil    - Add a dark soil background
-// 
-// Markup: 
+//
+// Markup:
 // <div style="height:100px; width: 100px" class="{$modifiers}"></div>
-// 
-// Styleguide 3.1.1
+//
+// Styleguide 1.1.1
 // Loop throught color list and define buttons name on the go.
 .for(@neutral-colors, background);
 .-each(@color, background) {
@@ -36,43 +36,43 @@
 
 
 // Soil text colors
-// 
+//
 // A scale of soil text colors
-// 
+//
 // .text-soil           - Color the text in a soil
 // .text-light-soil     - Color the text in a light soil
 // .text-bright-soil    - Color the text in a bright soil
 // .text-deep-soil      - Color the text in a deep soil
 // .text-dark-soil      - Color the text in a dark soil
-// 
-// Markup: 
+//
+// Markup:
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
-// 
-// Styleguide 3.1.2
+//
+// Styleguide 1.1.2
 .for(@neutral-colors, text);
 .-each(@color, text) {
 	.text-@{color} { color: @@color; }
 }
 
 // Palette color classes
-// 
+//
 // These colors are defined in the brand palette. They are used when a specific meaning is associated with the element
-// 
-// Styleguide 3.2
+//
+// Styleguide 1.2
 
 // Background colors
-// 
+//
 // A scale of palette background colors
-// 
+//
 // .bg-orange       - Add a orange background
 // .bg-pool         - Add a blue background
 // .bg-gold         - Add a yellow background
 // .bg-lime         - Add a green background
-// 
-// Markup: 
+//
+// Markup:
 // <div style="height:100px; width: 100px" class="{$modifiers}"></div>
-// 
-// Styleguide 3.2.1
+//
+// Styleguide 1.2.1
 
 .for(@palette-colors, background);
 
@@ -80,17 +80,17 @@
 
 
 // Text colors
-// 
+//
 // A scale of palette text colors
-// 
+//
 // .text-orange     - Color the text in orange
 // .text-pool       - Color the text in blue
 // .text-gold       - Color the text in yellow
 // .text-lime       - Color the text in green
-// 
-// Markup: 
+//
+// Markup:
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
-// 
-// Styleguide 3.2.2
+//
+// Styleguide 1.2.2
 
 .for(@palette-colors, text);
