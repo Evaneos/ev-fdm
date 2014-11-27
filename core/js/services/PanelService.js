@@ -2,13 +2,13 @@ const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
 const MAX_VISIBLE_PANEL = 3;
 
 angular.module('ev-fdm')
-    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
-        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
             $window) {
 
         var containers   = {};
         var panelsList   = {};
-        
+
         var addToDom = function (panel, containerId) {
             var container = containers[containerId];
             if (!container || panel.element.parent().length) {
@@ -18,12 +18,12 @@ angular.module('ev-fdm')
             // If no panel index, or no panel inside the container, it is added at the end
             if (!panel.index || !container.children().length) {
                 $animate.move(panel.element, container, null, function () {
-                    updateLayout(null, containerId);
+                    updateLayout(containerId);
                 });
             } else {
                 var beforePanel = getBeforePanelElm(panel.index, containerId);
                     $animate.move(panel.element, container, beforePanel.element, function () {
-                        updateLayout(null, containerId);
+                        updateLayout(containerId);
                 });
             }
         };
@@ -78,9 +78,9 @@ angular.module('ev-fdm')
             if (panels[name]) {
                 return panels[name];
             }
-            
-            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport ev-resizable-column>' + 
+
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
+                    name + '" ev-responsive-viewport ev-resizable-column>' +
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
@@ -119,9 +119,9 @@ angular.module('ev-fdm')
             var element  = panels[name].element;
             delete panels[name];
             $animate.leave(element, function() {
-                updateLayout(null, containerId);
+                updateLayout(containerId);
             });
-        };          
+        };
 
         /**
          * Registers a panels container
@@ -155,7 +155,7 @@ angular.module('ev-fdm')
             timerWindowResize = $timeout(function() {
                 updateLayout();
             }, 200);
-        });         
+        });
 
 
         function getTemplatePromise(options) {
@@ -168,17 +168,17 @@ angular.module('ev-fdm')
             });
         }
 
-       
-        function updateLayout(element, containerId) {
+
+        function updateLayout(containerId) {
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
-                    updateLayout(null, id);
+                    updateLayout(id);
                 });
                 return this;
             }
             var container = containers[containerId];
             var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
-            
+
 
             checkStacking(panelElements, container);
         }
@@ -195,7 +195,7 @@ angular.module('ev-fdm')
                     angular.element(panel).addClass('ev-stacked');
                 });
             }
-            // Starting from the first non stack panel, 
+            // Starting from the first non stack panel,
             var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
             // Stack until overflow does not exists anymore (or we arrive to the last panel)
             while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
