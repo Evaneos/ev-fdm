@@ -39,6 +39,12 @@
                     border-right: 7px solid transparent;
                     border-left: 7px solid transparent;
                 }
+
+                background: lighten(@navbar-inverse-bg, 3%);
+
+                &:hover {
+                    background: lighten(@navbar-inverse-bg, 7%);
+                }
             }
 
             .icon {
@@ -51,7 +57,7 @@
         }
 
         .menu-help {
-            background: @brand-danger;
+            background: @orange;
 
             a {
                 color: @navbar-inverse-link-active-color;
@@ -61,7 +67,7 @@
             }
 
             &:hover {
-                background: lighten(@brand-danger, 5%);
+                background: lighten(@orange, 5%);
                 a {
                     color: @navbar-inverse-link-active-color;
                 }
@@ -83,7 +89,7 @@
 
     .dropdown {
         &.open {
-            background: lighten(@brand-evaneos, 3%);
+            background: lighten(@light-soil, 3%);
         }
         .caret {
             margin-left: 5px;

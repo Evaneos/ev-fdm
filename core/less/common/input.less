@@ -8,7 +8,7 @@
 .placeholder-light {
     color: @soil;
     &:hover {
-      color: @light-soil;
+      color: @bright-soil;
     }
 }
 
@@ -24,17 +24,17 @@
   font-weight: inherit;
   font-size: inherit;
   border-radius: 0px;
-  border-bottom: @light-soil 1px solid;
+  border-bottom: @bright-soil 1px solid;
 
   .placeholder-style({
-    color: @soil;
-  }, {
     color: @light-soil;
+  }, {
+    color: @bright-soil;
   });
 
   &:hover, &:focus {
     outline: none;
-    border-bottom: @light-soil 1px solid;
+    border-bottom: @bright-soil 1px solid;
   }
 
   & ~ .input-group-addon {
@@ -56,11 +56,11 @@ textarea, h5, h4, h3, h2, h1 {
 textarea, h5, h4, h3, h2, h1 {
   &.input-inline, & .input-inline {
     display: inline;
-    border-bottom: @light-soil 1px solid;
+    border-bottom: @bright-soil 1px solid;
 
     &:hover, &:focus {
       outline: none;
-      border-bottom: @light-soil 1px solid;
+      border-bottom: @bright-soil 1px solid;
     }
   }
 }

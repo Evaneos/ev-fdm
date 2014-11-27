@@ -1,4 +1,5 @@
 @import "variables.less";
+@import "button-groups.less";
 @import "../mixins/loop.less";
 
 // Buttons
@@ -31,7 +32,7 @@
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
 // <button class="btn btn-secondary {$modifiers}">Button</button>
-// <button class="btn btn-thirdary {$modifiers}">Button</button>
+// <button class="btn btn-tertiary {$modifiers}">Button</button>
 //
 // Styleguide 2.2
 
@@ -68,7 +69,7 @@
 }
 
 // Default value
-.btn:not(.btn-primary):not(.btn-secondary):not(.btn-thirdary) {
+.btn:not(.btn-primary):not(.btn-secondary):not(.btn-tertiary) {
     .btn-secondary;
 }
 
@@ -86,7 +87,7 @@
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
 // <button class="btn btn-secondary {$modifiers}">Button</button>
-// <button class="btn btn-thirdary {$modifiers}">Button</button>
+// <button class="btn btn-tertiary {$modifiers}">Button</button>
 //
 // Styleguide 2.3
 
@@ -124,7 +125,7 @@
 //
 // .btn-primary     - Primary button, used to emphasize the main call to action (usually one per viewport).
 // .btn-secondary   - Secondary button, normal buttons (default value, this class is optional)
-// .btn-thirdary    - Thirdary button, light button, used generally inline, when you don't want to overload the interface.
+// .btn-tertiary    - Tertiary button, light button, used generally inline, when you don't want to overload the interface.
 //
 // Markup:
 // <button class="btn {$modifiers}">Button</button>
@@ -137,7 +138,7 @@
 .btn-secondary { &, &:hover, &:active {
     background-color: transparent;
 } }
-.btn-thirdary { &, &:hover, &:active {
+.btn-tertiary { &, &:hover, &:active {
     background-color: transparent;
     border-color: transparent;
 } }
@@ -156,7 +157,7 @@
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
 // <button class="btn btn-secondary {$modifiers}">Button</button>
-// <button class="btn btn-thirdary {$modifiers}">Button</button>
+// <button class="btn btn-tertiary {$modifiers}">Button</button>
 //
 // Styleguide 2.5
 
@@ -189,6 +190,6 @@
 // Markup:
 // <button class="btn btn-primary"><span class="icon icon-create"></span>Add a line</button>
 // <button class="btn btn-secondary"><span class="icon icon-tick"></span>Accept</button>
-// <button class="btn btn-thirdary"><span class="icon icon-bin"></span>Delete</button>
+// <button class="btn btn-tertiary"><span class="icon icon-bin"></span>Delete</button>
 //
 // Styleguide 2.6
