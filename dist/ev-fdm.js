@@ -661,6 +661,29 @@ angular.module('ev-fdm')
         });
     };
 });
+var module = angular.module('ev-fdm')
+.directive('evErrorMessage', function () {
+    return {
+        restrict: 'E',
+        transclude: true,
+        scope: {
+            input: '=',
+            error: '@'
+        },
+        template: '<li ng-if="input[\'evHasError\'] && input.$error[error]" ng-transclude></li>',
+    };
+});
+
+var module = angular.module('ev-fdm')
+.directive('evErrors', function () {
+    return {
+        restrict: 'E',
+        transclude: true,
+        replace: true,
+        template: '<ul class="errors text-danger" ng-transclude></ul>'
+    };
+});
+
 'use strict';
 
 function MenuManagerProvider() {
@@ -789,6 +812,20 @@ angular.module('ev-fdm')
         }
     }
 }]);
+var module = angular.module('ev-fdm')
+.directive('evFormGroup', ['$parse', '$rootScope', function($parse, $rootScope) {
+    return {
+        restrict: 'EA',
+        scope: true,
+        transclude: true,
+        replace: true,
+        template: '<div class="form-group" ng-transclude></div>',
+        controller: function($scope, $element, $attrs) {
+            this.toggleError = $element.toggleClass.bind($element, 'has-error');
+        }
+    };
+}]);
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -1769,6 +1806,40 @@ angular.module('ev-fdm')
             }
         }
     });
+var module = angular.module('ev-fdm')
+.directive('evSubmit', ['$parse', function($parse) {
+    return {
+        restrict: 'A',
+        require: 'form',
+        controller: function($scope, $element, $attrs) {
+            var validables = [];
+
+            this.$addValidable = function(makeValidable) {
+                validables.push(makeValidable)
+            };
+
+            var fn = $parse($attrs['evSubmit'], /* interceptorFn */ null, /* expensiveChecks */ true);
+
+            $element.on('submit', function(event) {
+                var callback = function() {
+                    if ($scope.form.$valid) {
+                        fn($scope, {$event:event});
+                    }
+                };
+
+                validables.forEach(function(makeValidable) {
+                  makeValidable();
+                });
+
+                $scope.$apply(callback);
+            });
+        },
+        link: function(scope, element, attrs, form) {
+            scope.form = form;
+        }
+    };
+}]);
+
 (function () {
     'use strict';
     angular.module('ev-fdm')
@@ -1985,6 +2056,47 @@ module.directive('throttle', ['$timeout', function($timeout) {
         }
     }
 }]);
+var module = angular.module('ev-fdm')
+/**
+ * DONE: makeValidable only happens after first blur or when ev-validable event occurs.
+ * TO DO: expose makeValidable, to provides validation directly
+ * on focus or on when a key is entered
+ */
+.directive('evValidable', function () {
+    return {
+        restrict: 'A',
+        require: ['ngModel', '^evSubmit', '^?evFormGroup'],
+        link: function(scope, element, attrs, controllers) {
+            var model = controllers[0],
+                evSubmit = controllers[1],
+                evFormGroup = controllers[2];
+
+            var makeValidable = function() {
+                model.evValidable = true;
+                hasError();
+            };
+
+            var hasError = function() {
+                model.evHasError = !!(!model.$valid && model.evValidable);
+
+                if (evFormGroup) {
+                    evFormGroup.toggleError(model.evHasError);
+                }
+            };
+
+            evSubmit.$addValidable(makeValidable);
+
+            element.on('blur', function() {
+                scope.$apply(makeValidable);
+            });
+
+            element.on('keyup', function() {
+                scope.$apply(hasError);
+            });
+        }
+    };
+});
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -2141,115 +2253,6 @@ angular.module('ev-fdm')
         };
     }]);
 
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -2756,6 +2759,115 @@ module.service('UtilService', [function() {
     };
 }]);
 
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 'use strict';
 
 /* Services */
@@ -3561,6 +3673,81 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         };
     }]);
 
+/* global tinymce:true */
+
+tinymce.PluginManager.add('evelements', function(editor) {
+    function setElement(nodeName) {
+        return function() {
+            var dom = editor.dom, elm = editor.selection.getNode();
+            if (elm && elm.nodeName.toLowerCase() === nodeName) {
+                dom.remove(elm, true);
+            } else {
+                editor.insertContent(
+                    dom.createHTML(
+                        nodeName,
+                        {},
+                        dom.encode(editor.selection.getContent({format: 'text'}))
+                    )
+                );
+            }
+        };
+    }
+
+    editor.settings.evelements.split(' ').forEach(function(elementName) {
+        editor.addButton('ev' + elementName, {
+            text: elementName,
+            tooltip: 'Set this text as ' + elementName,
+            onclick: setElement(elementName),
+            stateSelector: elementName
+        });
+    });
+});
+
+/*global tinymce:true */
+
+tinymce.PluginManager.add('evimage', function(editor) {
+    function showDialog() {
+        var dom = editor.dom;
+        var node = editor.selection.getNode();
+        var attributes = null;
+
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
+            };
+        }
+
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.removeAllAttribs(node);
+                dom.setAttribs(node, attributesNew);
+            } else {
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
+            }
+        });
+    }
+
+    editor.addButton('evimage', {
+        icon: 'image',
+        tooltip: 'Insert/edit image',
+        onclick: showDialog,
+        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
+    });
+
+    editor.addMenuItem('evimage', {
+        icon: 'image',
+        text: 'Insert image',
+        onclick: showDialog,
+        context: 'insert',
+        prependToContext: true
+    });
+
+    editor.addCommand('mceImage', showDialog);
+});
+
 /* jshint camelcase: false */
 /**
  * Directive to override some settings in tinymce
@@ -3795,81 +3982,6 @@ angular.module('ev-tinymce', [])
         };
     }]);
 }) (window.tinyMCE);
-
-/* global tinymce:true */
-
-tinymce.PluginManager.add('evelements', function(editor) {
-    function setElement(nodeName) {
-        return function() {
-            var dom = editor.dom, elm = editor.selection.getNode();
-            if (elm && elm.nodeName.toLowerCase() === nodeName) {
-                dom.remove(elm, true);
-            } else {
-                editor.insertContent(
-                    dom.createHTML(
-                        nodeName,
-                        {},
-                        dom.encode(editor.selection.getContent({format: 'text'}))
-                    )
-                );
-            }
-        };
-    }
-
-    editor.settings.evelements.split(' ').forEach(function(elementName) {
-        editor.addButton('ev' + elementName, {
-            text: elementName,
-            tooltip: 'Set this text as ' + elementName,
-            onclick: setElement(elementName),
-            stateSelector: elementName
-        });
-    });
-});
-
-/*global tinymce:true */
-
-tinymce.PluginManager.add('evimage', function(editor) {
-    function showDialog() {
-        var dom = editor.dom;
-        var node = editor.selection.getNode();
-        var attributes = null;
-
-        if (node && node.getAttribute('data-picture-id')) {
-            attributes = {
-                src: dom.getAttrib(node, 'src'),
-                alt: dom.getAttrib(node, 'alt'),
-                'class': dom.getAttrib(node, 'class'),
-                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
-            };
-        }
-
-        editor.settings.evimage(attributes, function(attributesNew) {
-            if (attributes) {
-                dom.removeAllAttribs(node);
-                dom.setAttribs(node, attributesNew);
-            } else {
-                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
-            }
-        });
-    }
-
-    editor.addButton('evimage', {
-        icon: 'image',
-        tooltip: 'Insert/edit image',
-        onclick: showDialog,
-        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
-    });
-
-    editor.addMenuItem('evimage', {
-        icon: 'image',
-        text: 'Insert image',
-        onclick: showDialog,
-        context: 'insert',
-        prependToContext: true
-    });
-
-    editor.addCommand('mceImage', showDialog);
-});
 
 (function () {
     'use strict';
