@@ -13,7 +13,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
 
         template: ''
             + '<form name="editform" novalidate>'
-                + '<header>'
+                + '<header class="top-sticky">'
                     + '<div class="pull-right" ng-hide="edit || inProgress">'
                         + '<button type="button" class="btn btn-xs btn-link" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
                         + ' &nbsp; <button class="btn btn-xs  btn-link" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
