@@ -63,7 +63,7 @@
     &[disabled],
     fieldset[disabled] & {
         cursor: not-allowed;
-        pointer-events: none; // Future-proof disabling of clicks
+        pointer-events: all; // Required to display tooltips if any
         .opacity(.65);
     }
 }
@@ -102,20 +102,22 @@
 }
 
 .btn-color-variant(@color) {
+    @border-color-variant: lighten(@color, 25%);
+
     color: @color;
-    border-color: @color;
+    border-color: @border-color-variant;
     background-color: @color;
 
     &:hover {
         color: darken(@color, @btn-darken-hover-factor);
+        border-color: darken(@border-color-variant, @btn-darken-hover-factor);
         background-color: darken(@color, @btn-darken-hover-factor);
-        border-color: darken(@color, @btn-darken-hover-factor);
     }
 
     &:active {
         color: darken(@color, @btn-darken-active-factor);
+        border-color: darken(@border-color-variant, @btn-darken-active-factor);
         background-color: darken(@color, @btn-darken-active-factor);
-        border-color: darken(@color, @btn-darken-active-factor);
     }
 }
 

@@ -3,14 +3,7 @@
 .btn-group {
   position: relative;
   display: inline-block;
-  vertical-align: middle;
   white-space: nowrap;
-
-  select, .btn {
-    &.no-lcorners {
-      border-radius:0 3px 3px 0;
-    }
-  }
 }
 
 // Prevent double borders when buttons are next to each other
@@ -64,3 +57,9 @@
 .btn-group-xs > .btn { .btn-xs(); }
 .btn-group-sm > .btn { .btn-sm(); }
 .btn-group-lg > .btn { .btn-lg(); }
+
+// Btn container allows to apply some margin on his btn childrens
+// Useful when btns jump to a new line
+.btn-container .btn {
+  margin-bottom: @btn-margin-size;
+}

@@ -83,8 +83,6 @@
 //
 // .ev-separator-bottom 	- Add a strong separator to the bottom of the element
 // .ev-separator-top	 	- Add a strong separator to the top of the element
-// .ev-processed			- Use when an element has already been acknowledged by the user
-// .ev-new					-
 //
 // Markup:
 // <ul class="ev-list ev-list-activable">
@@ -105,10 +103,5 @@
 		&:first-child {
 			border-top-size: @ev-list-separator-size;
 		}
-	}
-
-	&> .ev-processed {
-		font-weight: normal;
-		background-color: @ev-list-processed-color;
 	}
 }
