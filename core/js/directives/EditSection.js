@@ -10,25 +10,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             title: '@', // deprecated
             headerTitle: '@'
         },
-
-        template: ''
-            + '<form name="editform" novalidate>'
-                + '<header>'
-                    + '<div class="pull-right" ng-hide="edit || inProgress">'
-                        + '<button type="button" class="btn btn-xs btn-link" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
-                        + ' &nbsp; <button class="btn btn-xs  btn-link" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
-                    + '</div>'
-                    + '<div class="pull-right" ng-show="edit && !inProgress">'
-                        + '<button type="button" class="btn btn-xs btn-link" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }"><span class="icon icon-tick"></span>Enregistrer</button>'
-                        + ' &nbsp;<button class="btn btn-xs btn-link text-light" ng-click="cancel()"><span class="icon icon-cross"></span>Annuler</button>'
-                    + '</div>'
-                    + '<div ng-if="inProgress" class="pull-right">'
-                        + '<button type="button" class="btn btn-xs btn-link"><span class="icon icon-evaneos icon-spin"></span> Enregistrement en cours...</button>'
-                    + '</div>'
-                    + '<h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>'
-                + '</header>'
-                + '<div class="transclude"></div>'
-            + '</form>',
+        templateUrl: 'ev-edit-section.html',
 
         link: function(scope, element, attrs, controller, transcludeFn) {
             var _transcludedScope = {};

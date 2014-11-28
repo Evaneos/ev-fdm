@@ -9,3 +9,29 @@
     width: 100%;
     max-width: 100%;
 }
+
+// A sticky element
+// Experimental: This isn't supported in all browser and should only be used to improve user experience
+//
+// When out of the screen, the element stays at the top like a position absolute
+//
+// Compatible in Firefox 32+, Safari 7+.
+.top-sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    z-index: 1;
+    top: 0;
+}
+
+// A sticky element
+// Experimental: This isn't supported in all browser and should only be used to improve user experience
+//
+// When out of the screen, the element stays at the bottom like a position absolute
+//
+// Compatible in Firefox 32+, Safari 7+.
+.bottom-sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    z-index: 1;
+    bottom: 0;
+}
