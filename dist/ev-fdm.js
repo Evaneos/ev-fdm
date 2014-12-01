@@ -540,22 +540,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             title: '@', // deprecated
             headerTitle: '@'
         },
-
-        template: ''
-            + '<form name="editform" novalidate>'
-                + '<header>'
-                    + '<div class="pull-right" ng-hide="edit">'
-                        + '<button class="btn btn-xs btn-link" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
-                        + ' &nbsp; <button class="btn btn-xs  btn-link" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
-                    + '</div>'
-                    + '<div class="pull-right" ng-show="edit">'
-                        + '<button class="btn btn-xs btn-link" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }"><span class="icon icon-tick"></span>Enregistrer</button>'
-                        + ' &nbsp;<button class="btn btn-xs btn-link text-light" ng-click="cancel()"><span class="icon icon-cross"></span>Annuler</button>'
-                    + '</div>'
-                    + '<h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>'
-                + '</header>'
-                + '<div class="transclude"></div>'
-            + '</form>',
+        templateUrl: 'ev-edit-section.html',
 
         link: function(scope, element, attrs, controller, transcludeFn) {
             var _transcludedScope = {};
@@ -583,15 +568,18 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
                 }
                 var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
                 if (resultSave && resultSave.then) {
+                    scope.inProgress = true;
                     resultSave.then(
                         function success() {
                             notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
                             if (options.success) {
                                 options.success();
                             }
+                            scope.inProgress = false;
                             setEditMode(false);
                         },
                         function error() {
+                            scope.inProgress = false;
                             notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
                         }
                     );
@@ -610,15 +598,18 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
                 var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
 
                 if (result && result.then) {
+                    scope.inProgress = true;
                     result.then(
                         function success() {
                             notificationsService.addSuccess({ text: attrs.successDeleteMessage });
                             if (options.success) {
                                 options.success();
                             }
+                            scope.inProgress = false;
                             setEditMode(false);
                         },
                         function error() {
+                            scope.inProgress = false;
                             notificationsService.addError({ text: attrs.errorDeleteMessage });
                         }
                     );
@@ -3035,6 +3026,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
+            if (!element.update) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.put(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
@@ -3094,6 +3088,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.delete = function(element) {
+            if (!element.delete) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
         };
 
@@ -3108,6 +3105,9 @@ angular.module('ev-fdm')
          * prefer use of create() or update()
          */
         RestangularStorage.prototype.save = function(element, embed) {
+            if (!element.save) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
