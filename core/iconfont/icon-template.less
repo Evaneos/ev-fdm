@@ -1,0 +1,36 @@
+//    _      +------------------------------------------------------+
+//	 / \     | IMPORTANT: THIS FILE IS COMPILED.                    |
+//	/ | \    | If you want to modify it, please modify the original |
+// /__'__\   | in ./core/iconfont/icon-template.less                |
+// 		     +------------------------------------------------------+
+@import "icon-generic.less";
+
+@font-face {
+	font-family: "<%= fontName %>";
+	src: url('@{icon-font-path}<%= fontName %>.eot');
+	src: url('@{icon-font-path}<%= fontName %>.eot?#iefix') format('eot'),
+	url('@{icon-font-path}<%= fontName %>.woff') format('woff'),
+	url('@{icon-font-path}<%= fontName %>.ttf') format('truetype'),
+	url('@{icon-font-path}<%= fontName %>.svg#<%= fontName %>') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+.icon:before {
+	font-family: "<%= fontName %>";
+}
+
+// Default icons
+//
+// The complete list of default icons
+//
+//<% _.each(glyphs, function(glyph) { %> .icon-<%= glyph.name %> - <%= glyph.name %> icon
+//<% }); %>
+// Markup:
+// <i class="{$modifiers}"></i>
+//
+// Styleguide 5.4
+<% _.each(glyphs, function(glyph) { %>.icon-<%= glyph.name %> {
+	&:before {content: "\<%= glyph.codepoint.toString(16).toUpperCase() %>";}
+	&:extend(.icon all);
+}
+<% }); %>
