@@ -161,7 +161,7 @@ angular.module('ev-fdm')
     });
 
 angular.module('ev-fdm')
-    .factory('ListController', ['$state', '$stateParams', 'Restangular', 'communicationService', function($state, $stateParams, restangular, communicationService) {
+    .factory('ListController', ['$rootScope', '$state', '$stateParams', 'Restangular', function($rootScope, $state, $stateParams, restangular) {
 
         function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
             var self = this;
@@ -195,9 +195,8 @@ angular.module('ev-fdm')
 
                 var eventArgs = angular.copy(arguments);
 
-                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed');
-                communicationService.emit.apply(this, eventArgs);
-  
+                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', self.$scope.currentPage, newPage);
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
                 self.update(newPage, self.filters, self.sortKey, self.reverseSort);
             };
 
@@ -211,7 +210,8 @@ angular.module('ev-fdm')
                 var eventArgs = angular.copy(arguments);
 
                 Array.prototype.unshift.call(eventArgs, 'common::sort.changed', self.sortKey, self.reverseSort);
-                communicationService.emit.apply(this, eventArgs);
+                $rootScope.$broadcast('common::sort.changed', self.sortKey, self.reverseSort);
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
 
                 self.update(1, self.filters, self.sortKey, self.reverseSort);
             };
@@ -226,7 +226,7 @@ angular.module('ev-fdm')
             /*
              * Update the view when filter are changed in the SearchController
              */
-            communicationService.on('common::filters.changed', function(event, filters) {
+            $scope.$on('common::filters.changed', function(event, filters) {
                 this.filters = filters;
                 this.sortKey = this.defaultSortKey;
                 this.update(1, this.filters, this.sortKey, this.reverseSort);
@@ -244,15 +244,15 @@ angular.module('ev-fdm')
                 }
             });
 
-            communicationService.on(this.elementName + '::updated', function(event) {
+            $scope.$on(this.elementName + '::updated', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            communicationService.on(this.elementName + '::created', function(event) {
+            $scope.$on(this.elementName + '::created', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
 
-            communicationService.on(this.elementName + '::deleted', function(event) {
+            $scope.$on(this.elementName + '::deleted', function(event) {
                 self.update(self.$scope.currentPage, self.filters, self.sortKey, self.reverseSort);
             });
         }
@@ -299,8 +299,9 @@ angular.module('ev-fdm')
         };
 
         ListController.prototype.toggleView = function(view, element, routingArgs) {
+
             if (!element) {
-                communicationService.emit('common::list.toggleView', view, 'close');
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
                 return;
             }
@@ -308,7 +309,7 @@ angular.module('ev-fdm')
             var id = restangular.configuration.getIdFromElem(element);
 
             if (!id || $stateParams.id === id) {
-                communicationService.emit('common::list.toggleView', view, 'close');
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
                 $state.go(this.goToViewStatePath(false));
             }
             else {
@@ -317,8 +318,8 @@ angular.module('ev-fdm')
 
                 angular.extend(params, routingArgs);
 
-                communicationService.emit('common::list.toggleView', view, 'open');
-                
+                $rootScope.$broadcast('common::list.toggleView', view, 'open');
+
                 $state.go(this.goToViewStatePath(view, element), params);
             }
         };
@@ -365,14 +366,14 @@ var NotificationsController = ['$scope', 'NotificationsService', function($scope
 angular.module('ev-fdm')
     .controller('NotificationsController', NotificationsController);
 angular.module('ev-fdm')
-    .factory('SearchController', ['communicationService', function(communicationService) {
+    .factory('SearchController', ['$rootScope', function($rootScope) {
         function SearchController($scope) {
             this.$scope = $scope;
             this.$scope.filters = {};
 
-            this.$scope.filtersChanged = function() {
+            $scope.filtersChanged = function() {
                 Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                communicationService.emit.apply(this, arguments);
+                $rootScope.$broadcast.apply($rootScope, arguments);
             }.bind(this);
         }
 
@@ -677,63 +678,63 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
         transclude: true,
         scope: {
             options: '=',
-            title: '@',
-            successMessage: '@',
-            errorMessage: '@'
+            args: '=?',
+            title: '@', // deprecated
+            headerTitle: '@'
         },
 
         template: ''
             + '<form name="editform" novalidate>'
-            + '<div class="edit">'
-                + '<h4 ng-if="title">{{ title }}</h4>'
-                + '<div ng-show="!options.edit">'
-                    + '<span class="icon icon-edit"></span><button class="btn btn-link" ng-click="edit()">Editer</button>'
-                + '</div>'
-                + '<div ng-show="options.edit">'
-                    + '<button class="btn btn-link" ng-click="save()" ng-class="{ disabled: editform.$invalid }"><span class="icon icon-tick"></span></button>&nbsp;'
-                    + '<button class="btn btn-link" ng-click="cancel()"><span class="icon icon-cross"></span></button>'
-                + '</div>'
-            + '</div>'
-            + '<div class="transclude"></div>'
+                + '<header>'
+                    + '<div class="pull-right" ng-hide="edit">'
+                        + '<button class="btn btn-tertiary btn-lime" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
+                        + ' &nbsp; <button class="btn btn-tertiary btn-lime" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
+                    + '</div>'
+                    + '<div class="pull-right" ng-show="edit">'
+                        + '<button class="btn btn-tertiary btn-lime" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }"><span class="icon icon-tick"></span>Enregistrer</button>'
+                        + ' &nbsp;<button class="btn btn-tertiary text-light" ng-click="cancel()"><span class="icon icon-cross"></span>Annuler</button>'
+                    + '</div>'
+                    + '<h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>'
+                + '</header>'
+                + '<div class="transclude"></div>'
             + '</form>',
 
         link: function(scope, element, attrs, controller, transcludeFn) {
             var _transcludedScope = {};
             var options = scope.options;
+            var triedToSave = false;
 
             function setEditMode(editMode) {
-                _transcludedScope.edit = options.edit = editMode;
+                _transcludedScope.edit = editMode;
+                scope.edit = editMode;
                 _transcludedScope.editform = scope.editform;
-                _transcludedScope.showErrorMessage = function(fieldName, errorName) {
-                    var field = scope.editform[fieldName];
-                    return (scope.triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
-                };
             }
 
 
-            scope.edit = function() {
-                if (!options.onEdit || options.onEdit && options.onEdit() !== false) {
+            scope.changeToEditMode = function() {
+                if (!options.onEdit || options.onEdit && options.onEdit.apply(null, scope.args || []) !== false) {
                     setEditMode(true);
                 }
             };
 
             scope.save = function() {
                 if (!scope.editform.$valid) {
-                    scope.triedToSave = true;
+                    triedToSave = true;
+                    console.log(scope.editform.$error);
                     return;
                 }
-                var resultSave = !options.onSave || options.onSave && options.onSave();
+                var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
                 if (resultSave && resultSave.then) {
                     resultSave.then(
                         function success() {
-                            notificationsService.addSuccess({text: options.successMessage || scope.successMessage });
+                            notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
                             if (options.success) {
                                 options.success();
                             }
                             setEditMode(false);
                         },
                         function error() {
-                            notificationsService.addError({text: options.errorMessage || scope.errorMessage });
+                            notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
                         }
                     );
                 } else if (resultSave !== false) {
@@ -742,14 +743,39 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             };
 
             scope.cancel = function() {
-                if (!options.onCancel || options.onCancel && options.onCancel() !== false) {
+                if (!options.onCancel || options.onCancel && options.onCancel.apply(null, scope.args || []) !== false) {
                     setEditMode(false);
+                }
+            };
+
+            scope.delete = options.onDelete && function() {
+                var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
+
+                if (result && result.then) {
+                    result.then(
+                        function success() {
+                            notificationsService.addSuccess({ text: attrs.successDeleteMessage });
+                            if (options.success) {
+                                options.success();
+                            }
+                            setEditMode(false);
+                        },
+                        function error() {
+                            notificationsService.addError({ text: attrs.errorDeleteMessage });
+                        }
+                    );
                 }
             };
 
             transcludeFn(function(clone, transcludedScope) {
                 // default state
-                transcludedScope.edit = !!options.edit;
+                transcludedScope.edit = scope.edit = !!attrs.edit;
+
+                // usefull methods
+                transcludedScope.showErrorMessage = function(fieldName, errorName) {
+                    var field = scope.editform[fieldName];
+                    return (triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
+                };
 
                 // transclude values
                 _transcludedScope = transcludedScope;
@@ -777,6 +803,29 @@ angular.module('ev-fdm')
         });
     };
 });
+var module = angular.module('ev-fdm')
+.directive('evErrorMessage', function () {
+    return {
+        restrict: 'E',
+        transclude: true,
+        scope: {
+            input: '=',
+            error: '@'
+        },
+        template: '<li ng-if="input[\'evHasError\'] && input.$error[error]" ng-transclude></li>',
+    };
+});
+
+var module = angular.module('ev-fdm')
+.directive('evErrors', function () {
+    return {
+        restrict: 'E',
+        transclude: true,
+        replace: true,
+        template: '<ul class="errors text-danger" ng-transclude></ul>'
+    };
+});
+
 'use strict';
 
 function MenuManagerProvider() {
@@ -905,6 +954,20 @@ angular.module('ev-fdm')
         }
     }
 }]);
+var module = angular.module('ev-fdm')
+.directive('evFormGroup', ['$parse', '$rootScope', function($parse, $rootScope) {
+    return {
+        restrict: 'EA',
+        scope: true,
+        transclude: true,
+        replace: true,
+        template: '<div class="form-group" ng-transclude></div>',
+        controller: function($scope, $element, $attrs) {
+            this.toggleError = $element.toggleClass.bind($element, 'has-error');
+        }
+    };
+}]);
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -1070,7 +1133,7 @@ var module = angular.module('ev-fdm')
 
 (function () {
     'use strict';
-    var module = angular.module('ev-fdm')
+    angular.module('ev-fdm')
         .directive('evPictureList', function () {
           return {
             restrict: 'EA',
@@ -1090,12 +1153,12 @@ var module = angular.module('ev-fdm')
                         '<figure>' +
                             '<div class="picture-thumb">' +
                                 '<img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
-                                '<button class="action update-action ev-upload-clickable"' +
+                                '<button class="action btn btn-tertiary update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +
                                     '<span class="icon icon-edit"></span>' +
                                 '</button>' +
-                                '<button class="action delete-action" ' +
+                                '<button class="action btn btn-tertiary delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
                                   'tabIndex="-1"' +
                                   'data-ng-show="editable">' +
@@ -1552,7 +1615,7 @@ angular.module('ev-fdm')
             template:
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
-                        '<button class="btn btn-lg btn-default" ng-repeat="lang in availableLang"'+
+                        '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
                             'ng-class="{active: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
@@ -1885,6 +1948,40 @@ angular.module('ev-fdm')
             }
         }
     });
+var module = angular.module('ev-fdm')
+.directive('evSubmit', ['$parse', function($parse) {
+    return {
+        restrict: 'A',
+        require: 'form',
+        controller: function($scope, $element, $attrs) {
+            var validables = [];
+
+            this.$addValidable = function(makeValidable) {
+                validables.push(makeValidable)
+            };
+
+            var fn = $parse($attrs['evSubmit'], /* interceptorFn */ null, /* expensiveChecks */ true);
+
+            $element.on('submit', function(event) {
+                var callback = function() {
+                    if ($scope.form.$valid) {
+                        fn($scope, {$event:event});
+                    }
+                };
+
+                validables.forEach(function(makeValidable) {
+                  makeValidable();
+                });
+
+                $scope.$apply(callback);
+            });
+        },
+        link: function(scope, element, attrs, form) {
+            scope.form = form;
+        }
+    };
+}]);
+
 (function () {
     'use strict';
     angular.module('ev-fdm')
@@ -1977,19 +2074,32 @@ angular.module('ev-fdm')
                     tabShow: '='
                 },
                 link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
-
                     scope.alwaysShow = true;
                     if(angular.isDefined(attrs.tabShow)) {
                         scope.alwaysShow = false;
                     }
 
-                    tabsCtrl.addPane(scope);
-                    transcludeFn(function(clone, transcludedScope) {
+                    var childScope;
+                    var transclude = function transclude (clone, transcludedScope) {
+                        childScope = transcludedScope;
                         transcludedScope.$selectNext     = tabsCtrl.selectNext;
                         transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
-
-                        element.find('.transclude').append(clone);
+                        var el = element.find('.transclude');
+                        el.children().remove();
+                        el.append(clone);
+                    };
+                    scope.$watch('selected', function (selected) {
+                        if (!angular.isDefined(attrs.tabReset)) {
+                            return;
+                        }
+                        if (selected) {
+                            transcludeFn(transclude);
+                        } else if (childScope) {
+                            childScope.$destroy();
+                        }
                     });
+                    tabsCtrl.addPane(scope);
+                    transcludeFn(transclude);
                 },
                 template:
                     '<div class="tab-pane" ng-class="{active: selected}">' +
@@ -2088,6 +2198,47 @@ module.directive('throttle', ['$timeout', function($timeout) {
         }
     }
 }]);
+var module = angular.module('ev-fdm')
+/**
+ * DONE: makeValidable only happens after first blur or when ev-validable event occurs.
+ * TO DO: expose makeValidable, to provides validation directly
+ * on focus or on when a key is entered
+ */
+.directive('evValidable', function () {
+    return {
+        restrict: 'A',
+        require: ['ngModel', '^evSubmit', '^?evFormGroup'],
+        link: function(scope, element, attrs, controllers) {
+            var model = controllers[0],
+                evSubmit = controllers[1],
+                evFormGroup = controllers[2];
+
+            var makeValidable = function() {
+                model.evValidable = true;
+                hasError();
+            };
+
+            var hasError = function() {
+                model.evHasError = !!(!model.$valid && model.evValidable);
+
+                if (evFormGroup) {
+                    evFormGroup.toggleError(model.evHasError);
+                }
+            };
+
+            evSubmit.$addValidable(makeValidable);
+
+            element.on('blur', function() {
+                scope.$apply(makeValidable);
+            });
+
+            element.on('keyup', function() {
+                scope.$apply(hasError);
+            });
+        }
+    };
+});
+
 'use strict';
 
 angular.module('ev-fdm')
@@ -2211,64 +2362,6 @@ angular.module('ev-fdm')
             return $sce.trustAsHtml(val);
         };
     }]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-/**
- * Communication Service
- * Manage the communication for our app
- */
-module.service('communicationService', ['$rootScope', function($rootScope) {
-
-    var COMMUNICATION_KEY = 'evfdm-communication';
-
-    /**
-     * Emit an event
-     */
-    var emit = function(eventName, args) {
-        $rootScope.$emit.apply($rootScope, arguments);
-    };
-
-    /**
-     * Listen to an event
-     */
-    var on = function(eventName, callback) {
-        $rootScope.$on(eventName, callback);
-    };
-
-    /**
-     * Set a key/value
-     */
-    var set = function(key, value) {
-        if($rootScope[COMMUNICATION_KEY] === undefined) {
-            $rootScope[COMMUNICATION_KEY] = {};
-        }
-
-        $rootScope[COMMUNICATION_KEY][key] = value;
-    };
-
-    /**
-     * Get a value by key
-     */
-    var get = function(key) {
-        var result = null;
-        if($rootScope[COMMUNICATION_KEY] && $rootScope[COMMUNICATION_KEY][key] !== undefined) {
-            result = $rootScope[COMMUNICATION_KEY][key];
-        }
-
-        return result;
-    };
-
-    var communicationService = {
-        emit: emit,
-        on  : on,
-        set : set,
-        get : get
-    };
-
-    return communicationService;
-}]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -2887,7 +2980,7 @@ angular.module('ev-fdm')
     .service('AjaxStorage', ['$http', '$q', '$cacheFactory', 'UtilService', '$log', AjaxStorage]);
 
 angular.module('ev-fdm')
-    .factory('RestangularStorage', ['$q', 'Restangular', 'communicationService', function($q, restangular, communicationService) {
+    .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
 
         function RestangularStorage(resourceName, defaultEmbed) {
             this.restangular = restangular;
@@ -2896,7 +2989,7 @@ angular.module('ev-fdm')
 
             this.emitEventCallbackCreator = function(eventName, elements) {
                 return function(result) {
-                    communicationService.emit(this.resourceName + '::' + eventName, elements);
+                    $rootScope.$broadcast(this.resourceName + '::' + eventName, elements);
                     return result;
                 }.bind(this);
             }.bind(this);
@@ -2950,32 +3043,104 @@ angular.module('ev-fdm')
             return res;
         };
 
-        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+        RestangularStorage.updateObjectFromResult = function(object, result) {
+            (function merge(objectData, resultData, resultEmbeds) {
+                if (resultEmbeds) {
+                    resultEmbeds.forEach(function(embedName) {
+                        if (embedName in resultData) {
+                            if (!objectData[embedName]) {
+                                objectData[embedName] = resultData[embedName];
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    resultData[embedName].data,
+                                    resultData[embedName].embeds
+                                );
+                            }
+                            delete resultData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, resultData);
+            })(object, angular.copy(restangular.stripRestangular(result)), result.embeds);
+        };
+        RestangularStorage.prototype.updateObjectFromResult = RestangularStorage.updateObjectFromResult;
+
+        RestangularStorage.updateObjectBeforePatch = function(object, changes) {
+            (function merge(objectData, objectEmbeds, changesData) {
+                if (objectEmbeds) {
+                    objectEmbeds.forEach(function(embedName) {
+                        if (embedName in changesData) {
+                            if (!objectData[embedName]) {
+                                objectData[embedName] = changesData[embedName];
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    objectData[embedName].embeds,
+                                    changesData[embedName].data
+                                );
+                            }
+                            delete changesData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, changesData);
+            })(object, object.embeds, angular.copy(changes));
+        };
+
+
+        var getAll = function(options) {
             var parameters = {};
 
-            if(angular.isNumber(page) && page > 0) {
-                parameters.page = page;
+            if (angular.isNumber(options.page) && options.page > 0) {
+                parameters.page = options.page;
             }
 
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(this.defaultEmbed));
+            if (angular.isNumber(options.number) && options.number > 0) {
+                parameters.number = options.number;
             }
-            else if(this.defaultEmbed.length) {
+
+            if (angular.isArray(options.embed) && options.embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(options.embed.concat(this.defaultEmbed));
+            }
+            else if (this.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
             }
 
-            if(sortKey) {
-                parameters.sortBy = RestangularStorage.buildSortBy(sortKey, reverseSort);
+            if (options.sortKey) {
+                parameters.sortBy = RestangularStorage.buildSortBy(options.sortKey, options.reverseSort);
             }
 
-            if(filters) {
-                filters = RestangularStorage.buildFilters(filters);
+            if (options.filters) {
+                var filters = RestangularStorage.buildFilters(options.filters);
                 angular.extend(parameters, filters);
             }
-
             return this.restangular.all(this.resourceName).getList(parameters);
         };
 
+
+        RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
+            return getAll.call(this, {
+                number: 1,
+                page: null,
+                embed: embed,
+                filters: filters,
+                sortKey: sortKey,
+                reverseSort: reverseSort
+            }).then(function(result) {
+                return result[0];
+            });
+        };
+
+        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+            return getAll.call(this, {
+                page: page,
+                embed: embed,
+                filters: filters,
+                sortKey: sortKey,
+                reverseSort: reverseSort
+            });
+        };
 
         RestangularStorage.prototype.getById = function(id, embed) {
             return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
@@ -2983,6 +3148,10 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.update = function(element, embed) {
             return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
@@ -2990,7 +3159,11 @@ angular.module('ev-fdm')
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.put(parameters);
+                return element.put(parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
@@ -2998,25 +3171,37 @@ angular.module('ev-fdm')
             if (!element.patch) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
-            angular.extend(element, changes);
+            RestangularStorage.updateObjectBeforePatch(element, changes);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
         RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
             elements.forEach(function(element) {
-                angular.extend(element, changes);
+                RestangularStorage.updateObjectBeforePatch(element, changes);
             });
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.patch(changes, parameters);
+                return element.patch(changes, parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    })
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.create = function(element, embed) {
             return this.restangular.all(this.resourceName)
                 .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('created', [element]));
         };
 
@@ -3036,6 +3221,10 @@ angular.module('ev-fdm')
          */
         RestangularStorage.prototype.save = function(element, embed) {
             return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    RestangularStorage.updateObjectFromResult(element, result);
+                    return result;
+                })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
@@ -3043,12 +3232,20 @@ angular.module('ev-fdm')
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
-                return element.save(parameters);
+                return element.save(parameters)
+                    .then(function(result) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
         RestangularStorage.prototype.getNew = function() {
             return this.restangular.one(this.resourceName);
+        };
+
+        RestangularStorage.prototype.copy = function(element) {
+            return this.restangular.copy(element);
         };
 
         return RestangularStorage;
@@ -3476,315 +3673,6 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         };
     }]);
 
-/* jshint camelcase: false */
-/**
- * Directive to override some settings in tinymce
- * Usage:
- * <ev-tinymce
- *     max-chars="1000"                        -- maxChars this input accept (default: unlimited)
- *     ng-model="message.body"                 -- ng-model
- *     tinymce-options="tinymceOptions"        -- override default options with yours (object expected)
- *  ></ev-tinymce>
- */
-(function (tinyMCE) {
-    var defaultOptions = {
-        menubar: false,
-        statusbar: false,
-        //resize: false,
-        toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-        skin: false,
-        'verify_html': true,
-        'convert_fonts_to_spans': true,
-        //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
-        inline: true,
-
-        // We choose to have a restrictive approach here.
-        // The aim is to output the cleanest html possible.
-        // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
-        // 'valid_elements':
-        //     'strong,em' +
-        //     'span[!style<text-decoration: underline;],' +
-        //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
-        //     'p,!div,ul,li'
-    };
-
-
-angular.module('ev-tinymce', [])
-    .directive('evTinymce', [function () {
-
-        var generatedIds = 0;
-        return {
-            template: '<div class="tiny-mce-wrapper">'
-                + '<div class="ev-placeholder-container"></div>'
-                + '<div class="ev-tinymce-content"></div>'
-                + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
-                + '<div class="max-chars-info"></div>'
-                + '</div>',
-            restrict: 'AE',
-            replace: true,
-            require: '?ngModel',
-            scope: {
-                tinymceOptions: '=',
-            },
-
-            link: function (scope, elm, attrs, ngModel) {
-                var tinyId = 'uiTinymce' + generatedIds++;
-                var tinyElm = elm.find('.ev-tinymce-content');
-                tinyElm.attr('id', tinyId);
-                elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
-
-                var tinyInstance;
-                var getTinyInstance = function() {
-                    if (!tinyInstance) {
-                        tinyInstance = tinyMCE.get(tinyId);
-                    }
-                    return tinyInstance;
-                };
-                var options = angular.extend({
-                    fixed_toolbar_container: '#' + tinyId + 'toolbar',
-                }, defaultOptions, scope.tinymceOptions);
-
-
-                // /**
-                //  * This part is used for the max-chars attibute.
-                //  * It allows us to easily limit the number of characters typed in the editor
-                //  */
-                options.maxChars = attrs.maxChars || options.maxChars || null;
-                // // We set the max char warning when the THRESHOLD is reached
-                // // Here, it's 85% of max chars
-                var THRESHOLD = 85;
-
-                // /**
-                //  * Update the information area about the textEditor state (maxChars, ..)
-                //  */
-                var updateCharCounter = function(currentChars, maxChars) {
-                    var maxCharInfosElm = elm.parent().find('.max-chars-info');
-                    maxCharInfosElm.text(currentChars + ' / ' + maxChars);
-
-                    var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
-                    var isMaxLimitReached  = currentChars >= maxChars;
-
-                    maxCharInfosElm.toggleClass('max-chars-warning', isThresholdReached);
-                    maxCharInfosElm.toggleClass('max-chars-reached', isMaxLimitReached);
-                };
-
-                var hasFocus = false;
-                var placeholder = false;
-                var currentHtml = '';
-                var currentText = '';
-                var maxChars = options.maxChars;
-
-                var setPlaceholder = function() {
-                    var editor = getTinyInstance();
-                    editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
-                };
-
-                var updatePlaceholder = function(newText) {
-                    var editor = getTinyInstance();
-                    if (hasFocus) {
-                        if (currentText === attrs.placeholder) {
-                            editor.setContent('');
-                            editor.selection.setCursorLocation();
-                        }
-                    } else {
-                        if (newText !== attrs.placeholder) {
-                            setPlaceholder();
-                        }
-                    }
-                };
-
-                var updateView = function () {
-                    var editor = getTinyInstance();
-                    var newHtml = tinyElm.html();
-                    var newText = tinyElm.text();
-                    var newTextOverLimit = maxChars && newText.length > maxChars;
-                    var currentTextOverLimit = maxChars && currentText.length > maxChars;
-
-                    if (placeholder && newText === attrs.placeholder) {
-                        currentHtml = newHtml;
-                        currentText = newText;
-                    }
-                    /*
-                     * Specific case where the old and new text are both over the limit of max chars.
-                     * This case can occur on the first initilization, if data from DB are over the
-                     * limit.
-                     * For now, we substring the content (but that break the html and everything..)
-                     */
-                    else if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
-                        var shorterText = newText.substr(0, maxChars);
-                        // be carefull, setContent call this method again
-                        editor.setContent(shorterText, {format: 'text'});
-                    } else if(currentTextOverLimit && newTextOverLimit) {
-                        editor.setContent(currentHtml); // be carefull, setContent call this method again
-                    } else {
-                        ngModel.$setViewValue(newHtml);
-                        currentHtml = newHtml;
-                        currentText = newText;
-                    }
-
-                    if (maxChars) {
-                        updateCharCounter(currentText.length, maxChars);
-                    }
-
-                    placeholder = newText === '' || newText === attrs.placeholder;
-
-                    if (placeholder && attrs.placeholder) {
-                        updatePlaceholder(newText);
-                    }
-                };
-
-                ngModel.$render = function() {
-                    var editor = getTinyInstance();
-                    if (editor) {
-                        if (ngModel.$viewValue) {
-                            editor.setContent(ngModel.$viewValue);
-                        } else if (attrs.placeholder) {
-                            placeholder = true;
-                            setPlaceholder();
-                        }
-                    }
-                };
-
-                scope.focusTinymce = function() {
-                    var editor = getTinyInstance();
-                    if (editor) {
-                        editor.focus();
-                    }
-                };
-
-                /* Options */
-
-                var setup = function(editor) {
-                    editor.on('init', function() {
-                        if (ngModel.$viewValue) {
-                            ngModel.$render();
-                        }
-                    });
-                    // Update model on button click
-                    editor.on('ExecCommand', function (e) {
-                        updateView();
-                    });
-                    // Update model on keypress
-                    editor.on('KeyUp', function (e) {
-                        updateView();
-                    });
-                    // Update model on change, i.e. copy/pasted text, plugins altering content
-                    editor.on('SetContent', function (e) {
-                        if (!e.initial) {
-                            updateView();
-                        }
-                    });
-                    editor.on('blur', function(e) {
-                        if (hasFocus) {
-                            hasFocus = false;
-                            updateView();
-                        }
-                        tinyElm.blur();
-                    });
-
-                    editor.on('focus', function (e) {
-                        if (!hasFocus) {
-                            hasFocus = true;
-                            updateView();
-                        }
-                    });
-                };
-
-                // extend options with initial uiTinymceConfig and options from directive attribute value
-                options.setup = setup;
-                options.elems = tinyId;
-                options.mode = 'exact';
-
-                tinyMCE.init(options);
-
-                scope.$on('$destroy', function() {
-                    var editor = getTinyInstance();
-                    if (editor) {
-                        editor.destroy();
-                    }
-                });
-
-                tinyMCE.execCommand('mceToggleEditor', false, tinyId);
-            },
-        };
-    }]);
-}) (window.tinyMCE);
-
-/* global tinymce:true */
-
-tinymce.PluginManager.add('evelements', function(editor) {
-    function setElement(nodeName) {
-        return function() {
-            var dom = editor.dom, elm = editor.selection.getNode();
-            if (elm && elm.nodeName.toLowerCase() === nodeName) {
-                dom.remove(elm, true);
-            } else {
-                editor.insertContent(
-                    dom.createHTML(
-                        nodeName,
-                        {},
-                        dom.encode(editor.selection.getContent({format: 'text'}))
-                    )
-                );
-            }
-        };
-    }
-
-    editor.settings.evelements.split(' ').forEach(function(elementName) {
-        editor.addButton('ev' + elementName, {
-            text: elementName,
-            tooltip: 'Set this text as ' + elementName,
-            onclick: setElement(elementName),
-            stateSelector: elementName
-        });
-    });
-});
-
-/*global tinymce:true */
-
-tinymce.PluginManager.add('evimage', function(editor) {
-    function showDialog() {
-        var dom = editor.dom;
-        var node = editor.selection.getNode();
-        var attributes = null;
-
-        if (node && node.getAttribute('data-picture-id')) {
-            attributes = {
-                src: dom.getAttrib(node, 'src'),
-                alt: dom.getAttrib(node, 'alt'),
-                'class': dom.getAttrib(node, 'class'),
-                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
-            };
-        }
-
-        editor.settings.evimage(attributes, function(attributesNew) {
-            if (attributes) {
-                dom.removeAllAttribs(node);
-                dom.setAttribs(node, attributesNew);
-            } else {
-                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
-            }
-        });
-    }
-
-    editor.addButton('evimage', {
-        icon: 'image',
-        tooltip: 'Insert/edit image',
-        onclick: showDialog,
-        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
-    });
-
-    editor.addMenuItem('evimage', {
-        icon: 'image',
-        text: 'Insert image',
-        onclick: showDialog,
-        context: 'insert',
-        prependToContext: true
-    });
-
-    editor.addCommand('mceImage', showDialog);
-});
-
 (function () {
     'use strict';
     angular.module('ev-upload', ['ev-fdm']);
@@ -3822,7 +3710,7 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
                 'upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<button type="button" tabIndex="-1" class="btn btn-link ev-upload-clickable"' +
+                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-lime ev-upload-clickable"' +
                             'tooltip="{{tooltipText}}"' +
                             'tooltip-placement="top">' +
                         '<span class="icon {{iconName}}"></span>' +
@@ -3933,7 +3821,7 @@ angular.module('ev-upload')
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
                     '<table style="width:100%"><tr><td style="width:114px">'+
-                            '<button type="button" tabIndex="-1" class="btn btn-default ev-upload-clickable">' +
+                            '<button type="button" tabIndex="-1" class="btn ev-upload-clickable">' +
                                 '{{ "Importer..." | i18n}}' +
                             '</button>' +
                         '</td>'+
@@ -4029,16 +3917,6 @@ angular.module('ev-upload')
 
                 $scope.pictureUploaded = function(pictureUploaded) {
                     var picture = pictureUploaded.data[0];
-
-                    if($scope.language) {
-                        if (Array.isArray(picture.legend)) {
-                            picture.legend = {};
-                        }
-                        if (!picture.legend[$scope.language]) {
-                            picture.legend[$scope.language] = { name: '' };
-                        }
-                    }
-
                     $scope.addPicture(picture);
                 };
             }
@@ -4283,4 +4161,314 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
+/* jshint camelcase: false */
+/**
+ * Directive to override some settings in tinymce
+ * Usage:
+ * <ev-tinymce
+ *     max-chars="1000"                        -- maxChars this input accept (default: unlimited)
+ *     ng-model="message.body"                 -- ng-model
+ *     tinymce-options="tinymceOptions"        -- override default options with yours (object expected)
+ *  ></ev-tinymce>
+ */
+(function (tinyMCE) {
+    var defaultOptions = {
+        menubar: false,
+        statusbar: false,
+        //resize: false,
+        toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
+        skin: false,
+        'verify_html': true,
+        'convert_fonts_to_spans': true,
+        //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
+        inline: true,
+
+        // We choose to have a restrictive approach here.
+        // The aim is to output the cleanest html possible.
+        // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
+        // 'valid_elements':
+        //     'strong,em' +
+        //     'span[!style<text-decoration: underline;],' +
+        //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
+        //     'p,!div,ul,li'
+    };
+
+
+angular.module('ev-tinymce', [])
+    .directive('evTinymce', ['$timeout', function($timeout) {
+
+        var generatedIds = 0;
+        return {
+            template: '<div class="tiny-mce-wrapper">'
+                + '<div class="ev-placeholder-container"></div>'
+                + '<div class="ev-tinymce-content"></div>'
+                + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
+                + '<div class="max-chars-info"></div>'
+                + '</div>',
+            restrict: 'AE',
+            replace: true,
+            require: '?ngModel',
+            scope: {
+                tinymceOptions: '=',
+            },
+
+            link: function (scope, elm, attrs, ngModel) {
+                var tinyId = 'uiTinymce' + generatedIds++;
+                var tinyElm = elm.find('.ev-tinymce-content');
+                tinyElm.attr('id', tinyId);
+                elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
+
+                var tinyInstance;
+                var getTinyInstance = function() {
+                    if (!tinyInstance) {
+                        tinyInstance = tinyMCE.get(tinyId);
+                    }
+                    return tinyInstance;
+                };
+                var options = angular.extend({
+                    fixed_toolbar_container: '#' + tinyId + 'toolbar',
+                }, defaultOptions, scope.tinymceOptions);
+
+
+                // /**
+                //  * This part is used for the max-chars attibute.
+                //  * It allows us to easily limit the number of characters typed in the editor
+                //  */
+                var maxChars = options.maxChars = attrs.maxChars || options.maxChars || null;
+                // // We set the max char warning when the THRESHOLD is reached
+                // // Here, it's 85% of max chars
+                var THRESHOLD = 85;
+
+                // /**
+                //  * Update the information area about the textEditor state (maxChars, ..)
+                //  */
+                var updateCharCounter = function(currentChars, maxChars) {
+                    var maxCharInfosElm = elm.parent().find('.max-chars-info');
+                    maxCharInfosElm.text(currentChars + ' / ' + maxChars);
+
+                    var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
+                    var isMaxLimitReached  = currentChars >= maxChars;
+
+                    maxCharInfosElm.toggleClass('max-chars-warning', isThresholdReached);
+                    maxCharInfosElm.toggleClass('max-chars-reached', isMaxLimitReached);
+                };
+
+                var hasFocus = false;
+                var placeholder = false;
+                var currentHtml = '';
+                var currentText = '';
+
+                var setPlaceholder = function() {
+                    var editor = getTinyInstance();
+                    editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                };
+
+                var updatePlaceholder = function(newText) {
+                    var editor = getTinyInstance();
+                    if (hasFocus) {
+                        if (currentText === attrs.placeholder) {
+                            editor.setContent('');
+                            editor.selection.setCursorLocation();
+                        }
+                    } else {
+                        if (newText !== attrs.placeholder) {
+                            setPlaceholder();
+                        }
+                    }
+                };
+
+                var updateView = function () {
+                    var editor = getTinyInstance();
+                    var newHtml = tinyElm.html();
+                    var newText = tinyElm.text();
+                    var newTextOverLimit = maxChars && newText.length > maxChars;
+                    var currentTextOverLimit = maxChars && currentText.length > maxChars;
+
+                    if (placeholder && newText === attrs.placeholder) {
+                        currentHtml = newHtml;
+                        currentText = newText;
+                    }
+                    /*
+                     * Specific case where the old and new text are both over the limit of max chars.
+                     * This case can occur on the first initilization, if data from DB are over the
+                     * limit.
+                     * For now, we substring the content (but that break the html and everything..)
+                     */
+                    else if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
+                        var shorterText = newText.substr(0, maxChars);
+                        // be carefull, setContent call this method again
+                        editor.setContent(shorterText, { format: 'text' });
+                    } else if(currentTextOverLimit && newTextOverLimit) {
+                        editor.setContent(currentHtml); // be carefull, setContent call this method again
+                    } else {
+                        $timeout(function() {
+                            ngModel.$setViewValue(newText === '' || newText === attrs.placeholder ? '' : newHtml);
+                        });
+                        currentHtml = newHtml;
+                        currentText = newText;
+                    }
+
+                    if (maxChars) {
+                        updateCharCounter(currentText.length, maxChars);
+                    }
+
+                    placeholder = newText === '' || newText === attrs.placeholder;
+
+                    if (placeholder && attrs.placeholder) {
+                        updatePlaceholder(newText);
+                    }
+                };
+
+                ngModel.$render = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        if (ngModel.$viewValue) {
+                            editor.setContent(ngModel.$viewValue);
+                        } else if (attrs.placeholder) {
+                            placeholder = true;
+                            setPlaceholder();
+                        }
+                    }
+                };
+
+                scope.focusTinymce = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.focus();
+                    }
+                };
+
+                /* Options */
+
+                var setup = function(editor) {
+                    editor.on('init', function() {
+                        if (ngModel.$viewValue) {
+                            ngModel.$render();
+                        }
+                    });
+                    // Update model on button click
+                    editor.on('ExecCommand', function (e) {
+                        updateView();
+                    });
+                    // Update model on keypress
+                    editor.on('KeyUp', function (e) {
+                        updateView();
+                    });
+                    // Update model on change, i.e. copy/pasted text, plugins altering content
+                    editor.on('SetContent', function (e) {
+                        if (!e.initial) {
+                            updateView();
+                        }
+                    });
+                    editor.on('blur', function(e) {
+                        if (hasFocus) {
+                            hasFocus = false;
+                            updateView();
+                        }
+                        tinyElm.blur();
+                    });
+
+                    editor.on('focus', function (e) {
+                        if (!hasFocus) {
+                            hasFocus = true;
+                            updateView();
+                        }
+                    });
+                };
+
+                // extend options with initial uiTinymceConfig and options from directive attribute value
+                options.setup = setup;
+                options.elems = tinyId;
+                options.mode = 'exact';
+
+                tinyMCE.init(options);
+
+                scope.$on('$destroy', function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.destroy();
+                    }
+                });
+
+                tinyMCE.execCommand('mceToggleEditor', false, tinyId);
+            },
+        };
+    }]);
+}) (window.tinyMCE);
+
+/* global tinymce:true */
+
+tinymce.PluginManager.add('evelements', function(editor) {
+    function setElement(nodeName) {
+        return function() {
+            var dom = editor.dom, elm = editor.selection.getNode();
+            if (elm && elm.nodeName.toLowerCase() === nodeName) {
+                dom.remove(elm, true);
+            } else {
+                editor.insertContent(
+                    dom.createHTML(
+                        nodeName,
+                        {},
+                        dom.encode(editor.selection.getContent({format: 'text'}))
+                    )
+                );
+            }
+        };
+    }
+
+    editor.settings.evelements.split(' ').forEach(function(elementName) {
+        editor.addButton('ev' + elementName, {
+            text: elementName,
+            tooltip: 'Set this text as ' + elementName,
+            onclick: setElement(elementName),
+            stateSelector: elementName
+        });
+    });
+});
+
+/*global tinymce:true */
+
+tinymce.PluginManager.add('evimage', function(editor) {
+    function showDialog() {
+        var dom = editor.dom;
+        var node = editor.selection.getNode();
+        var attributes = null;
+
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
+            };
+        }
+
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.removeAllAttribs(node);
+                dom.setAttribs(node, attributesNew);
+            } else {
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
+            }
+        });
+    }
+
+    editor.addButton('evimage', {
+        icon: 'image',
+        tooltip: 'Insert/edit image',
+        onclick: showDialog,
+        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
+    });
+
+    editor.addMenuItem('evimage', {
+        icon: 'image',
+        text: 'Insert image',
+        onclick: showDialog,
+        context: 'insert',
+        prependToContext: true
+    });
+
+    editor.addCommand('mceImage', showDialog);
+});
+
 //# sourceMappingURL=ev-fdm.js.map

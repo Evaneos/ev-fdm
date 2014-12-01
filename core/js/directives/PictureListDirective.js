@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    var module = angular.module('ev-fdm')
+    angular.module('ev-fdm')
         .directive('evPictureList', function () {
           return {
             restrict: 'EA',

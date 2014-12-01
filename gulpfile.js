@@ -1,6 +1,9 @@
 /* jshint node: true */
 "use strict";
-
+var sourcemapsPackagejson = require('./node_modules/gulp-sourcemaps/package.json');
+if (sourcemapsPackagejson.version !== '1.2.8') {
+    throw new Error('Please update your node modules (npm install)');
+}
 
 
 var gulp = require('gulp');
@@ -15,7 +18,7 @@ var jshint = require('gulp-jshint');
 var pkg = require('./package.json');
 var fs = require('fs');
 
-var bowerrc = '';
+var bowerrc;
 try {
     bowerrc = require('./.bowerrc.json');
 } catch (e) {
@@ -36,7 +39,10 @@ function concatCorePlugins(src, suffix, customDest) {
     return gulp.src(src)
         .pipe(sourcemaps.init({ loadMaps: true }))
             .pipe(concat(pkg.name + suffix))
-        .pipe(sourcemaps.write('.'))
+        .pipe(sourcemaps.write('.', {
+            addComment: true,
+            includeContent: true,
+        }))
         .pipe(gulp.dest(customDest));
 }
 
@@ -45,7 +51,7 @@ function concatCorePlugins(src, suffix, customDest) {
 // //////////////////////////////////////////////////
 
 
-function minifySrc(src, dest, name) {
+function minifyJs(src, dest, name) {
     return gulp.src(src)
         .pipe(sourcemaps.init({ loadMaps: true }))
             .pipe(concat(name + '.js'))
@@ -54,7 +60,10 @@ function minifySrc(src, dest, name) {
                 banner: '/*! ' + name + ' ' + new Date().toJSON().split('T')[0] + ' */\n'
             }))
             .pipe(rename(name + '.min.js'))
-        .pipe(sourcemaps.write('.'))
+        .pipe(sourcemaps.write('.', {
+            addComment: true,
+            includeContent: true,
+        }))
         .pipe(gulp.dest(dest));
 }
 
@@ -64,7 +73,7 @@ function minifySrc(src, dest, name) {
 
     // Uglification
     gulp.task('core-js', function () {
-        return minifySrc(src, dest + '/core', pkg.name + '-core');
+        return minifyJs(src, dest + '/core', pkg.name + '-core');
     });
     // Watchers
     gulp.task('watch-core-js', function () {
@@ -73,10 +82,10 @@ function minifySrc(src, dest, name) {
 
     // Concatenation with plugins
     gulp.task('js-concat-core-plugins-min', function () {
-         return concatCorePlugins([dest + '/**/*.min.js', '!' + dest + '/' +  pkg.name + '.min.js'], '.min.js');
+        return concatCorePlugins([dest + '/**/*.min.js', '!' + dest + '/' +  pkg.name + '.min.js'], '.min.js');
     });
     gulp.task('js-concat-core-plugins-raw', function () {
-         return concatCorePlugins([dest + '/**/*.js', '!' + dest + '/' +  pkg.name + '.js', '!**/*.min.js'], '.js');
+        return concatCorePlugins([dest + '/**/*.js', '!' + dest + '/' +  pkg.name + '.js', '!**/*.min.js'], '.js');
     });
     gulp.task('js-concat-core-plugins', ['js-concat-core-plugins-min', 'js-concat-core-plugins-raw']);
 })();
@@ -94,7 +103,7 @@ plugins.forEach(function(name) {
     });
 
     gulp.task('plugin-' + name + '-js', ['plugin-' + name + '-js-hint'], function () {
-        return minifySrc(src, dest + '/' + dir, pkg.name + '-' + name);
+        return minifyJs(src, dest + '/' + dir, pkg.name + '-' + name);
     });
 
     gulp.task('watch-plugin-' + name + '-js', function () {
@@ -104,10 +113,10 @@ plugins.forEach(function(name) {
 
 var tasks = plugins.map(function(name) { return 'plugin-' + name + '-js'; });
 tasks.unshift('core-js');
+
 gulp.task('js-all', tasks, function () {
     return gulp.start('js-concat-core-plugins');
 });
-
 
 tasks = plugins.map(function(name) { return 'watch-plugin-' + name + '-js'; });
 tasks.unshift('js-all', 'watch-core-js');
@@ -118,15 +127,18 @@ gulp.task('watch-js', tasks);
 // LESS
 // //////////////////////////////////////////////////
 
-function minifyLess(src, paths, dest, name) {
-    return gulp.src(src)
+function minifyLess(src, base, paths, dest, name) {
+    return gulp.src(src, { base: base })
         .pipe(sourcemaps.init({ loadMaps: true }))
             .pipe(less({
                 paths: paths
             }))
             .pipe(csso())
             .pipe(rename(name + '.min.css'))
-        .pipe(sourcemaps.write('.'))
+        .pipe(sourcemaps.write('.', {
+            addComment: true,
+            includeContent: true,
+        }))
         .pipe(gulp.dest(dest));
 }
 
@@ -145,7 +157,7 @@ function lessConcatCorePlugins() {
     var paths = ['core/less', bowerDirectory];
     gulp.task('less-concat-core-plugins', lessConcatCorePlugins);
     gulp.task('core-less', function () {
-        return minifyLess(src, paths, dest + '/core/css', pkg.name + '-core');
+        return minifyLess(src, 'core/less', paths, dest + '/core/css', pkg.name + '-core');
     });
     gulp.task('watch-core-less', function () {
         gulp.watch(['core/less/**/*.less'], ['core-less', 'less-concat-core-plugins']);
@@ -157,7 +169,7 @@ plugins.forEach(function(name) {
     var src = [dir + '/less/index.less'];
     var paths = [dir + '/less', bowerDirectory, 'core/less'];
     gulp.task('plugin-' + name + '-less', function () {
-        return minifyLess(src, paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
+        return minifyLess(src, dir + '/less', paths, dest + '/' + dir + '/css', pkg.name + '-' + name);
     });
 
     gulp.task('watch-plugin-' + name + '-less', function () {
@@ -166,7 +178,7 @@ plugins.forEach(function(name) {
 });
 
 gulp.task('icon', function () {
-    minifyLess(['core/less/common/icons.less'], [], dest + '/css', 'icons-standalone');
+    minifyLess(['core/less/common/icons.less'], 'core/less', [], dest + '/css', 'icons-standalone');
 });
 
 gulp.task('watch-icon', function () {
@@ -287,4 +299,3 @@ gulp.task('watch-copy', tasks);
 
 gulp.task('default', ['js-all', 'less-all', 'copy-all', 'views-all']);
 gulp.task('watch', ['watch-copy', 'watch-less', 'watch-js', 'watch-views']);
-

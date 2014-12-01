@@ -35,7 +35,7 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
                 'upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<button type="button" tabIndex="-1" class="btn btn-link ev-upload-clickable"' +
+                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-lime ev-upload-clickable"' +
                             'tooltip="{{tooltipText}}"' +
                             'tooltip-placement="top">' +
                         '<span class="icon {{iconName}}"></span>' +
@@ -146,7 +146,7 @@ angular.module('ev-upload')
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
                     '<table style="width:100%"><tr><td style="width:114px">'+
-                            '<button type="button" tabIndex="-1" class="btn btn-default ev-upload-clickable">' +
+                            '<button type="button" tabIndex="-1" class="btn ev-upload-clickable">' +
                                 '{{ "Importer..." | i18n}}' +
                             '</button>' +
                         '</td>'+
@@ -242,16 +242,6 @@ angular.module('ev-upload')
 
                 $scope.pictureUploaded = function(pictureUploaded) {
                     var picture = pictureUploaded.data[0];
-
-                    if($scope.language) {
-                        if (Array.isArray(picture.legend)) {
-                            picture.legend = {};
-                        }
-                        if (!picture.legend[$scope.language]) {
-                            picture.legend[$scope.language] = { name: '' };
-                        }
-                    }
-
                     $scope.addPicture(picture);
                 };
             }
