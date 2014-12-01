@@ -51,7 +51,7 @@
     border-style: solid;
     white-space: nowrap;
 
-    .btn-color-variant(@soil);
+    .btn-soil;
     .btn-md;
 
     &:hover,
@@ -79,10 +79,10 @@
 // you need by changing the list of colors in the `buttons/variable.less` file.
 //
 //
-// .btn-soil    - A button color soil (default value, this class is optional)
-// .btn-orange  - A button color orange
-// .btn-pool    - A button color pool
-// .btn-lime    - A button color lime
+// .btn-soil - A button color soil (default value, this class is optional)
+// .btn-orange     - A button color orange
+// .btn-pool       - A button color pool
+// .btn-lime       - A button color lime
 //
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
@@ -102,21 +102,22 @@
 }
 
 .btn-color-variant(@color) {
-    @border-color-variant: lighten(@color, 25%);
+    @btn-border-lighten-factor: min(@btn-border-ligthess-factor, @btn-border-max-lighteness - lightness(@color));
+    @btn-border-lighten-color: lighten(@color, @btn-border-lighten-factor);
 
     color: @color;
-    border-color: @border-color-variant;
+    border-color: @btn-border-lighten-color;
     background-color: @color;
 
     &:hover {
         color: darken(@color, @btn-darken-hover-factor);
-        border-color: darken(@border-color-variant, @btn-darken-hover-factor);
+        border-color: darken(@btn-border-lighten-color, @btn-darken-hover-factor);
         background-color: darken(@color, @btn-darken-hover-factor);
     }
 
     &:active {
         color: darken(@color, @btn-darken-active-factor);
-        border-color: darken(@border-color-variant, @btn-darken-active-factor);
+        border-color: darken(@btn-border-lighten-color, @btn-darken-active-factor);
         background-color: darken(@color, @btn-darken-active-factor);
     }
 }
