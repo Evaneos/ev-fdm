@@ -1,11 +1,11 @@
-<form name="editform" novalidate>
-    <header class="top-sticky body-bg bottom-border">
+<form name="editform" class="ev-list" novalidate>
+    <header class="ev-top-sticky body-bg">
         <div class="pull-right" ng-hide="edit || inProgress">
             <button type="button" class="btn btn-xs btn-link" ng-click="changeToEditMode()">Edit</button>
              &nbsp; <button class="btn btn-xs  btn-link" ng-if="delete" ng-click="delete()">Delete</button>
         </div>
         <div class="pull-right" ng-show="edit && !inProgress">
-            <button type="button" class="btn btn-xs btn-link" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }">Save</button>
+            <button type="button" class="btn btn-xs btn-link" ng-click="save()" ng-class="{ 'btn-red': editform.$invalid }">Save</button>
              &nbsp;<button class="btn btn-xs btn-link text-light" ng-click="cancel()">Cancel</button>
         </div>
         <div ng-show="inProgress" class="pull-right">

@@ -30,7 +30,7 @@ However if you want to recompile the sources, this framework require the followi
 
 in the demo repository, execute
 
-    bower install
+    make install
 
 and you are good to go !
 
@@ -38,4 +38,4 @@ and you are good to go !
 
 At the root of the project, run
 
-    bower install && gulp
+    make watch
