@@ -166,6 +166,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
+            if (!element.update) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.put(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
@@ -225,6 +228,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.delete = function(element) {
+            if (!element.delete) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
         };
 
@@ -239,6 +245,9 @@ angular.module('ev-fdm')
          * prefer use of create() or update()
          */
         RestangularStorage.prototype.save = function(element, embed) {
+            if (!element.save) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
