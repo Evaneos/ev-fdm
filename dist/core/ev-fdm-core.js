@@ -382,148 +382,6 @@ angular.module('ev-fdm')
 
 'use strict';
 
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm')
-    .factory('Select2Configuration', ['$timeout', function($timeout) {
-
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            if (typeof dataProvider === 'object') {
-                formatter = dataProvider.formatter;
-                resultModifier = dataProvider.resultModifier;
-                minimumInputLength = dataProvider.minimumInputLength;
-                key = dataProvider.key;
-                dataProvider = dataProvider.dataProvider;
-            }
-            var oldQueryTerm = '',
-                filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
-
-                        oldQueryTerm = query.term;
-
-                        if (filterTextTimeout) {
-                            $timeout.cancel(filterTextTimeout);
-                        }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page).then(function (resources){
-
-                            var res = [];
-                            if(resultModifier) {
-                                angular.forEach(resources, function(resource ){
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if(resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = {id: null};
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }]);
-
-'use strict';
-
 angular.module('ev-fdm').directive('activableSet', function() {
     return {
         restrict: 'A',
@@ -682,22 +540,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             title: '@', // deprecated
             headerTitle: '@'
         },
-
-        template: ''
-            + '<form name="editform" novalidate>'
-                + '<header>'
-                    + '<div class="pull-right" ng-hide="edit">'
-                        + '<button class="btn btn-tertiary btn-lime" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
-                        + ' &nbsp; <button class="btn btn-tertiary btn-lime" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
-                    + '</div>'
-                    + '<div class="pull-right" ng-show="edit">'
-                        + '<button class="btn btn-tertiary btn-lime" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }"><span class="icon icon-tick"></span>Enregistrer</button>'
-                        + ' &nbsp;<button class="btn btn-tertiary text-light" ng-click="cancel()"><span class="icon icon-cross"></span>Annuler</button>'
-                    + '</div>'
-                    + '<h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>'
-                + '</header>'
-                + '<div class="transclude"></div>'
-            + '</form>',
+        templateUrl: 'ev-edit-section.html',
 
         link: function(scope, element, attrs, controller, transcludeFn) {
             var _transcludedScope = {};
@@ -725,15 +568,18 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
                 }
                 var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
                 if (resultSave && resultSave.then) {
+                    scope.inProgress = true;
                     resultSave.then(
                         function success() {
                             notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
                             if (options.success) {
                                 options.success();
                             }
+                            scope.inProgress = false;
                             setEditMode(false);
                         },
                         function error() {
+                            scope.inProgress = false;
                             notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
                         }
                     );
@@ -752,15 +598,18 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
                 var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
 
                 if (result && result.then) {
+                    scope.inProgress = true;
                     result.then(
                         function success() {
                             notificationsService.addSuccess({ text: attrs.successDeleteMessage });
                             if (options.success) {
                                 options.success();
                             }
+                            scope.inProgress = false;
                             setEditMode(false);
                         },
                         function error() {
+                            scope.inProgress = false;
                             notificationsService.addError({ text: attrs.errorDeleteMessage });
                         }
                     );
@@ -2254,6 +2103,148 @@ angular.module('ev-fdm')
         };
     });
 'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm')
+    .factory('Select2Configuration', ['$timeout', function($timeout) {
+
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProvider = dataProvider.dataProvider;
+            }
+            var oldQueryTerm = '',
+                filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = (oldQueryTerm === query.term) ? 0 : 600;
+
+                        oldQueryTerm = query.term;
+
+                        if (filterTextTimeout) {
+                            $timeout.cancel(filterTextTimeout);
+                        }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page).then(function (resources){
+
+                            var res = [];
+                            if(resultModifier) {
+                                angular.forEach(resources, function(resource ){
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if(resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = {id: null};
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }]);
+
+'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
 */
@@ -3147,6 +3138,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
+            if (!element.update) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.put(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
@@ -3206,6 +3200,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.delete = function(element) {
+            if (!element.delete) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
         };
 
@@ -3220,6 +3217,9 @@ angular.module('ev-fdm')
          * prefer use of create() or update()
          */
         RestangularStorage.prototype.save = function(element, embed) {
+            if (!element.save) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
