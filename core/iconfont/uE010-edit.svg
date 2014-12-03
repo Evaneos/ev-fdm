@@ -4,10 +4,8 @@
 <svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve">
 <g>
-	
-		<rect x="2.8" y="13.3" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -7.0408 15.8295)" fill="#9C8F87" width="25.7" height="6.3"/>
-	
-		<rect x="26.4" y="0.8" transform="matrix(0.7073 -0.7069 0.7069 0.7073 5.4559 21.0008)" fill="#9C8F87" width="3.4" height="6.3"/>
+	<rect x="2.8" y="13.3" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -7.0408 15.8295)" fill="#9C8F87" width="25.7" height="6.3"/>
+	<rect x="26.4" y="0.8" transform="matrix(0.7073 -0.7069 0.7069 0.7073 5.4559 21.0008)" fill="#9C8F87" width="3.4" height="6.3"/>
 	<polygon fill="#9C8F87" points="0.5,31.5 2,25.4 6.6,30 	"/>
 </g>
 </svg>

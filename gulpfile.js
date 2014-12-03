@@ -193,7 +193,7 @@ function lessConcatCorePlugins() {
         return minifyLess(src, 'core/less', paths, dest + '/core/css', pkg.name + '-core');
     });
     gulp.task('watch-core-less', function () {
-        gulp.watch(['core/less/**/*.less'], ['core-less', 'less-concat-core-plugins']);
+        gulp.watch(['core/less/**/*.less', '!core/less/icons/icon-compiled.less'], ['core-less', 'less-concat-core-plugins']);
     });
 })();
 
@@ -296,7 +296,7 @@ gulp.task('watch-core-copy', function () {
         bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
         bowerDirectory + '/bootstrap/fonts/*',
         'fonts/**/*',
-        'core/images/**/*'
+        'core/images/**/*',
     ], ['core-copy']);
 });
 
