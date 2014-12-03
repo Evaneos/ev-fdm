@@ -121,7 +121,7 @@ angular.module('ev-fdm')
           
             var element  = panels[name].element;
             $animate.leave(element, function() {
-                updateLayout(null, containerId);
+                updateLayout(containerId);
                 panels[name].scope.$destroy();
                 delete panels[name];
             });
