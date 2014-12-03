@@ -106,6 +106,7 @@ angular.module('ev-fdm')
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.totalElement = this.elements.pagination.total;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
 
