@@ -1,12 +1,12 @@
 <script type="text/ng-template" id="ev-edit-section.html"><form name="editform" class="ev-list" novalidate>
     <header class="ev-top-sticky body-bg">
         <div class="pull-right" ng-hide="edit || inProgress">
-            <button type="button" class="btn btn-tertiary btn-lime" ng-click="changeToEditMode()">Edit</button>
-             &nbsp; <button class="btn btn-tertiary btn-lime" ng-if="delete" ng-click="delete()">Delete</button>
+            <button type="button" class="btn btn-sm" ng-click="changeToEditMode()">Edit</button>
+            <button class="btn btn-sm" ng-if="delete" ng-click="delete()">Delete</button>
         </div>
         <div class="pull-right" ng-show="edit && !inProgress">
-            <button type="button" class="btn btn-tertiary btn-lime" ng-click="save()" ng-class="{ 'btn-red': editform.$invalid }">Save</button>
-             &nbsp;<button class="btn btn-tertiary text-light" ng-click="cancel()">Cancel</button>
+            <button type="button" class="btn btn-sm btn-lime" ng-click="save()" ng-class="{ 'btn-orange': editform.$invalid }">Save</button>
+            <button class="btn btn-sm" ng-click="cancel()">Cancel</button>
         </div>
         <div ng-show="inProgress" class="pull-right">
             <button type="button" class="btn btn-tertiary">Saving in progress...</button>
@@ -14,7 +14,8 @@
         <h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>
     </header>
     <div class="transclude"></div>
-</form></script>
+</form>
+</script>
 <script type="text/ng-template" id="ev-filters.html"><div class="search-bar">
 
     <!-- inner scrollable content -->
