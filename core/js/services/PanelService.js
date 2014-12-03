@@ -87,9 +87,11 @@ angular.module('ev-fdm')
             panel.element = element;
 
             return templatePromises.then(function(template) {
+                var scope = $rootScope.$new();
                 element.html(template);
-                element = $compile(element)($rootScope.$new());
+                element = $compile(element)(scope);
                 panel.element  = element;
+                panel.scope = scope;
                 addToDom(panel, id);
                 return panel;
             });
@@ -116,10 +118,12 @@ angular.module('ev-fdm')
                 console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
+          
             var element  = panels[name].element;
-            delete panels[name];
             $animate.leave(element, function() {
                 updateLayout(containerId);
+                panels[name].scope.$destroy();
+                delete panels[name];
             });
         };
 

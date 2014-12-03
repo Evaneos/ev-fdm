@@ -540,22 +540,7 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             title: '@', // deprecated
             headerTitle: '@'
         },
-
-        template: ''
-            + '<form name="editform" novalidate>'
-                + '<header>'
-                    + '<div class="pull-right" ng-hide="edit">'
-                        + '<button class="btn btn-xs btn-link" ng-click="changeToEditMode()"><span class="icon icon-edit"></span>Editer</button>'
-                        + ' &nbsp; <button class="btn btn-xs  btn-link" ng-if="delete" ng-click="delete()"><span class="icon icon-bin"></span>Supprimer</button>'
-                    + '</div>'
-                    + '<div class="pull-right" ng-show="edit">'
-                        + '<button class="btn btn-xs btn-link" ng-click="save()" ng-class="{ \'btn-red\': editform.$invalid }"><span class="icon icon-tick"></span>Enregistrer</button>'
-                        + ' &nbsp;<button class="btn btn-xs btn-link text-light" ng-click="cancel()"><span class="icon icon-cross"></span>Annuler</button>'
-                    + '</div>'
-                    + '<h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>'
-                + '</header>'
-                + '<div class="transclude"></div>'
-            + '</form>',
+        templateUrl: 'ev-edit-section.html',
 
         link: function(scope, element, attrs, controller, transcludeFn) {
             var _transcludedScope = {};
@@ -583,15 +568,18 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
                 }
                 var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
                 if (resultSave && resultSave.then) {
+                    scope.inProgress = true;
                     resultSave.then(
                         function success() {
                             notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
                             if (options.success) {
                                 options.success();
                             }
+                            scope.inProgress = false;
                             setEditMode(false);
                         },
                         function error() {
+                            scope.inProgress = false;
                             notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
                         }
                     );
@@ -610,15 +598,18 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
                 var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
 
                 if (result && result.then) {
+                    scope.inProgress = true;
                     result.then(
                         function success() {
                             notificationsService.addSuccess({ text: attrs.successDeleteMessage });
                             if (options.success) {
                                 options.success();
                             }
+                            scope.inProgress = false;
                             setEditMode(false);
                         },
                         function error() {
+                            scope.inProgress = false;
                             notificationsService.addError({ text: attrs.errorDeleteMessage });
                         }
                     );
@@ -2253,6 +2244,115 @@ angular.module('ev-fdm')
         };
     }]);
 
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -2473,13 +2573,13 @@ const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
 const MAX_VISIBLE_PANEL = 3;
 
 angular.module('ev-fdm')
-    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
-        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
             $window) {
 
         var containers   = {};
         var panelsList   = {};
-        
+
         var addToDom = function (panel, containerId) {
             var container = containers[containerId];
             if (!container || panel.element.parent().length) {
@@ -2489,12 +2589,12 @@ angular.module('ev-fdm')
             // If no panel index, or no panel inside the container, it is added at the end
             if (!panel.index || !container.children().length) {
                 $animate.move(panel.element, container, null, function () {
-                    updateLayout(null, containerId);
+                    updateLayout(containerId);
                 });
             } else {
                 var beforePanel = getBeforePanelElm(panel.index, containerId);
                     $animate.move(panel.element, container, beforePanel.element, function () {
-                        updateLayout(null, containerId);
+                        updateLayout(containerId);
                 });
             }
         };
@@ -2549,18 +2649,20 @@ angular.module('ev-fdm')
             if (panels[name]) {
                 return panels[name];
             }
-            
-            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport ev-resizable-column>' + 
+
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
+                    name + '" ev-responsive-viewport ev-resizable-column>' +
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
             panel.element = element;
 
             return templatePromises.then(function(template) {
+                var scope = $rootScope.$new();
                 element.html(template);
-                element = $compile(element)($rootScope.$new());
+                element = $compile(element)(scope);
                 panel.element  = element;
+                panel.scope = scope;
                 addToDom(panel, id);
                 return panel;
             });
@@ -2587,12 +2689,14 @@ angular.module('ev-fdm')
                 console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
+          
             var element  = panels[name].element;
-            delete panels[name];
             $animate.leave(element, function() {
-                updateLayout(null, containerId);
+                updateLayout(containerId);
+                panels[name].scope.$destroy();
+                delete panels[name];
             });
-        };          
+        };
 
         /**
          * Registers a panels container
@@ -2626,7 +2730,7 @@ angular.module('ev-fdm')
             timerWindowResize = $timeout(function() {
                 updateLayout();
             }, 200);
-        });         
+        });
 
 
         function getTemplatePromise(options) {
@@ -2639,17 +2743,17 @@ angular.module('ev-fdm')
             });
         }
 
-       
-        function updateLayout(element, containerId) {
+
+        function updateLayout(containerId) {
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
-                    updateLayout(null, id);
+                    updateLayout(id);
                 });
                 return this;
             }
             var container = containers[containerId];
             var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
-            
+
 
             checkStacking(panelElements, container);
         }
@@ -2666,7 +2770,7 @@ angular.module('ev-fdm')
                     angular.element(panel).addClass('ev-stacked');
                 });
             }
-            // Starting from the first non stack panel, 
+            // Starting from the first non stack panel,
             var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
             // Stack until overflow does not exists anymore (or we arrive to the last panel)
             while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
@@ -2759,115 +2863,6 @@ module.service('UtilService', [function() {
     };
 }]);
 
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
 'use strict';
 
 /* Services */
@@ -3147,6 +3142,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
+            if (!element.update) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.put(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
@@ -3206,6 +3204,9 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.delete = function(element) {
+            if (!element.delete) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
         };
 
@@ -3220,6 +3221,9 @@ angular.module('ev-fdm')
          * prefer use of create() or update()
          */
         RestangularStorage.prototype.save = function(element, embed) {
+            if (!element.save) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
                     RestangularStorage.updateObjectFromResult(element, result);
