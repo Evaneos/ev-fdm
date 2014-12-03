@@ -1,0 +1,94 @@
+@import "variables.less";
+
+// Icons
+//
+// Ev-fdm comes with a handful of helpful icon to bootstrap easily your application. They can be override with more furnish set of icons easily.
+// You can indeed add, remove, or replace svg from the `/core/iconfont` folder. The iconfont will update when compiling.
+//
+// To use an icon, simply add `icon-<name>` class to a `span` or a `i` tag.
+//
+// Markup:
+// <i class="icon-home"></i>
+//
+// Styleguide 5
+
+.icon {
+	&:before {
+		// NB: this class is extended by all the icons.
+		display: inline-block;
+		font-style: normal;
+		font-weight: normal;
+		line-height: 1;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	// Sizing & colour
+	//
+	// You can modify the size or the colour of an icon very easily
+	//
+	// .text-gold - An icon colour gold (see the helper section for more info on colour classes)
+	// .icon-lg   - An icon a little bit more large
+	// .icon-2x   - An icon 2x larger
+	// .icon-3x   - An icon 3x larger
+	// .icon-4x   - An icon 4x larger
+	// .icon-5x   - An icon 5x larger
+	//
+	// Markup:
+	// <i class="icon-home {$modifiers}"></i>
+	//
+	// Styleguide 5.1
+	&.icon-lg {
+		font-size: 1.3333333333333333em;
+		line-height: 0.75em;
+		vertical-align: -15%;
+	}
+	&.icon-2x { font-size: 2em; }
+	&.icon-3x { font-size: 3em; }
+	&.icon-4x { font-size: 4em; }
+	&.icon-5x { font-size: 5em; }
+
+	// Rotation
+	//
+	// You can rotate your icon or spin them.
+	//
+	// .icon-quarter-turn       - Rotate 90 degree
+	// .icon-half-turn          - Rotate 180 degree
+	// .icon-minus-quarter-turn - Rotate 270 degree
+	//
+	// Markup:
+	// <i class="icon-triangle {$modifiers}"></i>
+	//
+	// Styleguide 5.2
+	&.icon-quarter-turn:before {
+		transform: rotate(0.25turn);
+	}
+	&.icon-half-turn:before {
+		transform: rotate(0.5turn);
+	}
+	&.icon-minus-quarter-turn:before {
+		transform: rotate(-0.25turn);
+	}
+
+	// Spinning & transition
+	//
+	// You can add your icon or spin them
+	//
+	// .icon-spin       - The icons spin infinitly.
+	// .icon-transition - Enable transition on rotation, for a smoother expercience.
+	//
+	// Markup:
+	// <i class="icon-triangle icon-half-turn {$modifiers}"></i>
+	//
+	// Styleguide 5.3
+	@keyframes evspin {
+	    from {transform:rotate(0turn);}
+	    to {transform:rotate(1turn);}
+	}
+	&.icon-spin {
+		animation: evspin @icon-spinning-period infinite;
+	}
+	&.icon-transition:before {
+		transition: transform @icon-transition-delay;
+	}
+}
