@@ -61,7 +61,6 @@ gulp.task('core-icon-font', function() {
     return gulp.src([ 'core/iconfont/*.svg' ]) //, { read: false }
     .pipe(iconfont({
         fontName: icon.name,
-        appendCodepoints: true,
         normalize: true
     }))
     .on('codepoints', function(codepoints, options) {
