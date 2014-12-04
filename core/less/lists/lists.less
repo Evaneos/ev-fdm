@@ -51,6 +51,26 @@
 	}
 }
 
+// Standard list with no separator
+//
+// A standard list in ev-fdm but without the separator.
+// Require the use of .ev-list
+//
+// Markup:
+// <ul class="ev-list ev-list-no-separator">
+// 	<li> Guacamole </li>
+// 	<li> Chicken </li>
+// 	<li> Tomato </li>
+// </ul>
+//
+// Styleguide 3.2.1
+
+.ev-list.ev-list-no-separator {
+	> * {
+		border-bottom: none;
+	}
+}
+
 // Activable lists
 //
 // For activable list, you can add the `.ev-list-activable`. This useful with the `activable-set` directive.
@@ -62,7 +82,7 @@
 // 	<li activable> Beers </li>
 // </ul>
 //
-// Styleguide 3.2.1
+// Styleguide 3.2.2
 
 .ev-list.ev-list-activable > * {
 	border-left: @ev-list-emphasis-size solid transparent;
