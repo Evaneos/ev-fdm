@@ -18,14 +18,27 @@
 }
 
 // Container width
-.ev-viewport-sm .container {
+.container-sm {
+    .container-fixed();
     max-width: @container-sm;
 }
-.ev-viewport-md .container {
+.container-md {
+    .container-fixed();
     max-width: @container-md;
 }
-.ev-viewport-md .container {
+.container-lg {
+    .container-fixed();
     max-width: @container-lg;
+}
+
+.ev-viewport-sm .container {
+    .container-sm;
+}
+.ev-viewport-md .container {
+    .container-md;
+}
+.ev-viewport-lg .container {
+    .container-lg;
 }
 
 /*
