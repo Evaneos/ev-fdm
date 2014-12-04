@@ -108,7 +108,7 @@ angular.module('ev-fdm')
         };
 
 
-        var getAll = function(options) {
+        RestangularStorage.prototype.getAll = function(options) {
             var parameters = {};
 
             if (angular.isNumber(options.page) && options.page > 0) {
@@ -139,7 +139,7 @@ angular.module('ev-fdm')
 
 
         RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
-            return getAll.call(this, {
+            return this.getAll.call(this, {
                 number: 1,
                 page: null,
                 embed: embed,
@@ -152,7 +152,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
-            return getAll.call(this, {
+            return this.getAll.call(this, {
                 page: page,
                 embed: embed,
                 filters: filters,
