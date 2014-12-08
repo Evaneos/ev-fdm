@@ -3142,7 +3142,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.update = function(element, embed) {
-            if (!element.update) {
+            if (!element.put) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             return element.put(RestangularStorage.buildParameters(this, embed))
@@ -3189,7 +3189,7 @@ angular.module('ev-fdm')
                     .then(function(result) {
                         RestangularStorage.updateObjectFromResult(element, result);
                         return result;
-                    })
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
