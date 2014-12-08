@@ -28,10 +28,10 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                 var icons = evLeaflet.icons;
 
                 if ('default' in icons) {
-                    angular.extend(icons.default, baseIcon);
+                    angular.extend(angular.copy(baseIcon), icons.default);
                 }
                 if ('draggable' in icons) {
-                    angular.extend(icons.draggable, baseIcon);
+                    angular.extend(angular.copy(baseIcon), icons.draggable);
                 }
 
 

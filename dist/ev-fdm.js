@@ -3189,7 +3189,7 @@ angular.module('ev-fdm')
                     .then(function(result) {
                         RestangularStorage.updateObjectFromResult(element, result);
                         return result;
-                    })
+                    });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
