@@ -2,6 +2,7 @@
 'use strict';
 
 var hasOwnProp = Object.prototype.hasOwnProperty;
+var isObject = angular.isObject;
 
 function MapFilterProvider() {
   var maps = {};
@@ -31,9 +32,14 @@ function MapFilterProvider() {
   };
 
   this.$get = function factory() {
-    return function mapFilter(key, mappingName) {
-      assertMapping(mappingName);
-      var map = maps[mappingName];
+    return function mapFilter(key, mapping) {
+      // Mapping is directly provided
+      if (isObject(mapping)) {
+        return hasOwnProp.call(mapping, key)) ? mapping[key] : key;
+      }
+      // or it's just a mapping name
+      assertMapping(mapping);
+      var map = maps[mapping];
       switch (true) {
         case hasOwnProp.call(map, key):
           return map[key];
