@@ -15,6 +15,7 @@ var csso = require('gulp-csso');
 var sourcemaps = require('gulp-sourcemaps');
 var rename = require('gulp-rename');
 var jshint = require('gulp-jshint');
+var changed = require('gulp-changed');
 var pkg = require('./package.json');
 var fs = require('fs');
 
@@ -248,14 +249,17 @@ gulp.task('watch-views', tasks);
 
 
 gulp.task('core-copy', function() {
-    gulp.src(bowerDirectory + '/jquery-ui/themes/smoothness/images/*')
-        .pipe(gulp.dest(dest + '/images'));
     gulp.src([
             bowerDirectory + '/bootstrap/fonts/*',
             'fonts/**/*',
         ])
+        .pipe(changed(dest + '/fonts'))
         .pipe(gulp.dest(dest + '/fonts'));
-    gulp.src(['core/images/**/*'])
+    gulp.src([
+            bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
+            'core/images/**/*'
+        ])
+        .pipe(changed(dest + '/images'))
         .pipe(gulp.dest(dest + '/images'));
 });
 gulp.task('watch-core-copy', function () {
