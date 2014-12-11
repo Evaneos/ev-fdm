@@ -2,13 +2,13 @@ const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
 const MAX_VISIBLE_PANEL = 3;
 
 angular.module('ev-fdm')
-    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout', 
-        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout, 
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
             $window) {
 
         var containers   = {};
         var panelsList   = {};
-        
+
         var addToDom = function (panel, containerId) {
             var container = containers[containerId];
             if (!container || panel.element.parent().length) {
@@ -78,9 +78,9 @@ angular.module('ev-fdm')
             if (panels[name]) {
                 return panels[name];
             }
-            
-            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' + 
-                    name + '" ev-responsive-viewport ev-resizable-column>' + 
+
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
+                    name + '" ev-responsive-viewport ev-resizable-column>' +
                     '</div>');
             var templatePromises = getTemplatePromise(panel);
             panels[name] = panel;
@@ -155,7 +155,7 @@ angular.module('ev-fdm')
             timerWindowResize = $timeout(function() {
                 updateLayout();
             }, 200);
-        });         
+        });
 
 
         function getTemplatePromise(options) {
@@ -168,7 +168,7 @@ angular.module('ev-fdm')
             });
         }
 
-       
+
         function updateLayout(element, containerId) {
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
@@ -178,7 +178,7 @@ angular.module('ev-fdm')
             }
             var container = containers[containerId];
             var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
-            
+
 
             checkStacking(panelElements, container);
         }
@@ -188,6 +188,7 @@ angular.module('ev-fdm')
                 angular.element(panel).removeClass('ev-stacked');
                 // We reset the width each time we update the layout
                 angular.element(panel).css('minWidth', '');
+                angular.element(panel).css('maxWidth', '');
             });
             // We stack panels until there is only three left
             if (panels.length > MAX_VISIBLE_PANEL) {
@@ -195,13 +196,16 @@ angular.module('ev-fdm')
                     angular.element(panel).addClass('ev-stacked');
                 });
             }
-            // Starting from the first non stack panel, 
+            // Starting from the first non stack panel,
             var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
             // Stack until overflow does not exists anymore (or we arrive to the last panel)
             while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
                 angular.element(panels[i]).addClass('ev-stacked');
                 i ++;
             }
+            var panel = angular.element(panels[i]);
+            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
+            panel.css('maxWidth', container[0].offsetWidth);
             $rootScope.$broadcast('module-layout-changed');
         }
 
