@@ -13,7 +13,7 @@
     "angular-ui-router": "git@github.com:Evaneos/ui-router#view-prevent-update",
     "angular-animate": "1.2.16",
     "angular-ui-select2": "~0.0.2",
-    "angular-loading-bar": "25ece2a54c683b98aef598b3d2739999d1b8bba4",
+    "angular-loading-bar": "~0.6.0",
     "bootstrap": "3.0.0",
     "jquery-ui": "~1.10.3",
     "angular-bootstrap": "~0.9.0",
