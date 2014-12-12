@@ -85,8 +85,8 @@
 	    from {transform:rotate(0turn);}
 	    to {transform:rotate(1turn);}
 	}
-	&.icon-spin {
-		animation: evspin @icon-spinning-period infinite;
+	&.icon-spin:before {
+		animation: evspin @icon-spinning-period infinite linear;
 	}
 	&.icon-transition:before {
 		transition: transform @icon-transition-delay;

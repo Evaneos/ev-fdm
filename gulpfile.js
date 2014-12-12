@@ -60,8 +60,10 @@ var icon = {
 gulp.task('core-icon-font', function() {
     return gulp.src([ 'core/iconfont/*.svg' ]) //, { read: false }
     .pipe(iconfont({
+        fontHeight: 1500,
+        normalize: true,
         fontName: icon.name,
-        normalize: true
+        centerHorizontally: true,
     }))
     .on('codepoints', function(codepoints, options) {
         gulp.src('core/iconfont/icon-template.less')
