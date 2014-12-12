@@ -35,15 +35,6 @@
     display: inline-block;
 }
 
-// big fat splashscreen used in modules
-// to indicate that an operation is in progress
-.progress-splashscreen {
-    &:extend(.container-loading all);
-    &:before {
-        background: #FFF;
-    }
-}
-
 // values that are undefined
 .common-value {
     &.common-empty {
@@ -132,7 +123,6 @@ hr {
 @import "data.less";
 @import "loading-dots.less";
 @import "sortable.less";
-@import "animations.less";
 @import "controls.less";
 @import "list.less";
 @import "promise.less";
