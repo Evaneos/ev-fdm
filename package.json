@@ -18,6 +18,7 @@
     "url": "https://github.com/evaneos/ev-fdm/issues"
   },
   "devDependencies": {
+    "autoprefixer-core": "^4.0.2",
     "gulp": "^3.8.10",
     "gulp-concat": "git://github.com/christophehurpeau/gulp-concat.git#master",
     "gulp-consolidate": "^0.1.2",
@@ -26,6 +27,7 @@
     "gulp-insert": "^0.4.0",
     "gulp-jshint": "^1.9.0",
     "gulp-less": "^1.3.6",
+    "gulp-postcss": "^3.0.0",
     "gulp-rename": "^1.2.0",
     "gulp-sourcemaps": "1.2.8",
     "gulp-uglify": "^1.0.1",

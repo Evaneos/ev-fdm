@@ -17,6 +17,9 @@ var rename = require('gulp-rename');
 var jshint = require('gulp-jshint');
 var iconfont = require('gulp-iconfont');
 var consolidate = require('gulp-consolidate');
+// Post CSS
+var postcss = require('gulp-postcss');
+var autoprefixer = require('autoprefixer-core');
 
 
 var pkg = require('./package.json');
@@ -167,6 +170,7 @@ function minifyLess(src, base, paths, dest, name) {
             .pipe(less({
                 paths: paths
             }))
+            .pipe(postcss([autoprefixer({browsers: ['last 2 versions']})]))
             .pipe(csso())
             .pipe(rename(name + '.min.css'))
         .pipe(sourcemaps.write('.', {

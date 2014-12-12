@@ -52,50 +52,6 @@
     }
 }
 
-/*
- *  Mixin for cross-browser border radiuses
- *
- *  Usage:
- *      .border-radiuses(<top-right>, <bottom-right>, <bottom-left>, <top-left>)
- */
-.border-radiuses (@topright: 0, @bottomright: 0, @bottomleft: 0, @topleft: 0) {
-  -webkit-border-top-right-radius:    @topright;
-  -webkit-border-bottom-right-radius: @bottomright;
-  -webkit-border-bottom-left-radius:  @bottomleft;
-  -webkit-border-top-left-radius:     @topleft;
-
-  -moz-border-radius-topright:        @topright;
-  -moz-border-radius-bottomright:     @bottomright;
-  -moz-border-radius-bottomleft:      @bottomleft;
-  -moz-border-radius-topleft:         @topleft;
-
-  border-top-right-radius:            @topright;
-  border-bottom-right-radius:         @bottomright;
-  border-bottom-left-radius:          @bottomleft;
-  border-top-left-radius:             @topleft;
-
-  -moz-background-clip:    padding;
-  -webkit-background-clip: padding-box;
-  background-clip:         padding-box;
-}
-
-.transform(@string){
-  -webkit-transform: @string;
-  -moz-transform:    @string;
-  -ms-transform:     @string;
-  -o-transform:      @string;
-  transform:         @string;
-}
-
-
-.transition(@string){
-  -webkit-transform: @string;
-  -moz-transform:    @string;
-  -ms-transform:     @string;
-  -o-transform:      @string;
-  transform:         @string;
-}
-
 
 /*
  *  Mixin for styling placeholder inside input (cross-browser)
