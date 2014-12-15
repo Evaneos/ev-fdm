@@ -3,16 +3,31 @@
 .ev-flex-columns {
     display: flex;
     flex-wrap: wrap;
-    & > * {
-    	flex-shrink: 0;
+
+    &:not(.ev-overflow) > * {
         overflow-y: auto;
     }
+    & > * {
+        flex-shrink: 0;
+    }
+
 
     &.ev-align-start  { align-items: start;  }
     &.ev-align-center { align-items: center; }
     &.ev-align-end    { align-items: end;    }
 
     .ev-align-self-start  { align-self: start;  }
- 	.ev-align-self-center { align-self: center; }
-	.ev-align-self-end    { align-self: end;    }
+    .ev-align-self-center { align-self: center; }
+    .ev-align-self-end    { align-self: end;    }
 }
+
+/* Utilities class for flexbox */
+
+.ev-flex-no-wrap {
+    flex-wrap: nowrap;
+}
+
+.ev-flex {
+    flex: auto;
+}
+
