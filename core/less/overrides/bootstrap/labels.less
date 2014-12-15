@@ -1,4 +1,5 @@
 @import '../../variables.less';
+@import "../../colors/variables.less";
 
 .label-light(@color: @brand-primary) {
   background-color: transparent;
@@ -23,12 +24,12 @@
   }
 
   &.label-default {
-    background-color: @gray-lighter;
-    color: @gray;
+    background-color: @bright-soil;
+    color: @soil;
     .close {
-      color: @gray;
+      color: @soil;
       &:hover {
-        color: @gray-dark;
+        color: @deep-soil;
       }
     }
   }

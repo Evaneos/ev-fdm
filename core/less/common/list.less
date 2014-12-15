@@ -1,3 +1,6 @@
+@import "../colors/variables.less";
+// [PHOENIX : TODO delete me]
+
 /**
  *  A list containing elements
  *
@@ -39,7 +42,7 @@
      */
     .list-element {
         padding: 5px;
-        border-bottom: 1px solid @gray-lighter;
+        border-bottom: 1px solid @bright-soil;
         border-left: @layout-gutter solid transparent;
         cursor: pointer;
         position: relative;
@@ -64,7 +67,7 @@
             }
 
             .icon {
-                color: @gray;
+                color: @soil;
             }
         }
 
@@ -81,12 +84,12 @@
                     .text-overflow();
 
                     .icon {
-                        color: @gray;
+                        color: @soil;
                     }
                 }
 
                 .extra-information {
-                    color: @gray;
+                    color: @soil;
                     position: absolute;
                     right: 8px;
                     top: 5px;
@@ -102,7 +105,7 @@
              * Second line on this element
              */
             .title {
-                color: @gray;
+                color: @soil;
                 display: block;
                 .text-overflow();
             }
@@ -111,7 +114,7 @@
              * Third line
              */
             .description {
-                color: @gray;
+                color: @soil;
                 display:block;
                 .text-overflow();
             }
@@ -122,7 +125,7 @@
          */
         &.active {
             border-left: @layout-gutter solid @brand-primary;
-            background: @gray-lighter;
+            background: @bright-soil;
         }
 
         /**
@@ -130,12 +133,12 @@
          */
         &-new {
             .main-information {
-                color: @gray-darker;
+                color: @dark-soil;
                 font-weight: bold;
             }
 
             .extra-information {
-                color: @gray-dark;
+                color: @deep-soil;
             }
         }
     }

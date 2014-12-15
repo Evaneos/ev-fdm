@@ -102,16 +102,17 @@
 
   .mce-btn {
     .btn;
-    .btn-default;
+    .btn-soil;
+    .btn-tertiary;
     margin-top: 0;
     margin-bottom: 0;
     padding: 7px 6px 3px 6px;
     border: none;
     &.mce-active {
-      background-color: @gray-light;
+      background-color: @light-soil;
     }
     &:not(.mce-active):hover {
-        background: @gray-lighter;
+        background: @bright-soil;
     }
     &.mce-primary {
       .btn-primary;
@@ -161,13 +162,11 @@
 }
 
 .btn-tinymce {
-  .btn-light;
-  color: black;
-  position: relative;
-  top: 4px;
+  .btn-tertiary;
+  color: @dark-soil;
   padding: 5px;
   &:hover {
-    background-color: @gray-lighter;
+    background-color: @bright-soil;
   }
 }
 
@@ -193,12 +192,14 @@
       margin: @modal-inner-padding/2;
       > button {
         .btn;
+        .btn-tertiary;
       }
       // Primary button: always on the right, styled like in bootstrap
       &.@{prefix}-primary {
         float:right;
         margin-right: @modal-inner-padding;
         > button {
+          .btn;
           .btn-primary;
         }
       }

@@ -15,7 +15,14 @@ var csso = require('gulp-csso');
 var sourcemaps = require('gulp-sourcemaps');
 var rename = require('gulp-rename');
 var jshint = require('gulp-jshint');
+var iconfont = require('gulp-iconfont');
+var consolidate = require('gulp-consolidate');
+// Post CSS
+var postcss = require('gulp-postcss');
+var autoprefixer = require('autoprefixer-core');
+
 var changed = require('gulp-changed');
+
 var pkg = require('./package.json');
 var fs = require('fs');
 
@@ -46,6 +53,35 @@ function concatCorePlugins(src, suffix, customDest) {
         }))
         .pipe(gulp.dest(customDest));
 }
+
+// ///////////////////////////////////////////////////
+// ICONS
+// //////////////////////////////////////////////////
+var icon = {
+    name: 'evfdm-icon',
+    path: './fonts/iconfont'
+};
+gulp.task('core-icon-font', function() {
+    return gulp.src([ 'core/iconfont/*.svg' ]) //, { read: false }
+    .pipe(iconfont({
+        fontHeight: 1500,
+        normalize: true,
+        fontName: icon.name,
+        centerHorizontally: true,
+    }))
+    .on('codepoints', function(codepoints, options) {
+        gulp.src('core/iconfont/icon-template.less')
+            .pipe(consolidate('lodash', {
+                glyphs: codepoints,
+                fontName: icon.name,
+                fontPath: icon.path,
+                version: Date.now()
+            }))
+            .pipe(rename('icon-compiled.less'))
+            .pipe(gulp.dest('./core/less/icons/'));
+    })
+    .pipe(gulp.dest(icon.path));
+});
 
 // ///////////////////////////////////////////////////
 // JS
@@ -93,6 +129,7 @@ function minifyJs(src, dest, name) {
 
 
 
+
 plugins.forEach(function(name) {
     var dir = 'plugins/' + name;
     var src = [dir + '/js/app.js', dir + '/js/**/*.js'];
@@ -134,6 +171,7 @@ function minifyLess(src, base, paths, dest, name) {
             .pipe(less({
                 paths: paths
             }))
+            .pipe(postcss([autoprefixer({browsers: ['last 2 versions']})]))
             .pipe(csso())
             .pipe(rename(name + '.min.css'))
         .pipe(sourcemaps.write('.', {
@@ -157,11 +195,11 @@ function lessConcatCorePlugins() {
     var src = 'core/less/index.less';
     var paths = ['core/less', bowerDirectory];
     gulp.task('less-concat-core-plugins', lessConcatCorePlugins);
-    gulp.task('core-less', function () {
+    gulp.task('core-less', ['core-icon-font'], function () {
         return minifyLess(src, 'core/less', paths, dest + '/core/css', pkg.name + '-core');
     });
     gulp.task('watch-core-less', function () {
-        gulp.watch(['core/less/**/*.less'], ['core-less', 'less-concat-core-plugins']);
+        gulp.watch(['core/less/**/*.less', '!core/less/icons/icon-compiled.less'], ['core-less', 'less-concat-core-plugins']);
     });
 })();
 
@@ -247,8 +285,7 @@ gulp.task('watch-views', tasks);
 // COPY
 // //////////////////////////////////////////////////
 
-
-gulp.task('core-copy', function() {
+gulp.task('core-copy', ['core-icon-font'], function() {
     gulp.src([
             bowerDirectory + '/bootstrap/fonts/*',
             'fonts/**/*',
@@ -267,7 +304,7 @@ gulp.task('watch-core-copy', function () {
         bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
         bowerDirectory + '/bootstrap/fonts/*',
         'fonts/**/*',
-        'core/images/**/*'
+        'core/images/**/*',
     ], ['core-copy']);
 });
 

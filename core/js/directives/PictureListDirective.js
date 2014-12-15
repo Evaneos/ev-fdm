@@ -20,12 +20,12 @@
                         '<figure>' +
                             '<div class="picture-thumb">' +
                                 '<img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
-                                '<button class="action update-action ev-upload-clickable"' +
+                                '<button class="action btn btn-tertiary update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +
                                     '<span class="icon icon-edit"></span>' +
                                 '</button>' +
-                                '<button class="action delete-action" ' +
+                                '<button class="action btn btn-tertiary delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
                                   'tabIndex="-1"' +
                                   'data-ng-show="editable">' +

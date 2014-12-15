@@ -1,3 +1,5 @@
+@import "../colors/variables.less";
+
 /******************************************************
  * Put here all the styles likely to be reused
  * - make separate common/*.less files for components
@@ -14,7 +16,7 @@
 
 .common-empty-indic {
     padding: 40px;
-    color: @gray;
+    color: @soil;
     font-size: 14px;
     text-align: center;
 }
@@ -33,20 +35,11 @@
     display: inline-block;
 }
 
-// big fat splashscreen used in modules
-// to indicate that an operation is in progress
-.progress-splashscreen {
-    &:extend(.container-loading all);
-    &:before {
-        background: #FFF;
-    }
-}
-
 // values that are undefined
 .common-value {
     &.common-empty {
         font-style: italic;
-        color: @gray;
+        color: @soil;
     }
 }
 
@@ -54,7 +47,7 @@
 
 dl {
     dt {
-        color: @gray;
+        color: @soil;
         font-weight: 500;
 
         &:after {
@@ -126,19 +119,15 @@ hr {
   margin: 0 !important;
 }
 
-@import "icons.less";
-@import "icons-color.less";
 @import "trends.less";
 @import "data.less";
 @import "loading-dots.less";
 @import "sortable.less";
-@import "animations.less";
 @import "controls.less";
 @import "list.less";
 @import "promise.less";
 @import "progress.less";
 @import "countriesflags.less";
-@import "buttongroup.less";
 @import "ev-panel-tabs.less";
 @import "resizableDirective.less";
 @import "input.less";

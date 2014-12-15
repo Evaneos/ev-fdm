@@ -1,11 +1,12 @@
+@import "../colors/variables.less";
 @import "../variables.less";
 
 .ev-panel-tab {
-  background-color: @gray-lighter;
+  background-color: @white-soil;
 
   .nav-tabs {
-    // border-bottom: 5px solid @body-bg;
     border: none;
+    border-bottom: 5px solid @body-bg;
     >li {
       position: relative;
       top: -1px;
@@ -13,18 +14,18 @@
         >a,
         >a:hover,
         >a:focus {
-          color: @gray-darker;
+          color: @dark-soil;
           border: none;
           font-weight: bold;
         }
       }
       >a:hover {
-        color: @gray-dark;
+        color: @deep-soil;
         margin-bottom: 0;
       }
 
       >a {
-        color: @gray;
+        color: @soil;
         padding: 5px 15px;
         text-align: center;
         border: none;
@@ -49,11 +50,11 @@
   }
 
   a {
-    color: @gray-dark;
+    color: @deep-soil;
 
     &:hover {
       text-decoration: none;
-      color: @gray-darker;
+      color: @dark-soil;
     }
   }
 }

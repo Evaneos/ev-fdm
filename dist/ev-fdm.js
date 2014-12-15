@@ -268,6 +268,7 @@ angular.module('ev-fdm')
             this.$scope[this.elementName] = this.elements;
             this.$scope.currentPage = this.elements.pagination.current_page;
             this.$scope.pageCount = this.elements.pagination.total_pages;
+            this.$scope.totalElement = this.elements.pagination.total;
             this.$scope.sortKey = this.sortKey;
             this.$scope.reverseSort = this.reverseSort;
 
@@ -522,6 +523,115 @@ angular.module('ev-fdm')
         };
     }]);
 
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 'use strict';
 
 angular.module('ev-fdm').directive('activableSet', function() {
@@ -912,18 +1022,6 @@ angular.module('ev-fdm')
     .directive('evMenu', ['menuManager', EvMenuDirective]);
 'use strict';
 
-var module = angular.module('ev-fdm');
-
-module.directive('evFilters', function() {
-    return {
-        restrict: 'E',
-        replace: true,
-        transclude: true,
-        templateUrl: 'ev-filters.html'
-    };
-});
-'use strict';
-
 var module = angular.module('ev-fdm')
 .directive('evFlag', function () {
     return {
@@ -1144,12 +1242,12 @@ var module = angular.module('ev-fdm')
                         '<figure>' +
                             '<div class="picture-thumb">' +
                                 '<img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
-                                '<button class="action update-action ev-upload-clickable"' +
+                                '<button class="action btn btn-tertiary update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +
                                     '<span class="icon icon-edit"></span>' +
                                 '</button>' +
-                                '<button class="action delete-action" ' +
+                                '<button class="action btn btn-tertiary delete-action" ' +
                                   'ng-click="onDelete({picture: picture, index: $index})" ' +
                                   'tabIndex="-1"' +
                                   'data-ng-show="editable">' +
@@ -1606,7 +1704,7 @@ angular.module('ev-fdm')
             template:
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
-                        '<button class="btn btn-lg btn-default" ng-repeat="lang in availableLang"'+
+                        '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
                             'ng-class="{active: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
@@ -2126,7 +2224,7 @@ angular.module('ev-fdm')
                                 'ng-click="remove($index)">×</button> ' +
                         '</span>' +
                     '</li>' +
-                    '<li ng-show="editable && elements.length >= maxElements" class="text-warning no-margin">' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-orange no-margin">' +
                         ' {{ maxAlertMessage }}' +
                     '</li>' +
                 '</ul>',
@@ -2244,115 +2342,6 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -2689,7 +2678,7 @@ angular.module('ev-fdm')
                 console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
-          
+
             var element  = panels[name].element;
             $animate.leave(element, function() {
                 updateLayout(containerId);
@@ -2763,6 +2752,7 @@ angular.module('ev-fdm')
                 angular.element(panel).removeClass('ev-stacked');
                 // We reset the width each time we update the layout
                 angular.element(panel).css('minWidth', '');
+                angular.element(panel).css('maxWidth', '');
             });
             // We stack panels until there is only three left
             if (panels.length > MAX_VISIBLE_PANEL) {
@@ -2777,6 +2767,9 @@ angular.module('ev-fdm')
                 angular.element(panels[i]).addClass('ev-stacked');
                 i ++;
             }
+            var panel = angular.element(panels[i]);
+            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
+            panel.css('maxWidth', container[0].offsetWidth);
             $rootScope.$broadcast('module-layout-changed');
         }
 
@@ -3084,7 +3077,7 @@ angular.module('ev-fdm')
         };
 
 
-        var getAll = function(options) {
+        RestangularStorage.prototype.getAll = function(options) {
             var parameters = {};
 
             if (angular.isNumber(options.page) && options.page > 0) {
@@ -3115,7 +3108,7 @@ angular.module('ev-fdm')
 
 
         RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
-            return getAll.call(this, {
+            return this.getAll.call(this, {
                 number: 1,
                 page: null,
                 embed: embed,
@@ -3128,7 +3121,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
-            return getAll.call(this, {
+            return this.getAll.call(this, {
                 page: page,
                 embed: embed,
                 filters: filters,
@@ -4059,7 +4052,7 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
                 'upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<button type="button" tabIndex="-1" class="btn btn-link ev-upload-clickable"' +
+                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-lime ev-upload-clickable"' +
                             'tooltip="{{tooltipText}}"' +
                             'tooltip-placement="top">' +
                         '<span class="icon {{iconName}}"></span>' +
@@ -4170,7 +4163,7 @@ angular.module('ev-upload')
                 '<div ng-hide="uploading">' +
                     '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
                     '<table style="width:100%"><tr><td style="width:114px">'+
-                            '<button type="button" tabIndex="-1" class="btn btn-default ev-upload-clickable">' +
+                            '<button type="button" tabIndex="-1" class="btn ev-upload-clickable">' +
                                 '{{ "Importer..." | i18n}}' +
                             '</button>' +
                         '</td>'+

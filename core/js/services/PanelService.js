@@ -118,7 +118,7 @@ angular.module('ev-fdm')
                 console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
-          
+
             var element  = panels[name].element;
             $animate.leave(element, function() {
                 updateLayout(containerId);
@@ -192,6 +192,7 @@ angular.module('ev-fdm')
                 angular.element(panel).removeClass('ev-stacked');
                 // We reset the width each time we update the layout
                 angular.element(panel).css('minWidth', '');
+                angular.element(panel).css('maxWidth', '');
             });
             // We stack panels until there is only three left
             if (panels.length > MAX_VISIBLE_PANEL) {
@@ -206,6 +207,9 @@ angular.module('ev-fdm')
                 angular.element(panels[i]).addClass('ev-stacked');
                 i ++;
             }
+            var panel = angular.element(panels[i]);
+            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
+            panel.css('maxWidth', container[0].offsetWidth);
             $rootScope.$broadcast('module-layout-changed');
         }
 

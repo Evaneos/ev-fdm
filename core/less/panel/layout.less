@@ -1,15 +1,15 @@
 @import "variables.less";
-@import "../mixins/mixins.less";
 
 @import "../utils/layout.less";
 
 .ev-panels-container {
     background: @ev-panel-dark-color;
-    .flexbox();
+    display: flex;
+}
+
     /*********************************************************
      * NORMAL STATE
      ********************************************************/
-}
 
 .ev-panel {
     position: relative;
@@ -18,6 +18,10 @@
         border-left: 1px solid @ev-panel-dark-color;
     }
 
+
+    .close {
+        color: @deep-soil;
+    }
 
     // Main close button for panel
     .main-close {
@@ -36,6 +40,8 @@
     }
 }
 
+
+
     /*********************************************************
      * STACKED STATE
      ********************************************************/
@@ -43,10 +49,10 @@
 .ev-panel.ev-stacked {
     max-width: @ev-panel-stacked-size;
     min-width: @ev-panel-stacked-size;
-    .align-self(center);
+    align-self: center;
 
     > * {
-        .transform(rotate(-90deg));
+        transform: rotate(-90deg);
         white-space: nowrap;
     }
     // Hide everything that FOLLOW the stacked section
@@ -70,8 +76,6 @@
     background-color: @ev-panel-color;
 }
 
-// Resizable stuff
-
 
 /*********************************************************
  * RESIZABLE HANDLER
@@ -85,3 +89,4 @@
     border: 2px dotted @ev-panel-dark-color;
     background-color: fade(@ev-panel-dark-color, 30%);
 }
+

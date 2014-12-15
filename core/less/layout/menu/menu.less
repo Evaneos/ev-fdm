@@ -1,9 +1,17 @@
+@import "../../colors/variables.less";
+
 .navbar {
     min-height: @menu-height;
     border: none;
     margin-bottom: 0;
     position: absolute;
     width: 100%;
+
+    .navbar-brand img {
+        height: 20px;
+        position: relative;
+        top: 3px;
+    }
 
     #main-menu {
         position: absolute;
@@ -37,6 +45,13 @@
                     border-right: 7px solid transparent;
                     border-left: 7px solid transparent;
                 }
+
+                background: lighten(@navbar-inverse-bg, 3%);
+                font-weight: bold;
+
+                &:hover {
+                    background: lighten(@navbar-inverse-bg, 7%);
+                }
             }
 
             .icon {
@@ -49,7 +64,7 @@
         }
 
         .menu-help {
-            background: @brand-danger;
+            background: @orange;
 
             a {
                 color: @navbar-inverse-link-active-color;
@@ -59,7 +74,7 @@
             }
 
             &:hover {
-                background: lighten(@brand-danger, 5%);
+                background: lighten(@orange, 5%);
                 a {
                     color: @navbar-inverse-link-active-color;
                 }
@@ -81,7 +96,7 @@
 
     .dropdown {
         &.open {
-            background: lighten(@brand-evaneos, 3%);
+            background: lighten(@pool, 3%);
         }
         .caret {
             margin-left: 5px;
@@ -92,7 +107,7 @@
             border-top: none;
             > li {
                 width: 100%;
-                color: @gray-dark;
+                color: @deep-soil;
                 a {
                     padding: 10px;
                     span {

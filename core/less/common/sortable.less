@@ -1,3 +1,5 @@
+@import "../colors/variables.less";
+
 // sortable column headers
 .sortable {
     cursor: pointer;
@@ -6,16 +8,16 @@
     // display the arrow of the sort predicted
     &:after {
         visibilty: display;
-        border-top: @caret-width-base solid @gray;
+        border-top: @caret-width-base solid @soil;
         border-bottom: 0 dotted;
     }
 
     &:hover {
-        color: @gray-dark;
+        color: @deep-soil;
         // display the arrow of the sort predicted
         &:after {
             visibilty: display;
-            border-top: @caret-width-base solid @gray-dark;
+            border-top: @caret-width-base solid @deep-soil;
             border-bottom: 0 dotted;
         }
     }
