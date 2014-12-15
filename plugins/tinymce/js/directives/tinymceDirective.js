@@ -32,8 +32,23 @@
 
 
 angular.module('ev-tinymce', [])
-    .directive('evTinymce', ['$timeout', function($timeout) {
+    .provider('evTinymce', function() {
+        var configs = {};
 
+        this.register = function(name, value) {
+            if (configs.hasOwnProperty(name)) {
+                throw new Error('A config named "' + name + '" was already registered');
+            }
+            configs[name] = value;
+        };
+
+        this.get = function(name) {
+            return configs[name];
+        };
+
+        this.$get = function() { return configs; };
+    })
+    .directive('evTinymce', ['$timeout', 'evTinymce', function($timeout, evTinymce) {
         var generatedIds = 0;
         return {
             template: '<div class="tiny-mce-wrapper">'
@@ -45,6 +60,7 @@ angular.module('ev-tinymce', [])
             restrict: 'AE',
             replace: true,
             require: '?ngModel',
+
             scope: {
                 tinymceOptions: '=',
             },
@@ -64,8 +80,7 @@ angular.module('ev-tinymce', [])
                 };
                 var options = angular.extend({
                     fixed_toolbar_container: '#' + tinyId + 'toolbar',
-                }, defaultOptions, scope.tinymceOptions);
-
+                }, defaultOptions, evTinymce[attrs.configKey], scope.tinymceOptions);
 
                 // /**
                 //  * This part is used for the max-chars attibute.

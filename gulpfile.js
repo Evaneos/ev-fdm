@@ -21,6 +21,7 @@ var consolidate = require('gulp-consolidate');
 var postcss = require('gulp-postcss');
 var autoprefixer = require('autoprefixer-core');
 
+var changed = require('gulp-changed');
 
 var pkg = require('./package.json');
 var fs = require('fs');
@@ -284,16 +285,18 @@ gulp.task('watch-views', tasks);
 // COPY
 // //////////////////////////////////////////////////
 
-
 gulp.task('core-copy', ['core-icon-font'], function() {
-    gulp.src(bowerDirectory + '/jquery-ui/themes/smoothness/images/*')
-        .pipe(gulp.dest(dest + '/images'));
     gulp.src([
             bowerDirectory + '/bootstrap/fonts/*',
             'fonts/**/*',
         ])
+        .pipe(changed(dest + '/fonts'))
         .pipe(gulp.dest(dest + '/fonts'));
-    gulp.src(['core/images/**/*'])
+    gulp.src([
+            bowerDirectory + '/jquery-ui/themes/smoothness/images/*',
+            'core/images/**/*'
+        ])
+        .pipe(changed(dest + '/images'))
         .pipe(gulp.dest(dest + '/images'));
 });
 gulp.task('watch-core-copy', function () {

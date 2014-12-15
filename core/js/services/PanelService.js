@@ -17,13 +17,13 @@ angular.module('ev-fdm')
 
             // If no panel index, or no panel inside the container, it is added at the end
             if (!panel.index || !container.children().length) {
-                $animate.enter(panel.element, container, null, function () {
-                    updateLayout(null, containerId);
+                $animate.move(panel.element, container, null, function () {
+                    updateLayout(containerId);
                 });
             } else {
                 var beforePanel = getBeforePanelElm(panel.index, containerId);
-                    $animate.enter(panel.element, container, beforePanel.element, function () {
-                        updateLayout(null, containerId);
+                    $animate.move(panel.element, container, beforePanel.element, function () {
+                        updateLayout(containerId);
                 });
             }
         };
@@ -87,9 +87,11 @@ angular.module('ev-fdm')
             panel.element = element;
 
             return templatePromises.then(function(template) {
+                var scope = $rootScope.$new();
                 element.html(template);
-                element = $compile(element)($rootScope.$new());
+                element = $compile(element)(scope);
                 panel.element  = element;
+                panel.scope = scope;
                 addToDom(panel, id);
                 return panel;
             });
@@ -116,10 +118,12 @@ angular.module('ev-fdm')
                 console.log("Panel not found for: " + name + " in container: " + containerId);
             }
 
+
             var element  = panels[name].element;
-            delete panels[name];
             $animate.leave(element, function() {
-                updateLayout(null, containerId);
+                updateLayout(containerId);
+                panels[name].scope.$destroy();
+                delete panels[name];
             });
         };
 
@@ -169,10 +173,10 @@ angular.module('ev-fdm')
         }
 
 
-        function updateLayout(element, containerId) {
+        function updateLayout(containerId) {
             if (!containerId) {
                 Object.keys(containers).map(function (id) {
-                    updateLayout(null, id);
+                    updateLayout(id);
                 });
                 return this;
             }
