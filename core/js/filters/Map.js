@@ -43,8 +43,8 @@ function MapFilterProvider() {
       switch (true) {
         case hasOwnProp.call(map, key):
           return map[key];
-        case hasOwnProp.call(defaults, key):
-          return defaults[key];
+        case hasOwnProp.call(defaults, mapping):
+          return defaults[mapping];
         default:
           return key;
       }
