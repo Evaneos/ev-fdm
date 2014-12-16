@@ -1,4 +1,5 @@
 /* jshint camelcase: false */
+/* global tinymce */
 /**
  * Directive to override some settings in tinymce
  * Usage:
@@ -112,7 +113,8 @@ angular.module('ev-tinymce', [])
 
                 var setPlaceholder = function() {
                     var editor = getTinyInstance();
-                    editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                    tinymce.DOM.addClass(tinyElm, 'placeholder-light');
+                    editor.setContent(attrs.placeholder);
                 };
 
                 var updatePlaceholder = function(newText) {
@@ -121,6 +123,7 @@ angular.module('ev-tinymce', [])
                         if (currentText === attrs.placeholder) {
                             editor.setContent('');
                             editor.selection.setCursorLocation();
+                            tinymce.DOM.removeClass(tinyElm, 'placeholder-light');
                         }
                     } else {
                         if (newText !== attrs.placeholder) {
