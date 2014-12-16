@@ -27,7 +27,7 @@
     "restangular": "~1.4.0",
     "angular-leaflet-directive": "~0.7.7",
     "dropzone": "~3.10.2",
-    "angular-ui-tinymce": "0b2a007e6878e1a4599cc1fac57cf063bdc2f951"
+    "tinymce": "~4.1.7"
   },
   "resolutions": {
     "angular": "1.2.16"
