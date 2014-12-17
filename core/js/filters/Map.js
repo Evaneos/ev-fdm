@@ -35,7 +35,7 @@ function MapFilterProvider() {
     return function mapFilter(key, mapping) {
       // Mapping is directly provided
       if (isObject(mapping)) {
-        return hasOwnProp.call(mapping, key)) ? mapping[key] : key;
+        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
       }
       // or it's just a mapping name
       assertMapping(mapping);
