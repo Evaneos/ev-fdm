@@ -59,6 +59,7 @@
     }
 
     &.disabled,
+    &:disabled,
     &[disabled],
     fieldset[disabled] & {
         cursor: not-allowed;
@@ -119,6 +120,13 @@
         border-color: darken(@btn-border-lighten-color, @btn-darken-active-factor);
         background-color: darken(@color, @btn-darken-active-factor);
     }
+
+    // Avoid * effects on hover
+    &:disabled, &[disabled], &.disabled {
+        color: @color;
+        border-color: @btn-border-lighten-color;
+        background-color: @color;
+    }
 }
 
 // Type
@@ -134,14 +142,14 @@
 //
 // Styleguide 2.4
 
-.btn-primary { &, &:hover, &:active {
+.btn-primary { &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
     color: white;
     border-color: transparent;
 } }
-.btn-secondary { &, &:hover, &:active {
+.btn-secondary { &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
     background-color: transparent;
 } }
-.btn-tertiary { &, &:hover, &:active {
+.btn-tertiary { &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
     background-color: transparent;
     border-color: transparent;
 } }
