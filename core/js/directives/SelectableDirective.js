@@ -196,7 +196,7 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectable',
             replace: true,
-            template: '<span class="checkbox" ng-class="{ active: selected }"></span>'
+            template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
         };
     })
     .directive('selectAll', function() {
@@ -204,7 +204,7 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectableSet',
             scope: true,
-            template: '<span class="checkbox" ng-class="{ active: allSelected }" ng-click="toggleSelectAll()"></span>',
+            template: '<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
             link: function(scope, element, attr, ctrl) {
 
                 scope.toggleSelectAll = function () {
