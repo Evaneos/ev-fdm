@@ -6,7 +6,8 @@ tinymce.PluginManager.add('evelements', function(editor) {
 
     function setElement(elementConfig) {
         return function() {
-            var dom = editor.dom, node = editor.selection.getNode();
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
             if (node && elementConfig.matches(node)) {
                 dom.remove(node, true);
             } else {
@@ -44,15 +45,16 @@ tinymce.PluginManager.add('evelements', function(editor) {
                                  : editor.selection.getContent({ format: 'text' });
             (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
                 if (node) {
+                    editor.focus();
                     if (!newAttributes && !text) {
                         dom.remove(node, true);
+                        editor.undoManager.add();
                         return;
                     }
-                    editor.focus();
                     dom.removeAllAttribs(node);
                     dom.setAttribs(node, newAttributes);
                     if (text) {
-                        if ("innerText" in node) {
+                        if ('innerText' in node) {
                             node.innerText = text;
                         } else {
                             node.textContent = text;

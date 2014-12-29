@@ -4012,7 +4012,8 @@ tinymce.PluginManager.add('evelements', function(editor) {
 
     function setElement(elementConfig) {
         return function() {
-            var dom = editor.dom, node = editor.selection.getNode();
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
             if (node && elementConfig.matches(node)) {
                 dom.remove(node, true);
             } else {
@@ -4050,15 +4051,16 @@ tinymce.PluginManager.add('evelements', function(editor) {
                                  : editor.selection.getContent({ format: 'text' });
             (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
                 if (node) {
+                    editor.focus();
                     if (!newAttributes && !text) {
                         dom.remove(node, true);
+                        editor.undoManager.add();
                         return;
                     }
-                    editor.focus();
                     dom.removeAllAttribs(node);
                     dom.setAttribs(node, newAttributes);
                     if (text) {
-                        if ("innerText" in node) {
+                        if ('innerText' in node) {
                             node.innerText = text;
                         } else {
                             node.textContent = text;
@@ -4091,14 +4093,20 @@ tinymce.PluginManager.add('evelements', function(editor) {
             return node.nodeName.toLowerCase() === elementConfig.name;
         };
 
+        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
+
         editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
             text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
             icon: elementConfig.icon,
             tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
             shortcut: elementConfig.shortcut,
-            onclick: elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig),
+            onclick: callbackAction,
             stateSelector: elementConfig.selector || elementConfig.name,
         });
+
+        if (elementConfig.shortcut) {
+            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
+        }
     });
 });
 
