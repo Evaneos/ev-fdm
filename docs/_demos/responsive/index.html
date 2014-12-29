@@ -1,0 +1,261 @@
+---
+layout: default
+title: Responsive
+is_index: true
+---
+{% raw %}
+<!-- Double curly braces won't be interpreted by liquid parser as we are in raw mode -->
+<div ng-app="demo" class="clearfix demo-container">
+    <h1> Responsive utilities <small> for responsive panels </small> </h1>
+    <p> Contrary to the vast majority of responsive utilities developped, evfdm is not based on the media screen query. Instead, each viewport can have a different "media size" which will determine how the elements inside will respond. This allow for much more dynamic comportement (for instance, some part of the page being collapsed while other are not).
+    <div class="alert alert-warning"> <strong> Behold !</strong> Imbricated viewport of different size are not supported right now for instance, a `view-sm` inside a `view-lg`. Your viewport have to be siblings. </div>
+    </p>
+    <h2> Grid system </h2>
+    <p>
+        The possibilities are the same as the <a href="http://getbootstrap.com/css/#grid-options">bootstrap grid</a>.
+    </p>
+    <h3> Example: Stacked to horizontal </h3>
+    <p> Using a single set of <code>.col-md-*</code> grid classes, you can create a basic grid system that starts out stacked in extra small to small container before becoming horizontal on medium+ container. Place grid columns in any <code>.row</code>.
+    </p>
+
+    <div responsive-demo class="grid-demo">
+        <div class="row">
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+            <div class="col-md-1">.col-md-1</div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">.col-md-8</div>
+            <div class="col-md-4">.col-md-4</div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">.col-md-4</div>
+            <div class="col-md-4">.col-md-4</div>
+            <div class="col-md-4">.col-md-4</div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">.col-md-6</div>
+            <div class="col-md-6">.col-md-6</div>
+        </div>
+    </div>
+    <h3> Example: Extra Small and Medium container </h3>
+    <div responsive-demo class="grid-demo">
+        <!-- Stack the columns in xs containers by making one full-width and the other half-width -->
+        <div class="row">
+            <div class="col-xs-12 col-md-8">.col-xs-12 .col-md-8</div>
+            <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+        </div>
+
+        <!-- Columns start at 50% wide on xs container and bump up to 33.3% wide on md one -->
+        <div class="row">
+            <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+            <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+            <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+        </div>
+
+        <!-- Columns are always 50% wide-->
+        <div class="row">
+            <div class="col-xs-6">.col-xs-6</div>
+            <div class="col-xs-6">.col-xs-6</div>
+        </div>
+    </div>
+    <h3> Example: Extra Small, Small, and Medium container </h3>
+    <p> Build on the previous example by creating even more dynamic and powerful layouts with `.col-sm-*` classes. </p>
+    <div responsive-demo class="grid-demo">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8">.col-xs-12 .col-sm-6 .col-md-8</div>
+            <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+        </div>
+        <div class="row">
+            <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+            <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+            <!-- Optional: clear the XS cols if their content doesn't match in height -->
+            <div class="clearfix visible-xs"></div>
+            <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+        </div>
+    </div>
+    <h3> Offsetting columns </h3>
+    <p> Move columns to the right using `.col-md-offset-*` classes. These classes increase the left margin of a column by * columns. For example, `.col-md-offset-4` moves `.col-md-4` over four columns. </p>
+    <div responsive-demo class="grid-demo">
+        <div class="row">
+            <div class="col-md-4">.col-md-4</div>
+            <div class="col-md-4 col-md-offset-4">.col-md-4 .col-md-offset-4</div>
+        </div>
+        <div class="row">
+            <div class="col-md-3 col-md-offset-3">.col-md-3 .col-md-offset-3</div>
+            <div class="col-md-3 col-md-offset-3">.col-md-3 .col-md-offset-3</div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">.col-md-6 .col-md-offset-3</div>
+        </div>
+    </div>
+    <h3> Column ordering </h3>
+    <p>Easily change the order of our built-in grid columns with .col-md-push-* and .col-md-pull-* modifier classes. </p>
+    <div responsive-demo class="grid-demo">
+        <div class="row">
+          <div class="col-xs-9 col-md-push-3">.col-xs-9 .col-md-push-3</div>
+          <div class="col-xs-3 col-md-pull-9">.col-xs-3 .col-md-pull-9</div>
+        </div>
+    </div>
+
+    <h2> Container </h2>
+    <p> Like in bootstrap, you can use the responsive class container to format content. </p>
+    <div responsive-demo>
+        <div class="container"><h4>I'm in a container !</h4></div>
+    </div>
+
+    <h2> Responsive utilities </h2>
+    <h3>Visible on...</h3>
+    <p>Green checkmarks indicate the element <strong>is visible</strong> in your current viewport.</p>
+    <div responsive-demo class="responsive-utility-demo">
+        <div class="row responsive-utilities-test visible-on">
+            <div class="col-xs-3">
+                <span class="hidden-xs">Extra small</span>
+                <span class="visible-xs">✔ Visible on x-small</span>
+            </div>
+            <div class="col-xs-3">
+                <span class="hidden-sm">Small</span>
+                <span class="visible-sm">✔ Visible on small</span>
+            </div>
+            <div class="col-xs-3">
+                <span class="hidden-md">Medium</span>
+                <span class="visible-md">✔ Visible on medium</span>
+            </div>
+            <div class="col-xs-3">
+                <span class="hidden-lg">Large</span>
+                <span class="visible-lg">✔ Visible on large</span>
+            </div>
+        </div>
+        <div class="row responsive-utilities-test visible-on">
+            <div class="col-xs-6">
+                <span class="hidden-xs hidden-sm">Extra small and small</span>
+                <span class="visible-xs visible-sm">✔ Visible on x-small and small</span>
+            </div>
+            <div class="col-xs-6">
+                <span class="hidden-md hidden-lg">Medium and large</span>
+                <span class="visible-md visible-lg">✔ Visible on medium and large</span>
+            </div>
+            <div class="clearfix visible-xs"></div>
+            <div class="col-xs-6">
+                <span class="hidden-xs hidden-md">Extra small and medium</span>
+                <span class="visible-xs visible-md">✔ Visible on x-small and medium</span>
+            </div>
+            <div class="col-xs-6">
+                <span class="hidden-sm hidden-lg">Small and large</span>
+                <span class="visible-sm visible-lg">✔ Visible on small and large</span>
+            </div>
+            <div class="clearfix visible-xs"></div>
+            <div class="col-xs-6">
+                <span class="hidden-xs hidden-lg">Extra small and large</span>
+                <span class="visible-xs visible-lg">✔ Visible on x-small and large</span>
+            </div>
+            <div class="col-xs-6">
+                <span class="hidden-sm hidden-md">Small and medium</span>
+                <span class="visible-sm visible-md">✔ Visible on small and medium</span>
+            </div>
+        </div>
+    </div>
+    <h3>Hidden on...</h3>
+    <p>Here, green checkmarks also indicate the element <strong>is hidden</strong> in your current viewport.</p>
+    <div responsive-demo class="responsive-utility-demo">
+        <div class="row responsive-utilities-test hidden-on">
+            <div class="col-xs-3">
+                <span class="hidden-xs">Extra small</span>
+                <span class="visible-xs">✔ Hidden on x-small</span>
+            </div>
+            <div class="col-xs-3">
+                <span class="hidden-sm">Small</span>
+                <span class="visible-sm">✔ Hidden on small</span>
+            </div>
+            <div class="col-xs-3">
+                <span class="hidden-md">Medium</span>
+                <span class="visible-md">✔ Hidden on medium</span>
+            </div>
+            <div class="col-xs-3">
+                <span class="hidden-lg">Large</span>
+                <span class="visible-lg">✔ Hidden on large</span>
+            </div>
+        </div>
+        <div class="row responsive-utilities-test hidden-on">
+            <div class="col-xs-6">
+                <span class="hidden-xs hidden-sm">Extra small and small</span>
+                <span class="visible-xs visible-sm">✔ Hidden on x-small and small</span>
+            </div>
+            <div class="col-xs-6">
+                <span class="hidden-md hidden-lg">Medium and large</span>
+                <span class="visible-md visible-lg">✔ Hidden on medium and large</span>
+            </div>
+            <div class="clearfix visible-xs"></div>
+            <div class="col-xs-6">
+                <span class="hidden-xs hidden-md">Extra small and medium</span>
+                <span class="visible-xs visible-md">✔ Hidden on x-small and medium</span>
+            </div>
+            <div class="col-xs-6">
+                <span class="hidden-sm hidden-lg">Small and large</span>
+                <span class="visible-sm visible-lg">✔ Hidden on small and large</span>
+            </div>
+            <div class="clearfix visible-xs"></div>
+            <div class="col-xs-6">
+                <span class="hidden-xs hidden-lg">Extra small and large</span>
+                <span class="visible-xs visible-lg">✔ Hidden on x-small and large</span>
+            </div>
+            <div class="col-xs-6">
+                <span class="hidden-sm hidden-md">Small and medium</span>
+                <span class="visible-sm visible-md">✔ Hidden on small and medium</span>
+            </div>
+        </div>
+    </div>
+
+    <h2>Responsive Viewport directive </h2>
+    <p>This directive is responsible for putting the proper <code> ev-viewport-*size* </code> class on a container depanding on its size. For performance reason it doesn't watch the width of the element. So each time a resize happens, the event <code>module-layout-changed</code> must be triggered in order for the class to update if the size has changed. </p>
+    <p> The default upper limits are are <code><300px</code> very small, <code><450px</code> small, <code><700px</code> medium and <code>>=700px</code> large. They can be overriden.
+    <div resizable ev-responsive-viewport class="grid-demo resizable container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-8">.col-xs-12 .col-sm-6 .col-md-8</div>
+            <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+        </div>
+        <div class="row">
+            <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+            <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+            <!-- Optional: clear the XS cols if their content doesn't match in height -->
+            <div class="clearfix visible-xs"></div>
+            <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+        </div>
+    </div>
+    <h2>Limit classes </h2>
+    <p> It is possible to specify a max size and min size for viewport well, with the classes <code>ev-min-*size*</code> and <code>ev-max-*size</code>. For instance, if you want a viewport that don't go below <code>md</code> size, you can add <code>ev-min-md</code><p>
+    <p>Below is a div with the class <code>ev-min-sm</code> et <code>ev-max-md</code></p>
+    <div resizable ev-responsive-viewport class="ev-min-sm ev-max-md responsive-utility-demo resizable">
+        <div class="row responsive-utilities-test hidden-on">
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                <span class="hidden-xs">Extra small</span>
+                <span class="visible-xs">✔ Hidden on x-small</span>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                <span class="hidden-sm">Small</span>
+                <span class="visible-sm">✔ Hidden on small</span>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                <span class="hidden-md">Medium</span>
+                <span class="visible-md">✔ Hidden on medium</span>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                <span class="hidden-lg">Large</span>
+                <span class="visible-lg">✔ Hidden on large</span>
+            </div>
+        </div>
+    </div>
+
+    {% endraw %}
+
+    {% include script.html %}
+    <script type='text/javascript' src='app/app.js'></script>

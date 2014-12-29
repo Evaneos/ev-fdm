@@ -1,0 +1,297 @@
+---
+layout: default
+title: CSS
+is_index: false
+---
+{% raw %}
+<div class="clearfix container" ng-app="app" ev-responsive-viewport>
+    <header>
+        <hgroup><h1>CSS Styleguide</h1></hgroup>
+    </header>
+    <aside>
+        <nav><ul>
+            <li><a href="index.html">0.0: Overview</a></li>
+                <li><a href="section-1.html">1.0: Colors</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-1.html#1.1">1.1: Neutral colors classes</a>
+                    <li><a href="section-1.html#1.2">1.2: Palette color classes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-2.html">2.0: Buttons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-2.html#2.1">2.1: Default button</a>
+                    <li><a href="section-2.html#2.2">2.2: Base style &amp; state</a>
+                    <li><a href="section-2.html#2.3">2.3: Colors</a>
+                    <li><a href="section-2.html#2.4">2.4: Type</a>
+                    <li><a href="section-2.html#2.5">2.5: Size</a>
+                    <li><a href="section-2.html#2.6">2.6: Icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-3.html">3.0: Lists</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-3.html#3.1">3.1: Unstyled list</a>
+                    <li><a href="section-3.html#3.2">3.2: Standard list</a>
+                    <li><a href="section-3.html#3.3">3.3: Item styling</a>
+                </ul>
+            -->
+                </li>
+        </ul></nav>
+    </aside>
+    <div role="main">
+        <article>
+
+
+                    <h1><span class="text-dark">1.0</span> Colors</h1>
+
+
+
+                <section>
+
+                    <h2><span class="text-dark">1.1</span> Neutral colors classes</h1>
+
+                        <p>Neutral colors are used when the support should not convey any specific information.
+They can be used ad background color or text colors.</p>
+<p>You can customize the name and values you need by changing the list of colors in the <code>colors/variable.less</code> file.</p>
+
+
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">1.1.1</span> Neutral background colors</h1>
+
+                        <p>A scale of neutral background colors</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.bg-white-soil</strong>
+                            <span class="text-light"> <p>Add a white soil background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-white-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-bright-soil</strong>
+                            <span class="text-light"> <p>Add a bright soil background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-bright-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-light-soil</strong>
+                            <span class="text-light"> <p>Add a light soil background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-light-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-soil</strong>
+                            <span class="text-light"> <p>Add a soil background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-deep-soil</strong>
+                            <span class="text-light"> <p>Add a deep soil background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-deep-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-dark-soil</strong>
+                            <span class="text-light"> <p>Add a dark soil background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-dark-soil"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;div style=&quot;height:100px; width: 100px&quot; class=&quot;{$modifiers}&quot;&gt;&lt;/div&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">1.1.2</span> Soil text colors</h1>
+
+                        <p>A scale of soil text colors</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.text-white-soil</strong>
+                            <span class="text-light"> <p>Color the text in a white soil</p>
+</span>
+                            <div>
+                                <p class="text-white-soil">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-bright-soil</strong>
+                            <span class="text-light"> <p>Color the text in a bright soil</p>
+</span>
+                            <div>
+                                <p class="text-bright-soil">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-light-soil</strong>
+                            <span class="text-light"> <p>Color the text in a light soil</p>
+</span>
+                            <div>
+                                <p class="text-light-soil">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-soil</strong>
+                            <span class="text-light"> <p>Color the text in a soil</p>
+</span>
+                            <div>
+                                <p class="text-soil">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-deep-soil</strong>
+                            <span class="text-light"> <p>Color the text in a deep soil</p>
+</span>
+                            <div>
+                                <p class="text-deep-soil">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-dark-soil</strong>
+                            <span class="text-light"> <p>Color the text in a dark soil</p>
+</span>
+                            <div>
+                                <p class="text-dark-soil">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;p class=&quot;{$modifiers}&quot;&gt;Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.&lt;/p&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">1.2</span> Palette color classes</h1>
+
+                        <p>These colors are defined in the brand palette. They are used when a specific meaning is associated with the element</p>
+
+
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">1.2.1</span> Background colors</h1>
+
+                        <p>A scale of palette background colors</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.bg-orange</strong>
+                            <span class="text-light"> <p>Add a orange background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-orange"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-pool</strong>
+                            <span class="text-light"> <p>Add a blue background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-pool"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-gold</strong>
+                            <span class="text-light"> <p>Add a yellow background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-gold"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-lime</strong>
+                            <span class="text-light"> <p>Add a green background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-lime"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;div style=&quot;height:100px; width: 100px&quot; class=&quot;{$modifiers}&quot;&gt;&lt;/div&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">1.2.2</span> Text colors</h1>
+
+                        <p>A scale of palette text colors</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.text-orange</strong>
+                            <span class="text-light"> <p>Color the text in orange</p>
+</span>
+                            <div>
+                                <p class="text-orange">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-pool</strong>
+                            <span class="text-light"> <p>Color the text in blue</p>
+</span>
+                            <div>
+                                <p class="text-pool">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-gold</strong>
+                            <span class="text-light"> <p>Color the text in yellow</p>
+</span>
+                            <div>
+                                <p class="text-gold">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.text-lime</strong>
+                            <span class="text-light"> <p>Color the text in green</p>
+</span>
+                            <div>
+                                <p class="text-lime">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;p class=&quot;{$modifiers}&quot;&gt;Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.&lt;/p&gt;</pre>
+                    </div>
+
+                </section>
+        </article>
+    </div>
+</div>
+
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='public/app.js'></script>
+<script type='text/javascript' src='/js/kss.js'></script>

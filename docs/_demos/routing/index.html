@@ -1,0 +1,46 @@
+---
+layout: header-less
+title: Routing
+is_index: true
+---
+{% raw %}
+<div ng-app="demo">
+    <div id="lisette-menu" class="navbar navbar-inverse affix">
+        <ul id="small-menu" class="nav navbar-right navbar-nav">
+            <li class="dropdown module menu-item">
+                <a class="toggle dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="icon icon-display-inline"></i>
+                    <span>Menu</span>
+                </a>
+                <ul class="dropdown-menu">
+                </ul>
+            </li>
+        </ul>
+
+        <ul id="profile-menu" class="nav navbar-nav navbar-right">
+        </ul>
+
+        <ul id="lisette-menu-items" class="nav navbar-nav" style="left: 100px; right: 200px;">
+          <li class="menu-item"><a ui-sref="quote({quote: 1})">                       <span class="title">Q1</span></a></li>
+          <li class="menu-item"><a ui-sref="quote({quote: 2})">                       <span class="title">Q2</span></a></li>
+          <li class="menu-item"><a ui-sref="quote({quote: 3})">                       <span class="title">Q3</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.proposal({quote: 1, proposal: 1})"> <span class="title">Q1P1</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.proposal({quote: 2, proposal: 1})"> <span class="title">Q2P1</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.proposal({quote: 1, proposal: 2})"> <span class="title">Q1P2</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.proposal({quote: 2, proposal: 2})"> <span class="title">Q2P2</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.proposal2({quote: 1, proposal: 2})"><span class="title">P2Q1</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.proposal2({quote: 2, proposal: 2})"><span class="title">P2Q2</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.message.proposal({quote: 1, proposal: 2, message: 1})"><span class="title">Q1M1P2</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.message({quote: 1, message: 1})"><span class="title">Q1M1</span></a></li>
+          <li class="menu-item"><a ui-sref="quote.message({quote: 2, message: 1})"><span class="title">Q2M1</span></a></li>
+        </ul>
+    </div>
+
+    <div class="lisette-body">
+          <ev-panels ev-module></ev-panels>
+    </div>
+</div>
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='app/app.js'></script>

@@ -1,9 +1,3 @@
-demo/bower_components/*
-demo/node_modules/*
-node_modules/*
+_site
+node_modules
 bower_components
-.idea
-
-# eclipse ide
-.project
-.settings

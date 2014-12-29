@@ -1,0 +1,65 @@
+<div>
+    <h3>Debug</h3>
+    <ul>
+        <li ng-class="{ 'text-info': submitted }">
+            Form submitted: {{ submitted }}
+        </li>
+        <li>
+            Form valid:
+            <span ng-class="{ 'text-info': myForm.$valid, 'text-danger': !myForm.$valid }">{{ myForm.$valid }}</span>
+        </li>
+        <li>
+            Login  : {{ user.login }}
+
+            <ul>
+                <li>RAW errors: {{ myForm.login.$error }}</li>
+                <li>Validable: {{ myForm.login.evValidable }}</li>
+                <li>evHasError: {{ myForm.login.evHasError }}</li>
+                <li>Required:
+                    <span class="text-info" ng-hide="myForm.login.$error.required">valid</span>
+                    <span class="text-danger" ng-show="myForm.login.$error.required">in error</span>
+                </li>
+                <li>Min length:
+                    <span class="text-info" ng-hide="myForm.login.$error.minlength">valid</span>
+                    <span class="text-danger" ng-show="myForm.login.$error.minlength">in error</span>
+                </li>
+            </ul>
+        </li>
+
+        <li>
+            Password  : {{ user.password }}
+
+            <ul>
+                <li>RAW errors: {{ myForm.password.$error }}</li>
+                <li>evValidable: {{ myForm.password.evValidable }}</li>
+                <li>evHasError: {{ myForm.password.evHasError }}</li>
+                <li>Required:
+                    <span class="text-info" ng-hide="myForm.password.$error.required">valid</span>
+                    <span class="text-danger" ng-show="myForm.password.$error.required">in error</span>
+                </li>
+                <li>Min length:
+                    <span class="text-info" ng-hide="myForm.password.$error.minlength">valid</span>
+                    <span class="text-danger" ng-show="myForm.password.$error.minlength">in error</span>
+                </li>
+            </ul>
+        </li>
+
+        <li>
+            Email  : {{ user.email }}
+
+            <ul>
+                <li>RAW errors: {{ myForm.email.$error }}</li>
+                <li>evValidable: {{ myForm.email.evValidable }}</li>
+                <li>evHasError: {{ myForm.email.evHasError }}</li>
+                <li>Required:
+                    <span class="text-info" ng-hide="myForm.email.$error.required">valid</span>
+                    <span class="text-danger" ng-show="myForm.email.$error.required">in error</span>
+                </li>
+                <li>Format:
+                    <span class="text-info" ng-hide="myForm.email.$error.pattern">valid</span>
+                    <span class="text-danger" ng-show="myForm.email.$error.pattern">invalid</span>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>

@@ -1,0 +1,73 @@
+---
+layout: default
+title: Plugins
+is_index: true
+---
+{% raw %}
+<div class="controller-demo container" ng-app="demo">
+    <h1> Plugins </h1>
+    <p class="lead">Plugins are independant component that can be included to ev-fdm. They usually rely on external libraries.</p>
+    <p class="alert alert-error"> <strong>TODO</strong> Fix this demo module </p>
+
+    <h2> Leaflet directive </h2>
+    <p> A directive that encapsulate the leflet map directive </p>
+    <p>You can configure me with special icons</p>
+    <h3>Demo </h3>
+    <div>
+        <ev-leaflet coordinate="coord" editable="true" />
+    </div>
+    <br>
+    <p>
+        <code> coordinate: {{coord | json}} </code>
+    </p>
+
+
+    <h2> Picture upload directive </h2>
+    <p>
+        Check my <a href="https://github.com/Evaneos/ev-fdm/blob/eve-84/plugins/upload/js/directives/pictureUploadDirective.js"> Source code </a>
+    </p>
+    <br>
+    <p>
+        Upload Url: <input type="text" ng-model="uploadUrl" style="width:400px;">
+    </p>
+    <ev-picture-upload
+        url="{{uploadUrl}}"
+        picture-success="pictures.push(picture)"
+        class="col-xs-8"/>
+    <br>
+    <h4> List of pictures object from the directive </h4>
+    <pre><code>
+        {{pictures | json}}
+    </code></pre>
+
+
+    <h2> TinyMCE directive </h2>
+    <p>A TinyMCE implementation</p>
+    <p>You can change TinyMCE options using <code>options</code> attribute</p>
+    <p>See <a href="http://www.tinymce.com/wiki.php/Configuration" target="_blank">TinyMCE 4.0 documentation</a> for more informations</p>
+    <h3>Demo</h3>
+    <div>
+        <ev-tinymce ng-model="demoText" max-chars="50" placeholder="You can type me in !"></ev-tinymce>
+    </div>
+    <pre> <code>{{demoText}}</code></pre>
+
+
+</div>
+{% endraw %}
+{% include script.html %}
+
+
+<link type="text/css" rel="stylesheet" media="all" href="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.css" />
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/leaflet-dist/leaflet.js'></script>
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/angular-leaflet-directive/dist/angular-leaflet-directive.min.js'></script>
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/ev-fdm/dist/plugins/leaflet/ev-fdm-leaflet.js'></script>
+
+<script src="https://code.angularjs.org/1.2.6/angular-mocks.js"></script>
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/dropzone/downloads/dropzone.js'></script>
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/ev-fdm/dist/plugins/upload/ev-fdm-upload.js'></script>
+
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/tinymce/tinymce.min.js'></script>
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/angular-ui-tinymce/src/tinymce.js'></script>
+<script type='text/javascript' src='{{ site.baseurl }}bower_components/ev-fdm/dist/plugins/tinymce/ev-fdm-tinymce.min.js'></script>
+
+<script type='text/javascript' src='app/app.js'></script>

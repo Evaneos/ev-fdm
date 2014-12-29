@@ -1,0 +1,65 @@
+---
+layout: default
+title: Panels
+is_index: true
+---
+{% raw %}
+<div ng-app="demo" >
+    <h1>Introducing panels <small> the heart and soul of ev-fdm</small></h1>
+    Panels (aka ev-panels) are a special type of viewport in ev-fdm. 
+    <section ng-controller="introController">
+        <h2> Normal panels </h2>
+        <ev-panels> </ev-panels>
+        <script type="text/ng-template" id="intro-panel-1.html">
+            <h3> I'm a panel </h3> 
+            <p> Basically, it's just a viewport that can be close and opened. <em> TODO Explain how to create a panel </em></p>
+        </script>
+    </section>
+    <h2> Responsive example </h2>
+    <ev-panels id="responsive-example"> </ev-panels>
+    <script type="text/ng-template" id="responsive-panel.html">
+        <h3> I'm a panel </h3>
+        <div class="grid-demo ev-stacked-hide">
+            <div class="row">
+                <div class="col-xs-12 col-sm-6 col-md-8">.col-xs-12 .col-sm-6 .col-md-8</div>
+                <div class="col-xs-6 col-md-4">.col-xs-6 .col-md-4</div>
+            </div>
+            <div class="row">
+                <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+                <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+                <!-- Optional: clear the XS cols if their content doesn't match in height -->
+                <div class="clearfix visible-xs"></div>
+                <div class="col-xs-6 col-sm-4">.col-xs-6 .col-sm-4</div>
+            </div>
+        </div>
+    </script>
+    
+    <h2> Stacked panels </h2>
+    <ev-panels id="stacked-example"> </ev-panels>
+    <script type="text/ng-template" id="stacked-panel.html">
+    <div>
+        <h3 class="ev-stacked-show"> Gray wolf </h3> 
+        <h3 class="ev-stacked-hide"> Gray wolf <em> Canis lupus lupus </em></h3> 
+        <p class="ev-stacked-hide"> The gray wolf (Canis lupus), also known as the timber wolf, true wolf or western wolf is a canid native to the wilderness and remote areas of North America, Eurasia, and North Africa. It is the largest extant member of its family, with males averaging 43–45 kg (95–99 lb), and females 36–38.5 kg (79–85 lb). Like the red wolf, it is distinguished from other Canis species by its larger size and less pointed features, particularly on the ears and muzzle. Its winter fur is long and bushy, and predominantly a mottled gray in color, although nearly pure white, red, or brown to black also occur. </p> 
+        </div>
+    </script>
+
+
+    <h2> Panels with header </h2>
+    One nice trick, you can create fixed header with variables length using the helper class <code>.ev-fixed-header</code>
+    <div style="height: 200px;">
+        <ev-panels style="height: 100%" id="fixed-header-example"> </ev-panels>
+    </div>
+    <script type="text/ng-template" id="fixed-header-panel.html">
+        <div class="ev-fixed-header ev-stacked-hide">
+        <h3 class="ev-header"> Artic fox  </h3> 
+        <div class="ev-fixed-header">
+            <h4 class="ev-header"> <em>Vulpes lagopus</em> </h4> 
+            <p class="ev-body"> The arctic fox (Vulpes lagopus), also known as the white fox, polar fox, or snow fox, is a small fox native to the Arctic regions of the Northern Hemisphere and common throughout the Arctic tundra biome. It is well adapted to living in cold environments. It has a deep thick fur which is brown in summer and white in winter. Its body length ranges from 46 to 68 cm (18 to 27 in), with a generally rounded body shape to minimize the escape of body heat. </p>
+        </div>
+    </div>
+    </script>
+    {% endraw %}
+
+    {% include script.html %}
+    <script type='text/javascript' src='app/app.js'></script>

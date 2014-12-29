@@ -1,33 +1,18 @@
 {
-  "name": "ev-fdm",
-  "version": "0.3.1",
-  "homepage": "https://github.com/evaneos/pro.evaneos.com",
+  "name": "ev-fdm-demo",
+  "version": "0.0.1",
+  "homepage": "http://www.evaneos.com",
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components"
+    "bower_components",
+    "test",
+    "tests"
   ],
   "dependencies": {
-    "jquery": "~2.0.3",
-    "angular": "1.2.16",
-    "angular-ui-router": "git@github.com:Evaneos/ui-router#view-prevent-update",
-    "angular-animate": "1.2.16",
-    "angular-ui-select2": "~0.0.2",
-    "angular-loading-bar": "~0.6.0",
-    "bootstrap": "3.0.0",
-    "jquery-ui": "~1.10.3",
-    "angular-bootstrap": "~0.9.0",
-    "less.js": "~1.6.0",
-    "checklist-model": "~0.1.3",
-    "moment": "~2.5.1",
-    "angular-moment": "~0.6.2",
-    "angular-ui-date": "~0.0.3",
-    "jquery.floatThead": "1.2.8",
-    "underscore": "~1.5.1",
-    "restangular": "~1.4.0",
-    "angular-leaflet-directive": "~0.7.7",
-    "dropzone": "~3.10.2",
-    "tinymce": "4.1.6"
+    "ev-fdm": "git@github.com:Evaneos/ev-fdm.git#design_improvement",
+    "octicons": "*"
   },
   "resolutions": {
     "angular": "1.2.16"

@@ -1,41 +1,53 @@
-ev-fdm
-======
+EV-FDM DEMO
+===========
 
-Framework de Malade / Framework de Merde / Faute de Mieux
+## Getting started
 
-This is the JS and CSS framework used for the backoffice of Evaneos.com
+- Install Jekyll gem:
 
-## Architecture of the repository
+```
+$ gem install jekyll
+```
 
-This repository contains the following things:
+For gem to install jekyll, you need to install ruby dev packages.
+For exemple in Ubuntu:
 
- - the main framework code, in the `core` directory
- - the plugin code, available in the `plugin` directory
- - the compiled files, in the dist directory
+```
+$ apt-get install ruby1.9.1-dev
+```
 
-NB: Different compiled files can be found. You'll have the default ones, with all the js files from plugins and core concatenated in one file (`ev-fdm-core-and-plugins.js`). But also the `js` files before concatenation, corresponding to the `core` and `plugins`
+- Retrieve dependencies:
 
-## Requirements
+```
+$ make install
+```
 
-If you simply want to use the framework, you simly need to have bower installed, as you can see in the demo.
+- Start gulp with default task and in watch mode:
 
-However if you want to recompile the sources, this framework require the following applications to be installed :
+```
+$ make watch
+```
 
- - node
- - npm
- - gulp
- - bower
+- Start jekyll (only necessary if not on docker)
 
-## Using the demo
+```
+jekyll serve --watch
+```
 
-in the demo repository, execute
+## Folder structure
 
-    make install
+Each demo has its own separated application. All the application folder can be found in `docs/_demos`.
 
-and you are good to go !
+## Usefull links
 
-## Compiling the framework
+- [EVFDM demo website](http://evfdmdemo.dev.evaneos.com)
+- [EVFDM source code](https://github.com/evaneos/ev-fdm)
+- [Jekyll documentation](http://jekyllrb.com/)
 
-At the root of the project, run
+## Deploy
 
-    make watch
+Use fabric with the following command:
+
+```
+fab deploy:branch=master
+```

@@ -1,0 +1,44 @@
+<div class="navbar navbar-inverse affix">
+        <ul id="small-menu" class="nav navbar-right navbar-nav">
+            <li class="dropdown module menu-item">
+                <a class="toggle dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="icon icon-display-inline"></i>
+                    <span>Menu</span>
+                </a>
+                <ul class="dropdown-menu">
+                    {% for demo in site.demos | where:"is_index","true" %}
+                        {% if demo.is_index %}
+                            <li class="menu-item module ">
+                                <a href="{{ demo.url }}">
+                                    <i class="icon icon-money"></i>
+                                    <span class="title">{{ demo.title }}</span>
+                                    <span class="caret"></span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+
+        <ul id="profile-menu" class="nav navbar-nav navbar-right">
+            <li class="menu-item module menu-help">
+                <a href="https://github.com/evaneos/ev-fdm-demo">
+                    <span class="title"><span class="octicon octicon-mark-github"></span> Source</span>
+                </a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav" style="left: 100px; right: 200px;">
+            {% for demo in site.demos | where:"is_index","true" %}
+                {% if demo.is_index %}
+                    <li class="menu-item module">
+                        <a href="{{ demo.url }}">
+                            <span class="title">{{ demo.title }}</span>
+                            <span class="caret"></span>
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>

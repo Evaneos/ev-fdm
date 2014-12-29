@@ -1,0 +1,88 @@
+---
+layout: default
+title: Validation
+is_index: true
+---
+{% raw %}
+<div ng-app="demo">
+    <div class="container" style="padding-top: 50px">
+        <form ng-controller="MainController as main" name="myForm" novalidate ev-submit="submit()" ng-cloak>
+
+            <h3>Form validation</h3>
+
+            <p>Submit is canceled when form is not valid. Form validations occurs on:</p>
+            <ul>
+                <li>keydown after the field has been blurred one time</li>
+                <li>form submit (either submit button or pressing enter key).</li>
+            </ul>
+
+            <p>Source : <a href="https://github.com/Evaneos/ev-fdm-demo/tree/validation/docs/_demos/validation">ev-fdm-demo/tree/validation/docs/_demos/validation</a></p>
+
+
+            <div style="width: 50%; float: right;" >
+                <ev-form-group>
+                    <label for="login">Login (required, min 3 chars, validable on blur)</label>
+                    <input type="text"
+                            class="form-control"
+                            autocomplete="off"
+                            ng-model="user.login"
+                            ng-required="true"
+                            ng-minlength="3"
+                            name="login"
+                            ev-validable
+                            >
+                    <ev-errors>
+                        <ev-error-message input="myForm.login" error="required">Login is required</ev-error-message>
+                        <ev-error-message input="myForm.login" error="minlength">Login length must be greater than 3 characters</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+
+                <ev-form-group>
+                    <label for="name">Password (required, min 6 chars, validable on keyup)</label>
+                    <input type="password"
+                            class="form-control"
+                            autocomplete="off"
+                            ng-model="user.password"
+                            ng-required="true"
+                            name="password"
+                            ev-validable
+                            ng-minlength="6"
+                            >
+                    <ev-errors>
+                        <ev-error-message input="myForm.password" error="required">Password is required</ev-error-message>
+                        <ev-error-message input="myForm.password" error="minlength">Password length must be greater than 6 characters</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+
+                <ev-form-group>
+                    <label for="email">Email (required, email pattern, validable on blur)</label>
+                    <input type="email"
+                            class="form-control"
+                            autocomplete="off"
+                            ng-model="user.email"
+                            ng-required="true"
+                            name="email"
+                            ev-validable
+                            ng-pattern="emailPattern"
+                            >
+                    <ev-errors>
+                        <ev-error-message input="myForm.email" error="required">Email is required</ev-error-message>
+                        <ev-error-message input="myForm.email" error="pattern">Email is invalid</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+
+                <button type="submit" class="btn btn-default">Submit</button>
+            </div>
+
+            {% endraw %}
+            {% include validation_debug.html %}
+            {% raw %}
+        </form>
+    </div>
+</div>
+{% endraw %}
+
+
+{% include script.html %}
+<script type='text/javascript' src='app/app.js'></script>
+<script type='text/javascript' src='app/controllers/MainController.js'></script>

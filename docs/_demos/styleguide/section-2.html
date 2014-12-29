@@ -1,0 +1,326 @@
+---
+layout: default
+title: CSS
+is_index: false
+---
+{% raw %}
+<div class="clearfix container" ng-app="app" ev-responsive-viewport>
+    <header>
+        <hgroup><h1>CSS Styleguide</h1></hgroup>
+    </header>
+    <aside>
+        <nav><ul>
+            <li><a href="index.html">0.0: Overview</a></li>
+                <li><a href="section-1.html">1.0: Colors</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-1.html#1.1">1.1: Neutral colors classes</a>
+                    <li><a href="section-1.html#1.2">1.2: Palette color classes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-2.html">2.0: Buttons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-2.html#2.1">2.1: Default button</a>
+                    <li><a href="section-2.html#2.2">2.2: Base style &amp; state</a>
+                    <li><a href="section-2.html#2.3">2.3: Colors</a>
+                    <li><a href="section-2.html#2.4">2.4: Type</a>
+                    <li><a href="section-2.html#2.5">2.5: Size</a>
+                    <li><a href="section-2.html#2.6">2.6: Icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-3.html">3.0: Lists</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-3.html#3.1">3.1: Unstyled list</a>
+                    <li><a href="section-3.html#3.2">3.2: Standard list</a>
+                    <li><a href="section-3.html#3.3">3.3: Item styling</a>
+                </ul>
+            -->
+                </li>
+        </ul></nav>
+    </aside>
+    <div role="main">
+        <article>
+
+
+                    <h1><span class="text-dark">2.0</span> Buttons</h1>
+
+                        <p>A basic UI component triggering an action. Button styles can be applied to anything with the <code>.btn</code> class applied.
+However, typically you&#39;ll want to apply these to only <code>&lt;a&gt;</code> and <code>&lt;button&gt;</code> elements for the best rendering.</p>
+
+
+
+                <section>
+
+                    <h2><span class="text-dark">2.1</span> Default button</h1>
+
+                        <p>This is the simplest button use case with no modifiers implied.
+It can be applied on <code>button</code>, <code>a</code> and <code>input[type:submit|type:reset|type:button]</code> elements.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <div>
+                                <button class="btn">Button</button>
+<a class="btn">Link</a>
+<input class="btn" type="submit" value="Submit">
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn&quot;&gt;Button&lt;/button&gt;
+&lt;a class=&quot;btn&quot;&gt;Link&lt;/a&gt;
+&lt;input class=&quot;btn&quot; type=&quot;submit&quot; value=&quot;Submit&quot;&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">2.2</span> Base style &amp; state</h1>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>default</strong>
+                            <span class="text-light"> <p>A button in normal state</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary default">Button</button>
+<button class="btn btn-secondary default">Button</button>
+<button class="btn btn-tertiary default">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>:hover</strong>
+                            <span class="text-light"> <p>Hover state</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary pseudo-class-hover">Button</button>
+<button class="btn btn-secondary pseudo-class-hover">Button</button>
+<button class="btn btn-tertiary pseudo-class-hover">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>:active</strong>
+                            <span class="text-light"> <p>Active state</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary pseudo-class-active">Button</button>
+<button class="btn btn-secondary pseudo-class-active">Button</button>
+<button class="btn btn-tertiary pseudo-class-active">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.disabled</strong>
+                            <span class="text-light"> <p>Disabled button. If you use <code>&lt;button&gt;</code> element, that is acceptable to add disabled attribute instead.</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary disabled">Button</button>
+<button class="btn btn-secondary disabled">Button</button>
+<button class="btn btn-tertiary disabled">Button</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn btn-primary {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn btn-secondary {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn btn-tertiary {$modifiers}&quot;&gt;Button&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">2.3</span> Colors</h1>
+
+                        <p>You can change the color of the button by adding any of these classes. You can customize the list of colored button
+you need by changing the list of colors in the <code>buttons/variable.less</code> file.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.btn-soil</strong>
+                            <span class="text-light"> <p>A button color soil (default value, this class is optional)</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-soil">Button</button>
+<button class="btn btn-secondary btn-soil">Button</button>
+<button class="btn btn-tertiary btn-soil">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-orange</strong>
+                            <span class="text-light"> <p>A button color orange</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-orange">Button</button>
+<button class="btn btn-secondary btn-orange">Button</button>
+<button class="btn btn-tertiary btn-orange">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-pool</strong>
+                            <span class="text-light"> <p>A button color pool</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-pool">Button</button>
+<button class="btn btn-secondary btn-pool">Button</button>
+<button class="btn btn-tertiary btn-pool">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-lime</strong>
+                            <span class="text-light"> <p>A button color lime</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-lime">Button</button>
+<button class="btn btn-secondary btn-lime">Button</button>
+<button class="btn btn-tertiary btn-lime">Button</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn btn-primary {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn btn-secondary {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn btn-tertiary {$modifiers}&quot;&gt;Button&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">2.4</span> Type</h1>
+
+                        <p>There is three types of buttons:</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.btn-primary</strong>
+                            <span class="text-light"> <p>Primary button, used to emphasize the main call to action (usually one per viewport).</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-secondary</strong>
+                            <span class="text-light"> <p>Secondary button, normal buttons (default value, this class is optional)</p>
+</span>
+                            <div>
+                                <button class="btn btn-secondary">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-tertiary</strong>
+                            <span class="text-light"> <p>Tertiary button, light button, used generally inline, when you don&#39;t want to overload the interface.</p>
+</span>
+                            <div>
+                                <button class="btn btn-tertiary">Button</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn {$modifiers}&quot;&gt;Button&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">2.5</span> Size</h1>
+
+                        <p>You can change the size of any button by adding these class.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.btn-xs</strong>
+                            <span class="text-light"> <p>An extra small button</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-xs">Button</button>
+<button class="btn btn-secondary btn-xs">Button</button>
+<button class="btn btn-tertiary btn-xs">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-sm</strong>
+                            <span class="text-light"> <p>A small button</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-sm">Button</button>
+<button class="btn btn-secondary btn-sm">Button</button>
+<button class="btn btn-tertiary btn-sm">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-md</strong>
+                            <span class="text-light"> <p>A medium button (default value, this class is optional)</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-md">Button</button>
+<button class="btn btn-secondary btn-md">Button</button>
+<button class="btn btn-tertiary btn-md">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-lg</strong>
+                            <span class="text-light"> <p>A large button</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-lg">Button</button>
+<button class="btn btn-secondary btn-lg">Button</button>
+<button class="btn btn-tertiary btn-lg">Button</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.btn-block</strong>
+                            <span class="text-light"> <p>A block button having the full width of his parent</p>
+</span>
+                            <div>
+                                <button class="btn btn-primary btn-block">Button</button>
+<button class="btn btn-secondary btn-block">Button</button>
+<button class="btn btn-tertiary btn-block">Button</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn btn-primary {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn btn-secondary {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn btn-tertiary {$modifiers}&quot;&gt;Button&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">2.6</span> Icons</h1>
+
+                        <p>Of course, buttons can also contains icons to reinforce the button action</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <div>
+                                <button class="btn btn-primary"><span class="icon icon-create"></span>Add a line</button>
+<button class="btn btn-secondary"><span class="icon icon-tick"></span>Accept</button>
+<button class="btn btn-tertiary"><span class="icon icon-bin"></span>Delete</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn btn-primary&quot;&gt;&lt;span class=&quot;icon icon-create&quot;&gt;&lt;/span&gt;Add a line&lt;/button&gt;
+&lt;button class=&quot;btn btn-secondary&quot;&gt;&lt;span class=&quot;icon icon-tick&quot;&gt;&lt;/span&gt;Accept&lt;/button&gt;
+&lt;button class=&quot;btn btn-tertiary&quot;&gt;&lt;span class=&quot;icon icon-bin&quot;&gt;&lt;/span&gt;Delete&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+        </article>
+    </div>
+</div>
+
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='public/app.js'></script>
+<script type='text/javascript' src='/js/kss.js'></script>

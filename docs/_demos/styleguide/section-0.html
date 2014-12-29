@@ -1,0 +1,68 @@
+---
+layout: default
+title: CSS
+is_index: false
+---
+{% raw %}
+<div class="clearfix container" ng-app="app" ev-responsive-viewport>
+    <header>
+        <hgroup><h1>CSS Styleguide</h1></hgroup>
+    </header>
+    <aside>
+        <nav><ul>
+            <li><a href="index.html">0.0: Overview</a></li>
+                <li><a href="section-1.html">1.0: Buttons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-2.html">2.0: Lists</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-2.html#2.1">2.1: Unstyled list</a>
+                    <li><a href="section-2.html#2.2">2.2: Standard list</a>
+                    <li><a href="section-2.html#2.3">2.3: Item styling</a>
+                </ul>
+            -->
+                </li>
+        </ul></nav>
+    </aside>
+    <div role="main">
+        <article>
+
+                <section>
+
+                    <h2><strong>0.1</strong> - Gray background colors</h1>
+
+                        <p>A scale of gray background colors</p>
+<p>.bg-darker-gray
+.bg-dark-gray
+.bg-gray
+.bg-light-gray
+.bg-lighter-gray</p>
+
+
+                    <ul class="ev-list clearfix col-xs-12">
+                        <li>
+                            <div>
+                                <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;div style=&quot;height:100px; width: 100px&quot; class=&quot;{$modifiers}&quot;&gt;&lt;/div&gt;</pre>
+                    </div>
+
+                </section>
+        </article>
+    </div>
+</div>
+<script type='text/javascript' src='public/app.js'></script>
+
+
+
+
+{% endraw %}
+
+{% include script.html %}

@@ -1,0 +1,33 @@
+
+@activatedColor: #468847;
+
+.grid-demo .row > div:not(.clearfix) {
+    border: 1px solid lightgray;
+    background-color: lighten(lightgray, 20%);
+    min-height: 50px;
+    padding-top: 12px;
+    text-align: center;
+}
+
+.responsive-utility-demo .row > div:not(.clearfix) {
+    text-align: center;
+    margin-bottom: 10px;
+    span {
+        padding: 10px;
+        border: 1px solid lightgray;
+        border-radius: 3px;
+    }
+}
+
+.visible-on span, .hidden-on span {
+    &.visible-xs, &.visible-sm, &.visible-md, &.visible-lg {
+        color: @activatedColor;
+        background-color: lighten(@activatedColor, 40%);
+    }
+}
+
+
+
+.resizable {
+    resize: both;
+}

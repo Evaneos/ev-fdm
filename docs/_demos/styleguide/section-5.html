@@ -1,0 +1,525 @@
+---
+layout: default
+title: CSS
+is_index: false
+---
+{% raw %}
+<div class="clearfix container" ng-app="app" ev-responsive-viewport>
+    <header>
+        <hgroup><h1>CSS Styleguide</h1></hgroup>
+    </header>
+    <aside>
+        <nav><ul>
+            <li><a href="index.html">0.0: Overview</a></li>
+                <li><a href="section-1.html">1.0: Colors</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-1.html#1.1">1.1: Neutral colors classes</a>
+                    <li><a href="section-1.html#1.2">1.2: Palette color classes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-2.html">2.0: Buttons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-2.html#2.1">2.1: Default button</a>
+                    <li><a href="section-2.html#2.2">2.2: Base style &amp; state</a>
+                    <li><a href="section-2.html#2.3">2.3: Colors</a>
+                    <li><a href="section-2.html#2.4">2.4: Type</a>
+                    <li><a href="section-2.html#2.5">2.5: Size</a>
+                    <li><a href="section-2.html#2.6">2.6: Icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-3.html">3.0: Lists</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-3.html#3.1">3.1: Unstyled list</a>
+                    <li><a href="section-3.html#3.2">3.2: Standard list</a>
+                    <li><a href="section-3.html#3.3">3.3: Item styling</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-5.html">5.0: Icons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-5.html#5.1">5.1: Sizing &amp; colour</a>
+                    <li><a href="section-5.html#5.2">5.2: Rotation</a>
+                    <li><a href="section-5.html#5.3">5.3: Spinning &amp; transition</a>
+                    <li><a href="section-5.html#5.4">5.4: Default icons</a>
+                </ul>
+            -->
+                </li>
+        </ul></nav>
+    </aside>
+    <div role="main">
+        <article>
+
+
+                    <h1><span class="text-dark">5.0</span> Icons</h1>
+
+                        <p>Ev-fdm comes with a handful of helpful icon to bootstrap easily your application. They can be override with more furnish set of icons easily.
+You can indeed add, remove, or replace svg from the <code>/core/iconfont</code> folder. The iconfont will update when compiling.</p>
+<p>To use an icon, simply add <code>icon-&lt;name&gt;</code> class to a <code>span</code> or a <code>i</code> tag.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <div>
+                                <i class="icon-home"></i>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;i class=&quot;icon-home&quot;&gt;&lt;/i&gt;</pre>
+                    </div>
+
+                <section>
+
+                    <h2><span class="text-dark">5.1</span> Sizing &amp; colour</h1>
+
+                        <p>You can modify the size or the colour of an icon very easily</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.text-gold</strong>
+                            <span class="text-light"> <p>An icon colour gold (see the helper section for more info on colour classes)</p>
+</span>
+                            <div>
+                                <i class="icon-home text-gold"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-lg</strong>
+                            <span class="text-light"> <p>An icon a little bit more large</p>
+</span>
+                            <div>
+                                <i class="icon-home icon-lg"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-2x</strong>
+                            <span class="text-light"> <p>An icon 2x larger</p>
+</span>
+                            <div>
+                                <i class="icon-home icon-2x"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-3x</strong>
+                            <span class="text-light"> <p>An icon 3x larger</p>
+</span>
+                            <div>
+                                <i class="icon-home icon-3x"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-4x</strong>
+                            <span class="text-light"> <p>An icon 4x larger</p>
+</span>
+                            <div>
+                                <i class="icon-home icon-4x"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-5x</strong>
+                            <span class="text-light"> <p>An icon 5x larger</p>
+</span>
+                            <div>
+                                <i class="icon-home icon-5x"></i>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;i class=&quot;icon-home {$modifiers}&quot;&gt;&lt;/i&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">5.2</span> Rotation</h1>
+
+                        <p>You can rotate your icon or spin them.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.icon-quarter-turn</strong>
+                            <span class="text-light"> <p>Rotate 90 degree</p>
+</span>
+                            <div>
+                                <i class="icon-triangle icon-quarter-turn"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-half-turn</strong>
+                            <span class="text-light"> <p>Rotate 180 degree</p>
+</span>
+                            <div>
+                                <i class="icon-triangle icon-half-turn"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-minus-quarter-turn</strong>
+                            <span class="text-light"> <p>Rotate 270 degree</p>
+</span>
+                            <div>
+                                <i class="icon-triangle icon-minus-quarter-turn"></i>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;i class=&quot;icon-triangle {$modifiers}&quot;&gt;&lt;/i&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">5.3</span> Spinning &amp; transition</h1>
+
+                        <p>You can add your icon or spin them</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.icon-spin</strong>
+                            <span class="text-light"> <p>The icons spin infinitly.</p>
+</span>
+                            <div>
+                                <i class="icon-triangle icon-half-turn icon-spin"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-transition</strong>
+                            <span class="text-light"> <p>Enable transition on rotation, for a smoother expercience.</p>
+</span>
+                            <div>
+                                <i class="icon-triangle icon-half-turn icon-transition"></i>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;i class=&quot;icon-triangle icon-half-turn {$modifiers}&quot;&gt;&lt;/i&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h2><span class="text-dark">5.4</span> Default icons</h1>
+
+                        <p>The complete list of default icons</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.icon-arrow-down</strong>
+                            <span class="text-light"> <p>arrow-down icon</p>
+</span>
+                            <div>
+                                <i class="icon-arrow-down"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-arrow-left</strong>
+                            <span class="text-light"> <p>arrow-left icon</p>
+</span>
+                            <div>
+                                <i class="icon-arrow-left"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-arrow-right</strong>
+                            <span class="text-light"> <p>arrow-right icon</p>
+</span>
+                            <div>
+                                <i class="icon-arrow-right"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-arrow-up</strong>
+                            <span class="text-light"> <p>arrow-up icon</p>
+</span>
+                            <div>
+                                <i class="icon-arrow-up"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-article</strong>
+                            <span class="text-light"> <p>article icon</p>
+</span>
+                            <div>
+                                <i class="icon-article"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-bin</strong>
+                            <span class="text-light"> <p>bin icon</p>
+</span>
+                            <div>
+                                <i class="icon-bin"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-calendar</strong>
+                            <span class="text-light"> <p>calendar icon</p>
+</span>
+                            <div>
+                                <i class="icon-calendar"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-camera</strong>
+                            <span class="text-light"> <p>camera icon</p>
+</span>
+                            <div>
+                                <i class="icon-camera"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-clock</strong>
+                            <span class="text-light"> <p>clock icon</p>
+</span>
+                            <div>
+                                <i class="icon-clock"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-create</strong>
+                            <span class="text-light"> <p>create icon</p>
+</span>
+                            <div>
+                                <i class="icon-create"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-cross</strong>
+                            <span class="text-light"> <p>cross icon</p>
+</span>
+                            <div>
+                                <i class="icon-cross"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-discussions</strong>
+                            <span class="text-light"> <p>discussions icon</p>
+</span>
+                            <div>
+                                <i class="icon-discussions"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-display-hierarchical</strong>
+                            <span class="text-light"> <p>display-hierarchical icon</p>
+</span>
+                            <div>
+                                <i class="icon-display-hierarchical"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-download</strong>
+                            <span class="text-light"> <p>download icon</p>
+</span>
+                            <div>
+                                <i class="icon-download"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-eye</strong>
+                            <span class="text-light"> <p>eye icon</p>
+</span>
+                            <div>
+                                <i class="icon-eye"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-filter</strong>
+                            <span class="text-light"> <p>filter icon</p>
+</span>
+                            <div>
+                                <i class="icon-filter"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-fold</strong>
+                            <span class="text-light"> <p>fold icon</p>
+</span>
+                            <div>
+                                <i class="icon-fold"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-handle</strong>
+                            <span class="text-light"> <p>handle icon</p>
+</span>
+                            <div>
+                                <i class="icon-handle"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-help</strong>
+                            <span class="text-light"> <p>help icon</p>
+</span>
+                            <div>
+                                <i class="icon-help"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-home</strong>
+                            <span class="text-light"> <p>home icon</p>
+</span>
+                            <div>
+                                <i class="icon-home"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-infos</strong>
+                            <span class="text-light"> <p>infos icon</p>
+</span>
+                            <div>
+                                <i class="icon-infos"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-note</strong>
+                            <span class="text-light"> <p>note icon</p>
+</span>
+                            <div>
+                                <i class="icon-note"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-read</strong>
+                            <span class="text-light"> <p>read icon</p>
+</span>
+                            <div>
+                                <i class="icon-read"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-search</strong>
+                            <span class="text-light"> <p>search icon</p>
+</span>
+                            <div>
+                                <i class="icon-search"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-settings</strong>
+                            <span class="text-light"> <p>settings icon</p>
+</span>
+                            <div>
+                                <i class="icon-settings"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-stats</strong>
+                            <span class="text-light"> <p>stats icon</p>
+</span>
+                            <div>
+                                <i class="icon-stats"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-tick</strong>
+                            <span class="text-light"> <p>tick icon</p>
+</span>
+                            <div>
+                                <i class="icon-tick"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-triangle</strong>
+                            <span class="text-light"> <p>triangle icon</p>
+</span>
+                            <div>
+                                <i class="icon-triangle"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-unfold</strong>
+                            <span class="text-light"> <p>unfold icon</p>
+</span>
+                            <div>
+                                <i class="icon-unfold"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-users</strong>
+                            <span class="text-light"> <p>users icon</p>
+</span>
+                            <div>
+                                <i class="icon-users"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-warning</strong>
+                            <span class="text-light"> <p>warning icon</p>
+</span>
+                            <div>
+                                <i class="icon-warning"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-attached</strong>
+                            <span class="text-light"> <p>attached icon</p>
+</span>
+                            <div>
+                                <i class="icon-attached"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-edit</strong>
+                            <span class="text-light"> <p>edit icon</p>
+</span>
+                            <div>
+                                <i class="icon-edit"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-star-empty</strong>
+                            <span class="text-light"> <p>star-empty icon</p>
+</span>
+                            <div>
+                                <i class="icon-star-empty"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-star-mid</strong>
+                            <span class="text-light"> <p>star-mid icon</p>
+</span>
+                            <div>
+                                <i class="icon-star-mid"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-star</strong>
+                            <span class="text-light"> <p>star icon</p>
+</span>
+                            <div>
+                                <i class="icon-star"></i>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.icon-mail</strong>
+                            <span class="text-light"> <p>mail icon</p>
+</span>
+                            <div>
+                                <i class="icon-mail"></i>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;i class=&quot;{$modifiers}&quot;&gt;&lt;/i&gt;</pre>
+                    </div>
+
+                </section>
+        </article>
+    </div>
+</div>
+
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='public/app.js'></script>
+<script type='text/javascript' src='/js/kss.js'></script>

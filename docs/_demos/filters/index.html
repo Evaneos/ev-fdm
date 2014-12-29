@@ -1,0 +1,60 @@
+---
+layout: default
+title: Filters
+is_index: true
+---
+{% raw %}
+<!-- Double curly braces won't be interpreted by liquid parser as we are in raw mode -->
+<div class="lisette-body" ng-app="demo">
+    <div class="container" ui-view>
+        <h2> Sum </h2>
+        <p>
+            Usage : <code ng-non-bindable> {{ [{ value: 5 }, { value: 4 }] | sum:'value' }} </code>
+            <br>
+            Result : <code>{{ [{ value: 5 }, { value: 4 }] | sum:'value' }}</code>
+        </p>
+        <h2> PrettySecs </h2>
+        <p>
+            Usage : <code ng-non-bindable> {{ 3675| prettySecs }} </code>
+            <br>
+            Result : <code>{{ 3675 | prettySecs }}</code>
+        </p>
+        <h2> Replace </h2>
+        <p>
+            Replace the content of the input in the same fashion as <code> String.Prototype.replace </code> <br>
+            Usage : <code ng-non-bindable> {{ 'Hello everybody' | replace : RegExp('every') : 'no' }} </code>
+            <br>
+            Result : <code> {{ 'Hello everybody' | replace : RegExp('every') : 'no' }} </code>
+            <br>
+            <span class="text-warning"> Make sure that <code>RegExp</code> is attached to your scope if you want the inline notation </span>
+        </p>
+        <h2> Map </h2>
+        <p>
+            Replace the input according to a defined mapping <br>
+            Usage : <code ng-non-bindable> {{ something.ugly_integer_status | map : 'orderStatus' }} </code>
+            <br>
+            Mapping definition : <br>
+            <pre ng-non-bindable>
+            angular.module('super-module', ['ev-fdm'])
+                .config(function(mapFilterProvider) {
+                    mapFilterProvider.registerMapping('orderStatus', {
+                        0: 'Commande validée',
+                        1: 'Commande expédiée',
+                        2: 'Commande reçue'
+                    });
+
+                    // Optional, a default value can be defined
+                    mapFilterProvider.registerDefault('orderStatus', 'État inconnu');
+                })
+            ;
+            </pre>
+            <br>
+            <!-- Waiting for #61 to be merged -->
+            <!-- Result : <code> {{ 'some.title' | map : 'orderStatus' }} </code> -->
+        </p>
+    </div>
+</div>
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='app/app.js'></script>

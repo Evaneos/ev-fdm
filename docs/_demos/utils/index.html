@@ -1,0 +1,175 @@
+---
+layout: default
+title: Utils
+is_index: true
+---
+{% raw %}
+<!-- Double curly braces won't be interpreted by liquid parser as we are in raw mode -->
+<div class="container" ng-app="app" ev-responsive-viewport >
+    <h1>Utils</h1>
+    <p class="lead">
+        Some utils classes for creating neat, fluid layout easily.
+    </p>
+
+    <h2>Fixed header layout <code>.ev-fixed-header</code> </h2>
+    <p>
+        Sometimes, you want a fixed header layout. Without using fixed, because you don't know the precise height of your header. And without javascript, because, well, that's not efficient. This is where the <code>.ev-fixed-header</code> class comes handy. It uses the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/flex" title="flex MDN"> flex</a> layout (compatible IE10+, firefox, chrome).
+    </p>
+    <p> Utilisation is quite straight forward. The containing block is specified with the class <code>.ev-fixed-header</code>, the header(s) with the class <code>.ev-header</code> and the body <code>.ev-body</code>.
+    <h3> Some example of possible layout</h3>
+
+    <h4> Header and body </h4>
+    <div class="example row">
+        <div class="col-sm-12 col-md-offset-1 col-md-10 col-lg-offset-3 col-lg-6">
+            <div class="ev-fixed-header fixed-header-example">
+                <h5 class="ev-header"><strong> Greater flamingo </strong></h5>
+                <p class="ev-body">
+                   The greater flamingo (Phoenicopterus roseus) is the most widespread species of the flamingo family. It is found in parts of Africa, southern Asia (coastal regions of Pakistan and India), and southern Europe (including Spain, Albania, Turkey, Greece, Cyprus, Portugal, Italy and the Camargue region of France). Some populations are short distance migrants, and sightings north of the breeding range are relatively frequent; however, given the species' popularity in captivity, whether or not these are truly wild individuals is a matter of some debate. A single bird was seen on North Keeling Island (Cocos (Keeling) Islands) in 1988.
+                </p>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <h4> Header, body and footer </h4>
+    <div class="example row">
+        <div class="col-sm-12 col-md-offset-1 col-md-10 col-lg-offset-3 col-lg-6">
+            <div class="ev-fixed-header fixed-header-example">
+                <h5 class="ev-header"><strong>American flamingo </strong></h5>
+                <p class="ev-body">
+                   The American flamingo (Phoenicopterus ruber) is a large species of flamingo closely related to the greater flamingo and Chilean flamingo. It was formerly considered conspecific with the greater flamingo, but that treatment is now widely viewed (e.g. by the American and British Ornithologists' Unions) as incorrect due to a lack of evidence. It has also been known as the Caribbean flamingo, but the species' presence in the Galápagos makes that name problematic. It is the only flamingo which naturally inhabits North America.
+                </p>
+                <p class="ev-header">
+                    <a title="Wikipedia page" href="http://en.wikipedia.org/wiki/American_flamingo"> More infos </a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <br>
+
+    <h4> Imbricated headers </h4>
+    <div class="example row">
+        <div class="col-sm-12 col-md-offset-1 col-md-10 col-lg-offset-3 col-lg-6">
+            <div class="ev-fixed-header fixed-header-example">
+                <h5 class="ev-header"><strong>Chilean flamingo</strong></h5>
+                <div class="ev-body ev-fixed-header">
+                    <h6 class="ev-header"><em>Characteristics</em></h6>
+                    <p class="ev-body">
+                       The American flamingo (Phoenicopterus ruber) is a large species of flamingo closely related to the greater flamingo and Chilean flamingo. It was formerly considered conspecific with the greater flamingo, but that treatment is now widely viewed (e.g. by the American and British Ornithologists' Unions) as incorrect due to a lack of evidence. It has also been known as the Caribbean flamingo, but the species' presence in the Galápagos makes that name problematic. It is the only flamingo which naturally inhabits North America.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+
+
+    <h4> Two body two headers </h4>
+    <div class="example row">
+        <div class="col-sm-12 col-md-offset-1 col-md-10 col-lg-offset-3 col-lg-6">
+            <div class="ev-fixed-header fixed-header-example" style="max-height: 300px;">
+                <h5 class="ev-header"><strong>James's flamingo</strong></h5>
+                <h6 class="ev-header"> <em>Feather</em> </h6>
+                <p class="ev-body">
+                    Newly hatched flamingos are gray or white. They gain color after 2 or 3 years of age. The active component that gives the feathers the pink color is the proteins alpha and beta-carotene (similar to carotene in carrots). A diet rich in carotene allows them to produce pigmented feathers. An adult has 12 main feathers designed for flight on each wing. The body is covered in contour feathers, which protect the bird and also help with waterproofing from a secretion of oil at the base of the feather.
+                </p>
+                <h6 class="ev-header"><em>Flight</em></h6>
+                <p class="ev-body">
+                    Although in zoos flamingos usually appear stationary, they are able to fly. They have specific feathers used to take flight. These feathers are easily distinguished in James's flamingo's because they're the only black feathers on the bird. In order to begin flying they run a few steps and then begin to flap their wings. When they want to land, the opposite process occurs and as they touch down to a surface they continue to run as they decelerate they stop flapping their wings.
+                </p>
+            </div>
+        </div>
+    </div>
+    <br>
+    <p class="alert alert-warning"> If the body or the header have a grid layout (ie, some of the block have a <code>.col-**-**</code> class) then the <code>.row</code> class must be moved out of the block, and put at the level of the container (the one which has the <code>.ev-fixed-header</code> class). This will prevent some scrollbar to display due to the negative margin on the row class. </p>
+
+
+    <h2>Flex columns layout <code>.ev-flex-columns</code></h2>
+    <p> This class enable the <a title="CSS-tricks article" href="http://css-tricks.com/fluid-width-equal-height-columns/"> fluid width equal height column layout </a>. When the class is attributed to a container, all of its direct child will have the same height, and align in column layout.
+    </p>
+    <h3> Example: Three column layout </h3>
+        <div class="example">
+            <h4 class="container-fluid"> European hedgehog </h4>
+            <div class="ev-flex-columns three-columns-example">
+                <div class="col-xs-4">The European hedgehog (Erinaceus europaeus: Linnaeus, 1758), or common hedgehog is a hedgehog species found in western Europe, from the Iberian Peninsula and Italy northwards into Scandinavia.It is a generally common and widely distributed species that can survive across a wide range of habitat types. </div>
+                <div class="col-xs-4">E. europaeus has a generalised body structure with unspecialised limb girdles. The animal appears brownish with most of its body covered by up to 6,000 brown and white spines. </div>
+                <div class="col-xs-4">This species is largely nocturnal. It has a hesitant gait, frequently stopping to smell the air. Unlike the smaller, warmer-climate species, the European hedgehog may hibernate in the winter. However, most wake at least once to move their nests.</div>
+            </div>
+        </div>
+    <h3> Example: Three column with fixed headers </h3>
+        <p> You can change the height, and watch the magic happens </p>
+        <input type="number" ng-init="height=300" ng-model="height">
+        <div class="example">
+            <div class="ev-fixed-header" ng-style="{'max-height': height}">
+                <h4 class="ev-header col-xs-12"> Squirrel </h4>
+                <div class="ev-body ev-flex-columns three-columns-example">
+                    <div class="col-sm-4 ev-fixed-header">
+                        <h5 class="ev-header"><strong> Mexican fox squirrel </strong></h5>
+                        <div class="ev-body">
+                            <p>The Mexican fox squirrel, scientific name Sciurus nayaritensis, is a species of tree squirrel found throughout the Sierra Madre Occidental of Mexico as far south as Jalisco — and northward into the Chiricahua Mountains of southeastern Arizona, U.S.</p>
+                            <p>This species, or its subspecies, is sometimes called the Apache, Nayarit, or Chiricahua fox squirrel. It has been evaluated as an IUCN Red List Least Concern species.</p>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 ev-fixed-header">
+                        <h5 class="ev-header"><strong> Neotropical pygmy squirrel </strong></h5>
+                        <p class="ev-body">
+                            The Neotropical pygmy squirrel is the smallest species of tree squirrel native to the Americas, measuring on average just 10 cm (3.9 in) in head-body length, with an 11 cm (4.3 in) tail. Adults weigh from 30 to 48 grams (1.1 to 1.7 oz). The fur is grizzled grey over the body, with paler, but not sharply contrasting, fur on the underparts. The head is slightly reddish, with distinct white markings behind the ears, which are shorter and more rounded than on most other tree squirrels.
+                        </p>
+                    </div>
+                    <div class="col-sm-4 ev-fixed-header">
+                        <h5 class="ev-header"><strong> Cream-coloured giant squirrel </strong></h5>
+                        <p class="ev-body">
+                            The cream-coloured giant squirrel (Ratufa affinis) is a large tree squirrel in the genus Ratufa found in Brunei, Indonesia, Malaysia, and Thailand. It is probably extinct in Singapore, as no recent sightings have been made. Reported sightings in Vietnam in 1984 are considered to be dubious.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <h3> Vertical alignement </h3>
+        <p> You can specify the vertical alignement very easily by adding a class to the container. For top alignement, it's <code>.ev-align-start </code>, for bottom, <code>.ev-align-end</code>. And centering vertically is very easy: <code>.ev-align-center</code>
+        </p>
+        <p > <strong>Select the alignement:</strong>
+            <br>
+            <input ng-model="alignement" value="start" type="radio" name="alignement"> <code>ev-align-start</code> </input>
+            <input ng-model="alignement" value="center" type="radio" name="alignement"> <code>ev-align-center</code> </input>
+            <input ng-model="alignement" value="end" type="radio" name="alignement"> <code>ev-align-end</code> </input>
+        </p>
+        <div class="example">
+            <h4 class="container-fluid">Pony </h4>
+            <div class="ev-flex-columns three-columns-example" ng-class="'ev-align-' + alignement">
+                <div class="col-xs-4">A pony is a small horse (Equus ferus caballus). Depending on context, a pony may be a horse that is under an approximate or exact height at the withers, or a small horse with a specific conformation and temperament. There are many different breeds. </div>
+                <div class="col-xs-4">Compared to other horses, ponies often exhibit thicker manes, tails and overall coat, as well as proportionally shorter legs, wider barrels, heavier bone, thicker necks, and shorter heads with broader foreheads. The word "pony" derives from the old French poulenet, meaning foal, a young, immature horse, but this is not the modern meaning; unlike a horse foal, a pony remains small when fully grown. </div>
+                <div class="col-xs-4">However, on occasion, people who are unfamiliar with horses may confuse an adult pony with a foal...</div>
+            </div>
+        </div>
+
+    <h2>Sticky elements <code>.ev-top-sticky</code> <code>.ev-bottom-sticky</code> </h2>
+
+    <p>
+        <em>Experimental:</em> This isn't supported in all browser and should only be used to improve user experience
+    </p>
+    <p>
+        When out of the screen, the element stays at the top/bottom like a position absolute
+    </p>
+
+
+    <div class="example">
+        <header class="ev-top-sticky">
+            My sticky top header
+        </header>
+        <div class="row">
+            <div class="col-sm-2">
+                The springbok (Antidorcas marsupialis) is a medium-sized brown and white antelope-gazelle of southwestern Africa. It is extremely fast and can reach speeds of 100 km/h (62 mph) and can leap 4 m (13 feet) through the air. The common name "springbok" comes from the Afrikaans and Dutch words spring = jump and bok = male antelope or goat.
+
+    The specific epithet marsupialis (Latin: marsupium, "pocket") derives from a pocket-like skin flap which extends along the middle of the back from the tail onwards. When the male springbok is showing off his strength to attract a mate, or to ward off predators, he starts off in a stiff-legged trot, jumping up into the air with an arched back every few paces and lifting the flap along his back. Lifting the flap causes the long white hairs under the tail to stand up in a conspicuous fan shape, which in turn emits a strong scent of sweat. This ritual is known as stotting or pronking from the Afrikaans meaning to boast or show off.
+            </div>
+        </div>
+        <footer class="ev-bottom-sticky">
+            My sticky bottom footer
+        </footer>
+
+</div>
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='app.js'></script>
