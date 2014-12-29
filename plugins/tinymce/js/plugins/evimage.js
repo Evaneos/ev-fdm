@@ -1,6 +1,7 @@
-/*global tinymce:true */
+/* global tinymce, console */
 
 tinymce.PluginManager.add('evimage', function(editor) {
+    console.log('evimage is deprecated: use evelements');
     function showDialog() {
         var dom = editor.dom;
         var node = editor.selection.getNode();

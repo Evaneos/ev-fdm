@@ -1,29 +1,103 @@
-/* global tinymce:true */
+/* global tinymce */
 
 tinymce.PluginManager.add('evelements', function(editor) {
-    function setElement(nodeName) {
+    var evelementsConfig = editor.settings.evelements;
+    var evelementsOptions = editor.settings.evelementsOptions;
+
+    function setElement(elementConfig) {
         return function() {
-            var dom = editor.dom, elm = editor.selection.getNode();
-            if (elm && elm.nodeName.toLowerCase() === nodeName) {
-                dom.remove(elm, true);
+            var dom = editor.dom, node = editor.selection.getNode();
+            if (node && elementConfig.matches(node)) {
+                dom.remove(node, true);
             } else {
                 editor.insertContent(
                     dom.createHTML(
-                        nodeName,
+                        elementConfig.name,
                         {},
-                        dom.encode(editor.selection.getContent({format: 'text'}))
+                        dom.encode(editor.selection.getContent({ format: 'text' }))
                     )
                 );
             }
         };
     }
 
-    editor.settings.evelements.split(' ').forEach(function(elementName) {
-        editor.addButton('ev' + elementName, {
-            text: elementName,
-            tooltip: 'Set this text as ' + elementName,
-            onclick: setElement(elementName),
-            stateSelector: elementName
+    function showDialog(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            var attributes = null;
+
+            if (node && elementConfig.matches(node)) {
+                attributes = {};
+                var attribs = dom.getAttribs(node);
+                for (var i = 0; i < attribs.length; ++i) {
+                    var item = attribs[i];
+                    attributes[item.name] = item.value;
+                }
+            } else {
+                node = null;
+            }
+
+            var key = elementConfig.key || elementConfig.name;
+            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
+            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
+                                 : editor.selection.getContent({ format: 'text' });
+            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
+                if (node) {
+                    if (!newAttributes && !text) {
+                        dom.remove(node, true);
+                        return;
+                    }
+                    editor.focus();
+                    dom.removeAllAttribs(node);
+                    dom.setAttribs(node, newAttributes);
+                    if (text) {
+                        if ("innerText" in node) {
+                            node.innerText = text;
+                        } else {
+                            node.textContent = text;
+                        }
+                    }
+                    editor.selection.select(node);
+                    editor.undoManager.add();
+                } else {
+                    editor.focus();
+                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
+                    editor.selection.setContent(node);
+                    editor.undoManager.add();
+                }
+            }, text, evelementsOptions);
+        };
+    }
+
+    if (typeof evelementsConfig === 'string') {
+        evelementsConfig = evelementsConfig.split(' ');
+    }
+
+    evelementsConfig.forEach(function(elementConfig) {
+        if (typeof elementConfig === 'string') {
+            elementConfig = {
+                name: elementConfig
+            };
+        }
+
+        elementConfig.matches = elementConfig.matches || function(node) {
+            return node.nodeName.toLowerCase() === elementConfig.name;
+        };
+
+        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
+
+        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
+            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
+            icon: elementConfig.icon,
+            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
+            shortcut: elementConfig.shortcut,
+            onclick: callbackAction,
+            stateSelector: elementConfig.selector || elementConfig.name,
         });
+
+        if (elementConfig.shortcut) {
+            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
+        }
     });
 });

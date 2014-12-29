@@ -10,3 +10,6 @@ build:
 
 watch:
 	gulp watch
+
+lint:
+	jshint core
