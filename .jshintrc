@@ -15,7 +15,7 @@
     "maxlen": 120,
     "boss": true,
     "eqnull": true,
-    "node": true,
+    "node": false,
     "browser": true,
     "predef": ["angular", "$"]
 }
