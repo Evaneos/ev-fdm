@@ -66,6 +66,8 @@ gulp.task('copy', function() {
         .pipe(gulp.dest(dest + '/css/'));
     gulp.src([nodeModuleDirectory + '/kss/lib/template/public/kss.js'])
         .pipe(gulp.dest(dest + '/js/'));
+    gulp.src([bowerDirectory + '/ev-fdm/dist/core/views/ev-templates.html'])
+        .pipe(gulp.dest(dest + '/_includes/'));
 });
 gulp.task('watch-copy', function () {
     watch( bowerDirectory + '/ev-fdm/dist/**/*', function(stream, done) {

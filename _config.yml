@@ -4,12 +4,10 @@ permalink:   pretty
 
 # server
 source:          docs
-host:            0.0.0.0
-port:            3333
 baseurl:         /
-url:             "http://evfdmdemo.dev.evaneos.com"
 encoding:        UTF-8
-title:           "EV-FDM Demo"
+port:            3333
+title:           "ev-fdm"
 github_username: "Evaneos"
 
 collections:

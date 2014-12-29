@@ -40,6 +40,16 @@ is_index: false
                 </ul>
             -->
                 </li>
+                <li><a href="section-5.html">5.0: Icons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-5.html#5.1">5.1: Sizing &amp; colour</a>
+                    <li><a href="section-5.html#5.2">5.2: Rotation</a>
+                    <li><a href="section-5.html#5.3">5.3: Spinning &amp; transition</a>
+                    <li><a href="section-5.html#5.4">5.4: Default icons</a>
+                </ul>
+            -->
+                </li>
         </ul></nav>
     </aside>
     <div role="main">
@@ -107,7 +117,35 @@ children will be styled like list element.</p>
                 </section>
                 <section>
 
-                    <h3><span class="text-dark">3.2.1</span> Activable lists</h1>
+                    <h3><span class="text-dark">3.2.1</span> Standard list with no separator</h1>
+
+                        <p>A standard list in ev-fdm but without the separator.
+Require the use of .ev-list</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <div>
+                                <ul class="ev-list ev-list-no-separator">
+	<li> Guacamole </li>
+	<li> Chicken </li>
+	<li> Tomato </li>
+</ul>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;ul class=&quot;ev-list ev-list-no-separator&quot;&gt;
+	&lt;li&gt; Guacamole &lt;/li&gt;
+	&lt;li&gt; Chicken &lt;/li&gt;
+	&lt;li&gt; Tomato &lt;/li&gt;
+&lt;/ul&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">3.2.2</span> Activable lists</h1>
 
                         <p>For activable list, you can add the <code>.ev-list-activable</code>. This useful with the <code>activable-set</code> directive.</p>
 

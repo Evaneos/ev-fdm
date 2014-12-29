@@ -36638,7 +36638,7 @@ angular.module('ngAnimate', ['ng'])
 /*
  * angular-loading-bar
  *
- * intercepts XHR requests and creates a loading bar when that shit happens.
+ * intercepts XHR requests and creates a loading bar.
  * Based on the excellent nprogress work by rstacruz (more info in readme)
  *
  * (c) 2013 Wes Cruver
@@ -36648,17 +36648,22 @@ angular.module('ngAnimate', ['ng'])
 
 (function() {
 
-  'use strict';
+'use strict';
+
+// Alias the loading bar for various backwards compatibilities since the project has matured:
+angular.module('angular-loading-bar', ['cfp.loadingBarInterceptor']);
+angular.module('chieffancypants.loadingBar', ['cfp.loadingBarInterceptor']);
+
 
 /**
  * loadingBarInterceptor service
  *
  * Registers itself as an Angular interceptor and listens for XHR requests.
  */
-angular.module('chieffancypants.loadingBar', [])
+angular.module('cfp.loadingBarInterceptor', ['cfp.loadingBar'])
   .config(['$httpProvider', function ($httpProvider) {
 
-    var interceptor = ['$q', '$cacheFactory', 'cfpLoadingBar', function ($q, $cacheFactory, cfpLoadingBar) {
+    var interceptor = ['$q', '$cacheFactory', '$timeout', '$rootScope', 'cfpLoadingBar', function ($q, $cacheFactory, $timeout, $rootScope, cfpLoadingBar) {
 
       /**
        * The total number of requests made
@@ -36670,12 +36675,23 @@ angular.module('chieffancypants.loadingBar', [])
        */
       var reqsCompleted = 0;
 
+      /**
+       * The amount of time spent fetching before showing the loading bar
+       */
+      var latencyThreshold = cfpLoadingBar.latencyThreshold;
+
+      /**
+       * $timeout handle for latencyThreshold
+       */
+      var startTimeout;
+
 
       /**
        * calls cfpLoadingBar.complete() which removes the
        * loading bar from the DOM.
        */
       function setComplete() {
+        $timeout.cancel(startTimeout);
         cfpLoadingBar.complete();
         reqsCompleted = 0;
         reqsTotal = 0;
@@ -36688,19 +36704,15 @@ angular.module('chieffancypants.loadingBar', [])
        */
       function isCached(config) {
         var cache;
+        var defaultCache = $cacheFactory.get('$http');
         var defaults = $httpProvider.defaults;
 
-        if (config.method !== 'GET' || config.cache === false) {
-          config.cached = false;
-          return false;
-        }
-
-        if (config.cache === true && defaults.cache === undefined) {
-          cache = $cacheFactory.get('$http');
-        } else if (defaults.cache !== undefined) {
-          cache = defaults.cache;
-        } else {
-          cache = config.cache;
+        // Choose the proper cache source. Borrowed from angular: $http service
+        if ((config.cache || defaults.cache) && config.cache !== false &&
+          (config.method === 'GET' || config.method === 'JSONP')) {
+            cache = angular.isObject(config.cache) ? config.cache
+              : angular.isObject(defaults.cache) ? defaults.cache
+              : defaultCache;
         }
 
         var cached = cache !== undefined ?
@@ -36713,21 +36725,29 @@ angular.module('chieffancypants.loadingBar', [])
         return cached;
       }
 
+
       return {
         'request': function(config) {
-          if (!isCached(config)) {
+          // Check to make sure this request hasn't already been cached and that
+          // the requester didn't explicitly ask us to ignore this request:
+          if (!config.ignoreLoadingBar && !isCached(config)) {
+            $rootScope.$broadcast('cfpLoadingBar:loading', {url: config.url});
             if (reqsTotal === 0) {
-              cfpLoadingBar.start();
+              startTimeout = $timeout(function() {
+                cfpLoadingBar.start();
+              }, latencyThreshold);
             }
             reqsTotal++;
+            cfpLoadingBar.set(reqsCompleted / reqsTotal);
           }
           return config;
         },
 
         'response': function(response) {
-          if (!isCached(response.config)) {
+          if (!response.config.ignoreLoadingBar && !isCached(response.config)) {
             reqsCompleted++;
-            if (reqsCompleted === reqsTotal) {
+            $rootScope.$broadcast('cfpLoadingBar:loaded', {url: response.config.url});
+            if (reqsCompleted >= reqsTotal) {
               setComplete();
             } else {
               cfpLoadingBar.set(reqsCompleted / reqsTotal);
@@ -36737,9 +36757,10 @@ angular.module('chieffancypants.loadingBar', [])
         },
 
         'responseError': function(rejection) {
-          if (!isCached(rejection.config)) {
+          if (!rejection.config.ignoreLoadingBar && !isCached(rejection.config)) {
             reqsCompleted++;
-            if (reqsCompleted === reqsTotal) {
+            $rootScope.$broadcast('cfpLoadingBar:loaded', {url: rejection.config.url});
+            if (reqsCompleted >= reqsTotal) {
               setComplete();
             } else {
               cfpLoadingBar.set(reqsCompleted / reqsTotal);
@@ -36751,47 +36772,73 @@ angular.module('chieffancypants.loadingBar', [])
     }];
 
     $httpProvider.interceptors.push(interceptor);
-  }])
+  }]);
 
 
-  /**
-   * Loading Bar
-   *
-   * This service handles actually adding and removing the element from the DOM.
-   * Because this is such a light-weight element, the
-   */
+/**
+ * Loading Bar
+ *
+ * This service handles adding and removing the actual element in the DOM.
+ * Generally, best practices for DOM manipulation is to take place in a
+ * directive, but because the element itself is injected in the DOM only upon
+ * XHR requests, and it's likely needed on every view, the best option is to
+ * use a service.
+ */
+angular.module('cfp.loadingBar', [])
   .provider('cfpLoadingBar', function() {
 
     this.includeSpinner = true;
+    this.includeBar = true;
+    this.latencyThreshold = 100;
+    this.startSize = 0.02;
     this.parentSelector = 'body';
+    this.spinnerTemplate = '<div id="loading-bar-spinner"><div class="spinner-icon"></div></div>';
+    this.loadingBarTemplate = '<div id="loading-bar"><div class="bar"><div class="peg"></div></div></div>';
 
-    this.$get = ['$document', '$timeout', '$animate', function ($document, $timeout, $animate) {
-
+    this.$get = ['$injector', '$document', '$timeout', '$rootScope', function ($injector, $document, $timeout, $rootScope) {
+      var $animate;
       var $parentSelector = this.parentSelector,
-        $parent = $document.find($parentSelector),
-        loadingBarContainer = angular.element('<div id="loading-bar"><div class="bar"><div class="peg"></div></div></div>'),
+        loadingBarContainer = angular.element(this.loadingBarTemplate),
         loadingBar = loadingBarContainer.find('div').eq(0),
-        spinner = angular.element('<div id="loading-bar-spinner"><div class="spinner-icon"></div></div>');
+        spinner = angular.element(this.spinnerTemplate);
 
       var incTimeout,
-		completeTimeout,
+        completeTimeout,
         started = false,
         status = 0;
 
       var includeSpinner = this.includeSpinner;
+      var includeBar = this.includeBar;
+      var startSize = this.startSize;
 
       /**
        * Inserts the loading bar element into the dom, and sets it to 2%
        */
       function _start() {
-        started = true;
+        if (!$animate) {
+          $animate = $injector.get('$animate');
+        }
+
+        var $parent = $document.find($parentSelector).eq(0);
         $timeout.cancel(completeTimeout);
-        $animate.enter(loadingBarContainer, $parent);
+
+        // do not continually broadcast the started event:
+        if (started) {
+          return;
+        }
+
+        $rootScope.$broadcast('cfpLoadingBar:started');
+        started = true;
+
+        if (includeBar) {
+          $animate.enter(loadingBarContainer, $parent);
+        }
 
         if (includeSpinner) {
           $animate.enter(spinner, $parent);
         }
-        _set(0.02);
+
+        _set(startSize);
       }
 
       /**
@@ -36807,9 +36854,9 @@ angular.module('chieffancypants.loadingBar', [])
         loadingBar.css('width', pct);
         status = n;
 
-        // increment loadingbar to give the illusion that there is always progress
-        // but make sure to cancel the previous timeouts so we don't have multiple
-        // incs running at the same time.
+        // increment loadingbar to give the illusion that there is always
+        // progress but make sure to cancel the previous timeouts so we don't
+        // have multiple incs running at the same time.
         $timeout.cancel(incTimeout);
         incTimeout = $timeout(function() {
           _inc();
@@ -36818,7 +36865,7 @@ angular.module('chieffancypants.loadingBar', [])
 
       /**
        * Increments the loading bar by a random amount
-       * but slows down once it approaches 70%
+       * but slows down as it progresses
        */
       function _inc() {
         if (_status() >= 1) {
@@ -36855,27 +36902,42 @@ angular.module('chieffancypants.loadingBar', [])
         return status;
       }
 
+      function _completeAnimation() {
+        status = 0;
+        started = false;
+      }
+
       function _complete() {
+        if (!$animate) {
+          $animate = $injector.get('$animate');
+        }
+
+        $rootScope.$broadcast('cfpLoadingBar:completed');
         _set(1);
+
+        $timeout.cancel(completeTimeout);
+
+        // Attempt to aggregate any start/complete calls within 500ms:
         completeTimeout = $timeout(function() {
-          $animate.leave(loadingBarContainer, function() {
-            status = 0;
-            started = false;
-          });
+          var promise = $animate.leave(loadingBarContainer, _completeAnimation);
+          if (promise && promise.then) {
+            promise.then(_completeAnimation);
+          }
           $animate.leave(spinner);
         }, 500);
       }
 
       return {
-        start: _start,
-        set: _set,
-        status: _status,
-        inc: _inc,
-        complete: _complete,
-        includeSpinner: this.includeSpinner,
-        parentSelector: this.parentSelector,
+        start            : _start,
+        set              : _set,
+        status           : _status,
+        inc              : _inc,
+        complete         : _complete,
+        includeSpinner   : this.includeSpinner,
+        latencyThreshold : this.latencyThreshold,
+        parentSelector   : this.parentSelector,
+        startSize        : this.startSize
       };
-
 
 
     }];     //
@@ -44528,115 +44590,6 @@ angular.module('ev-fdm')
     }]);
 
 'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
-'use strict';
 
 angular.module('ev-fdm').directive('activableSet', function() {
     return {
@@ -45926,7 +45879,7 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectable',
             replace: true,
-            template: '<span class="checkbox" ng-class="{ active: selected }"></span>'
+            template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
         };
     })
     .directive('selectAll', function() {
@@ -45934,7 +45887,7 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectableSet',
             scope: true,
-            template: '<span class="checkbox" ng-class="{ active: allSelected }" ng-click="toggleSelectAll()"></span>',
+            template: '<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
             link: function(scope, element, attr, ctrl) {
 
                 scope.toggleSelectAll = function () {
@@ -46346,520 +46299,176 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
 angular.module('ev-fdm')
-.service('DownloadService', ['$document', function($document) {
-   var iframe = null;
-   return {
-       download: function(url) {
-           if(!iframe) {
-               iframe = $document[0].createElement('iframe');
-               iframe.style.display = 'none';
-               $document[0].body.appendChild(iframe);
-           }
-           iframe.src = url;
-       }
-   };
-}]);
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
 'use strict';
 
-// Map that stores the selected filters across pages
-angular.module('ev-fdm').
-    service('FilteringService', ['$location', function ($location) {
-
-        var filters = {};
-
-        return {
-            setSelectedFilter:function (filterName, value){
-                if (value != undefined && value != 'undefined'){
-                    filters[filterName] = value;
-                    // $location.search(filterName, encodeURIComponent(value));
-                }
-                else {
-                    filters[filterName] = '';
-                }
-
-            },
-
-            getSelectedFilter:function (filterName){
-                var res = '';
-
-                if (typeof filters[filterName] != 'undefined' && filters[filterName] != 'undefined') {
-                    res = filters[filterName];
-                }
-
-                return res;
-            },
-
-            getAllFilters:function (){
-                return filters;
-            }
-        }
-    }]
-    );
 /**
- * ModalService
- *     Angularization of bootstrap's $.fn.modal into a service
- *     - read template from ng's template cache
- *     - uses ng's $compilation, attaching the provided $scope
- *     - (optional) attach a controller to the view for more advanced modals
- *
- * Usage:
- *     - modalService.open({
- *         .. same as twitter bootstrap options
- *         template:                [html value string],
- *         templateUrl:             [url matching a key in $templateCache],
- *         scope:                   [key values],
- *         parentScope (optional):  [scope will inherit from that scope, $rootScope by default],
- *         controller: (optional):  [that controller will be injected on the view]
- *     })
- *     returns the $dom
- *
- * @author maz
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
  */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
 
-var module = angular.module('ev-fdm');
-
-var ModalService = function($rootScope, $templateCache, $compile, $controller) {
-    this.$rootScope = $rootScope;
-    this.$templateCache = $templateCache;
-    this.$compile = $compile;
-    this.$controller = $controller;
-};
-
-ModalService.prototype.open = function(options) {
-    // extend and check options given
-    options = this._readOptions(options);
-
-    // get/create the scope
-    var $scope = (options.parentScope || this.$rootScope).$new();
-    $scope = _($scope).extend(options.scope);
-
-    // attach a controller if specified
-    var $controller;
-    if (options.controller) {
-        $controller = this.$controller(options.controller, { $scope: $scope });
-    }
-
-    // create the dom that will feed bs modal service
-    var modalDom = this.$compile(options.template || this.$templateCache.get(options.templateUrl))($scope);
-
-    // attach these to the returned dom el
-    modalDom.$scope = $scope;
-    modalDom.$controller = $controller;
-    // controller has access to the bs dom modal object
-    if ($controller) {
-        $controller.$modal = modalDom;
-    }
-
-    return $(modalDom).modal(options);
-}
-
-ModalService.prototype._readOptions = function(options) {
-    // read options, adding defaults
-    options = _({
-        backdrop: true,
-        scope: {},
-        keyboard: true
-    }).extend(options);
-
-    // templateUrl is compulsory
-    if (!options.templateUrl && !options.template) {
-        throw new Error('Either template or templateUrl have to be defined');
-    }
-
-    return options;
-}
-
-// injection
-module.service('ModalService', [
-    '$rootScope',
-    '$templateCache',
-    '$compile',
-    '$controller',
-    ModalService
-]);
+            return res;
+        };
+    });
+(function() {
 'use strict';
 
-/* Services */
-var module = angular.module('ev-fdm');
+var hasOwnProp = Object.prototype.hasOwnProperty;
+var isObject = angular.isObject;
 
-// Map that stores the selected filters across pages
-module.service('NotificationsService', ['$timeout', function($timeout) {
+function MapFilterProvider() {
+  var maps = {};
+  var defaults = {};
 
-    var self = this;
-    var queue = [];
-    var DEFAULT_DELAY = 5;
-    var TYPES = {
-        SUCCESS : 0,
-        ERROR : 1,
-        INFO : 2,
-        WARNING : 3
+  function assertMapping(name) {
+    if (!hasOwnProp.call(maps, name)) {
+      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
+    }
+  }
+
+  this.registerMapping = function(name, mapping) {
+    if (hasOwnProp.call(maps, name)) {
+      throw new Error('A mapping named "' + name + '" was already registered');
+    }
+    var map = maps[name] = {};
+    for (var key in mapping) {
+      if (hasOwnProp.call(mapping, key)) {
+        map[key] = mapping[key];
+      }
+    }
+  };
+
+  this.registerDefault = function(name, value) {
+    assertMapping(name);
+    defaults[name] = value;
+  };
+
+  this.$get = function factory() {
+    return function mapFilter(key, mapping) {
+      // Mapping is directly provided
+      if (isObject(mapping)) {
+        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
+      }
+      // or it's just a mapping name
+      assertMapping(mapping);
+      var map = maps[mapping];
+      switch (true) {
+        case hasOwnProp.call(map, key):
+          return map[key];
+        case hasOwnProp.call(defaults, mapping):
+          return defaults[mapping];
+        default:
+          return key;
+      }
     };
+  };
+}
 
-    /**
-     * The notification being displayed
-     */
-    this.activeNotification = null;
-
-    /**
-     * Give this function a notification object with :
-     * {
-     *     text: 'the text you want to display',
-     *     type: the type, a value among the constant in NotificationsService.type
-     *     [delay]: optionnal, the duration in seconds during which you want to display the error
-     *             if -1 : sticky message
-     * }
-     */
-    function add(notification) {
-        if (!notification.type) {
-            notification.type = TYPES.SUCCESS;
-        }
-        queueNotification(notification);
-    }
-
-    /**
-     * For manual removal
-     */
-    function remove(notification) {
-        queue = _(queue).without(notification);
-        next();
-    }
-
-    function next() {
-        if (queue.length) {
-            var notification = queue[0];
-            if (self.activeNotification !== notification) {
-                self.activeNotification = notification;
-                if (notification.delay !== -1) {
-                    // The notification is removed after a while
-                    $timeout(
-                        function() { remove(notification); },
-                        (notification.delay || DEFAULT_DELAY) * 1000
-                    );
-                }
-            }
-        } else {
-            self.activeNotification = null;
-        }
-    }
-
-    function queueNotification(notification) {
-        queue.push(notification);
-        next();
-    }
-
-    // export only these
-    this.add = add;
-    this.remove = remove;
-    this.addError = function(notification) {
-        notification.type = TYPES.ERROR;
-        add(notification);
-    };
-    this.addSuccess = function(notification) {
-        notification.type = TYPES.SUCCESS;
-        add(notification);
-    };
-    this.type = TYPES;
-}]);
-
-const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
-const MAX_VISIBLE_PANEL = 3;
 
 angular.module('ev-fdm')
-    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
-        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
-            $window) {
+  .provider('mapFilter', MapFilterProvider)
+;
 
-        var containers   = {};
-        var panelsList   = {};
+})();
 
-        var addToDom = function (panel, containerId) {
-            var container = containers[containerId];
-            if (!container || panel.element.parent().length) {
-                return;
-            }
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
 
-            // If no panel index, or no panel inside the container, it is added at the end
-            if (!panel.index || !container.children().length) {
-                $animate.move(panel.element, container, null, function () {
-                    updateLayout(containerId);
-                });
-            } else {
-                var beforePanel = getBeforePanelElm(panel.index, containerId);
-                    $animate.move(panel.element, container, beforePanel.element, function () {
-                        updateLayout(containerId);
-                });
-            }
-        };
-
-        function getBeforePanelElm(index, containerId) {
-            var beforePanel = null;
-            var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
-                return panelsList[containerId][panelName];
-            });
-            panels
-                .filter(function (panel) {
-                    return panel.element.parent().length;
-                })
-                .filter(function (panel) {
-                    return panel.index;
-                })
-                .some(function (insertedPanel) {
-                    var isBeforePanel = insertedPanel.index > index;
-                    if (isBeforePanel) {
-                        beforePanel = insertedPanel;
-                    }
-                    return !isBeforePanel;
-                });
-            return (beforePanel || panels[0]).element;
-        }
-
-        /**
-         * Panel options are:
-         * - name
-         * - template or templateURL
-         * - index
-         */
-        this.open = function (panel, id) {
-            if (!id) {
-                id = DEFAULT_CONTAINER_ID;
-            }
-            var panels = panelsList[id] = panelsList[id] || {};
-
-            if (!panel.name && panel.panelName) {
-                console.log("Deprecated: use name instead of panelName");
-                panel.name = panel.panelName;
-            }
-
-            if (!panel) {
-                console.log("A panel must have a name (options.name)");
-                return;
-            }
-
-            // Change panelName to panel-name
-            var name = panel.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-            if (panels[name]) {
-                return panels[name];
-            }
-
-            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
-                    name + '" ev-responsive-viewport ev-resizable-column>' +
-                    '</div>');
-            var templatePromises = getTemplatePromise(panel);
-            panels[name] = panel;
-            panel.element = element;
-
-            return templatePromises.then(function(template) {
-                var scope = $rootScope.$new();
-                element.html(template);
-                element = $compile(element)(scope);
-                panel.element  = element;
-                panel.scope = scope;
-                addToDom(panel, id);
-                return panel;
-            });
-        };
-
-
-        this.getPanels = function (containerId) {
-            if (!containerId) {
-                containerId = DEFAULT_CONTAINER_ID;
-            }
-            return panelsList[containerId];
-        };
-
-        this.close = function(name, containerId) {
-            // Change panelName to panel-name
-            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-            if (!containerId) {
-                containerId = DEFAULT_CONTAINER_ID;
-            }
-            var panels = panelsList[containerId];
-
-            if (!name || !panels[name]) {
-                console.log("Panel not found for: " + name + " in container: " + containerId);
-            }
-
-
-            var element  = panels[name].element;
-            $animate.leave(element, function() {
-                updateLayout(containerId);
-                panels[name].scope.$destroy();
-                delete panels[name];
-            });
-        };
-
-        /**
-         * Registers a panels container
-         *
-         * element : DOM element
-         */
-        this.registerContainer = function(container, containerId) {
-            if (!containerId) {
-                containerId = DEFAULT_CONTAINER_ID;
-            }
-            if (!containers[containerId]) {
-                containers[containerId] = container;
-                if (!panelsList[containerId]) {
-                    return;
-                }
-
-                Object.keys(panelsList[containerId]).forEach(function (panelName) {
-                    var panel = panelsList[containerId][panelName];
-                    addToDom(panel, containerId);
-                });
-            }
-        };
-
-
-
-        var timerWindowResize = null;
-        angular.element($window).on('resize', function() {
-            if(timerWindowResize !== null) {
-                $timeout.cancel(timerWindowResize);
-            }
-            timerWindowResize = $timeout(function() {
-                updateLayout();
-            }, 200);
-        });
-
-
-        function getTemplatePromise(options) {
-            if (options.template || options.templateURL) {
-                return $q.when(options.template);
-            }
-
-            return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
-                return result.data;
-            });
-        }
-
-
-        function updateLayout(containerId) {
-            if (!containerId) {
-                Object.keys(containers).map(function (id) {
-                    updateLayout(id);
-                });
-                return this;
-            }
-            var container = containers[containerId];
-            var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
-
-
-            checkStacking(panelElements, container);
-        }
-
-        function checkStacking(panels, container) {
-            panels.forEach(function (panel) {
-                angular.element(panel).removeClass('ev-stacked');
-                // We reset the width each time we update the layout
-                angular.element(panel).css('minWidth', '');
-                angular.element(panel).css('maxWidth', '');
-            });
-            // We stack panels until there is only three left
-            if (panels.length > MAX_VISIBLE_PANEL) {
-                panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
-                    angular.element(panel).addClass('ev-stacked');
-                });
-            }
-            // Starting from the first non stack panel,
-            var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
-            // Stack until overflow does not exists anymore (or we arrive to the last panel)
-            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
-                angular.element(panels[i]).addClass('ev-stacked');
-                i ++;
-            }
-            var panel = angular.element(panels[i]);
-            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
-            panel.css('maxWidth', container[0].offsetWidth);
-            $rootScope.$broadcast('module-layout-changed');
-        }
-
-        return this;
-    }])
-    .directive('evPanels', ['PanelService', function(panelService) {
-        return {
-            restrict: 'AE',
-            scope: {},
-            replace: true,
-            template: '<div class="ev-panels-container"></div>',
-            link: function (scope, element, attrs) {
-              panelService.registerContainer(element, attrs.id);
-            }
-        };
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
     }]);
 
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
 'use strict';
 
-var module = angular.module('ev-fdm');
-
-module.service('SortService', [function() {
-    var currentSortValue = '';
-    var isReverse = false;
-
-    var getCurrentSort = function() {
-        return currentSortValue;
-    }
-    
-    var sortBy = function(sortValue) {
-        if (sortValue == currentSortValue)
-            isReverse = !isReverse;
-        else {
-            currentSortValue = sortValue;
-        }
-        return this;
-    };
-
-    var getSortCSS = function(value) {
-        var res = 'sort ';
-        if (value == currentSortValue) {
-            if (isReverse)
-                res += 'sort-up';
-            else
-                res += 'sort-down';
-        }
-        else
-            res += 'no-sort';
-        return res;
-    }
-
-    var setReverse = function(reverse) {
-        isReverse = reverse;
-    };
-    var isReverse = function() {
-        return isReverse;
-    };
-
-    return {
-        'sortBy'        : sortBy,
-        'getSortCSS'    : getSortCSS,
-        'getCurrentSort': getCurrentSort,
-        'setReverse'    : setReverse,
-        'isReverse'     : isReverse
-    }
-}]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.service('UtilService', [function() {
-    this.generatedIds = {};
-
-    this.generateId = function(prefix) {
-        var id = prefix + Math.random() * 10000;
-
-        if(typeof(this.generatedIds[id] !== 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = this.generateId(prefix);
-        }
-
-        return id;
-    };
-}]);
-
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 'use strict';
 
 /* Services */
@@ -47529,6 +47138,520 @@ angularLocalStorage.service('localStorageService', [
 
 }]);
 angular.module('ev-fdm')
+.service('DownloadService', ['$document', function($document) {
+   var iframe = null;
+   return {
+       download: function(url) {
+           if(!iframe) {
+               iframe = $document[0].createElement('iframe');
+               iframe.style.display = 'none';
+               $document[0].body.appendChild(iframe);
+           }
+           iframe.src = url;
+       }
+   };
+}]);
+'use strict';
+
+// Map that stores the selected filters across pages
+angular.module('ev-fdm').
+    service('FilteringService', ['$location', function ($location) {
+
+        var filters = {};
+
+        return {
+            setSelectedFilter:function (filterName, value){
+                if (value != undefined && value != 'undefined'){
+                    filters[filterName] = value;
+                    // $location.search(filterName, encodeURIComponent(value));
+                }
+                else {
+                    filters[filterName] = '';
+                }
+
+            },
+
+            getSelectedFilter:function (filterName){
+                var res = '';
+
+                if (typeof filters[filterName] != 'undefined' && filters[filterName] != 'undefined') {
+                    res = filters[filterName];
+                }
+
+                return res;
+            },
+
+            getAllFilters:function (){
+                return filters;
+            }
+        }
+    }]
+    );
+/**
+ * ModalService
+ *     Angularization of bootstrap's $.fn.modal into a service
+ *     - read template from ng's template cache
+ *     - uses ng's $compilation, attaching the provided $scope
+ *     - (optional) attach a controller to the view for more advanced modals
+ *
+ * Usage:
+ *     - modalService.open({
+ *         .. same as twitter bootstrap options
+ *         template:                [html value string],
+ *         templateUrl:             [url matching a key in $templateCache],
+ *         scope:                   [key values],
+ *         parentScope (optional):  [scope will inherit from that scope, $rootScope by default],
+ *         controller: (optional):  [that controller will be injected on the view]
+ *     })
+ *     returns the $dom
+ *
+ * @author maz
+ */
+
+var module = angular.module('ev-fdm');
+
+var ModalService = function($rootScope, $templateCache, $compile, $controller) {
+    this.$rootScope = $rootScope;
+    this.$templateCache = $templateCache;
+    this.$compile = $compile;
+    this.$controller = $controller;
+};
+
+ModalService.prototype.open = function(options) {
+    // extend and check options given
+    options = this._readOptions(options);
+
+    // get/create the scope
+    var $scope = (options.parentScope || this.$rootScope).$new();
+    $scope = _($scope).extend(options.scope);
+
+    // attach a controller if specified
+    var $controller;
+    if (options.controller) {
+        $controller = this.$controller(options.controller, { $scope: $scope });
+    }
+
+    // create the dom that will feed bs modal service
+    var modalDom = this.$compile(options.template || this.$templateCache.get(options.templateUrl))($scope);
+
+    // attach these to the returned dom el
+    modalDom.$scope = $scope;
+    modalDom.$controller = $controller;
+    // controller has access to the bs dom modal object
+    if ($controller) {
+        $controller.$modal = modalDom;
+    }
+
+    return $(modalDom).modal(options);
+}
+
+ModalService.prototype._readOptions = function(options) {
+    // read options, adding defaults
+    options = _({
+        backdrop: true,
+        scope: {},
+        keyboard: true
+    }).extend(options);
+
+    // templateUrl is compulsory
+    if (!options.templateUrl && !options.template) {
+        throw new Error('Either template or templateUrl have to be defined');
+    }
+
+    return options;
+}
+
+// injection
+module.service('ModalService', [
+    '$rootScope',
+    '$templateCache',
+    '$compile',
+    '$controller',
+    ModalService
+]);
+'use strict';
+
+/* Services */
+var module = angular.module('ev-fdm');
+
+// Map that stores the selected filters across pages
+module.service('NotificationsService', ['$timeout', function($timeout) {
+
+    var self = this;
+    var queue = [];
+    var DEFAULT_DELAY = 5;
+    var TYPES = {
+        SUCCESS : 0,
+        ERROR : 1,
+        INFO : 2,
+        WARNING : 3
+    };
+
+    /**
+     * The notification being displayed
+     */
+    this.activeNotification = null;
+
+    /**
+     * Give this function a notification object with :
+     * {
+     *     text: 'the text you want to display',
+     *     type: the type, a value among the constant in NotificationsService.type
+     *     [delay]: optionnal, the duration in seconds during which you want to display the error
+     *             if -1 : sticky message
+     * }
+     */
+    function add(notification) {
+        if (!notification.type) {
+            notification.type = TYPES.SUCCESS;
+        }
+        queueNotification(notification);
+    }
+
+    /**
+     * For manual removal
+     */
+    function remove(notification) {
+        queue = _(queue).without(notification);
+        next();
+    }
+
+    function next() {
+        if (queue.length) {
+            var notification = queue[0];
+            if (self.activeNotification !== notification) {
+                self.activeNotification = notification;
+                if (notification.delay !== -1) {
+                    // The notification is removed after a while
+                    $timeout(
+                        function() { remove(notification); },
+                        (notification.delay || DEFAULT_DELAY) * 1000
+                    );
+                }
+            }
+        } else {
+            self.activeNotification = null;
+        }
+    }
+
+    function queueNotification(notification) {
+        queue.push(notification);
+        next();
+    }
+
+    // export only these
+    this.add = add;
+    this.remove = remove;
+    this.addError = function(notification) {
+        notification.type = TYPES.ERROR;
+        add(notification);
+    };
+    this.addSuccess = function(notification) {
+        notification.type = TYPES.SUCCESS;
+        add(notification);
+    };
+    this.type = TYPES;
+}]);
+
+const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
+const MAX_VISIBLE_PANEL = 3;
+
+angular.module('ev-fdm')
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
+            $window) {
+
+        var containers   = {};
+        var panelsList   = {};
+
+        var addToDom = function (panel, containerId) {
+            var container = containers[containerId];
+            if (!container || panel.element.parent().length) {
+                return;
+            }
+
+            // If no panel index, or no panel inside the container, it is added at the end
+            if (!panel.index || !container.children().length) {
+                $animate.move(panel.element, container, null, function () {
+                    updateLayout(containerId);
+                });
+            } else {
+                var beforePanel = getBeforePanelElm(panel.index, containerId);
+                    $animate.move(panel.element, container, beforePanel.element, function () {
+                        updateLayout(containerId);
+                });
+            }
+        };
+
+        function getBeforePanelElm(index, containerId) {
+            var beforePanel = null;
+            var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
+                return panelsList[containerId][panelName];
+            });
+            panels
+                .filter(function (panel) {
+                    return panel.element.parent().length;
+                })
+                .filter(function (panel) {
+                    return panel.index;
+                })
+                .some(function (insertedPanel) {
+                    var isBeforePanel = insertedPanel.index > index;
+                    if (isBeforePanel) {
+                        beforePanel = insertedPanel;
+                    }
+                    return !isBeforePanel;
+                });
+            return (beforePanel || panels[0]).element;
+        }
+
+        /**
+         * Panel options are:
+         * - name
+         * - template or templateURL
+         * - index
+         */
+        this.open = function (panel, id) {
+            if (!id) {
+                id = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[id] = panelsList[id] || {};
+
+            if (!panel.name && panel.panelName) {
+                console.log("Deprecated: use name instead of panelName");
+                panel.name = panel.panelName;
+            }
+
+            if (!panel) {
+                console.log("A panel must have a name (options.name)");
+                return;
+            }
+
+            // Change panelName to panel-name
+            var name = panel.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (panels[name]) {
+                return panels[name];
+            }
+
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
+                    name + '" ev-responsive-viewport ev-resizable-column>' +
+                    '</div>');
+            var templatePromises = getTemplatePromise(panel);
+            panels[name] = panel;
+            panel.element = element;
+
+            return templatePromises.then(function(template) {
+                var scope = $rootScope.$new();
+                element.html(template);
+                element = $compile(element)(scope);
+                panel.element  = element;
+                panel.scope = scope;
+                addToDom(panel, id);
+                return panel;
+            });
+        };
+
+
+        this.getPanels = function (containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            return panelsList[containerId];
+        };
+
+        this.close = function(name, containerId) {
+            // Change panelName to panel-name
+            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[containerId];
+
+            if (!name || !panels[name]) {
+                console.log("Panel not found for: " + name + " in container: " + containerId);
+            }
+
+
+            var element  = panels[name].element;
+            $animate.leave(element, function() {
+                updateLayout(containerId);
+                panels[name].scope.$destroy();
+                delete panels[name];
+            });
+        };
+
+        /**
+         * Registers a panels container
+         *
+         * element : DOM element
+         */
+        this.registerContainer = function(container, containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            if (!containers[containerId]) {
+                containers[containerId] = container;
+                if (!panelsList[containerId]) {
+                    return;
+                }
+
+                Object.keys(panelsList[containerId]).forEach(function (panelName) {
+                    var panel = panelsList[containerId][panelName];
+                    addToDom(panel, containerId);
+                });
+            }
+        };
+
+
+
+        var timerWindowResize = null;
+        angular.element($window).on('resize', function() {
+            if(timerWindowResize !== null) {
+                $timeout.cancel(timerWindowResize);
+            }
+            timerWindowResize = $timeout(function() {
+                updateLayout();
+            }, 200);
+        });
+
+
+        function getTemplatePromise(options) {
+            if (options.template || options.templateURL) {
+                return $q.when(options.template);
+            }
+
+            return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
+                return result.data;
+            });
+        }
+
+
+        function updateLayout(containerId) {
+            if (!containerId) {
+                Object.keys(containers).map(function (id) {
+                    updateLayout(id);
+                });
+                return this;
+            }
+            var container = containers[containerId];
+            var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
+
+
+            checkStacking(panelElements, container);
+        }
+
+        function checkStacking(panels, container) {
+            panels.forEach(function (panel) {
+                angular.element(panel).removeClass('ev-stacked');
+                // We reset the width each time we update the layout
+                angular.element(panel).css('minWidth', '');
+                angular.element(panel).css('maxWidth', '');
+            });
+            // We stack panels until there is only three left
+            if (panels.length > MAX_VISIBLE_PANEL) {
+                panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
+                    angular.element(panel).addClass('ev-stacked');
+                });
+            }
+            // Starting from the first non stack panel,
+            var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
+            // Stack until overflow does not exists anymore (or we arrive to the last panel)
+            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
+                angular.element(panels[i]).addClass('ev-stacked');
+                i ++;
+            }
+            var panel = angular.element(panels[i]);
+            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
+            panel.css('maxWidth', container[0].offsetWidth);
+            $rootScope.$broadcast('module-layout-changed');
+        }
+
+        return this;
+    }])
+    .directive('evPanels', ['PanelService', function(panelService) {
+        return {
+            restrict: 'AE',
+            scope: {},
+            replace: true,
+            template: '<div class="ev-panels-container"></div>',
+            link: function (scope, element, attrs) {
+              panelService.registerContainer(element, attrs.id);
+            }
+        };
+    }]);
+
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.service('SortService', [function() {
+    var currentSortValue = '';
+    var isReverse = false;
+
+    var getCurrentSort = function() {
+        return currentSortValue;
+    }
+    
+    var sortBy = function(sortValue) {
+        if (sortValue == currentSortValue)
+            isReverse = !isReverse;
+        else {
+            currentSortValue = sortValue;
+        }
+        return this;
+    };
+
+    var getSortCSS = function(value) {
+        var res = 'sort ';
+        if (value == currentSortValue) {
+            if (isReverse)
+                res += 'sort-up';
+            else
+                res += 'sort-down';
+        }
+        else
+            res += 'no-sort';
+        return res;
+    }
+
+    var setReverse = function(reverse) {
+        isReverse = reverse;
+    };
+    var isReverse = function() {
+        return isReverse;
+    };
+
+    return {
+        'sortBy'        : sortBy,
+        'getSortCSS'    : getSortCSS,
+        'getCurrentSort': getCurrentSort,
+        'setReverse'    : setReverse,
+        'isReverse'     : isReverse
+    }
+}]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.service('UtilService', [function() {
+    this.generatedIds = {};
+
+    this.generateId = function(prefix) {
+        var id = prefix + Math.random() * 10000;
+
+        if(typeof(this.generatedIds[id] !== 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = this.generateId(prefix);
+        }
+
+        return id;
+    };
+}]);
+
+angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
       require: '^form',
@@ -47695,6 +47818,7 @@ angular.module('ev-leaflet', ['leaflet-directive'])
     }]);
 
 /* jshint camelcase: false */
+/* global tinymce */
 /**
  * Directive to override some settings in tinymce
  * Usage:
@@ -47808,7 +47932,8 @@ angular.module('ev-tinymce', [])
 
                 var setPlaceholder = function() {
                     var editor = getTinyInstance();
-                    editor.setContent('<span class="placeholder-light">' + attrs.placeholder + '</span>');
+                    tinymce.DOM.addClass(tinyElm, 'placeholder-light');
+                    editor.setContent(attrs.placeholder);
                 };
 
                 var updatePlaceholder = function(newText) {
@@ -47817,6 +47942,7 @@ angular.module('ev-tinymce', [])
                         if (currentText === attrs.placeholder) {
                             editor.setContent('');
                             editor.selection.setCursorLocation();
+                            tinymce.DOM.removeClass(tinyElm, 'placeholder-light');
                         }
                     } else {
                         if (newText !== attrs.placeholder) {
