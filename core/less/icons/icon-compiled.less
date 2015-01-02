@@ -29,6 +29,7 @@
 // .icon-arrow-right - arrow-right icon
 // .icon-arrow-up - arrow-up icon
 // .icon-article - article icon
+// .icon-attached - attached icon
 // .icon-bin - bin icon
 // .icon-calendar - calendar icon
 // .icon-camera - camera icon
@@ -38,6 +39,7 @@
 // .icon-discussions - discussions icon
 // .icon-display-hierarchical - display-hierarchical icon
 // .icon-download - download icon
+// .icon-edit - edit icon
 // .icon-eye - eye icon
 // .icon-filter - filter icon
 // .icon-fold - fold icon
@@ -45,22 +47,20 @@
 // .icon-help - help icon
 // .icon-home - home icon
 // .icon-infos - infos icon
+// .icon-mail - mail icon
 // .icon-note - note icon
 // .icon-read - read icon
 // .icon-search - search icon
 // .icon-settings - settings icon
+// .icon-star-empty - star-empty icon
+// .icon-star-mid - star-mid icon
+// .icon-star - star icon
 // .icon-stats - stats icon
 // .icon-tick - tick icon
 // .icon-triangle - triangle icon
 // .icon-unfold - unfold icon
 // .icon-users - users icon
 // .icon-warning - warning icon
-// .icon-attached - attached icon
-// .icon-edit - edit icon
-// .icon-star-empty - star-empty icon
-// .icon-star-mid - star-mid icon
-// .icon-star - star icon
-// .icon-mail - mail icon
 //
 // Markup:
 // <i class="{$modifiers}"></i>
@@ -84,6 +84,10 @@
 }
 .icon-article {
     &:before {content: "\E005";}
+    &:extend(.icon all);
+}
+.icon-attached {
+    &:before {content: "\E006";}
     &:extend(.icon all);
 }
 .icon-bin {
@@ -122,6 +126,10 @@
     &:before {content: "\E00F";}
     &:extend(.icon all);
 }
+.icon-edit {
+    &:before {content: "\E010";}
+    &:extend(.icon all);
+}
 .icon-eye {
     &:before {content: "\E011";}
     &:extend(.icon all);
@@ -150,67 +158,59 @@
     &:before {content: "\E017";}
     &:extend(.icon all);
 }
-.icon-note {
+.icon-mail {
     &:before {content: "\E018";}
     &:extend(.icon all);
 }
-.icon-read {
+.icon-note {
     &:before {content: "\E019";}
     &:extend(.icon all);
 }
-.icon-search {
+.icon-read {
     &:before {content: "\E01A";}
     &:extend(.icon all);
 }
-.icon-settings {
+.icon-search {
     &:before {content: "\E01B";}
     &:extend(.icon all);
 }
-.icon-stats {
+.icon-settings {
     &:before {content: "\E01C";}
     &:extend(.icon all);
 }
-.icon-tick {
+.icon-star-empty {
     &:before {content: "\E01D";}
     &:extend(.icon all);
 }
-.icon-triangle {
+.icon-star-mid {
     &:before {content: "\E01E";}
     &:extend(.icon all);
 }
-.icon-unfold {
+.icon-star {
     &:before {content: "\E01F";}
     &:extend(.icon all);
 }
-.icon-users {
+.icon-stats {
     &:before {content: "\E020";}
     &:extend(.icon all);
 }
-.icon-warning {
+.icon-tick {
     &:before {content: "\E021";}
     &:extend(.icon all);
 }
-.icon-attached {
+.icon-triangle {
     &:before {content: "\E022";}
     &:extend(.icon all);
 }
-.icon-edit {
+.icon-unfold {
     &:before {content: "\E023";}
     &:extend(.icon all);
 }
-.icon-star-empty {
+.icon-users {
     &:before {content: "\E024";}
     &:extend(.icon all);
 }
-.icon-star-mid {
+.icon-warning {
     &:before {content: "\E025";}
-    &:extend(.icon all);
-}
-.icon-star {
-    &:before {content: "\E026";}
-    &:extend(.icon all);
-}
-.icon-mail {
-    &:before {content: "\E028";}
     &:extend(.icon all);
 }
