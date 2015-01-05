@@ -5,11 +5,8 @@ angular.module('ev-fdm')
             link: function (scope, element, attr) {
                 attr.evStopEvent
                     .split(',')
-                    .map(function (eventName) {
-                        return eventName.trim();
-                    })
                     .forEach(function (eventName) {
-                        element.bind(eventName, function (e) {
+                        element.bind(eventName.trim(), function (e) {
                             e.stopPropagation();
                         });
                     });
