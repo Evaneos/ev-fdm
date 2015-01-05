@@ -1,5 +1,5 @@
 angular.module('ev-fdm')
-    .directive('evStopEvent', function () {
+    .directive('evStopEventPropagation', function () {
         return {
             restrict: 'A',
             link: function (scope, element, attr) {
