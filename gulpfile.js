@@ -70,7 +70,7 @@ gulp.task('core-icon-font', function() {
         centerHorizontally: true,
     }))
     .on('codepoints', function(codepoints, options) {
-        gulp.src('core/iconfont/icon-template.less')
+        gulp.src('core/iconfont/template.less')
             .pipe(consolidate('lodash', {
                 glyphs: codepoints,
                 fontName: icon.name,
