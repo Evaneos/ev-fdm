@@ -9,8 +9,8 @@ angular.module('ev-fdm').factory('Select2Configuration', [
                 resultModifier = dataProvider.resultModifier;
                 minimumInputLength = dataProvider.minimumInputLength;
                 key = dataProvider.key;
-                dataProvider = dataProvider.dataProvider;
                 dataProviderFilter = dataProvider.dataProviderFilter;
+                dataProvider = dataProvider.dataProvider;
 
                 if (typeof dataProviderFilter === 'object') {
                     var filter = dataProviderFilter;
