@@ -3,7 +3,7 @@ angular.module('ev-fdm')
         return {
             restrict: 'A',
             link: function (scope, element, attr) {
-                attr.evStopEvent
+                attr.evStopEventPropagation
                     .split(',')
                     .forEach(function (eventName) {
                         element.bind(eventName.trim(), function (e) {
