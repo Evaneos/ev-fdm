@@ -19,7 +19,7 @@
                     '<li ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">' +
                         '<figure>' +
                             '<div class="picture-thumb">' +
-                                '<img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />' +
+                                '<img ng-src="{{picture.id | imageUrl:300:200 | escapeQuotes }}" />' +
                                 '<button class="action btn btn-tertiary update-action ev-upload-clickable"' +
                                     'ng-click="onUpdate({picture: picture, index: $index})" ' +
                                     'data-ng-show="editable && showUpdate">' +
