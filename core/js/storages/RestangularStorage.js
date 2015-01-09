@@ -69,6 +69,8 @@ angular.module('ev-fdm')
                         if (embedName in resultData) {
                             if (!objectData[embedName]) {
                                 objectData[embedName] = resultData[embedName];
+                            } else if (resultData[embedName].data === null ) {
+                                objectData[embedName].data = null;
                             } else {
                                 merge(
                                     objectData[embedName].data,
