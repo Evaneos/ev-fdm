@@ -20,6 +20,7 @@
         'convert_fonts_to_spans': true,
         //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
         inline: true,
+        browser_spellcheck : true,
 
         // We choose to have a restrictive approach here.
         // The aim is to output the cleanest html possible.
