@@ -20,6 +20,10 @@ label {
 }
 
 .form-group {
+    // If someone wants to: never put margin for form group. It is used in cases where we have a group with validation
+    // inside a table and we don't want any margin. Thanks !
+    margin-bottom: 0;
+
 
     & > label {
         .text-overflow();
