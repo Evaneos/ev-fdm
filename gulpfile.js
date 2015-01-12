@@ -64,7 +64,7 @@ var icon = {
 gulp.task('core-icon-font', function() {
     return gulp.src([ 'core/iconfont/*.svg' ]) //, { read: false }
     .pipe(iconfont({
-        fontHeight: 1500,
+        fontHeight: 900,
         normalize: true,
         fontName: icon.name,
         centerHorizontally: true,
