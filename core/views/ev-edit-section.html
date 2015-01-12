@@ -6,7 +6,7 @@
         </div>
         <div class="pull-right" ng-show="edit && !inProgress">
             <button type="submit" class="btn btn-sm btn-lime" ng-class="{ 'btn-orange': editform.$invalid }">Save</button>
-            <button class="btn btn-sm" ng-click="cancel()">Cancel</button>
+            <button type="button" class="btn btn-sm" ng-click="cancel()">Cancel</button>
         </div>
         <div ng-show="inProgress" class="pull-right">
             <button type="button" class="btn btn-tertiary">Saving in progress...</button>
