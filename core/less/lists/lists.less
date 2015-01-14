@@ -42,7 +42,7 @@
 .ev-list {
 	.list-unstyled;
 	margin: 0;
-	> * {
+	> *, .ev-list-element {
 		padding: @ev-list-vertical-padding @ev-list-horizontal-padding;
 		border-bottom: solid 1px @ev-list-border-color;
 		&:last-child {
@@ -66,7 +66,7 @@
 // Styleguide 3.2.1
 
 .ev-list.ev-list-no-separator {
-	> * {
+	> *, .ev-list-element {
 		border-bottom: none;
 	}
 }
@@ -127,15 +127,7 @@
 }
 
 .ev-list-collapse {
-	li header:hover {
-		cursor: pointer;
-
-		.ev-list-collapse-trigger {
-			color: @ev-list-hover-collapse-trigger;
-		}
-	}
-
-	li.collapsed:hover {
+	.collapsed:hover {
 		background-color: @ev-list-hover-background;
 		cursor: pointer;
 	}
