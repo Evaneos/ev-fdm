@@ -593,7 +593,8 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             options: '=',
             args: '=?',
             title: '@', // deprecated
-            headerTitle: '@'
+            headerTitle: '@',
+            noteditable: '=?'
         },
         templateUrl: 'ev-edit-section.html',
 
@@ -618,7 +619,6 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             scope.save = function() {
                 if (!scope.editform.$valid) {
                     triedToSave = true;
-                    console.log(scope.editform.$error);
                     return;
                 }
                 var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
