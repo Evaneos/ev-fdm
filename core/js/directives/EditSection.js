@@ -9,7 +9,8 @@ angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', fun
             args: '=?',
             title: '@', // deprecated
             headerTitle: '@',
-            noteditable: '=?'
+            noteditable: '=?',
+            notdeletable: '=?',
         },
         templateUrl: 'ev-edit-section.html',
 
