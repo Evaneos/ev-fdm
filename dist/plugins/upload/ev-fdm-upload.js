@@ -129,7 +129,7 @@ angular.module('ev-upload')
 
     You can parameter me with:
     - `url`:  which is the place where I'll upload the pictures
-    - `pictureSuccess`:  a function called each time a picture has successfully been uploaded (by flickr
+    - `addPicture`:  a function called each time a picture has successfully been uploaded (by flickr
         or manually). The picture is passed as argument.
 
 */
@@ -198,8 +198,9 @@ angular.module('ev-upload')
                     var flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/ .exec($scope.flickrUrl)[0];
                     var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
                     uploadPromise
-                        .success(function (response) {
-                            $scope.pictureSuccess({picture: response});
+                        .success(function (pictureUploaded) {
+                            var picture = pictureUploaded.data[0];
+                            $scope.addPicture(picture);
                         })
                         .success(function () {
                             flickrForm.$setPristine();
