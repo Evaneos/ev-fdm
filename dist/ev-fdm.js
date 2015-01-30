@@ -3128,7 +3128,7 @@ angular.module('ev-fdm')
                 if (resultEmbeds) {
                     resultEmbeds.forEach(function(embedName) {
                         if (embedName in resultData) {
-                            if (!objectData[embedName]) {
+                            if (!objectData[embedName] || !objectData[embedName].data) {
                                 objectData[embedName] = resultData[embedName];
                             } else if (resultData[embedName].data === null ) {
                                 objectData[embedName].data = null;
@@ -4390,8 +4390,9 @@ angular.module('ev-upload')
                     var flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/ .exec($scope.flickrUrl)[0];
                     var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
                     uploadPromise
-                        .success(function (response) {
-                            $scope.addPicture({picture: response});
+                        .success(function (pictureUploaded) {
+                            var picture = pictureUploaded.data[0];
+                            $scope.addPicture(picture);
                         })
                         .success(function () {
                             flickrForm.$setPristine();

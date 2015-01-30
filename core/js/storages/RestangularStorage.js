@@ -67,7 +67,7 @@ angular.module('ev-fdm')
                 if (resultEmbeds) {
                     resultEmbeds.forEach(function(embedName) {
                         if (embedName in resultData) {
-                            if (!objectData[embedName]) {
+                            if (!objectData[embedName] || !objectData[embedName].data) {
                                 objectData[embedName] = resultData[embedName];
                             } else if (resultData[embedName].data === null ) {
                                 objectData[embedName].data = null;
