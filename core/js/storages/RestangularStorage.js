@@ -83,7 +83,11 @@ angular.module('ev-fdm')
                     });
                 }
                 angular.extend(objectData, resultData);
-            })(object, angular.copy(restangular.stripRestangular(result)), result.embeds);
+            })(
+                object.data && object.embeds ? object.data : object,
+                angular.copy(restangular.stripRestangular(result)),
+                result.embeds
+            );
         };
         RestangularStorage.prototype.updateObjectFromResult = RestangularStorage.updateObjectFromResult;
 
