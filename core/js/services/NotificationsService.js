@@ -68,14 +68,31 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
         next();
     }
 
+    function prepareNotification(notification) {
+      if(!angular.isObject(notification)){
+          var tmp = notification;
+          notification = {
+            text: tmp
+          };
+        }
+
+      return notification;
+    }
+
     // export only these
     this.add = add;
     this.remove = remove;
     this.addError = function(notification) {
+        
+        notification = prepareNotification(notification);
+
         notification.type = TYPES.ERROR;
         add(notification);
     };
     this.addSuccess = function(notification) {
+
+        notification = prepareNotification(notification);
+
         notification.type = TYPES.SUCCESS;
         add(notification);
     };
