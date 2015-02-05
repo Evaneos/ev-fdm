@@ -69,11 +69,8 @@ module.service('NotificationsService', ['$timeout', function($timeout) {
     }
 
     function prepareNotification(notification) {
-      if(!angular.isObject(notification)){
-          var tmp = notification;
-          notification = {
-            text: tmp
-          };
+        if(!angular.isObject(notification)){
+            return { text: notification };
         }
 
       return notification;
