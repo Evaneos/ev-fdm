@@ -7,6 +7,6 @@ var module = angular.module('ev-fdm')
             input: '=',
             error: '@'
         },
-        template: '<li ng-if="input[\'evHasError\'] && input.$error[error]" ng-transclude></li>',
+        template: '<li ng-show="input[\'evHasError\'] && input.$error[error]"><div ng-transclude></div></li>'
     };
 });

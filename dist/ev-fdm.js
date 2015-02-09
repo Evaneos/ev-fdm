@@ -160,157 +160,6 @@ angular.module('ev-fdm')
         };
     });
 
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            if (typeof dataProvider === 'object') {
-                formatter = dataProvider.formatter;
-                resultModifier = dataProvider.resultModifier;
-                minimumInputLength = dataProvider.minimumInputLength;
-                key = dataProvider.key;
-                dataProviderFilter = dataProvider.dataProviderFilter;
-                dataProvider = dataProvider.dataProvider;
-
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }
-]);
-
 angular.module('ev-fdm')
     .factory('ListController', ['$rootScope', '$state', '$stateParams', 'Restangular', function($rootScope, $state, $stateParams, restangular) {
 
@@ -868,7 +717,7 @@ var module = angular.module('ev-fdm')
             input: '=',
             error: '@'
         },
-        template: '<li ng-if="input[\'evHasError\'] && input.$error[error]" ng-transclude></li>',
+        template: '<li ng-show="input[\'evHasError\'] && input.$error[error]"><div ng-transclude></div></li>'
     };
 });
 
@@ -2265,6 +2114,157 @@ angular.module('ev-fdm')
         };
     });
 'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProviderFilter = dataProvider.dataProviderFilter;
+                dataProvider = dataProvider.dataProvider;
+
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }
+]);
+
+'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
 */
@@ -2434,537 +2434,6 @@ angular.module('ev-fdm')
             return $sce.trustAsHtml(val);
         };
     }]);
-angular.module('ev-fdm')
-.service('DownloadService', ['$document', function($document) {
-   var iframe = null;
-   return {
-       download: function(url) {
-           if(!iframe) {
-               iframe = $document[0].createElement('iframe');
-               iframe.style.display = 'none';
-               $document[0].body.appendChild(iframe);
-           }
-           iframe.src = url;
-       }
-   };
-}]);
-'use strict';
-
-// Map that stores the selected filters across pages
-angular.module('ev-fdm').
-    service('FilteringService', ['$location', function ($location) {
-
-        var filters = {};
-
-        return {
-            setSelectedFilter:function (filterName, value){
-                if (value != undefined && value != 'undefined'){
-                    filters[filterName] = value;
-                    // $location.search(filterName, encodeURIComponent(value));
-                }
-                else {
-                    filters[filterName] = '';
-                }
-
-            },
-
-            getSelectedFilter:function (filterName){
-                var res = '';
-
-                if (typeof filters[filterName] != 'undefined' && filters[filterName] != 'undefined') {
-                    res = filters[filterName];
-                }
-
-                return res;
-            },
-
-            getAllFilters:function (){
-                return filters;
-            }
-        }
-    }]
-    );
-/**
- * ModalService
- *     Angularization of bootstrap's $.fn.modal into a service
- *     - read template from ng's template cache
- *     - uses ng's $compilation, attaching the provided $scope
- *     - (optional) attach a controller to the view for more advanced modals
- *
- * Usage:
- *     - modalService.open({
- *         .. same as twitter bootstrap options
- *         template:                [html value string],
- *         templateUrl:             [url matching a key in $templateCache],
- *         scope:                   [key values],
- *         parentScope (optional):  [scope will inherit from that scope, $rootScope by default],
- *         controller: (optional):  [that controller will be injected on the view]
- *     })
- *     returns the $dom
- *
- * @author maz
- */
-
-var module = angular.module('ev-fdm');
-
-var ModalService = function($rootScope, $templateCache, $compile, $controller) {
-    this.$rootScope = $rootScope;
-    this.$templateCache = $templateCache;
-    this.$compile = $compile;
-    this.$controller = $controller;
-};
-
-ModalService.prototype.open = function(options) {
-    // extend and check options given
-    options = this._readOptions(options);
-
-    // get/create the scope
-    var $scope = (options.parentScope || this.$rootScope).$new();
-    $scope = _($scope).extend(options.scope);
-
-    // attach a controller if specified
-    var $controller;
-    if (options.controller) {
-        $controller = this.$controller(options.controller, { $scope: $scope });
-    }
-
-    // create the dom that will feed bs modal service
-    var modalDom = this.$compile(options.template || this.$templateCache.get(options.templateUrl))($scope);
-
-    // attach these to the returned dom el
-    modalDom.$scope = $scope;
-    modalDom.$controller = $controller;
-    // controller has access to the bs dom modal object
-    if ($controller) {
-        $controller.$modal = modalDom;
-    }
-
-    return $(modalDom).modal(options);
-}
-
-ModalService.prototype._readOptions = function(options) {
-    // read options, adding defaults
-    options = _({
-        backdrop: true,
-        scope: {},
-        keyboard: true
-    }).extend(options);
-
-    // templateUrl is compulsory
-    if (!options.templateUrl && !options.template) {
-        throw new Error('Either template or templateUrl have to be defined');
-    }
-
-    return options;
-}
-
-// injection
-module.service('ModalService', [
-    '$rootScope',
-    '$templateCache',
-    '$compile',
-    '$controller',
-    ModalService
-]);
-'use strict';
-
-/* Services */
-var module = angular.module('ev-fdm');
-
-// Map that stores the selected filters across pages
-module.service('NotificationsService', ['$timeout', function($timeout) {
-
-    var self = this;
-    var queue = [];
-    var DEFAULT_DELAY = 5;
-    var TYPES = {
-        SUCCESS : 0,
-        ERROR : 1,
-        INFO : 2,
-        WARNING : 3
-    };
-
-    /**
-     * The notification being displayed
-     */
-    this.activeNotification = null;
-
-    /**
-     * Give this function a notification object with :
-     * {
-     *     text: 'the text you want to display',
-     *     type: the type, a value among the constant in NotificationsService.type
-     *     [delay]: optionnal, the duration in seconds during which you want to display the error
-     *             if -1 : sticky message
-     * }
-     */
-    function add(notification) {
-        if (!notification.type) {
-            notification.type = TYPES.SUCCESS;
-        }
-        queueNotification(notification);
-    }
-
-    /**
-     * For manual removal
-     */
-    function remove(notification) {
-        queue = _(queue).without(notification);
-        next();
-    }
-
-    function next() {
-        if (queue.length) {
-            var notification = queue[0];
-            if (self.activeNotification !== notification) {
-                self.activeNotification = notification;
-                if (notification.delay !== -1) {
-                    // The notification is removed after a while
-                    $timeout(
-                        function() { remove(notification); },
-                        (notification.delay || DEFAULT_DELAY) * 1000
-                    );
-                }
-            }
-        } else {
-            self.activeNotification = null;
-        }
-    }
-
-    function queueNotification(notification) {
-        queue.push(notification);
-        next();
-    }
-
-    function prepareNotification(notification) {
-      if(!angular.isObject(notification)){
-          var tmp = notification;
-          notification = {
-            text: tmp
-          };
-        }
-
-      return notification;
-    }
-
-    // export only these
-    this.add = add;
-    this.remove = remove;
-    this.addError = function(notification) {
-        
-        notification = prepareNotification(notification);
-
-        notification.type = TYPES.ERROR;
-        add(notification);
-    };
-    this.addSuccess = function(notification) {
-
-        notification = prepareNotification(notification);
-
-        notification.type = TYPES.SUCCESS;
-        add(notification);
-    };
-    this.type = TYPES;
-}]);
-
-const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
-const MAX_VISIBLE_PANEL = 3;
-
-angular.module('ev-fdm')
-    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
-        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
-            $window) {
-
-        var containers   = {};
-        var panelsList   = {};
-
-        var addToDom = function (panel, containerId) {
-            var container = containers[containerId];
-            if (!container || panel.element.parent().length) {
-                return;
-            }
-
-            // If no panel index, or no panel inside the container, it is added at the end
-            if (!panel.index || !container.children().length) {
-                $animate.move(panel.element, container, null, function () {
-                    updateLayout(containerId);
-                });
-            } else {
-                var beforePanel = getBeforePanelElm(panel.index, containerId);
-                    $animate.move(panel.element, container, beforePanel.element, function () {
-                        updateLayout(containerId);
-                });
-            }
-        };
-
-        function getBeforePanelElm(index, containerId) {
-            var beforePanel = null;
-            var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
-                return panelsList[containerId][panelName];
-            });
-            panels
-                .filter(function (panel) {
-                    return panel.element.parent().length;
-                })
-                .filter(function (panel) {
-                    return panel.index;
-                })
-                .some(function (insertedPanel) {
-                    var isBeforePanel = insertedPanel.index > index;
-                    if (isBeforePanel) {
-                        beforePanel = insertedPanel;
-                    }
-                    return !isBeforePanel;
-                });
-            return (beforePanel || panels[0]).element;
-        }
-
-        /**
-         * Panel options are:
-         * - name
-         * - template or templateURL
-         * - index
-         */
-        this.open = function (panel, id) {
-            if (!id) {
-                id = DEFAULT_CONTAINER_ID;
-            }
-            var panels = panelsList[id] = panelsList[id] || {};
-
-            if (!panel.name && panel.panelName) {
-                console.log("Deprecated: use name instead of panelName");
-                panel.name = panel.panelName;
-            }
-
-            if (!panel) {
-                console.log("A panel must have a name (options.name)");
-                return;
-            }
-
-            // Change panelName to panel-name
-            var name = panel.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-            if (panels[name]) {
-                return panels[name];
-            }
-
-            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
-                    name + '" ev-responsive-viewport ev-resizable-column>' +
-                    '</div>');
-            var templatePromises = getTemplatePromise(panel);
-            panels[name] = panel;
-            panel.element = element;
-
-            return templatePromises.then(function(template) {
-                var scope = $rootScope.$new();
-                element.html(template);
-                element = $compile(element)(scope);
-                panel.element  = element;
-                panel.scope = scope;
-                addToDom(panel, id);
-                return panel;
-            });
-        };
-
-
-        this.getPanels = function (containerId) {
-            if (!containerId) {
-                containerId = DEFAULT_CONTAINER_ID;
-            }
-            return panelsList[containerId];
-        };
-
-        this.close = function(name, containerId) {
-            // Change panelName to panel-name
-            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-
-            if (!containerId) {
-                containerId = DEFAULT_CONTAINER_ID;
-            }
-            var panels = panelsList[containerId];
-
-            if (!name || !panels[name]) {
-                console.log("Panel not found for: " + name + " in container: " + containerId);
-            }
-
-
-            var element  = panels[name].element;
-            $animate.leave(element, function() {
-                updateLayout(containerId);
-                panels[name].scope.$destroy();
-                delete panels[name];
-            });
-        };
-
-        /**
-         * Registers a panels container
-         *
-         * element : DOM element
-         */
-        this.registerContainer = function(container, containerId) {
-            if (!containerId) {
-                containerId = DEFAULT_CONTAINER_ID;
-            }
-            if (!containers[containerId]) {
-                containers[containerId] = container;
-                if (!panelsList[containerId]) {
-                    return;
-                }
-
-                Object.keys(panelsList[containerId]).forEach(function (panelName) {
-                    var panel = panelsList[containerId][panelName];
-                    addToDom(panel, containerId);
-                });
-            }
-        };
-
-
-
-        var timerWindowResize = null;
-        angular.element($window).on('resize', function() {
-            if(timerWindowResize !== null) {
-                $timeout.cancel(timerWindowResize);
-            }
-            timerWindowResize = $timeout(function() {
-                updateLayout();
-            }, 200);
-        });
-
-
-        function getTemplatePromise(options) {
-            if (options.template || options.templateURL) {
-                return $q.when(options.template);
-            }
-
-            return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
-                return result.data;
-            });
-        }
-
-
-        function updateLayout(containerId) {
-            if (!containerId) {
-                Object.keys(containers).map(function (id) {
-                    updateLayout(id);
-                });
-                return this;
-            }
-            var container = containers[containerId];
-            var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
-
-
-            checkStacking(panelElements, container);
-        }
-
-        function checkStacking(panels, container) {
-            panels.forEach(function (panel) {
-                angular.element(panel).removeClass('ev-stacked');
-                // We reset the width each time we update the layout
-                angular.element(panel).css('minWidth', '');
-                angular.element(panel).css('maxWidth', '');
-            });
-            // We stack panels until there is only three left
-            if (panels.length > MAX_VISIBLE_PANEL) {
-                panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
-                    angular.element(panel).addClass('ev-stacked');
-                });
-            }
-            // Starting from the first non stack panel,
-            var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
-            // Stack until overflow does not exists anymore (or we arrive to the last panel)
-            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
-                angular.element(panels[i]).addClass('ev-stacked');
-                i ++;
-            }
-            var panel = angular.element(panels[i]);
-            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
-            panel.css('maxWidth', container[0].offsetWidth);
-            $rootScope.$broadcast('module-layout-changed');
-        }
-
-        return this;
-    }])
-    .directive('evPanels', ['PanelService', function(panelService) {
-        return {
-            restrict: 'AE',
-            scope: {},
-            replace: true,
-            template: '<div class="ev-panels-container"></div>',
-            link: function (scope, element, attrs) {
-              panelService.registerContainer(element, attrs.id);
-            }
-        };
-    }]);
-
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.service('SortService', [function() {
-    var currentSortValue = '';
-    var isReverse = false;
-
-    var getCurrentSort = function() {
-        return currentSortValue;
-    }
-    
-    var sortBy = function(sortValue) {
-        if (sortValue == currentSortValue)
-            isReverse = !isReverse;
-        else {
-            currentSortValue = sortValue;
-        }
-        return this;
-    };
-
-    var getSortCSS = function(value) {
-        var res = 'sort ';
-        if (value == currentSortValue) {
-            if (isReverse)
-                res += 'sort-up';
-            else
-                res += 'sort-down';
-        }
-        else
-            res += 'no-sort';
-        return res;
-    }
-
-    var setReverse = function(reverse) {
-        isReverse = reverse;
-    };
-    var isReverse = function() {
-        return isReverse;
-    };
-
-    return {
-        'sortBy'        : sortBy,
-        'getSortCSS'    : getSortCSS,
-        'getCurrentSort': getCurrentSort,
-        'setReverse'    : setReverse,
-        'isReverse'     : isReverse
-    }
-}]);
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.service('UtilService', [function() {
-    this.generatedIds = {};
-
-    this.generateId = function(prefix) {
-        var id = prefix + Math.random() * 10000;
-
-        if(typeof(this.generatedIds[id] !== 'undefined')) {
-            this.generatedIds[id] = true;
-        } else {
-            id = this.generateId(prefix);
-        }
-
-        return id;
-    };
-}]);
-
 'use strict';
 
 /* Services */
@@ -3639,6 +3108,534 @@ angularLocalStorage.service('localStorageService', [
   };
 
 }]);
+angular.module('ev-fdm')
+.service('DownloadService', ['$document', function($document) {
+   var iframe = null;
+   return {
+       download: function(url) {
+           if(!iframe) {
+               iframe = $document[0].createElement('iframe');
+               iframe.style.display = 'none';
+               $document[0].body.appendChild(iframe);
+           }
+           iframe.src = url;
+       }
+   };
+}]);
+'use strict';
+
+// Map that stores the selected filters across pages
+angular.module('ev-fdm').
+    service('FilteringService', ['$location', function ($location) {
+
+        var filters = {};
+
+        return {
+            setSelectedFilter:function (filterName, value){
+                if (value != undefined && value != 'undefined'){
+                    filters[filterName] = value;
+                    // $location.search(filterName, encodeURIComponent(value));
+                }
+                else {
+                    filters[filterName] = '';
+                }
+
+            },
+
+            getSelectedFilter:function (filterName){
+                var res = '';
+
+                if (typeof filters[filterName] != 'undefined' && filters[filterName] != 'undefined') {
+                    res = filters[filterName];
+                }
+
+                return res;
+            },
+
+            getAllFilters:function (){
+                return filters;
+            }
+        }
+    }]
+    );
+/**
+ * ModalService
+ *     Angularization of bootstrap's $.fn.modal into a service
+ *     - read template from ng's template cache
+ *     - uses ng's $compilation, attaching the provided $scope
+ *     - (optional) attach a controller to the view for more advanced modals
+ *
+ * Usage:
+ *     - modalService.open({
+ *         .. same as twitter bootstrap options
+ *         template:                [html value string],
+ *         templateUrl:             [url matching a key in $templateCache],
+ *         scope:                   [key values],
+ *         parentScope (optional):  [scope will inherit from that scope, $rootScope by default],
+ *         controller: (optional):  [that controller will be injected on the view]
+ *     })
+ *     returns the $dom
+ *
+ * @author maz
+ */
+
+var module = angular.module('ev-fdm');
+
+var ModalService = function($rootScope, $templateCache, $compile, $controller) {
+    this.$rootScope = $rootScope;
+    this.$templateCache = $templateCache;
+    this.$compile = $compile;
+    this.$controller = $controller;
+};
+
+ModalService.prototype.open = function(options) {
+    // extend and check options given
+    options = this._readOptions(options);
+
+    // get/create the scope
+    var $scope = (options.parentScope || this.$rootScope).$new();
+    $scope = _($scope).extend(options.scope);
+
+    // attach a controller if specified
+    var $controller;
+    if (options.controller) {
+        $controller = this.$controller(options.controller, { $scope: $scope });
+    }
+
+    // create the dom that will feed bs modal service
+    var modalDom = this.$compile(options.template || this.$templateCache.get(options.templateUrl))($scope);
+
+    // attach these to the returned dom el
+    modalDom.$scope = $scope;
+    modalDom.$controller = $controller;
+    // controller has access to the bs dom modal object
+    if ($controller) {
+        $controller.$modal = modalDom;
+    }
+
+    return $(modalDom).modal(options);
+}
+
+ModalService.prototype._readOptions = function(options) {
+    // read options, adding defaults
+    options = _({
+        backdrop: true,
+        scope: {},
+        keyboard: true
+    }).extend(options);
+
+    // templateUrl is compulsory
+    if (!options.templateUrl && !options.template) {
+        throw new Error('Either template or templateUrl have to be defined');
+    }
+
+    return options;
+}
+
+// injection
+module.service('ModalService', [
+    '$rootScope',
+    '$templateCache',
+    '$compile',
+    '$controller',
+    ModalService
+]);
+'use strict';
+
+/* Services */
+var module = angular.module('ev-fdm');
+
+// Map that stores the selected filters across pages
+module.service('NotificationsService', ['$timeout', function($timeout) {
+
+    var self = this;
+    var queue = [];
+    var DEFAULT_DELAY = 5;
+    var TYPES = {
+        SUCCESS : 0,
+        ERROR : 1,
+        INFO : 2,
+        WARNING : 3
+    };
+
+    /**
+     * The notification being displayed
+     */
+    this.activeNotification = null;
+
+    /**
+     * Give this function a notification object with :
+     * {
+     *     text: 'the text you want to display',
+     *     type: the type, a value among the constant in NotificationsService.type
+     *     [delay]: optionnal, the duration in seconds during which you want to display the error
+     *             if -1 : sticky message
+     * }
+     */
+    function add(notification) {
+        if (!notification.type) {
+            notification.type = TYPES.SUCCESS;
+        }
+        queueNotification(notification);
+    }
+
+    /**
+     * For manual removal
+     */
+    function remove(notification) {
+        queue = _(queue).without(notification);
+        next();
+    }
+
+    function next() {
+        if (queue.length) {
+            var notification = queue[0];
+            if (self.activeNotification !== notification) {
+                self.activeNotification = notification;
+                if (notification.delay !== -1) {
+                    // The notification is removed after a while
+                    $timeout(
+                        function() { remove(notification); },
+                        (notification.delay || DEFAULT_DELAY) * 1000
+                    );
+                }
+            }
+        } else {
+            self.activeNotification = null;
+        }
+    }
+
+    function queueNotification(notification) {
+        queue.push(notification);
+        next();
+    }
+
+    function prepareNotification(notification) {
+        if(!angular.isObject(notification)){
+            return { text: notification };
+        }
+
+      return notification;
+    }
+
+    // export only these
+    this.add = add;
+    this.remove = remove;
+    this.addError = function(notification) {
+        
+        notification = prepareNotification(notification);
+
+        notification.type = TYPES.ERROR;
+        add(notification);
+    };
+    this.addSuccess = function(notification) {
+
+        notification = prepareNotification(notification);
+
+        notification.type = TYPES.SUCCESS;
+        add(notification);
+    };
+    this.type = TYPES;
+}]);
+
+const DEFAULT_CONTAINER_ID = 'ev-default-panels-container';
+const MAX_VISIBLE_PANEL = 3;
+
+angular.module('ev-fdm')
+    .service('PanelService', ['$animate', '$q', '$http', '$templateCache', '$compile', '$rootScope', '$timeout',
+        '$window', function ($animate, $q, $http, $templateCache, $compile, $rootScope, $timeout,
+            $window) {
+
+        var containers   = {};
+        var panelsList   = {};
+
+        var addToDom = function (panel, containerId) {
+            var container = containers[containerId];
+            if (!container || panel.element.parent().length) {
+                return;
+            }
+
+            // If no panel index, or no panel inside the container, it is added at the end
+            if (!panel.index || !container.children().length) {
+                $animate.move(panel.element, container, null, function () {
+                    updateLayout(containerId);
+                });
+            } else {
+                var beforePanel = getBeforePanelElm(panel.index, containerId);
+                    $animate.move(panel.element, container, beforePanel.element, function () {
+                        updateLayout(containerId);
+                });
+            }
+        };
+
+        function getBeforePanelElm(index, containerId) {
+            var beforePanel = null;
+            var panels = Object.keys(panelsList[containerId]).map(function (panelName) {
+                return panelsList[containerId][panelName];
+            });
+            panels
+                .filter(function (panel) {
+                    return panel.element.parent().length;
+                })
+                .filter(function (panel) {
+                    return panel.index;
+                })
+                .some(function (insertedPanel) {
+                    var isBeforePanel = insertedPanel.index > index;
+                    if (isBeforePanel) {
+                        beforePanel = insertedPanel;
+                    }
+                    return !isBeforePanel;
+                });
+            return (beforePanel || panels[0]).element;
+        }
+
+        /**
+         * Panel options are:
+         * - name
+         * - template or templateURL
+         * - index
+         */
+        this.open = function (panel, id) {
+            if (!id) {
+                id = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[id] = panelsList[id] || {};
+
+            if (!panel.name && panel.panelName) {
+                console.log("Deprecated: use name instead of panelName");
+                panel.name = panel.panelName;
+            }
+
+            if (!panel) {
+                console.log("A panel must have a name (options.name)");
+                return;
+            }
+
+            // Change panelName to panel-name
+            var name = panel.name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (panels[name]) {
+                return panels[name];
+            }
+
+            var element = angular.element('<div class="container-fluid ev-panel ev-panel-' +
+                    name + '" ev-responsive-viewport ev-resizable-column>' +
+                    '</div>');
+            var templatePromises = getTemplatePromise(panel);
+            panels[name] = panel;
+            panel.element = element;
+
+            return templatePromises.then(function(template) {
+                var scope = $rootScope.$new();
+                element.html(template);
+                element = $compile(element)(scope);
+                panel.element  = element;
+                panel.scope = scope;
+                addToDom(panel, id);
+                return panel;
+            });
+        };
+
+
+        this.getPanels = function (containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            return panelsList[containerId];
+        };
+
+        this.close = function(name, containerId) {
+            // Change panelName to panel-name
+            name = name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            var panels = panelsList[containerId];
+
+            if (!name || !panels[name]) {
+                console.log("Panel not found for: " + name + " in container: " + containerId);
+            }
+
+
+            var element  = panels[name].element;
+            $animate.leave(element, function() {
+                updateLayout(containerId);
+                panels[name].scope.$destroy();
+                delete panels[name];
+            });
+        };
+
+        /**
+         * Registers a panels container
+         *
+         * element : DOM element
+         */
+        this.registerContainer = function(container, containerId) {
+            if (!containerId) {
+                containerId = DEFAULT_CONTAINER_ID;
+            }
+            if (!containers[containerId]) {
+                containers[containerId] = container;
+                if (!panelsList[containerId]) {
+                    return;
+                }
+
+                Object.keys(panelsList[containerId]).forEach(function (panelName) {
+                    var panel = panelsList[containerId][panelName];
+                    addToDom(panel, containerId);
+                });
+            }
+        };
+
+
+
+        var timerWindowResize = null;
+        angular.element($window).on('resize', function() {
+            if(timerWindowResize !== null) {
+                $timeout.cancel(timerWindowResize);
+            }
+            timerWindowResize = $timeout(function() {
+                updateLayout();
+            }, 200);
+        });
+
+
+        function getTemplatePromise(options) {
+            if (options.template || options.templateURL) {
+                return $q.when(options.template);
+            }
+
+            return $http.get(options.templateUrl, {cache: $templateCache}).then(function (result) {
+                return result.data;
+            });
+        }
+
+
+        function updateLayout(containerId) {
+            if (!containerId) {
+                Object.keys(containers).map(function (id) {
+                    updateLayout(id);
+                });
+                return this;
+            }
+            var container = containers[containerId];
+            var panelElements = $.makeArray(angular.element(container).children('.ev-panel'));
+
+
+            checkStacking(panelElements, container);
+        }
+
+        function checkStacking(panels, container) {
+            panels.forEach(function (panel) {
+                angular.element(panel).removeClass('ev-stacked');
+                // We reset the width each time we update the layout
+                angular.element(panel).css('minWidth', '');
+                angular.element(panel).css('maxWidth', '');
+            });
+            // We stack panels until there is only three left
+            if (panels.length > MAX_VISIBLE_PANEL) {
+                panels.slice(0, -MAX_VISIBLE_PANEL).forEach(function (panel) {
+                    angular.element(panel).addClass('ev-stacked');
+                });
+            }
+            // Starting from the first non stack panel,
+            var i = panels.slice(0, -MAX_VISIBLE_PANEL).length;
+            // Stack until overflow does not exists anymore (or we arrive to the last panel)
+            while (container[0].offsetWidth < container[0].scrollWidth && i < panels.length - 1) {
+                angular.element(panels[i]).addClass('ev-stacked');
+                i ++;
+            }
+            var panel = angular.element(panels[i]);
+            panel.css('minWidth', panel.width() - container[0].scrollWidth + container[0].offsetWidth);
+            panel.css('maxWidth', container[0].offsetWidth);
+            $rootScope.$broadcast('module-layout-changed');
+        }
+
+        return this;
+    }])
+    .directive('evPanels', ['PanelService', function(panelService) {
+        return {
+            restrict: 'AE',
+            scope: {},
+            replace: true,
+            template: '<div class="ev-panels-container"></div>',
+            link: function (scope, element, attrs) {
+              panelService.registerContainer(element, attrs.id);
+            }
+        };
+    }]);
+
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.service('SortService', [function() {
+    var currentSortValue = '';
+    var isReverse = false;
+
+    var getCurrentSort = function() {
+        return currentSortValue;
+    }
+    
+    var sortBy = function(sortValue) {
+        if (sortValue == currentSortValue)
+            isReverse = !isReverse;
+        else {
+            currentSortValue = sortValue;
+        }
+        return this;
+    };
+
+    var getSortCSS = function(value) {
+        var res = 'sort ';
+        if (value == currentSortValue) {
+            if (isReverse)
+                res += 'sort-up';
+            else
+                res += 'sort-down';
+        }
+        else
+            res += 'no-sort';
+        return res;
+    }
+
+    var setReverse = function(reverse) {
+        isReverse = reverse;
+    };
+    var isReverse = function() {
+        return isReverse;
+    };
+
+    return {
+        'sortBy'        : sortBy,
+        'getSortCSS'    : getSortCSS,
+        'getCurrentSort': getCurrentSort,
+        'setReverse'    : setReverse,
+        'isReverse'     : isReverse
+    }
+}]);
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.service('UtilService', [function() {
+    this.generatedIds = {};
+
+    this.generateId = function(prefix) {
+        var id = prefix + Math.random() * 10000;
+
+        if(typeof(this.generatedIds[id] !== 'undefined')) {
+            this.generatedIds[id] = true;
+        } else {
+            id = this.generateId(prefix);
+        }
+
+        return id;
+    };
+}]);
+
 angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
