@@ -3,9 +3,9 @@ angular.module('ev-fdm').factory('ConfirmBox', [
     function($modal) {
         return function(title, message, positive, negative) {
             return $modal.open({
+                backdrop: 'static', 
                 template:
                     '<div class="modal-header">' +
-                        '<button type="button" class="close" ng-click="$dismiss()">&times;</button>' +
                         '<h3 class="modal-title">{{ \'' +  title  + '\'| i18n }}</h3>' +
                     '</div>' +
                     '<div class="modal-body">' +
