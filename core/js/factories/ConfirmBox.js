@@ -1,4 +1,4 @@
-angular.module('ev-fdm').factory('ConfirmBox', [
+angular.module('ev-fdm').factory('confirmBox', [
     '$modal',
     function($modal) {
         return function(title, message, positive, negative) {
