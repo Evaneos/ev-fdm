@@ -1,3 +1,13 @@
+<script type="text/ng-template" id="ev-confirm-box.html"> <div class="modal-header">
+    <h3 class="modal-title">{{  title }}</h3>
+</div>
+<div class="modal-body">
+{{ message }}
+</div>
+<div class="modal-footer">
+    <button class="btn" ng-click="$dismiss()">{{  negative }}</button>
+    <button class="btn btn-primary btn-orange" ng-click="$close()">{{ positive }}</button>
+</div></script>
 <script type="text/ng-template" id="ev-edit-section.html"><form name="editform" class="ev-list" novalidate ev-submit="save()">
     <header class="ev-top-sticky body-bg">
         <div class="pull-right" ng-hide="edit || inProgress">
