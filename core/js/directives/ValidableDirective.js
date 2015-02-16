@@ -4,7 +4,7 @@ var module = angular.module('ev-fdm')
  * TO DO: expose makeValidable, to provides validation directly
  * on focus or on when a key is entered
  */
-.directive('evValidable', ['$timeout', function ($timeout) {
+.directive('evValidable', function () {
     return {
         restrict: 'A',
         require: ['ngModel', '^evSubmit', '^?evFormGroup'],
@@ -48,4 +48,4 @@ var module = angular.module('ev-fdm')
             });
         }
     };
-}]);
+});
