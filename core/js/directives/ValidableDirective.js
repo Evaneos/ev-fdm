@@ -13,27 +13,38 @@ var module = angular.module('ev-fdm')
                 evSubmit = controllers[1],
                 evFormGroup = controllers[2];
 
-            var makeValidable = function() {
-                model.evValidable = true;
-                hasError();
+            var markAsBlurred = function() {
+                model.evBlurred = true;
             };
 
-            var hasError = function() {
-                model.evHasError = !!(!model.$valid && model.evValidable);
+            var markAsChanged = function() {
+                model.evChanged = true;
+            };
+
+            var displayErrors = function() {
+                model.evHasError = !!(!model.$valid && model.evBlurred && model.evChanged);
 
                 if (evFormGroup) {
                     evFormGroup.toggleError(model.evHasError);
                 }
             };
 
-            evSubmit.$addValidable(makeValidable);
-
             element.on('blur', function() {
-                scope.$apply(makeValidable);
+                scope.$evalAsync(function() {
+                    markAsBlurred();
+                    displayErrors();
+                });
             });
 
-            element.on('keyup', function() {
-                scope.$apply(hasError);
+            model.$viewChangeListeners.push(function() {
+                markAsChanged();
+                displayErrors();
+            });
+
+            evSubmit.$addValidable(function() {
+                markAsBlurred();
+                markAsChanged();
+                displayErrors();
             });
         }
     };
