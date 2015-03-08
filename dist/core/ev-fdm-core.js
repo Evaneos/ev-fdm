@@ -3173,8 +3173,9 @@ angular.module('ev-fdm')
                         if (embedName in resultData) {
                             if (!objectData[embedName] || !objectData[embedName].data) {
                                 objectData[embedName] = resultData[embedName];
-                            } else if (resultData[embedName].data === null ) {
-                                objectData[embedName].data = null;
+                            } else if (typeof resultData[embedName].data !== 'object' ||
+                                       Array.isArray(resultData[embedName].data)) {
+                                objectData[embedName].data = resultData[embedName].data;
                             } else {
                                 merge(
                                     objectData[embedName].data,
