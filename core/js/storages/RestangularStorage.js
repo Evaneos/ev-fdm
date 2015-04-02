@@ -196,14 +196,16 @@ angular.module('ev-fdm')
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
-        RestangularStorage.prototype.patch = function(element, changes, embed) {
+        RestangularStorage.prototype.patch = function(element, changes, embed, preventUpdate) {
             if (!element.patch) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             RestangularStorage.updateObjectBeforePatch(element, changes);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
-                    RestangularStorage.updateObjectFromResult(element, result);
+                    if (!preventUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
                     return result;
                 })
                 .then(this.emitEventCallbackCreator('updated', [element]));
