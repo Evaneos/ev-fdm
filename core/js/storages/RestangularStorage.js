@@ -69,8 +69,9 @@ angular.module('ev-fdm')
                         if (embedName in resultData) {
                             if (!objectData[embedName] || !objectData[embedName].data) {
                                 objectData[embedName] = resultData[embedName];
-                            } else if (resultData[embedName].data === null ) {
-                                objectData[embedName].data = null;
+                            } else if (typeof resultData[embedName].data !== 'object' ||
+                                       Array.isArray(resultData[embedName].data)) {
+                                objectData[embedName].data = resultData[embedName].data;
                             } else {
                                 merge(
                                     objectData[embedName].data,
@@ -96,8 +97,11 @@ angular.module('ev-fdm')
                 if (objectEmbeds) {
                     objectEmbeds.forEach(function(embedName) {
                         if (embedName in changesData) {
-                            if (!objectData[embedName]) {
+                            if (!objectData[embedName] || !objectData[embedName].data) {
                                 objectData[embedName] = changesData[embedName];
+                            } else if (typeof changesData[embedName].data !== 'object' ||
+                                       Array.isArray(changesData[embedName].data)) {
+                                objectData[embedName].data = changesData[embedName].data;
                             } else {
                                 merge(
                                     objectData[embedName].data,
@@ -195,20 +199,22 @@ angular.module('ev-fdm')
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
-        RestangularStorage.prototype.patch = function(element, changes, embed) {
+        RestangularStorage.prototype.patch = function(element, changes, embed, options) {
             if (!element.patch) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             RestangularStorage.updateObjectBeforePatch(element, changes);
             return element.patch(changes, RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
-                    RestangularStorage.updateObjectFromResult(element, result);
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
                     return result;
                 })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
-        RestangularStorage.prototype.patchAll = function(elements, changes, embed) {
+        RestangularStorage.prototype.patchAll = function(elements, changes, embed, options) {
             elements.forEach(function(element) {
                 RestangularStorage.updateObjectBeforePatch(element, changes);
             });
@@ -217,17 +223,22 @@ angular.module('ev-fdm')
             return $q.all(elements.map(function(element) {
                 return element.patch(changes, parameters)
                     .then(function(result) {
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
                         RestangularStorage.updateObjectFromResult(element, result);
                         return result;
                     });
             })).then(this.emitEventCallbackCreator('updated', elements));
         };
 
-        RestangularStorage.prototype.create = function(element, embed) {
+        RestangularStorage.prototype.create = function(element, embed, options) {
             return this.restangular.all(this.resourceName)
                 .post(element, RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
-                    RestangularStorage.updateObjectFromResult(element, result);
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
                     return result;
                 })
                 .then(this.emitEventCallbackCreator('created', [element]));
@@ -250,25 +261,29 @@ angular.module('ev-fdm')
         /**
          * prefer use of create() or update()
          */
-        RestangularStorage.prototype.save = function(element, embed) {
+        RestangularStorage.prototype.save = function(element, embed, options) {
             if (!element.save) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             return element.save(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
-                    RestangularStorage.updateObjectFromResult(element, result);
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
                     return result;
                 })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
-        RestangularStorage.prototype.saveAll = function(elements, embed) {
+        RestangularStorage.prototype.saveAll = function(elements, embed, options) {
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
                 return element.save(parameters)
                     .then(function(result) {
-                        RestangularStorage.updateObjectFromResult(element, result);
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
                         return result;
                     });
             })).then(this.emitEventCallbackCreator('updated', elements));
