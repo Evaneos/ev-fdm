@@ -160,6 +160,393 @@ angular.module('ev-fdm')
         };
     });
 
+angular.module('ev-fdm')
+    .factory('ListController', ['$rootScope', '$state', '$stateParams', 'Restangular', function($rootScope, $state, $stateParams, restangular) {
+
+        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
+
+            if (typeof elementName === 'object') {
+                defaultReverseSort = elementName.defaultReverseSort;
+                defaultSortKey = elementName.defaultSortKey;
+                elements = elementName.elements;
+                activeIdSelector = elementName.activeIdSelector || 'id';
+                elementName = elementName.elementName;
+            }
+
+            /*
+                Properties
+             */
+            this.elementName = elementName;
+            this.defaultSortKey = defaultSortKey;
+            this.defaultReverseSort = defaultReverseSort;
+            this.activeIdSelector = activeIdSelector || 'id';
+
+            this.$scope = $scope;
+            this.$scope.filters = {};
+            this.$scope.sortKey = this.defaultSortKey;
+            this.$scope.reverseSort = this.defaultReverseSort;
+
+            this.setElements(elements);
+
+            /*
+                Pagination method that should be called from the template
+             */
+            this.$scope.changePage = function(newPage) {
+
+                var eventArgs = angular.copy(arguments);
+                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', this.$scope.currentPage, newPage);
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
+
+                this.update(newPage, this.$scope.filters, this.sortKey, this.reverseSort);
+            }.bind(this);
+
+            /*
+                Sort method that should be called from the template
+             */
+            this.$scope.sortChanged = function() {
+
+                var eventArgs = angular.copy(arguments);
+                Array.prototype.unshift.call(eventArgs, 'common::sort.changed', this.$scope.sortKey, this.$scope.reverseSort);
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
+
+                this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+            }.bind(this);
+
+
+            /*
+                Filter method that should be called from the template
+             */
+            this.$scope.filtersChanged = function() {
+
+                var eventArgs = angular.copy(arguments);
+                Array.prototype.unshift.call(eventArgs, 'common::filters.changed', this.$scope.filters);
+                $rootScope.$broadcast.apply($rootScope, eventArgs);
+
+                this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+            }.bind(this);
+
+            /*
+                Display an item by changing route
+             */
+            this.$scope.toggleDetailView = function(element) {
+                this.toggleView('view', element);
+            }.bind(this);
+
+            /*
+                When returning to the list state remove the active element
+             */
+            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
+                if(toState.name === this.elementName) {
+                    this.$scope.activeElement = null;
+                }
+                else {
+                    this.setActiveElement();
+                }
+            }.bind(this));
+
+            this.$scope.$on(this.elementName + '::updated', function(event) {
+                this.update(this.$scope.currentPage, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+            }.bind(this));
+
+            this.$scope.$on(this.elementName + '::created', function(event) {
+                this.update(this.$scope.currentPage, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+            }.bind(this));
+
+            this.$scope.$on(this.elementName + '::deleted', function(event) {
+                this.update(this.$scope.currentPage, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+            }.bind(this));
+        }
+
+        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
+            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+                this.setElements(elements);
+            }.bind(this));
+        };
+
+        ListController.prototype.setElements = function(elements) {
+            this.$scope[this.elementName] = elements;
+            this.$scope.currentPage = elements.pagination.current_page;
+            this.$scope.pageCount = elements.pagination.total_pages;
+            this.$scope.totalElement = elements.pagination.total;
+
+            if(!this.$scope.selectedElements || !this.$scope[this.elementName]) {
+                this.$scope.selectedElements  = [];
+            }
+            else {
+                var selectedElementsIds = this.$scope[this.elementName].map(function(elt) {
+                    return restangular.configuration.getIdFromElem(elt);
+                });
+                this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
+                    return selectedElementsIds.indexOf(restangular.configuration.getIdFromElem(elt)) !== -1;
+                });
+            }
+
+            this.setActiveElement();
+        };
+
+        ListController.prototype.setActiveElement = function() {
+            this.$scope.activeElement = null;
+
+            if(angular.isDefined($state.params[this.activeIdSelector])) {
+                angular.forEach(this.$scope[this.elementName], function(element) {
+                    if (restangular.configuration.getIdFromElem(element) == $state.params[this.activeIdSelector]) {
+                        this.$scope.activeElement = element;
+                    }
+                }.bind(this));
+            }
+        };
+
+        ListController.prototype.toggleView = function(view, element, routingArgs) {
+
+            if (!element) {
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
+                $state.go(this.goToViewStatePath(false));
+                return;
+            }
+
+            var id = restangular.configuration.getIdFromElem(element);
+
+            if (!id || $stateParams.id === id) {
+                $rootScope.$broadcast('common::list.toggleView', view, 'close');
+                $state.go(this.goToViewStatePath(false));
+            }
+            else {
+                var params = {};
+                params[this.activeIdSelector] = id;
+
+                angular.extend(params, routingArgs);
+
+                $rootScope.$broadcast('common::list.toggleView', view, 'open');
+
+                $state.go(this.goToViewStatePath(view, element), params);
+            }
+        };
+
+        ListController.prototype.goToViewStatePath = function(view, element) {
+            return this.elementName + (view ? '.' + view : '');
+        };
+
+        return ListController;
+    }]);
+
+'use strict';
+
+var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
+    $scope.notifications = NotificationsService.list;
+    
+    $scope.$watch(function() {
+        return NotificationsService.activeNotification;
+    }, function() {
+        $scope.activeNotification = NotificationsService.activeNotification;
+    });
+    
+    $scope.getClass = function (notification){
+        if (!notification) return '';
+        switch (notification.type){
+            case NotificationsService.type.ERROR:
+                return 'danger';
+            case NotificationsService.type.SUCCESS:
+                return 'success';
+            case NotificationsService.type.WARNING:
+                return 'warning';
+            case NotificationsService.type.INFO:
+                return 'info';
+            default:
+                return 'success';
+        }
+    };
+
+    $scope.remove = function(notification) {
+        NotificationsService.remove(notification);
+    };
+}];
+
+angular.module('ev-fdm')
+    .controller('NotificationsController', NotificationsController);
+angular.module('ev-fdm')
+    .factory('SearchController', ['$rootScope', function($rootScope) {
+        function SearchController($scope) {
+            this.$scope = $scope;
+            this.$scope.filters = {};
+
+            $scope.filtersChanged = function() {
+                Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
+                $rootScope.$broadcast.apply($rootScope, arguments);
+            }.bind(this);
+        }
+
+        return SearchController;
+    }]);
+
+angular.module('ev-fdm').factory('confirmBox', [
+    '$modal',
+    function($modal) {
+        return function(title, message, positive, negative) {
+            return $modal.open({
+                backdrop: 'static',
+                templateUrl: 'ev-confirm-box.html',
+                controller: ['$scope', function($scope) {
+                    $scope.title    = title;
+                    $scope.message  = message;
+                    $scope.positive = positive;
+                    $scope.negative = negative;
+                }]
+            }).result;
+        };
+    }
+]);
+
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            if (typeof dataProvider === 'object') {
+                formatter = dataProvider.formatter;
+                resultModifier = dataProvider.resultModifier;
+                minimumInputLength = dataProvider.minimumInputLength;
+                key = dataProvider.key;
+                dataProviderFilter = dataProvider.dataProviderFilter;
+                dataProvider = dataProvider.dataProvider;
+
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                }
+            };
+            return config;
+        };
+    }
+]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -1903,6 +2290,176 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+'use strict';
+
+/**
+ * Meant to be used for stuff like this:
+ * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
+ * We want to display a css class depending on a given value,
+ * and we do not want our controller to store a data for that
+ * We can use this filter, and feed it with an object with the matching key,value we want
+ */
+angular.module('ev-fdm')
+    .filter('cssify', function() {
+        return function(input, possibilities) {
+            var res = '';
+            if (possibilities)
+            {
+                for (var prop in possibilities) {
+                    if (possibilities.hasOwnProperty(prop)) { 
+                        if (input == prop){
+                            res = possibilities[prop];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return res;
+        };
+    });
+(function() {
+'use strict';
+
+var hasOwnProp = Object.prototype.hasOwnProperty;
+var isObject = angular.isObject;
+
+function MapFilterProvider() {
+  var maps = {};
+  var defaults = {};
+
+  function assertMapping(name) {
+    if (!hasOwnProp.call(maps, name)) {
+      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
+    }
+  }
+
+  this.registerMapping = function(name, mapping) {
+    if (hasOwnProp.call(maps, name)) {
+      throw new Error('A mapping named "' + name + '" was already registered');
+    }
+    var map = maps[name] = {};
+    for (var key in mapping) {
+      if (hasOwnProp.call(mapping, key)) {
+        map[key] = mapping[key];
+      }
+    }
+  };
+
+  this.registerDefault = function(name, value) {
+    assertMapping(name);
+    defaults[name] = value;
+  };
+
+  this.$get = function factory() {
+    return function mapFilter(key, mapping) {
+      // Mapping is directly provided
+      if (isObject(mapping)) {
+        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
+      }
+      // or it's just a mapping name
+      assertMapping(mapping);
+      var map = maps[mapping];
+      switch (true) {
+        case hasOwnProp.call(map, key):
+          return map[key];
+        case hasOwnProp.call(defaults, mapping):
+          return defaults[mapping];
+        default:
+          return key;
+      }
+    };
+  };
+}
+
+
+angular.module('ev-fdm')
+  .provider('mapFilter', MapFilterProvider)
+;
+
+})();
+
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$document', function($document) {
    var iframe = null;
@@ -3171,560 +3728,3 @@ angular.module('ev-fdm')
         }
     }
 });
-angular.module('ev-fdm')
-    .factory('ListController', ['$rootScope', '$state', '$stateParams', 'Restangular', function($rootScope, $state, $stateParams, restangular) {
-
-        function ListController($scope, elementName, elements, defaultSortKey, defaultReverseSort, activeIdSelector) {
-
-            if (typeof elementName === 'object') {
-                defaultReverseSort = elementName.defaultReverseSort;
-                defaultSortKey = elementName.defaultSortKey;
-                elements = elementName.elements;
-                activeIdSelector = elementName.activeIdSelector || 'id';
-                elementName = elementName.elementName;
-            }
-
-            /*
-                Properties
-             */
-            this.elementName = elementName;
-            this.defaultSortKey = defaultSortKey;
-            this.defaultReverseSort = defaultReverseSort;
-            this.activeIdSelector = activeIdSelector || 'id';
-
-            this.$scope = $scope;
-            this.$scope.filters = {};
-            this.$scope.sortKey = this.defaultSortKey;
-            this.$scope.reverseSort = this.defaultReverseSort;
-
-            this.setElements(elements);
-
-            /*
-                Pagination method that should be called from the template
-             */
-            this.$scope.changePage = function(newPage) {
-
-                var eventArgs = angular.copy(arguments);
-                Array.prototype.unshift.call(eventArgs, 'common::pagination.changed', this.$scope.currentPage, newPage);
-                $rootScope.$broadcast.apply($rootScope, eventArgs);
-
-                this.update(newPage, this.$scope.filters, this.sortKey, this.reverseSort);
-            }.bind(this);
-
-            /*
-                Sort method that should be called from the template
-             */
-            this.$scope.sortChanged = function() {
-
-                var eventArgs = angular.copy(arguments);
-                Array.prototype.unshift.call(eventArgs, 'common::sort.changed', this.$scope.sortKey, this.$scope.reverseSort);
-                $rootScope.$broadcast.apply($rootScope, eventArgs);
-
-                this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
-            }.bind(this);
-
-
-            /*
-                Filter method that should be called from the template
-             */
-            this.$scope.filtersChanged = function() {
-
-                var eventArgs = angular.copy(arguments);
-                Array.prototype.unshift.call(eventArgs, 'common::filters.changed', this.$scope.filters);
-                $rootScope.$broadcast.apply($rootScope, eventArgs);
-
-                this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
-            }.bind(this);
-
-            /*
-                Display an item by changing route
-             */
-            this.$scope.toggleDetailView = function(element) {
-                this.toggleView('view', element);
-            }.bind(this);
-
-            /*
-                When returning to the list state remove the active element
-             */
-            this.$scope.$on('$stateChangeSuccess', function(event, toState) {
-                if(toState.name === this.elementName) {
-                    this.$scope.activeElement = null;
-                }
-                else {
-                    this.setActiveElement();
-                }
-            }.bind(this));
-
-            this.$scope.$on(this.elementName + '::updated', function(event) {
-                this.update(this.$scope.currentPage, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
-            }.bind(this));
-
-            this.$scope.$on(this.elementName + '::created', function(event) {
-                this.update(this.$scope.currentPage, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
-            }.bind(this));
-
-            this.$scope.$on(this.elementName + '::deleted', function(event) {
-                this.update(this.$scope.currentPage, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
-            }.bind(this));
-        }
-
-        ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                this.setElements(elements);
-            }.bind(this));
-        };
-
-        ListController.prototype.setElements = function(elements) {
-            this.$scope[this.elementName] = elements;
-            this.$scope.currentPage = elements.pagination.current_page;
-            this.$scope.pageCount = elements.pagination.total_pages;
-            this.$scope.totalElement = elements.pagination.total;
-
-            if(!this.$scope.selectedElements || !this.$scope[this.elementName]) {
-                this.$scope.selectedElements  = [];
-            }
-            else {
-                var selectedElementsIds = this.$scope[this.elementName].map(function(elt) {
-                    return restangular.configuration.getIdFromElem(elt);
-                });
-                this.$scope.selectedElements = this.$scope.selectedElements.filter(function(elt) {
-                    return selectedElementsIds.indexOf(restangular.configuration.getIdFromElem(elt)) !== -1;
-                });
-            }
-
-            this.setActiveElement();
-        };
-
-        ListController.prototype.setActiveElement = function() {
-            this.$scope.activeElement = null;
-
-            if(angular.isDefined($state.params[this.activeIdSelector])) {
-                angular.forEach(this.$scope[this.elementName], function(element) {
-                    if (restangular.configuration.getIdFromElem(element) == $state.params[this.activeIdSelector]) {
-                        this.$scope.activeElement = element;
-                    }
-                }.bind(this));
-            }
-        };
-
-        ListController.prototype.toggleView = function(view, element, routingArgs) {
-
-            if (!element) {
-                $rootScope.$broadcast('common::list.toggleView', view, 'close');
-                $state.go(this.goToViewStatePath(false));
-                return;
-            }
-
-            var id = restangular.configuration.getIdFromElem(element);
-
-            if (!id || $stateParams.id === id) {
-                $rootScope.$broadcast('common::list.toggleView', view, 'close');
-                $state.go(this.goToViewStatePath(false));
-            }
-            else {
-                var params = {};
-                params[this.activeIdSelector] = id;
-
-                angular.extend(params, routingArgs);
-
-                $rootScope.$broadcast('common::list.toggleView', view, 'open');
-
-                $state.go(this.goToViewStatePath(view, element), params);
-            }
-        };
-
-        ListController.prototype.goToViewStatePath = function(view, element) {
-            return this.elementName + (view ? '.' + view : '');
-        };
-
-        return ListController;
-    }]);
-
-'use strict';
-
-var NotificationsController = ['$scope', 'NotificationsService', function($scope, NotificationsService) {
-    $scope.notifications = NotificationsService.list;
-    
-    $scope.$watch(function() {
-        return NotificationsService.activeNotification;
-    }, function() {
-        $scope.activeNotification = NotificationsService.activeNotification;
-    });
-    
-    $scope.getClass = function (notification){
-        if (!notification) return '';
-        switch (notification.type){
-            case NotificationsService.type.ERROR:
-                return 'danger';
-            case NotificationsService.type.SUCCESS:
-                return 'success';
-            case NotificationsService.type.WARNING:
-                return 'warning';
-            case NotificationsService.type.INFO:
-                return 'info';
-            default:
-                return 'success';
-        }
-    };
-
-    $scope.remove = function(notification) {
-        NotificationsService.remove(notification);
-    };
-}];
-
-angular.module('ev-fdm')
-    .controller('NotificationsController', NotificationsController);
-angular.module('ev-fdm')
-    .factory('SearchController', ['$rootScope', function($rootScope) {
-        function SearchController($scope) {
-            this.$scope = $scope;
-            this.$scope.filters = {};
-
-            $scope.filtersChanged = function() {
-                Array.prototype.unshift.call(arguments, 'common::filters.changed', this.$scope.filters);
-                $rootScope.$broadcast.apply($rootScope, arguments);
-            }.bind(this);
-        }
-
-        return SearchController;
-    }]);
-
-angular.module('ev-fdm').factory('confirmBox', [
-    '$modal',
-    function($modal) {
-        return function(title, message, positive, negative) {
-            return $modal.open({
-                backdrop: 'static',
-                templateUrl: 'ev-confirm-box.html',
-                controller: ['$scope', function($scope) {
-                    $scope.title    = title;
-                    $scope.message  = message;
-                    $scope.positive = positive;
-                    $scope.negative = negative;
-                }]
-            }).result;
-        };
-    }
-]);
-
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            if (typeof dataProvider === 'object') {
-                formatter = dataProvider.formatter;
-                resultModifier = dataProvider.resultModifier;
-                minimumInputLength = dataProvider.minimumInputLength;
-                key = dataProvider.key;
-                dataProviderFilter = dataProvider.dataProviderFilter;
-                dataProvider = dataProvider.dataProvider;
-
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                }
-            };
-            return config;
-        };
-    }
-]);
-
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-(function() {
-'use strict';
-
-var hasOwnProp = Object.prototype.hasOwnProperty;
-var isObject = angular.isObject;
-
-function MapFilterProvider() {
-  var maps = {};
-  var defaults = {};
-
-  function assertMapping(name) {
-    if (!hasOwnProp.call(maps, name)) {
-      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
-    }
-  }
-
-  this.registerMapping = function(name, mapping) {
-    if (hasOwnProp.call(maps, name)) {
-      throw new Error('A mapping named "' + name + '" was already registered');
-    }
-    var map = maps[name] = {};
-    for (var key in mapping) {
-      if (hasOwnProp.call(mapping, key)) {
-        map[key] = mapping[key];
-      }
-    }
-  };
-
-  this.registerDefault = function(name, value) {
-    assertMapping(name);
-    defaults[name] = value;
-  };
-
-  this.$get = function factory() {
-    return function mapFilter(key, mapping) {
-      // Mapping is directly provided
-      if (isObject(mapping)) {
-        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
-      }
-      // or it's just a mapping name
-      assertMapping(mapping);
-      var map = maps[mapping];
-      switch (true) {
-        case hasOwnProp.call(map, key):
-          return map[key];
-        case hasOwnProp.call(defaults, mapping):
-          return defaults[mapping];
-        default:
-          return key;
-      }
-    };
-  };
-}
-
-
-angular.module('ev-fdm')
-  .provider('mapFilter', MapFilterProvider)
-;
-
-})();
-
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
