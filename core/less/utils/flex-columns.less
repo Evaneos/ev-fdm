@@ -12,13 +12,17 @@
     }
 
 
-    &.ev-align-start  { align-items: start;  }
-    &.ev-align-center { align-items: center; }
-    &.ev-align-end    { align-items: end;    }
+    &.ev-align-start  { align-items: flex-start; }
+    &.ev-align-center { align-items: center;     }
+    &.ev-align-end    { align-items: flex-end;   }
 
-    .ev-align-self-start  { align-self: start;  }
-    .ev-align-self-center { align-self: center; }
-    .ev-align-self-end    { align-self: end;    }
+    .ev-align-self-start  { align-self: flex-start; }
+    .ev-align-self-center { align-self: center;     }
+    .ev-align-self-end    { align-self: flex-end;   }
+
+    .ev-justify-content-start  { justify-content: flex-start; }
+    .ev-justify-content-center { justify-content: center;     }
+    .ev-justify-content-end    { justify-content: flex-end;   }
 }
 
 /* Utilities class for flexbox */
@@ -29,5 +33,9 @@
 
 .ev-flex {
     flex: auto;
+}
+
+.ev-flex-1 {
+    flex: 1;
 }
 
