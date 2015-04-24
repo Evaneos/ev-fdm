@@ -1,13 +1,13 @@
 angular.module('ev-fdm')
     .provider('evSelectLanguage', function() {
-        this.$get =function () {
+        this.$get = function () {
             return {
                 availableLang: this.availableLang || [],
                 defaultLang: this.defaultLang
             };
         };
 
-        this.setAvailableLang =function (availableLang) {
+        this.setAvailableLang = function (availableLang) {
             this.availableLang = availableLang;
         };
         this.setDefaultLang =function (defaultLang) {
@@ -20,7 +20,7 @@ angular.module('ev-fdm')
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
                         '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
-                            'ng-class="{active: selectedLang===lang}"' +
+                            'ng-class="{selected: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
                         '</button>' +

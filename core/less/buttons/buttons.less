@@ -139,20 +139,30 @@
 //
 // Markup:
 // <button class="btn {$modifiers}">Button</button>
+// <button class="btn {$modifiers} selected">Selected button</button>
 //
 // Styleguide 2.4
 
-.btn-primary { &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
-    color: white;
-    border-color: transparent;
-} }
-.btn-secondary { &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
-    background-color: transparent;
-} }
-.btn-tertiary { &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
-    background-color: transparent;
-    border-color: transparent;
-} }
+.btn-primary {
+    &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
+        color: white;
+        border-color: transparent;
+    }
+}
+.btn-secondary {
+    &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
+        background-color: transparent;
+    }
+    &.selected {
+        background-color: white;
+    }
+}
+.btn-tertiary {
+    &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
+        background-color: transparent;
+        border-color: transparent;
+    }
+}
 
 // Size
 //
