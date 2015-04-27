@@ -47,7 +47,7 @@ angular.module('ev-fdm')
                 Array.prototype.unshift.call(eventArgs, 'common::sort.changed', this.$scope.sortKey, this.$scope.reverseSort);
                 $rootScope.$broadcast.apply($rootScope, eventArgs);
 
-                this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+                return this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
             }.bind(this);
 
 
@@ -60,7 +60,7 @@ angular.module('ev-fdm')
                 Array.prototype.unshift.call(eventArgs, 'common::filters.changed', this.$scope.filters);
                 $rootScope.$broadcast.apply($rootScope, eventArgs);
 
-                this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
+                return this.update(1, this.$scope.filters, this.$scope.sortKey, this.$scope.reverseSort);
             }.bind(this);
 
             /*
@@ -96,8 +96,9 @@ angular.module('ev-fdm')
         }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
+            return this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
                 this.setElements(elements);
+                return elements;
             }.bind(this));
         };
 
