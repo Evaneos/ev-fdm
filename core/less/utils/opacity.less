@@ -1,0 +1,14 @@
+// Opacity
+//
+// Quick helper to generate classes affecting the opacity property.
+//
+// Simply apply the class .ev-opacity-X where X can be between (0 and 10)
+// For instance, using the .ev-opacity-7 will apply an opacity of .7
+@iterations: 10;
+
+.opacity-loop (@i) when (@i >= 0) {
+  .ev-opacity-@{i} { opacity: (@i / 10);}
+  .opacity-loop(@i - 1);
+}
+
+.opacity-loop(@iterations);
