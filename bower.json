@@ -9,9 +9,9 @@
   ],
   "dependencies": {
     "jquery": "~2.0.3",
-    "angular": "1.2.16",
+    "angular": "1.2.18",
     "angular-ui-router": "git@github.com:Evaneos/ui-router#view-prevent-update",
-    "angular-animate": "1.2.16",
+    "angular-animate": "1.2.18",
     "angular-ui-select2": "~0.0.2",
     "angular-loading-bar": "~0.6.0",
     "bootstrap": "3.0.0",
@@ -27,9 +27,10 @@
     "restangular": "~1.4.0",
     "angular-leaflet-directive": "~0.7.7",
     "dropzone": "~3.10.2",
-    "tinymce": "4.1.7"
+    "tinymce": "4.1.7",
+    "angular-ui-select": "~0.11.2"
   },
   "resolutions": {
-    "angular": "1.2.16"
+    "angular": "1.2.18"
   }
 }
