@@ -1,5 +1,5 @@
-@import (reference) "../../utils/text.less";
-@import "../../colors/variables.less";
+@import (reference) "../../../utils/text.less";
+@import "../../../colors/variables.less";
 
 label {
     font-weight: normal;
@@ -19,12 +19,16 @@ label {
     }
 }
 
-.form-group {
+table .form-group {
     // If someone wants to: never put margin for form group. It is used in cases where we have a group with validation
     // inside a table and we don't want any margin. Thanks !
+
+    // In answer to the above comment, I'll try something. Cause I really need that margin' of your.
+    // So I moved this part inside a special table thing.
     margin-bottom: 0;
+}
 
-
+.form-group {
     & > label {
         .text-overflow();
         padding-right: 0;

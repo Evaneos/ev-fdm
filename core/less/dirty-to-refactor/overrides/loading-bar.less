@@ -1,3 +1,5 @@
+@import "../../environment/index.less";
+
 /**
  * These override styles definded in vendor/angular-loading-bar/src/..css
  */
@@ -7,7 +9,8 @@
 #loading-bar {
 
      .bar {
-        background: @loading-bar-color;
+        &:extend(.bg-env all);
+        // background: @loading-bar-color;
         position: absolute;
         top: auto;
         bottom: -3px;

@@ -1,7 +1,7 @@
 // --------------------------------------------------------
 // BOOTSTRAP
 // --------------------------------------------------------
-@import "variables.less";
+@import "variables-bootstrap.less";
 @import "bootstrap/less/mixins.less";
 // We just need a few modules in our framework. Get them !
 @import "overrides/bootstrap/modules.less";
@@ -22,3 +22,11 @@
 @import "overrides/select2.less";
 // Replace the location of icons for ui
 @import "overrides/ui-icon.less";
+
+// TODO: refacto nav-bar
+.navbar {
+	min-height:initial;
+	margin-bottom: 0px;
+	position: fixed;
+	border:none;
+}
