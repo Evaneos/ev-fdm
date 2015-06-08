@@ -1,38 +1,49 @@
-@import "../icons/index.less";
-
-// Forms
-//
-// Yay
-//
-// Styleguide 6
+@import "variables.less";
+@import (reference) "../icons/index.less";
+@import (reference) "../colors/colors.less";
+@import (reference) "../utils/border.less";
 
 // Checkboxes
 //
 // You can style checkboxes using some of the following classes. However, take a close look to the associated html.
 // You'll need to specify a `<label>` tag in order for this to work. Note that you could any icon specific class to that last tag for further personalisation (like color for instance)
 //
+// .tick-checkbox - A checkbox with a tick. Standard one.
 // .star-checkbox - A checkbox star style. Useful for flagging a favorite.
 //
 // Markup:
 // <input id="{$modifiers}" type="checkbox" class="{$modifiers}">
-// <label for="{$modifiers}" class="icon-lg text-gold"></label>
+// <label for="{$modifiers}"></label>
 //
 // Styleguide 6.1
-input.star-checkbox[type="checkbox"] {
+
+.custom-checkbox() {
 	display: none;
-	& + label{
-		&:extend(.icon-star-empty all);
-		&:hover {
-			&:extend(.icon-star all);
-			&:before {
-				opacity: 0.5;
-			}
-		}
+	& + label:hover::before {
+		opacity: @checkbox-hover-opacity;
 	}
-	&:checked + label{
-		&:extend(.icon-star all);
-		&:hover:before {
-			opacity: 0.75;
-		}
+	&:checked + label:hover::before{
+		opacity: @checkbox-checked-hover-opacity;
+	}
+}
+
+input.star-checkbox[type="checkbox"] {
+	.custom-checkbox();
+	& + label {
+		&:extend(.icon-star-empty all);
+		&:hover{&:extend(.icon-star all);}
+	}
+	&:checked + label{&:extend(.icon-star all);}
+}
+
+input.tick-checkbox[type="checkbox"] {
+	.custom-checkbox();
+	& + label {
+		.border-soil;
+		.border-radius;
+		&:extend(.icon-tick all);
+	}
+	&:not(:checked) + label:not(:hover)::before {
+		opacity: 0;
 	}
 }
