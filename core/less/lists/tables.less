@@ -1,0 +1,109 @@
+@import "lists.less";
+@import "variables.less";
+@import "../utils/text.less";
+
+// Tables
+//
+// `ev-table` style table in the same fashion as lists. Useful for keeping a visual coherence thougout your app.
+//
+// Markup:
+// <table class="ev-table">
+//      <thead><tr>
+//          <th> Beer </th>
+//          <th>Price</th>
+//      </tr></thead>
+//      <tbody>
+//          <tr> <td>Chouff'</td> <td>5€</td> </tr>
+//          <tr> <td>Kwak</td> <td>6€</td> </tr>
+//          <tr> <td>Brooklyn Lager</td> <td>4€</td> </tr>
+//      </tbody>
+// </table>
+//
+// Styleguide 3.4
+.tableCell(@rules) {
+    > thead > tr > th,
+    > tbody > tr > th,
+    > tfoot > tr > th,
+    > thead > tr > td,
+    > tbody > tr > td,
+    > tfoot > tr > td {
+    	@rules();
+    }
+}
+
+table.ev-table {
+    width: 100%;
+    &:not(.table-wrap) {
+        .tableCell({
+            white-space: nowrap;
+        });
+    }
+
+    .tableCell({
+        min-width: 50px;
+        .ev-list-elem;
+    });
+
+    > thead > tr > th {
+        text-align: left;
+        font-size: 12px;
+        font-weight: normal;
+        border-top: none;
+    }
+}
+
+// Activable Tables
+//
+// Just add `ev-table-activable` to enable the activable behaviour. The rows of the table will then be clickable.
+//
+// Markup:
+// <table class="ev-table ev-table-activable">
+//      <thead><tr>
+//          <th> Beer </th>
+//          <th>Price</th>
+//      </tr></thead>
+//      <tbody>
+//          <tr> <td>Chouff'</td> <td>5€</td> </tr>
+//          <tr class="active"> <td>Kwak</td> <td>6€</td> </tr>
+//          <tr> <td>Brooklyn Lager</td> <td>4€</td> </tr>
+//      </tbody>
+// </table>
+//
+// Styleguide 3.4.1
+
+.ev-activable-table-mixin(@color) {
+    table.ev-table.ev-table-activable > tbody > tr {
+        // The bow shadow have to be put on the first `td` since Chrome doesn't display box shadow on td.
+        // See http://stackoverflow.com/a/17610047
+        .ev-activable-elem-mixin(@color, ~'td:first-child');
+        &.active > td {
+            background-color: inherit;
+        }
+    }
+}
+.ev-activable-table-mixin(@list-emphasis-color);
+
+// Table without separator
+// 
+// Markup 
+// <table class="ev-table ev-table-no-separator">
+//      <thead><tr>
+//          <th> Beer </th>
+//          <th>Price</th>
+//      </tr></thead>
+//      <tbody>
+//          <tr> <td>Chouff'</td> <td>5€</td> </tr>
+//          <tr> <td>Kwak</td> <td>6€</td> </tr>
+//          <tr> <td>Brooklyn Lager</td> <td>4€</td> </tr>
+//      </tbody>
+//      
+// Styleguide 3.4.2
+
+table.ev-table.ev-table-no-separator {
+    .tableCell({
+        border-top-width: 0px;
+    });
+    > thead > tr > th {
+        border-bottom: solid 1px @list-border-color;
+    }
+}

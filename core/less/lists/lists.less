@@ -1,10 +1,4 @@
 @import "variables.less";
-@import "bower_components/bootstrap/less/type.less";
-
-
-// Lists
-//
-// Styleguide 3
 
 // Unstyled list
 //
@@ -20,7 +14,8 @@
 // Styleguide 3.1
 
 .list-unstyled {
-	.list-unstyled;
+  	padding-left: 0;
+  	list-style: none;
     margin: 0;
 }
 
@@ -39,39 +34,42 @@
 //
 // Styleguide 3.2.0
 
+.ev-list-elem() {
+	background-color: @list-color;
+	padding: @list-vertical-padding @list-horizontal-padding;
+	padding-bottom: @list-vertical-padding + 1px;
+	border-top: solid 1px @list-border-color;
+}
 
 .ev-list {
 	.list-unstyled;
 	margin: 0;
-	// TODO WhatTheFuck ? 
-	> *, .ev-list-element {
-		padding: @ev-list-vertical-padding @ev-list-horizontal-padding;
-		border-bottom: solid 1px @ev-list-border-color;
-		&:last-child {
-			border-bottom-width: 0px;
+	> * {
+		.ev-list-elem();
+		&:first-child {
+			border-top: none;
 		}
 	}
 }
 
-// Standard list with no separator
+// List without separator
 //
-// A standard list in ev-fdm but without the separator.
-// Require the use of .ev-list
+// Remove separators between items of the list
 //
 // Markup:
-// <ul class="ev-list ev-list-no-separator">
-// 	<li> Guacamole </li>
-// 	<li> Chicken </li>
-// 	<li> Tomato </li>
+// <ul class="ev-list ev-list-activable ev-list-no-separator">
+// 	<li> Eggs </li>
+// 	<li> Milk </li>
+// 	<li> Beers </li>
 // </ul>
 //
 // Styleguide 3.2.1
 
-.ev-list.ev-list-no-separator {
-	> *, .ev-list-element {
-		border-bottom: none;
-	}
+
+.ev-list.ev-list-no-separator > * {
+	border-top: none;
 }
+
 
 // Activable lists
 //
@@ -86,25 +84,34 @@
 //
 // Styleguide 3.2.2
 
-.ev-list.ev-list-activable > * {
-	border-left: @ev-list-emphasis-size solid transparent;
-	&.active {
-		border-left: @ev-list-emphasis-size solid @ev-list-emphasis-color;
-	}
-	&[activable] {
-		cursor: pointer;
-		&:not(.active):hover {
-			border-left: 3px solid fade(@brand-primary, 50%);
-		}
-	}
+.ev-activable-elem-mixin(@color, @selector) {
+    @box-shadow       : inset @list-emphasis-size 0 0 0 @color;
+    @box-shadow-hover : inset @list-emphasis-size 0 0 0 fade(@color, @list-emphasis-fade-factor);
+    cursor: pointer;
+    &.active {
+        background-color: @list-active-color;
+    	@{selector} {
+        	box-shadow: @box-shadow;
+    	}
+    }
+    &:not(.active):hover @{selector} {
+        box-shadow: @box-shadow-hover;
+    }
 }
+
+.ev-activable-list-mixin(@color) {
+    .ev-list.ev-list-activable > * {
+        .ev-activable-elem-mixin(@color, ~'')
+    }
+}
+.ev-activable-list-mixin(@list-emphasis-color);
 
 // Item styling
 //
 // You can style add any of the following class to a child element of an `ev-list` class
 //
-// .ev-separator-bottom 	- Add a strong separator to the bottom of the element
 // .ev-separator-top	 	- Add a strong separator to the top of the element
+// .ev-separator-bottom	 	- Add a strong separator to the bottom of the element
 //
 // Markup:
 // <ul class="ev-list ev-list-activable">
@@ -116,21 +123,11 @@
 // Styleguide 3.3
 
 .ev-list {
-	&> .ev-separator-bottom {
-		border-bottom-width: @ev-list-separator-size;
+	& > .ev-separator-top {
+		border-top: solid @list-separator-size @list-border-color;
 	}
 
-	&> .ev-separator-top {
-		border-top: solid (@ev-list-separator-size - 1px) @ev-list-border-color;
-		&:first-child {
-			border-top-size: @ev-list-separator-size;
-		}
-	}
-}
-
-.ev-list-collapse {
-	.collapsed:hover {
-		background-color: @ev-list-hover-background;
-		cursor: pointer;
+	& > .ev-separator-bottom {
+		border-bottom: solid @list-separator-size @list-border-color;
 	}
 }
