@@ -1,0 +1,34 @@
+// Environment
+//
+// Add several top-level classes, that can change the color of all the env element below.
+// This might be extremely useful when you have a dominant color for an application, or a composant. 
+// You can change it seemlessly by changing the top level `env-<*>` class. See ([the env page on the wiki](https://github.com/Evaneos/ev-fdm/wiki/Environment-specific)) by simply using the .btn-env class
+// for additional informations.
+//
+// .env-pool - all the `<*>-env` element below are now of pool color.
+// .env-gold - all the `<*>-env` element below are now of gold color.
+//
+// Markup:
+// <div class="{$modifiers}">
+// 		<button class="btn btn-primary btn-env"> Environment primary button </button>
+// 		<button class="btn btn-env"> Environment secondary button </button>
+// 		<button class="btn btn-tertiary btn-env"> Environment tertiary button </button> </br>
+// 		<p class="text-env"> Environment text </p>
+// 		<p class="bg-env"> Environment background</p>
+// 		<p class="border-env"> Environment border</p>
+// 		<span class="label-env"> Environment label</span>
+// 		<ul class="ev-list ev-list-activable">
+// 			<li class="active"> List with </li>
+// 			<li> Environment color </li>
+// 		</ul>
+// </div>
+//
+// Styleguide 7
+
+@import "variables.less";
+
+// You can activate which element are available with the `env` version directly here.
+@import "../buttons/index.less"; .env(buttons);
+@import "../colors/index.less"; .env(colors);
+@import "../lists/index.less"; .env(lists);
+@import "../small-ui/index.less"; .env(labels);

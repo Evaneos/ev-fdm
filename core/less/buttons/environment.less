@@ -1,0 +1,10 @@
+@import (reference) "buttons.less";
+@import "../environment/variables.less";
+@import "../mixins/loop.less";
+
+// Loop throught each color list and define buttons name on the go.
+.for(@env-colors, btn-env);
+.-each(@color, btn-env) { .env-@{color} .btn-env {
+        .btn-color-variant(@@color);
+    }
+}
