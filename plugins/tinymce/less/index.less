@@ -52,8 +52,8 @@
 @import "Icons.less";
 
 // To be consistent with the whole design
-@import (reference) "../../../core/less/variables.less";
-@import (reference) "../../../core/less/overrides/bootstrap/index.less";
+@import (reference) "../../../core/less/dirty-to-refactor/variables-bootstrap.less";
+@import (reference) "../../../core/less/dirty-to-refactor/overrides/bootstrap/index.less";
 
 
 /* Icons */
@@ -101,9 +101,9 @@
   }
 
   .mce-btn {
-    .btn;
-    .btn-soil;
-    .btn-tertiary;
+    &:extend(.btn all);
+    &:extend(.btn-soil all);
+    &:extend(.btn-tertiary all);
     margin-top: 0;
     margin-bottom: 0;
     padding: 7px 6px 3px 6px;
@@ -115,7 +115,7 @@
         background: @bright-soil;
     }
     &.mce-primary {
-      .btn-primary;
+      &:extend(.btn-primary all);
     }
   }
 }
@@ -162,7 +162,7 @@
 }
 
 .btn-tinymce {
-  .btn-tertiary;
+  &:extend(.btn-tertiary all);
   color: @dark-soil;
   padding: 5px;
   &:hover {
@@ -191,16 +191,16 @@
       width:auto;
       margin: @modal-inner-padding/2;
       > button {
-        .btn;
-        .btn-tertiary;
+        &:extend(.btn all);
+        &:extend(.btn-tertiary all);
       }
       // Primary button: always on the right, styled like in bootstrap
       &.@{prefix}-primary {
         float:right;
         margin-right: @modal-inner-padding;
         > button {
-          .btn;
-          .btn-primary;
+          &:extend(.btn all);
+          &:extend(.btn-primary all);
         }
       }
     }
