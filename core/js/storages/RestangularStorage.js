@@ -48,7 +48,7 @@ angular.module('ev-fdm')
                     res[filterKey + '.id'] = filter.id;
                 }
                 else if(angular.isArray(filter) && filter.length > 0) {
-                    res[filterKey] = filter.join(',');
+                    res[filterKey + '[]'] = filter;
                 }
                 else if(angular.isDate(filter)) {
                     res[filterKey] = filter.toISOString();
@@ -120,6 +120,7 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.getAll = function(options) {
             var parameters = {};
+            var options = options || {};
 
             if (angular.isNumber(options.page) && options.page > 0) {
                 parameters.page = options.page;
@@ -161,6 +162,9 @@ angular.module('ev-fdm')
             });
         };
 
+        /**
+         * @Deprecated
+         */
         RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
             return this.getAll.call(this, {
                 page: page,
