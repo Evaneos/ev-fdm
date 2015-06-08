@@ -1,0 +1,128 @@
+@import "variables.less";
+@import "../mixins/loop.less";
+@import "../colors/colors.less";
+
+// Small UI Components
+// Small reusable ui component with a specific meaning.
+
+// Labels
+//
+// A basic UI component, which brings attention to discrete pieces of informations (eg: tags).
+// They are usually linked to a main content, and do not stand on their own. Generally employed on a `<span>`
+//
+// You can change the color background with the `label-<color>` classes. You can customize the list of colors available
+// you need by changing the `@label-colors`list variables in the `small-ui/variable.less` file.
+//
+// default      - A default vanilla label
+// label-gold   - Label with a gold color
+//
+// Markup:
+// <span class="label {$modifiers}">Label</button>
+//
+// Styleguide 9.1
+
+.label {
+    display: inline-block;
+    border-radius: @label-border-radius;
+    white-space: nowrap;
+    vertical-align: bottom;
+    border: none;
+    margin-right: @label-margin-size;
+    font-weight: bold;
+    .text-white;
+    .label-md;
+    .label-color-variant(@light-soil);
+}
+
+.label-color-variant(@color) {
+    background-color: @color;
+}
+
+// Loop throught color list and define buttons name on the go.
+.for(@label-colors, label-colors);
+.-each(@color, label-colors) { .label-@{color}:not(.label) {
+        .label;
+        .label-color-variant(@@color);
+    }
+}
+
+// Size
+//
+// You can change the size of any label by adding these class. The font size is proportional to the parent 
+// (a label inside a `h1` wont have the same size as inside a `small` balise)
+//
+// .label-sm    - A small button
+// .label-md    - A medium button (default value, this class is optional)
+// .label-lg    - A large button
+//
+// Markup:
+// <span class="label-pool {$modifiers}">Large Label</span>
+// <span class="label-pool {$modifiers}">Normal Label</span>
+// <span class="label-pool {$modifiers}">Small Label</span>
+//
+// Styleguide 9.1.1
+
+// Sizes variants --------------
+.label-sm { .label-size-variant(@label-sm-font-size, @label-sm-padding); }
+.label-md { .label-size-variant(@label-md-font-size, @label-md-padding); }
+.label-lg { .label-size-variant(@label-lg-font-size, @label-lg-padding); }
+
+.label-size-variant(@font-size; @padding) {
+    font-size: @font-size;
+    padding: @padding;
+}
+
+
+// Icons
+//
+// Of course, labels can also contains icons
+//
+//
+// Markup:
+// <button class="label"><span class="icon-tick"></span>Accept</button>
+// <button class="label-pool"><span class="icon-user"></span> Voyageur</button>
+// <button class="btn btn-tertiary"><span class="icon icon-bin"></span>Delete</button>
+//
+// Styleguide 9.1.2
+
+
+// Label container
+//
+// The `label-container` class add a bottom margin to all its label children.
+// This is useful when the labels splits on more than one line
+//
+//
+// Markup:
+// <div class="label-container max-sm">
+//      <span class="label">Plenty</span>
+//      <span class="label-pool">Of</span>
+//      <span class="label-gold">Tags</span>
+//      <span class="label-lime">It's</span>
+//      <span class="label-orange">Wonderful</span>
+//      <span class="label-pool">It's</span>
+//      <span class="label">Wonderful</span>
+//      <span class="label-gold">Oh</span>
+//      <span class="label-orange">Yeah</span>
+// </div>
+// Styleguide 9.1.3
+.label-container > .label {
+    margin-bottom: @label-margin-size;
+}
+
+
+// Buttons inside label
+//
+// The `label-btn` is for button inside label. The button is tertiary style.
+//
+//
+// Markup:
+// <span class="label"> <button class="label-btn">Click me</button></span>
+// <span class="label-lg"> <button class="label-btn">Click me</button></span>
+//
+// Styleguide 9.1.4
+.label-btn {
+      &:extend(.btn all);
+      &:extend(.btn-xs all);
+      &:extend(.btn-tertiary all);
+      font-size: inherit;
+}

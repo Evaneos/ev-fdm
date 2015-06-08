@@ -1,0 +1,11 @@
+@import (reference) "labels.less";
+@import "../environment/variables.less";
+@import "../mixins/loop.less";
+
+// Loop throught each color list and define labels name on the go.
+.for(@env-colors, label-env);
+.-each(@color, label-env) { .env-@{color} .label-env {
+        .label-color-variant(@@color);
+        &:extend(.label all);
+    }
+}
