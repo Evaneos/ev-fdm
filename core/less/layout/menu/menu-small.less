@@ -1,4 +1,5 @@
 @import "../../colors/variables.less";
+@import "../../buttons/buttons.less";
 
 #small-menu {
     display: none;
@@ -13,7 +14,7 @@
         }
 
         #small-menu {
-            position: absolute;
+            // position: absolute;
             right: 0;
             display: block;
             margin: 0;
@@ -23,47 +24,24 @@
             }
 
             .dropdown {
-                padding: 0 20px;
 
-                .dropdown-toggle {
-                    padding: 0;
-                    span {
-                        line-height: @menu-height;
-                    }
+                &.open .btn.toggle{
+                    &:extend(.active all);
                 }
-                &.open {
-                    background: @body-bg;
-                    .dropdown-toggle {
-                        color: @light-soil;
-                    }
+                //     .dropdown-toggle {
+                //         color: @light-soil;
+                //     }
+                // }
+                .btn.toggle {
+                    margin-right: 0px;
+                    border-radius: 0px;
                 }
-
                 .dropdown-menu {
                     position: fixed;
                     bottom: 0;
                     overflow-x: hidden;
                     background: #FFF;
                     top: @menu-height;
-                    li {
-                        a {
-                            border-bottom: 1px solid @bright-soil;
-                            .title {
-                                padding: 5px 10px;
-                            }
-                        }
-                        &.active a {
-                            color: @brand-evaneos;
-                        }
-                        &:hover a {
-                            background: @white-soil;
-                            color: @dark-soil;
-                        }
-                    }
-                    .divider {
-                        margin: 0;
-                        height: 3px;
-                        background-color: @light-soil;
-                    }
                 }
             }
         }

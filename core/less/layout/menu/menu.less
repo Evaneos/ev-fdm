@@ -3,6 +3,7 @@
 .navbar {
     min-height: @menu-height;
     border: none;
+    position: fixed;
     margin-bottom: 0;
     position: absolute;
     width: 100%;
@@ -25,16 +26,16 @@
             min-width: 115px;
             display: inline-block;
             float: none;
+            color: white;
 
             a {
+                opacity: 0.9;
+                color: white !important;
                 padding: 5px 8px 4px 8px;
             }
 
-            &:hover {
-                background: lighten(@navbar-inverse-bg, 3%);
-            }
-
             &.active {
+                opacity: 1;
                 .caret {
                     display: inline-block;
                     position: absolute;
@@ -46,17 +47,19 @@
                     border-left: 7px solid transparent;
                 }
 
-                background: lighten(@navbar-inverse-bg, 3%);
                 font-weight: bold;
-
-                &:hover {
-                    background: lighten(@navbar-inverse-bg, 7%);
-                }
             }
-
+            &:hover {
+                opacity: 1;
+            }
             .icon {
                 display: none;
             }
+        }
+
+        .caret {
+            border-top-color: white !important;
+            border-bottom-color: white !important;
         }
 
         .caret {
@@ -65,20 +68,13 @@
 
         .menu-help {
             background: @orange;
-
+            opacity: 1;
             a {
-                color: @navbar-inverse-link-active-color;
                 .icon {
                     display: inline-block;
                 }
             }
 
-            &:hover {
-                background: lighten(@orange, 5%);
-                a {
-                    color: @navbar-inverse-link-active-color;
-                }
-            }
         }
     }
 
@@ -95,21 +91,21 @@
     }
 
     .dropdown {
-        &.open {
-            background: lighten(@pool, 3%);
-        }
         .caret {
             margin-left: 5px;
         }
         .dropdown-menu {
+            opacity: 1;
             left: -1px;
             padding: 0;
             border-top: none;
             text-align: left;
             > li {
                 width: 100%;
+                opacity: 1;
                 color: @deep-soil;
                 a {
+                    color: @deep-soil !important;
                     padding: 10px;
 
                 }
