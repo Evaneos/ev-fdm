@@ -179,25 +179,29 @@ angular.module('ev-fdm')
             return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
         };
 
-        RestangularStorage.prototype.update = function(element, embed) {
+        RestangularStorage.prototype.update = function(element, embed, options) {
             if (!element.put) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             return element.put(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
-                    RestangularStorage.updateObjectFromResult(element, result);
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
                     return result;
                 })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
-        RestangularStorage.prototype.updateAll = function(elements, embed) {
+        RestangularStorage.prototype.updateAll = function(elements, embed, options) {
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
                 return element.put(parameters)
                     .then(function(result) {
-                        RestangularStorage.updateObjectFromResult(element, result);
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
                         return result;
                     });
             })).then(this.emitEventCallbackCreator('updated', elements));
