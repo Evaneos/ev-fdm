@@ -20,7 +20,7 @@ angular.module('ev-fdm')
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
                         '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
-                            'ng-class="{selected: selectedLang===lang}"' +
+                            'ng-class="{active: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
                         '</button>' +

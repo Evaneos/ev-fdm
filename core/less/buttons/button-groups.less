@@ -38,15 +38,14 @@
     & > .btn:not(:first-child):not(:last-child) {
         border-radius: 0;
     }
-
-    // Set corners individual because sometimes a single button can be in a .btn-group and we need :first-child and :last-child to both match
-    & > .btn:first-child {
-        margin-left: 0;
-        &:not(:last-child) {
-            .border-right-radius(0);
-        }
+    & > .btn:not(:last-child) {
+        margin-right: 0;
     }
 
+    // Set corners individual because sometimes a single button can be in a .btn-group and we need :first-child and :last-child to both match
+    & > .btn:first-child:not(:last-child) {
+        .border-right-radius(0);
+    }
     & > .btn:last-child:not(:first-child) {
         .border-left-radius(0);
     }
