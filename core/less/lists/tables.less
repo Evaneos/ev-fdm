@@ -40,7 +40,6 @@ table.ev-table {
     }
 
     .tableCell({
-        min-width: 50px;
         .ev-list-elem;
     });
 
@@ -71,6 +70,7 @@ table.ev-table {
 //
 // Styleguide 3.4.1
 
+
 .ev-activable-table-mixin(@color) {
     table.ev-table.ev-table-activable > tbody > tr {
         // The bow shadow have to be put on the first `td` since Chrome doesn't display box shadow on td.
@@ -84,8 +84,8 @@ table.ev-table {
 .ev-activable-table-mixin(@list-emphasis-color);
 
 // Table without separator
-// 
-// Markup 
+//
+// Markup
 // <table class="ev-table ev-table-no-separator">
 //      <thead><tr>
 //          <th> Beer </th>
@@ -96,7 +96,8 @@ table.ev-table {
 //          <tr> <td>Kwak</td> <td>6€</td> </tr>
 //          <tr> <td>Brooklyn Lager</td> <td>4€</td> </tr>
 //      </tbody>
-//      
+//</table>
+//
 // Styleguide 3.4.2
 
 table.ev-table.ev-table-no-separator {
@@ -106,4 +107,28 @@ table.ev-table.ev-table-no-separator {
     > thead > tr > th {
         border-bottom: solid 1px @list-border-color;
     }
+}
+
+// Row fit content
+//
+// You can force a row to exactly fit its content by adding the class `ev-row-fit-content` to one of its cell
+//
+// Markup
+// <table class="ev-table">
+//      <thead><tr>
+//          <th> Beer </th>
+//          <th>Price</th>
+//      </tr></thead>
+//      <tbody>
+//          <tr> <td>Chouff'</td> <td>5€</td> </tr>
+//          <tr> <td>Kwak</td> <td class="ev-row-fit-content">6€</td> </tr>
+//          <tr> <td>Brooklyn Lager</td> <td>4€</td> </tr>
+//      </tbody>
+//</table>
+//
+// Styleguide 3.4.3
+table.ev-table {
+    td, th { &.ev-row-fit-content {
+        width: 1%;
+    } }
 }
