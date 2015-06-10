@@ -53,7 +53,7 @@ angular.module('ev-tinymce', [])
     .directive('evTinymce', ['$timeout', 'evTinymce', function($timeout, evTinymce) {
         var generatedIds = 0;
         return {
-            template: '<div class="tiny-mce-wrapper">'
+            template: '<div class="tiny-mce-wrapper form-control">'
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
                 + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'

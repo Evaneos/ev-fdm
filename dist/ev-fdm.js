@@ -469,19 +469,29 @@ angular.module('ev-fdm').factory('Select2Configuration', [
     function($timeout) {
         return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
             var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
             if (typeof dataProvider === 'object') {
-                formatter = dataProvider.formatter;
-                resultModifier = dataProvider.resultModifier;
-                minimumInputLength = dataProvider.minimumInputLength;
-                key = dataProvider.key;
-                dataProviderFilter = dataProvider.dataProviderFilter;
-                dataProvider = dataProvider.dataProvider;
-
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
                 if (typeof dataProviderFilter === 'object') {
                     var filter = dataProviderFilter;
                     dataProviderFilter = function() { return filter; };
                 } else if (typeof dataProviderFilter !== 'function') {
                     dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
                 }
             }
             var oldQueryTerm = '', filterTextTimeout;
@@ -541,183 +551,14 @@ angular.module('ev-fdm').factory('Select2Configuration', [
                 },
                 initSelection: function() {
                     return {};
-                }
+                },
+                id: idFunction,
             };
             return config;
         };
     }
 ]);
 
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-'use strict';
-
-/**
- * Meant to be used for stuff like this:
- * {{ message.isFromTraveller | cssify:{1:'message-traveller', 0:'message-agent'} }}
- * We want to display a css class depending on a given value,
- * and we do not want our controller to store a data for that
- * We can use this filter, and feed it with an object with the matching key,value we want
- */
-angular.module('ev-fdm')
-    .filter('cssify', function() {
-        return function(input, possibilities) {
-            var res = '';
-            if (possibilities)
-            {
-                for (var prop in possibilities) {
-                    if (possibilities.hasOwnProperty(prop)) { 
-                        if (input == prop){
-                            res = possibilities[prop];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return res;
-        };
-    });
-(function() {
-'use strict';
-
-var hasOwnProp = Object.prototype.hasOwnProperty;
-var isObject = angular.isObject;
-
-function MapFilterProvider() {
-  var maps = {};
-  var defaults = {};
-
-  function assertMapping(name) {
-    if (!hasOwnProp.call(maps, name)) {
-      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
-    }
-  }
-
-  this.registerMapping = function(name, mapping) {
-    if (hasOwnProp.call(maps, name)) {
-      throw new Error('A mapping named "' + name + '" was already registered');
-    }
-    var map = maps[name] = {};
-    for (var key in mapping) {
-      if (hasOwnProp.call(mapping, key)) {
-        map[key] = mapping[key];
-      }
-    }
-  };
-
-  this.registerDefault = function(name, value) {
-    assertMapping(name);
-    defaults[name] = value;
-  };
-
-  this.$get = function factory() {
-    return function mapFilter(key, mapping) {
-      // Mapping is directly provided
-      if (isObject(mapping)) {
-        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
-      }
-      // or it's just a mapping name
-      assertMapping(mapping);
-      var map = maps[mapping];
-      switch (true) {
-        case hasOwnProp.call(map, key):
-          return map[key];
-        case hasOwnProp.call(defaults, mapping):
-          return defaults[mapping];
-        default:
-          return key;
-      }
-    };
-  };
-}
-
-
-angular.module('ev-fdm')
-  .provider('mapFilter', MapFilterProvider)
-;
-
-})();
-
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -1798,7 +1639,7 @@ angular.module('ev-fdm')
                 '<div class="ev-language-tabs">' +
                     '<div class="btn-group">' +
                         '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
-                            'ng-class="{selected: selectedLang===lang}"' +
+                            'ng-class="{active: selectedLang===lang}"' +
                             'ng-click="$parent.selectedLang=lang">' +
                             '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
                         '</button>' +
@@ -2002,7 +1843,7 @@ angular.module('ev-fdm')
                   if (event.shiftKey) {
                       ctrl.shiftedClick(currentElement, scope.$index);
                   }
-                  else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
+                  else if (event.ctrlKey || angular.element(event.target).is('[type=checkbox]')) {
                       ctrl.toggleSelection(currentElement, scope.$index);
                   }
               }
@@ -2015,7 +1856,11 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectable',
             replace: true,
-            template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
+            controller: ['$scope', function ($scope) {
+                $scope.idRand = String(Math.random());
+            }],
+            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="selected"><label ng-attr-for="{{idRand}}"></label></span>'
+            // template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
         };
     })
     .directive('selectAll', function() {
@@ -2023,9 +1868,10 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectableSet',
             scope: true,
-            template: '<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
+            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="allSelected" ng-click="toggleSelectAll()"><label ng-attr-for="{{idRand}}"></label></span>',
+            //'<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
             link: function(scope, element, attr, ctrl) {
-
+                scope.idRand = String(Math.random());
                 scope.toggleSelectAll = function () {
                     ctrl.toggleSelectAll();
                 };
@@ -2328,8 +2174,8 @@ angular.module('ev-fdm')
                     '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
                             '{{ displayElement(element) }}' +
-                            '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
-                                'ng-click="remove($index)">×</button> ' +
+                            '<button ng-show="editable" tabIndex="-1" type="button" class="label-btn" ' +
+                                'ng-click="remove($index)"><span class="icon-bin"></span></button> ' +
                         '</span>' +
                     '</li>' +
                     '<li ng-show="editable && elements.length >= maxElements" class="text-orange no-margin">' +
@@ -2461,6 +2307,148 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+(function() {
+'use strict';
+
+var hasOwnProp = Object.prototype.hasOwnProperty;
+var isObject = angular.isObject;
+
+function MapFilterProvider() {
+  var maps = {};
+  var defaults = {};
+
+  function assertMapping(name) {
+    if (!hasOwnProp.call(maps, name)) {
+      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
+    }
+  }
+
+  this.registerMapping = function(name, mapping) {
+    if (hasOwnProp.call(maps, name)) {
+      throw new Error('A mapping named "' + name + '" was already registered');
+    }
+    var map = maps[name] = {};
+    for (var key in mapping) {
+      if (hasOwnProp.call(mapping, key)) {
+        map[key] = mapping[key];
+      }
+    }
+  };
+
+  this.registerDefault = function(name, value) {
+    assertMapping(name);
+    defaults[name] = value;
+  };
+
+  this.$get = function factory() {
+    return function mapFilter(key, mapping) {
+      // Mapping is directly provided
+      if (isObject(mapping)) {
+        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
+      }
+      // or it's just a mapping name
+      assertMapping(mapping);
+      var map = maps[mapping];
+      switch (true) {
+        case hasOwnProp.call(map, key):
+          return map[key];
+        case hasOwnProp.call(defaults, mapping):
+          return defaults[mapping];
+        default:
+          return key;
+      }
+    };
+  };
+}
+
+
+angular.module('ev-fdm')
+  .provider('mapFilter', MapFilterProvider)
+;
+
+})();
+
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$window', '$document', function($window, $document) {
     var iframe = null;
@@ -3163,7 +3151,7 @@ angular.module('ev-fdm')
                     res[filterKey + '.id'] = filter.id;
                 }
                 else if(angular.isArray(filter) && filter.length > 0) {
-                    res[filterKey] = filter.join(',');
+                    res[filterKey + '[]'] = filter;
                 }
                 else if(angular.isDate(filter)) {
                     res[filterKey] = filter.toISOString();
@@ -3235,6 +3223,7 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.getAll = function(options) {
             var parameters = {};
+            var options = options || {};
 
             if (angular.isNumber(options.page) && options.page > 0) {
                 parameters.page = options.page;
@@ -3276,6 +3265,9 @@ angular.module('ev-fdm')
             });
         };
 
+        /**
+         * @Deprecated
+         */
         RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
             return this.getAll.call(this, {
                 page: page,
@@ -3290,25 +3282,29 @@ angular.module('ev-fdm')
             return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
         };
 
-        RestangularStorage.prototype.update = function(element, embed) {
+        RestangularStorage.prototype.update = function(element, embed, options) {
             if (!element.put) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             return element.put(RestangularStorage.buildParameters(this, embed))
                 .then(function(result) {
-                    RestangularStorage.updateObjectFromResult(element, result);
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
                     return result;
                 })
                 .then(this.emitEventCallbackCreator('updated', [element]));
         };
 
-        RestangularStorage.prototype.updateAll = function(elements, embed) {
+        RestangularStorage.prototype.updateAll = function(elements, embed, options) {
             var parameters = RestangularStorage.buildParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
                 return element.put(parameters)
                     .then(function(result) {
-                        RestangularStorage.updateObjectFromResult(element, result);
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
                         return result;
                     });
             })).then(this.emitEventCallbackCreator('updated', elements));
@@ -3912,7 +3908,7 @@ angular.module('ev-tinymce', [])
     .directive('evTinymce', ['$timeout', 'evTinymce', function($timeout, evTinymce) {
         var generatedIds = 0;
         return {
-            template: '<div class="tiny-mce-wrapper">'
+            template: '<div class="tiny-mce-wrapper form-control">'
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
                 + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
@@ -4300,10 +4296,10 @@ angular.module('ev-upload')
             '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
                 'upload="newUpload(promise)">' +
                 '<div ng-hide="uploading">' +
-                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-lime ev-upload-clickable"' +
+                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-env ev-upload-clickable"' +
                             'tooltip="{{tooltipText}}"' +
                             'tooltip-placement="top">' +
-                        '<span class="icon {{iconName}}"></span>' +
+                        '<span class="icon {{iconName}}"></span> ' +
                        '{{buttonText}}' +
                     '</button>' +
                 '</div>' +
