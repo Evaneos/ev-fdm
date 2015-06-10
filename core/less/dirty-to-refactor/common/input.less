@@ -7,21 +7,14 @@
  */
 
 .placeholder-light {
-    color: @soil;
-    &:hover {
-      color: @bright-soil;
-    }
+    color: @light-soil;
 }
 
-.input-light {
+.input-light:not(.priority-helper) {
   border: none;
-  padding: 0;
-  padding-left: 5px;
-  margin: 0;
-  margin-left: -5px;
+  height: auto ;
   position: relative;
   background-color: transparent;
-  padding-right: 10px;
   font-weight: inherit;
   font-size: inherit;
   border-radius: 0px;
@@ -35,7 +28,8 @@
 
   &:hover, &:focus {
     outline: none;
-    border-bottom: @bright-soil 1px solid;
+    transition: border-bottom 0.2s;
+    border-bottom: @light-soil 1px solid;
   }
 
   & ~ .input-group-addon {
