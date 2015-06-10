@@ -1,9 +1,7 @@
 @import "variables.less";
 @import "../mixins/loop.less";
+@import "../utils/border.less";
 
-// Colors
-//
-// Styleguide 1
 
 // Neutral colors classes
 //
@@ -18,6 +16,7 @@
 //
 // A scale of neutral background colors
 //
+// .bg-white        - Add a white background
 // .bg-white-soil   - Add a white soil background
 // .bg-bright-soil  - Add a bright soil background
 // .bg-light-soil   - Add a light soil background
@@ -32,7 +31,7 @@
 // Loop throught color list and define buttons name on the go.
 .for(@neutral-colors, background);
 .-each(@color, background) {
-	.bg-@{color} { background-color: @@color; }
+    .bg-@{color} { background-color: @@color; }
 }
 
 
@@ -40,6 +39,7 @@
 //
 // A scale of soil text colors
 //
+// .text-white          - Color the text in white
 // .text-white-soil     - Color the text in a white soil
 // .text-bright-soil    - Color the text in a bright soil
 // .text-light-soil     - Color the text in a light soil
@@ -53,8 +53,31 @@
 // Styleguide 1.1.2
 .for(@neutral-colors, text);
 .-each(@color, text) {
-	.text-@{color} { color: @@color; }
+    .text-@{color} { color: @@color; }
 }
+
+
+// Soil border colors
+//
+// A scale of soil border colors
+//
+// .border-white          - Color the border in white
+// .border-white-soil     - Color the border in a white soil
+// .border-bright-soil    - Color the border in a bright soil
+// .border-light-soil     - Color the border in a light soil
+// .border-soil           - Color the border in a soil
+// .border-deep-soil      - Color the border in a deep soil
+// .border-dark-soil      - Color the border in a dark soil
+//
+// Markup:
+// <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+//
+// Styleguide 1.1.3
+.for(@neutral-colors, border);
+.-each(@color, border) {
+    .border-@{color} { border-color: @@color; .border()}
+}
+
 
 // Palette color classes
 //
@@ -70,6 +93,7 @@
 // .bg-pool         - Add a blue background
 // .bg-gold         - Add a yellow background
 // .bg-lime         - Add a green background
+// .bg-sienna       - Add a red background
 //
 // Markup:
 // <div style="height:100px; width: 100px" class="{$modifiers}"></div>
@@ -77,8 +101,6 @@
 // Styleguide 1.2.1
 
 .for(@palette-colors, background);
-
-
 
 
 // Text colors
@@ -89,6 +111,7 @@
 // .text-pool       - Color the text in blue
 // .text-gold       - Color the text in yellow
 // .text-lime       - Color the text in green
+// .text-sienna     - Color the text in red
 //
 // Markup:
 // <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
@@ -96,3 +119,20 @@
 // Styleguide 1.2.2
 
 .for(@palette-colors, text);
+
+// Border colors
+//
+// A scale of palette border colors
+//
+// .border-orange     - Color the border in orange
+// .border-pool       - Color the border in blue
+// .border-gold       - Color the border in yellow
+// .border-lime       - Color the border in green
+// .border-sienna     - Color the border in red
+//
+// Markup:
+// <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+//
+// Styleguide 1.2.3
+
+.for(@palette-colors, border);

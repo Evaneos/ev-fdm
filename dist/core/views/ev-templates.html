@@ -12,12 +12,12 @@
 <script type="text/ng-template" id="ev-edit-section.html"><form name="editform" class="ev-list" novalidate ev-submit="save()">
     <header class="ev-top-sticky body-bg">
         <div class="pull-right" ng-hide="edit || inProgress">
-            <button type="button" ng-if="!noteditable" class="btn btn-sm" ng-click="changeToEditMode()">Edit</button>
-            <button class="btn btn-sm" ng-if="!notdeletable && delete" ng-click="delete()">Delete</button>
+            <button type="button" ng-if="!noteditable" class="btn btn-sm btn-tertiary" ng-click="changeToEditMode()">Edit</button>
+            <button class="btn btn-sm btn-tertiary" ng-if="!notdeletable && delete" ng-click="delete()">Delete</button>
         </div>
         <div class="pull-right" ng-show="edit && !inProgress">
-            <button type="submit" class="btn btn-sm btn-lime" ng-class="{ 'btn-orange': editform.$invalid }">Save</button>
-            <button type="button" class="btn btn-sm" ng-click="cancel()">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-tertiary btn-lime" ng-disabled="editform.$invalid">Save</button>
+            <button type="button" class="btn btn-sm btn-tertiary" ng-click="cancel()">Cancel</button>
         </div>
         <div ng-show="inProgress" class="pull-right">
             <button type="button" class="btn btn-tertiary">Saving in progress...</button>

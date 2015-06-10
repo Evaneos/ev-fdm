@@ -183,7 +183,7 @@ angular.module('ev-fdm')
                   if (event.shiftKey) {
                       ctrl.shiftedClick(currentElement, scope.$index);
                   }
-                  else if (event.ctrlKey || angular.element(event.target).is('.checkbox')) {
+                  else if (event.ctrlKey || angular.element(event.target).is('[type=checkbox]')) {
                       ctrl.toggleSelection(currentElement, scope.$index);
                   }
               }
@@ -196,7 +196,11 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectable',
             replace: true,
-            template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
+            controller: ['$scope', function ($scope) {
+                $scope.idRand = String(Math.random());
+            }],
+            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="selected"><label ng-attr-for="{{idRand}}"></label></span>'
+            // template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
         };
     })
     .directive('selectAll', function() {
@@ -204,9 +208,10 @@ angular.module('ev-fdm')
             restrict: 'E',
             require: '^selectableSet',
             scope: true,
-            template: '<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
+            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="allSelected" ng-click="toggleSelectAll()"><label ng-attr-for="{{idRand}}"></label></span>',
+            //'<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
             link: function(scope, element, attr, ctrl) {
-
+                scope.idRand = String(Math.random());
                 scope.toggleSelectAll = function () {
                     ctrl.toggleSelectAll();
                 };

@@ -4,19 +4,29 @@ angular.module('ev-fdm').factory('Select2Configuration', [
     function($timeout) {
         return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
             var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
             if (typeof dataProvider === 'object') {
-                formatter = dataProvider.formatter;
-                resultModifier = dataProvider.resultModifier;
-                minimumInputLength = dataProvider.minimumInputLength;
-                key = dataProvider.key;
-                dataProviderFilter = dataProvider.dataProviderFilter;
-                dataProvider = dataProvider.dataProvider;
-
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
                 if (typeof dataProviderFilter === 'object') {
                     var filter = dataProviderFilter;
                     dataProviderFilter = function() { return filter; };
                 } else if (typeof dataProviderFilter !== 'function') {
                     dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
                 }
             }
             var oldQueryTerm = '', filterTextTimeout;
@@ -76,7 +86,8 @@ angular.module('ev-fdm').factory('Select2Configuration', [
                 },
                 initSelection: function() {
                     return {};
-                }
+                },
+                id: idFunction,
             };
             return config;
         };

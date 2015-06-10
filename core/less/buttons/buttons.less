@@ -1,5 +1,4 @@
 @import "variables.less";
-@import "button-groups.less";
 @import "../mixins/loop.less";
 
 // Buttons
@@ -25,8 +24,8 @@
 // Base style & state
 //
 // default      - A button in normal state
-// :hover       - Hover state
-// :active      - Active state
+// :hover       - Hover state (also available though `.hover`)
+// :active      - Active state (also available though `.active`)
 // .disabled    - Disabled button. If you use `<button>` element, that is acceptable to add disabled attribute instead.
 //
 // Markup:
@@ -45,10 +44,12 @@
     border-radius: @btn-border-radius;
     outline: none;
     cursor: pointer;
-    white-space: nowrap;
-    border-width: 1px;
+    text-align: center;
+    text-decoration: none;
+    border-width: @btn-border-width;
     border-style: solid;
     white-space: nowrap;
+    margin-right: @btn-margin-size;
 
     .btn-soil;
     .btn-md;
@@ -64,13 +65,13 @@
     fieldset[disabled] & {
         cursor: not-allowed;
         pointer-events: all; // Required to display tooltips if any
-        .opacity(.65);
+        opacity: .65;
     }
 }
 
 // Default value
 .btn:not(.btn-primary):not(.btn-secondary):not(.btn-tertiary) {
-    .btn-secondary;
+    &:extend(.btn-secondary all);
 }
 
 // Colors
@@ -94,9 +95,8 @@
 
 
 // Loop throught color list and define buttons name on the go.
-.for(@btn-colors);
-.-each(@color, default) {
-    .btn-@{color} {
+.for(@btn-colors, btn-color);
+.-each(@color, btn-color) { .btn-@{color} {
         .btn-color-variant(@@color);
     }
 }
@@ -109,16 +109,16 @@
     border-color: @btn-border-lighten-color;
     background-color: @color;
 
-    &:hover {
-        color: darken(@color, @btn-darken-hover-factor);
-        border-color: darken(@btn-border-lighten-color, @btn-darken-hover-factor);
-        background-color: darken(@color, @btn-darken-hover-factor);
+    &:hover, &.hover {
+        color: lighten(@color, @btn-hover-factor);
+        border-color: lighten(@btn-border-lighten-color, @btn-hover-factor);
+        background-color: lighten(@color, @btn-hover-factor);
     }
 
-    &:active {
-        color: darken(@color, @btn-darken-active-factor);
-        border-color: darken(@btn-border-lighten-color, @btn-darken-active-factor);
-        background-color: darken(@color, @btn-darken-active-factor);
+    &:active, &.active {
+        color: darken(@color, @btn-hover-factor);
+        border-color: darken(@btn-border-lighten-color, @btn-hover-factor);
+        background-color: darken(@color, @btn-hover-factor);
     }
 
     // Avoid * effects on hover
@@ -143,25 +143,22 @@
 //
 // Styleguide 2.4
 
-.btn-primary {
-    &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
-        color: white;
-        border-color: transparent;
+
+
+// NB, here, priority-helper is a stub class used just to increase the priority of these rules.
+.btn-primary:not(.priority-helper):not(.priority-helper):not(.priority-helper) {
+    color: white;
+    border-color: transparent;
+}
+.btn-secondary:not(.priority-helper):not(.priority-helper):not(.priority-helper) {
+    background-color: transparent;
+    &.active, &:active {
+        background-color: rgba(0,0,0,0.05);
     }
 }
-.btn-secondary {
-    &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
-        background-color: transparent;
-    }
-    &.selected {
-        background-color: white;
-    }
-}
-.btn-tertiary {
-    &, &:hover, &:active, &:disabled, &[disabled], &.disabled {
-        background-color: transparent;
-        border-color: transparent;
-    }
+.btn-tertiary:not(.priority-helper):not(.priority-helper):not(.priority-helper) {
+    background-color: transparent;
+    border-color: transparent;
 }
 
 // Size
@@ -173,7 +170,6 @@
 // .btn-sm    - A small button
 // .btn-md    - A medium button (default value, this class is optional)
 // .btn-lg    - A large button
-// .btn-block - A block button having the full width of his parent
 //
 // Markup:
 // <button class="btn btn-primary {$modifiers}">Button</button>
@@ -193,14 +189,24 @@
     padding: @padding;
 }
 
+// Button Block
+//
+// The `btn-block` class transform a button in a block display which span over al the width of its parent.
+//
+// Markup:
+// <div class="max-sm">
+//      <button class="btn btn-lg">Comes in all sizes</button>
+//      <button class="btn btn-pool">And all flavours</button>
+// </div>
+// Styleguide 2.7
+
 .btn-block {
   display: block;
   width: 100%;
 }
-
 // Space out multiple btn block
 .btn-block + .btn-block {
-  margin-top: 5px;
+  margin-top: @btn-margin-size;
 }
 
 // Icons
@@ -215,7 +221,19 @@
 //
 // Styleguide 2.6
 
-.btn>.icon {
-    position: relative;
-    top: 2px;
+
+// Button container
+//
+// The `btn-container` class add a bottom margin to all its button children.
+// This is useful when the buttons splits on more than one line
+//
+//
+// Markup:
+// <div class="btn-container max-sm">
+//      <button class="btn btn-tertiary">I'am a very verbose button</button>
+//      <button class="btn btn-tertiary">Whith a lot of useless text</button>
+// </div>
+// Styleguide 2.8
+.btn-container > .btn {
+    margin-bottom: @btn-margin-size;
 }
