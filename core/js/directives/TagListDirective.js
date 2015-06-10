@@ -20,8 +20,8 @@ angular.module('ev-fdm')
                     '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
                         '<span class="label label-default" >' +
                             '{{ displayElement(element) }}' +
-                            '<button ng-show="editable" tabIndex="-1" type="button" class="close inline" ' +
-                                'ng-click="remove($index)">×</button> ' +
+                            '<button ng-show="editable" tabIndex="-1" type="button" class="btn btn-sm btn-tertiary" ' +
+                                'ng-click="remove($index)"><span class="icon-bin></span></button> ' +
                         '</span>' +
                     '</li>' +
                     '<li ng-show="editable && elements.length >= maxElements" class="text-orange no-margin">' +
