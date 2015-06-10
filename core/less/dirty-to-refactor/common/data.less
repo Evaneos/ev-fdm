@@ -1,10 +1,12 @@
 @import "../../colors/variables.less";
+@import "bootstrap/less/mixins.less";
+
 div.common-data {
 
     @gutter-size: 5px;
 
     > div {
-
+        .clearfix();
         &.common-header {
             border-bottom: 1px solid @white-soil;
 
