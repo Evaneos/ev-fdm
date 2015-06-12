@@ -13,3 +13,5 @@ safe: true
 collections:
   demos:
     output: true
+
+exclude: [ node_module, README.md, bower.json, gulpfile.js, package.json, bower_component ]

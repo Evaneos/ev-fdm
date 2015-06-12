@@ -1,0 +1,239 @@
+@import "variables.less";
+@import "../mixins/loop.less";
+
+// Buttons
+//
+// A basic UI component triggering an action. Button styles can be applied to anything with the `.btn` class applied.
+// However, typically you'll want to apply these to only `<a>` and `<button>` elements for the best rendering.
+//
+// Styleguide 2
+
+
+// Default button
+//
+// This is the simplest button use case with no modifiers implied.
+// It can be applied on `button`, `a` and `input[type:submit|type:reset|type:button]` elements.
+//
+// Markup:
+// <button class="btn">Button</button>
+// <a class="btn">Link</a>
+// <input class="btn" type="submit" value="Submit">
+//
+// Styleguide 2.1
+
+// Base style & state
+//
+// default      - A button in normal state
+// :hover       - Hover state (also available though `.hover`)
+// :active      - Active state (also available though `.active`)
+// .disabled    - Disabled button. If you use `<button>` element, that is acceptable to add disabled attribute instead.
+//
+// Markup:
+// <button class="btn btn-primary {$modifiers}">Button</button>
+// <button class="btn btn-secondary {$modifiers}">Button</button>
+// <button class="btn btn-tertiary {$modifiers}">Button</button>
+//
+// Styleguide 2.2
+
+// // Default values
+// .btn-secondary;
+// .btn-soil;
+// .btn-md;
+.btn {
+    display: inline-block;
+    border-radius: @btn-border-radius;
+    outline: none;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    border-width: @btn-border-width;
+    border-style: solid;
+    white-space: nowrap;
+    margin-right: @btn-margin-size;
+
+    .btn-soil;
+    .btn-md;
+
+    &:hover,
+    &:active {
+        text-decoration: none;
+    }
+
+    &.disabled,
+    &:disabled,
+    &[disabled],
+    fieldset[disabled] & {
+        cursor: not-allowed;
+        pointer-events: all; // Required to display tooltips if any
+        opacity: .65;
+    }
+}
+
+// Default value
+.btn:not(.btn-primary):not(.btn-secondary):not(.btn-tertiary) {
+    &:extend(.btn-secondary all);
+}
+
+// Colors
+//
+// You can change the color of the button by adding any of these classes. You can customize the list of colored button
+// you need by changing the list of colors in the `buttons/variable.less` file.
+//
+//
+// .btn-soil - A button color soil (default value, this class is optional)
+// .btn-orange     - A button color orange
+// .btn-pool       - A button color pool
+// .btn-lime       - A button color lime
+//
+// Markup:
+// <button class="btn btn-primary {$modifiers}">Button</button>
+// <button class="btn btn-secondary {$modifiers}">Button</button>
+// <button class="btn btn-tertiary {$modifiers}">Button</button>
+//
+// Styleguide 2.3
+
+
+
+// Loop throught color list and define buttons name on the go.
+.for(@btn-colors, btn-color);
+.-each(@color, btn-color) { .btn-@{color} {
+        .btn-color-variant(@@color);
+    }
+}
+
+.btn-color-variant(@color) {
+    @btn-border-lighten-factor: min(@btn-border-ligthess-factor, @btn-border-max-lighteness - lightness(@color));
+    @btn-border-lighten-color: lighten(@color, @btn-border-lighten-factor);
+
+    color: @color;
+    border-color: @btn-border-lighten-color;
+    background-color: @color;
+
+    &:hover, &.hover {
+        color: lighten(@color, @btn-hover-factor);
+        border-color: lighten(@btn-border-lighten-color, @btn-hover-factor);
+        background-color: lighten(@color, @btn-hover-factor);
+    }
+
+    &:active, &.active {
+        color: darken(@color, @btn-hover-factor);
+        border-color: darken(@btn-border-lighten-color, @btn-hover-factor);
+        background-color: darken(@color, @btn-hover-factor);
+    }
+
+    // Avoid * effects on hover
+    &:disabled, &[disabled], &.disabled {
+        color: @color;
+        border-color: @btn-border-lighten-color;
+        background-color: @color;
+    }
+}
+
+// Type
+//
+// There is three types of buttons:
+//
+// .btn-primary     - Primary button, used to emphasize the main call to action (usually one per viewport).
+// .btn-secondary   - Secondary button, normal buttons (default value, this class is optional)
+// .btn-tertiary    - Tertiary button, light button, used generally inline, when you don't want to overload the interface.
+//
+// Markup:
+// <button class="btn {$modifiers}">Button</button>
+// <button class="btn {$modifiers} selected">Selected button</button>
+//
+// Styleguide 2.4
+
+
+
+// NB, here, priority-helper is a stub class used just to increase the priority of these rules.
+.btn-primary:not(.priority-helper):not(.priority-helper):not(.priority-helper) {
+    color: white;
+    border-color: transparent;
+}
+.btn-secondary:not(.priority-helper):not(.priority-helper):not(.priority-helper) {
+    background-color: transparent;
+    &.active, &:active {
+        background-color: rgba(0,0,0,0.05);
+    }
+}
+.btn-tertiary:not(.priority-helper):not(.priority-helper):not(.priority-helper) {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+// Size
+//
+// You can change the size of any button by adding these class.
+//
+//
+// .btn-xs    - An extra small button
+// .btn-sm    - A small button
+// .btn-md    - A medium button (default value, this class is optional)
+// .btn-lg    - A large button
+//
+// Markup:
+// <button class="btn btn-primary {$modifiers}">Button</button>
+// <button class="btn btn-secondary {$modifiers}">Button</button>
+// <button class="btn btn-tertiary {$modifiers}">Button</button>
+//
+// Styleguide 2.5
+
+// Sizes variants --------------
+.btn-xs { .btn-size-variant(@btn-xs-font-size, @btn-xs-padding); }
+.btn-sm { .btn-size-variant(@btn-sm-font-size, @btn-sm-padding); }
+.btn-md { .btn-size-variant(@btn-md-font-size, @btn-md-padding); }
+.btn-lg { .btn-size-variant(@btn-lg-font-size, @btn-lg-padding); }
+
+.btn-size-variant(@font-size; @padding) {
+    font-size: @font-size;
+    padding: @padding;
+}
+
+// Button Block
+//
+// The `btn-block` class transform a button in a block display which span over al the width of its parent.
+//
+// Markup:
+// <div class="max-sm">
+//      <button class="btn btn-lg">Comes in all sizes</button>
+//      <button class="btn btn-pool">And all flavours</button>
+// </div>
+// Styleguide 2.7
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+// Space out multiple btn block
+.btn-block + .btn-block {
+  margin-top: @btn-margin-size;
+}
+
+// Icons
+//
+// Of course, buttons can also contains icons to reinforce the button action
+//
+//
+// Markup:
+// <button class="btn btn-primary"><span class="icon icon-create"></span>Add a line</button>
+// <button class="btn btn-secondary"><span class="icon icon-tick"></span>Accept</button>
+// <button class="btn btn-tertiary"><span class="icon icon-bin"></span>Delete</button>
+//
+// Styleguide 2.6
+
+
+// Button container
+//
+// The `btn-container` class add a bottom margin to all its button children.
+// This is useful when the buttons splits on more than one line
+//
+//
+// Markup:
+// <div class="btn-container max-sm">
+//      <button class="btn btn-tertiary">I'am a very verbose button</button>
+//      <button class="btn btn-tertiary">Whith a lot of useless text</button>
+// </div>
+// Styleguide 2.8
+.btn-container > .btn {
+    margin-bottom: @btn-margin-size;
+}

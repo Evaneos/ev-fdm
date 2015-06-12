@@ -1,0 +1,39 @@
+{
+  "name": "ev-fdm",
+  "version": "0.11.5",
+  "description": "Evaneos frontend framework",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evaneos/ev-fdm.git"
+  },
+  "author": "Evaneos",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/evaneos/ev-fdm/issues"
+  },
+  "devDependencies": {
+    "autoprefixer-core": "^4.0.2",
+    "gulp": "^3.8.10",
+    "gulp-concat": "git://github.com/christophehurpeau/gulp-concat.git#master",
+    "gulp-consolidate": "^0.1.2",
+    "gulp-csso": "^0.2.9",
+    "gulp-iconfont": "^1.0.0",
+    "gulp-insert": "^0.4.0",
+    "gulp-jshint": "^1.9.0",
+    "gulp-less": "^1.3.6",
+    "gulp-postcss": "^3.0.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-sourcemaps": "1.2.8",
+    "gulp-uglify": "^1.0.1",
+    "gulp-insert": "^0.4.0",
+    "gulp-changed": "^1.1.0",
+    "jshint-stylish": "^1.0.0",
+    "lodash": "^2.4.1"
+  }
+}

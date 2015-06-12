@@ -1,0 +1,23 @@
+@resizable-size: 12px;
+.ev-resizable-column-handle {
+	position: absolute;
+	z-index: 10;
+	right: -@resizable-size / 2;
+	top: 0;
+	bottom: 0;
+	width: @resizable-size;
+	cursor: ew-resize;
+}
+
+*:last-of-type > .ev-resizable-column-handle {
+	display: none;
+}
+
+.ev-resizable-helper {
+	position: absolute;
+	z-index: 11;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	background-color: rgba(255,255,255,0.3);
+}

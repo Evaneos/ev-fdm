@@ -1,0 +1,130 @@
+<script type="text/ng-template" id="ev-confirm-box.html"> <div class="modal-header">
+    <h3 class="modal-title">{{ title }}</h3>
+</div>
+<div class="modal-body">
+    {{ message }}
+</div>
+<div class="modal-footer">
+    <button class="btn" ng-click="$dismiss()">{{ negative }}</button>
+    <button class="btn btn-primary btn-orange" ng-click="$close()">{{ positive }}</button>
+</div>
+</script>
+<script type="text/ng-template" id="ev-edit-section.html"><form name="editform" class="ev-list" novalidate ev-submit="save()">
+    <header class="ev-top-sticky body-bg">
+        <div class="pull-right" ng-hide="edit || inProgress">
+            <button type="button" ng-if="!noteditable" class="btn btn-sm btn-tertiary" ng-click="changeToEditMode()">Edit</button>
+            <button class="btn btn-sm btn-tertiary" ng-if="!notdeletable && delete" ng-click="delete()">Delete</button>
+        </div>
+        <div class="pull-right" ng-show="edit && !inProgress">
+            <button type="submit" class="btn btn-sm btn-tertiary btn-lime" ng-disabled="editform.$invalid">Save</button>
+            <button type="button" class="btn btn-sm btn-tertiary" ng-click="cancel()">Cancel</button>
+        </div>
+        <div ng-show="inProgress" class="pull-right">
+            <button type="button" class="btn btn-tertiary">Saving in progress...</button>
+        </div>
+        <h4 ng-if="headerTitle || title">{{ headerTitle || title }}</h4>
+    </header>
+    <div class="transclude"></div>
+</form>
+</script>
+<script type="text/ng-template" id="ev-filters.html"><div class="search-bar container-fluid">
+
+    <!-- inner scrollable content -->
+
+    <div class="inner">
+
+        <!-- SEARCH BOX : FILTERS -->
+
+        <h2>{{ 'Recherche' | i18n }}</h2>
+
+        <div class="searchbox">
+            <div class="inner">
+                <ul class="filters-list" ng-transclude>
+                    <!-- This part gets inherited -->
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+</div></script>
+<script type="text/ng-template" id="ev-pagination.html"><ul class="pagination" ng-show="nbPage > 1" class="ng-cloak">
+    <li ng-click="previousPage()">
+        <a href="javascript:void(0)">&laquo;</a>
+    </li>
+    <li ng-repeat="btn in paginationButtons"
+        class="{{btn.class}}"
+        ng-click="changePage(btn.value)">
+        <a href="javascript:void(0)">{{ btn.value }}</a>
+    </li>
+    <li ng-click="nextPage()">
+        <a href="javascript:void(0)" >&raquo;</a>
+    </li>
+</ul></script>
+<script type="text/ng-template" id="ev-picture-list.html"><ul class="picture-list row">
+    <li ng-form="pictureform" ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">
+        <figure ng-hide="editable">
+            <div class="picture-thumb">
+                <img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />
+            </div>
+            <figcaption>
+                <span class="copyright">&copy;</span>
+                <span class="author">
+                    {{ picture.author }}
+                </span>
+            </figcaption>
+            <figcaption ng-if="language">
+                <span class="author">
+                    {{ picture.legend[language].name }}
+                </span>
+            </figcaption>
+        </figure>
+        <figure ng-show="editable">
+            <div class="picture-thumb">
+                <img ng-src="{{picture.id | imageUrl:300:200 | escapeQuotes }}" />
+                <button class="action btn btn-tertiary update-action ev-upload-clickable"
+                        ng-click="onUpdate({picture: picture, index: $index})"
+                        ng-show="showUpdate">
+                    <span class="icon icon-edit"></span>
+                </button>
+                <button class="action btn btn-tertiary delete-action"
+                        ng-click="onDelete({picture: picture, index: $index})"
+                        tabIndex="-1">
+                    <span class="icon icon-bin"></span>
+                </button>
+            </div>
+            <figcaption>
+                <span class="copyright">&copy;</span>
+                <ev-form-group>
+                    <input required ev-validable
+                        name="author"
+                        type="text"
+                        class="form-control author"
+                        ng-model="picture.author"
+                        ng-change="onChange({picture: picture})"/>
+                    <ev-errors>
+                        <ev-error-message input="pictureform.author" error="required">Author is required</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+            </figcaption>
+            <figcaption ng-if="language">
+                <ev-form-group>
+                    <input required ev-validable
+                        name="legend"
+                        type="text"
+                        class="form-control author"
+                        ng-model="picture.legend[language].name"
+                        ng-change="onChange({picture: picture})">
+                    <ev-errors>
+                        <ev-error-message input="pictureform.legend" error="required">Legend is required</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+            </figcaption>
+        </figure>
+    </li>
+</ul>
+<div class="clearfix"></div>
+</script>
+<script type="text/ng-template" id="ev-value.html"><div class="common-value" ng-class="{ 'common-empty': !value }" >
+    {{ value || noValue }}
+</div></script>

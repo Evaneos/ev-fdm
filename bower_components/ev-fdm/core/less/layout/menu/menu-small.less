@@ -1,0 +1,44 @@
+@import "../../colors/variables.less";
+@import "../../buttons/buttons.less";
+
+#small-menu {
+    display: none;
+}
+
+
+@media (max-width: @screen-desktop) {
+
+    #menu {
+        #normal-menu {
+            display: none;
+        }
+
+        #small-menu {
+            right: 0;
+            display: block;
+            margin: 0;
+
+            .caret {
+                display: none;
+            }
+
+            .dropdown {
+
+                &.open .btn.toggle{
+                    &:extend(.active all);
+                }
+                .btn.toggle {
+                    margin-right: 0px;
+                    border-radius: 0px;
+                }
+                .dropdown-menu {
+                    position: fixed;
+                    bottom: 0;
+                    overflow-x: hidden;
+                    background: #FFF;
+                    top: @menu-height;
+                }
+            }
+        }
+    }
+}

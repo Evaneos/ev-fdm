@@ -1,0 +1,41 @@
+{
+  "name": "floatthead",
+  "version": "1.2.8",
+  "description": "fixed table header plugin that works",
+  "filename": "jquery.floatThead.js",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-coffee": "~0.10.1",
+    "grunt-contrib-uglify": "~0.4.0",
+    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-concat": "~0.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mkoryak/floatThead.git"
+  },
+  "keywords": [
+    "locked header",
+    "floating header",
+    "fixed header",
+    "fixed table header",
+    "table",
+    "thead",
+    "floatThead",
+    "scrolling table"
+  ],
+  "author": "Misha Koryak",
+  "license": "MIT",
+  "bugs": "https://github.com/mkoryak/floatThead/issues",
+  "homepage": "https://github.com/mkoryak/floatThead",
+  "npmName": "floatthead",
+  "npmFileMap": [
+    {
+      "basePath": "/dist/",
+      "files": [
+        "*.js"
+      ]
+    }
+  ]
+}

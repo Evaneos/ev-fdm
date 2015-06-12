@@ -1,0 +1,32 @@
+// --------------------------------------------------------
+// BOOTSTRAP
+// --------------------------------------------------------
+@import "variables-bootstrap.less";
+@import "bootstrap/less/mixins.less";
+// We just need a few modules in our framework. Get them !
+@import "overrides/bootstrap/modules.less";
+// Do some stuff that override bootstrap
+@import "overrides/bootstrap/index.less";
+
+
+// --------------------------------------------------------
+// OTHER VENDORS
+// --------------------------------------------------------
+
+@import (less) "angular-loading-bar/src/loading-bar.css";
+@import "overrides/loading-bar.less";
+@import "overrides/datepicker.less";
+@import (inline) "jquery-ui/themes/base/jquery-ui.css";
+@import (inline) "select2/select2.css";
+@import (inline) "angular-ui-select/dist/select.min.css";
+@import "overrides/select2.less";
+// Replace the location of icons for ui
+@import "overrides/ui-icon.less";
+
+// TODO: refacto nav-bar
+.navbar {
+	min-height:initial;
+	margin-bottom: 0px;
+	position: fixed;
+	border:none;
+}

@@ -1,0 +1,77 @@
+@import "../../colors/variables.less";
+@import "../variables-bootstrap.less";
+@import (reference) "../../mixins/mixins.less";
+
+/* .input-light removes all outline from input leaving just a light bottom border.
+
+ */
+
+.placeholder-light {
+    color: @light-soil;
+}
+
+.input-light:not(.priority-helper) {
+  border: none;
+  height: auto ;
+  position: relative;
+  background-color: transparent;
+  font-weight: inherit;
+  font-size: inherit;
+  border-radius: 0px;
+  border-bottom: @bright-soil 1px solid;
+
+  .placeholder-style({
+    color: @light-soil;
+  }, {
+    color: @bright-soil;
+  });
+
+  &:hover, &:focus {
+    outline: none;
+    transition: border-bottom 0.2s;
+    border-bottom: @light-soil 1px solid;
+  }
+
+  & ~ .input-group-addon {
+    border-color: transparent;
+    background-color: @body-bg;
+    padding: 0;
+  }
+}
+
+textarea, h5, h4, h3, h2, h1 {
+  &.input-light, & .input-light {
+    border: none;
+    &:hover, &:focus {
+      border: none;
+    }
+  }
+}
+
+textarea, h5, h4, h3, h2, h1 {
+  &.input-inline, & .input-inline {
+    display: inline;
+    border-bottom: @bright-soil 1px solid;
+
+    &:hover, &:focus {
+      outline: none;
+      border-bottom: @bright-soil 1px solid;
+    }
+  }
+}
+
+
+
+.input-sm {
+  font-size: @font-size-small;
+  line-height: @line-height-base;
+  height: auto;
+}
+
+.errors {
+    list-style: none;
+    margin: 0;
+    padding: 0 10px;
+    font-style: italic;
+}
+

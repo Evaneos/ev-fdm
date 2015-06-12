@@ -1,0 +1,50 @@
+/* Allows for layout of same size columns with a max width */
+
+.ev-flex-columns {
+    display: flex;
+    flex-wrap: wrap;
+
+    &:not(.ev-overflow) > * {
+        overflow-y: auto;
+    }
+    & > * {
+        flex-shrink: 0;
+    }
+
+
+    &.ev-align-start  { align-items: flex-start; }
+    &.ev-align-center { align-items: center;     }
+    &.ev-align-end    { align-items: flex-end;   }
+
+    .ev-align-self-start  { align-self: flex-start; }
+    .ev-align-self-center { align-self: center;     }
+    .ev-align-self-end    { align-self: flex-end;   }
+
+    .ev-justify-content-start  { justify-content: flex-start; }
+    .ev-justify-content-center { justify-content: center;     }
+    .ev-justify-content-end    { justify-content: flex-end;   }
+}
+
+/* Utilities class for flexbox */
+
+.ev-flex-no-wrap {
+    flex-wrap: nowrap;
+}
+
+/* flex */
+.ev-flex {
+    flex: auto;
+}
+
+.ev-flex-1 {
+    flex: 1;
+}
+
+/* flex grow */
+.ev-flex-grow-1 {
+    flex-grow: 1;
+}
+
+.ev-flex-grow-2 {
+    flex-grow: 2;
+}

@@ -1,0 +1,75 @@
+@import "../colors/variables.less";
+@import "buttons.less";
+
+@import (reference) "bootstrap/less/mixins.less";
+
+// Buttons Group
+//
+// A coherent ensemble of buttons
+//
+// default - normal sized buttons
+// .btn-group-xs - extra small buttons
+// .btn-group-sm - small buttons
+// .btn-group-lg - large buttons
+//
+// Markup:
+// <div class="button-group {$modifiers}">
+//      <button class="btn">Buttons</button>
+//      <button class="btn">Bonding</button>
+//      <button class="btn">Together !</button>
+// </div>
+// Styleguide 2.7
+
+
+.btn-group {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+
+// Prevent double borders when buttons are next to each other
+
+    .btn + .btn,
+    .btn + .btn-group,
+    .btn-group + .btn,
+    .btn-group + .btn-group {
+        margin-left: -1px;
+    }
+
+    & > .btn:not(:first-child):not(:last-child) {
+        border-radius: 0;
+    }
+    & > .btn:not(:last-child) {
+        margin-right: 0;
+    }
+
+    // Set corners individual because sometimes a single button can be in a .btn-group and we need :first-child and :last-child to both match
+    & > .btn:first-child:not(:last-child) {
+        .border-right-radius(0);
+    }
+    & > .btn:last-child:not(:first-child) {
+        .border-left-radius(0);
+    }
+
+    // Custom edits for including btn-groups within btn-groups (useful for including dropdown buttons within a btn-group)
+    & > .btn-group {
+        float: left;
+    }
+    & > .btn-group:not(:first-child):not(:last-child) > .btn {
+        border-radius: 0;
+    }
+    & > .btn-group:first-child > .btn:last-child {
+        .border-right-radius(0);
+    }
+
+    & > .btn-group:last-child > .btn:first-child {
+        .border-left-radius(0);
+    }
+
+    // Sizing
+    //
+    // Remix the default button sizing classes into new ones for easier manipulation.
+
+    &.btn-group-xs > .btn { .btn-xs(); }
+    &.btn-group-sm > .btn { .btn-sm(); }
+    &.btn-group-lg > .btn { .btn-lg(); }
+}

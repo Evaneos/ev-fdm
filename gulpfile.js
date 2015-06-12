@@ -7,7 +7,7 @@ var concat = require('gulp-concat');
 var watch = require('gulp-watch');
 var exec = require('child_process').exec;
 var dest = '.';
-var bowerDirectory = './_bower_components';
+var bowerDirectory = './bower_components';
 var nodeModuleDirectory = './node_modules';
 
 var bowerDependancies = [
@@ -17,17 +17,17 @@ var bowerDependancies = [
     'angular/angular.js',
     'angular-animate/angular-animate.js',
     'angular-loading-bar/src/loading-bar.js',
-    'angular-bootstrap/ui-bootstrap-tpls.min.js',
+    'angular-bootstrap/ui-bootstrap-tpls.js',
     'angular-ui-date/src/date.js',
-    'restangular/dist/restangular.min.js',
+    'restangular/dist/restangular.js',
     'moment/moment.js',
-    'angular-moment/angular-moment.min.js',
+    'angular-moment/angular-moment.js',
     'angular-ui-select2/src/select2.js',
-    'angular-ui-router/release/angular-ui-router.min.js',
+    'angular-ui-router/release/angular-ui-router.js',
     'jquery-ui/ui/jquery.ui.core.js',
     'jquery-ui/ui/jquery.ui.datepicker.js',
     'jquery-ui/ui/i18n/jquery.ui.datepicker-fr.js',
-    'jquery-ui/ui/minified/jquery-ui.min.js',
+    'jquery-ui/ui/minified/jquery-ui.js',
     'checklist-model/checklist-model.js',
     'dropzone/downloads/dropzone.js',
     'ev-fdm/dist/ev-fdm.js'

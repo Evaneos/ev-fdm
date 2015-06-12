@@ -1,0 +1,138 @@
+@import "variables.less";
+@import "../mixins/loop.less";
+@import "../utils/border.less";
+
+
+// Neutral colors classes
+//
+// Neutral colors are used when the support should not convey any specific information.
+// They can be used ad background color or text colors.
+//
+// You can customize the name and values you need by changing the list of colors in the `colors/variable.less` file.
+//
+// Styleguide 1.1
+
+// Neutral background colors
+//
+// A scale of neutral background colors
+//
+// .bg-white        - Add a white background
+// .bg-white-soil   - Add a white soil background
+// .bg-bright-soil  - Add a bright soil background
+// .bg-light-soil   - Add a light soil background
+// .bg-soil         - Add a soil background
+// .bg-deep-soil    - Add a deep soil background
+// .bg-dark-soil    - Add a dark soil background
+//
+// Markup:
+// <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+//
+// Styleguide 1.1.1
+// Loop throught color list and define buttons name on the go.
+.for(@neutral-colors, background);
+.-each(@color, background) {
+    .bg-@{color} { background-color: @@color; }
+}
+
+
+// Soil text colors
+//
+// A scale of soil text colors
+//
+// .text-white          - Color the text in white
+// .text-white-soil     - Color the text in a white soil
+// .text-bright-soil    - Color the text in a bright soil
+// .text-light-soil     - Color the text in a light soil
+// .text-soil           - Color the text in a soil
+// .text-deep-soil      - Color the text in a deep soil
+// .text-dark-soil      - Color the text in a dark soil
+//
+// Markup:
+// <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+//
+// Styleguide 1.1.2
+.for(@neutral-colors, text);
+.-each(@color, text) {
+    .text-@{color} { color: @@color; }
+}
+
+
+// Soil border colors
+//
+// A scale of soil border colors
+//
+// .border-white          - Color the border in white
+// .border-white-soil     - Color the border in a white soil
+// .border-bright-soil    - Color the border in a bright soil
+// .border-light-soil     - Color the border in a light soil
+// .border-soil           - Color the border in a soil
+// .border-deep-soil      - Color the border in a deep soil
+// .border-dark-soil      - Color the border in a dark soil
+//
+// Markup:
+// <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+//
+// Styleguide 1.1.3
+.for(@neutral-colors, border);
+.-each(@color, border) {
+    .border-@{color} { border-color: @@color; .border()}
+}
+
+
+// Palette color classes
+//
+// These colors are defined in the brand palette. They are used when a specific meaning is associated with the element
+//
+// Styleguide 1.2
+
+// Background colors
+//
+// A scale of palette background colors
+//
+// .bg-orange       - Add a orange background
+// .bg-pool         - Add a blue background
+// .bg-gold         - Add a yellow background
+// .bg-lime         - Add a green background
+// .bg-sienna       - Add a red background
+//
+// Markup:
+// <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+//
+// Styleguide 1.2.1
+
+.for(@palette-colors, background);
+
+
+// Text colors
+//
+// A scale of palette text colors
+//
+// .text-orange     - Color the text in orange
+// .text-pool       - Color the text in blue
+// .text-gold       - Color the text in yellow
+// .text-lime       - Color the text in green
+// .text-sienna     - Color the text in red
+//
+// Markup:
+// <p class="{$modifiers}">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+//
+// Styleguide 1.2.2
+
+.for(@palette-colors, text);
+
+// Border colors
+//
+// A scale of palette border colors
+//
+// .border-orange     - Color the border in orange
+// .border-pool       - Color the border in blue
+// .border-gold       - Color the border in yellow
+// .border-lime       - Color the border in green
+// .border-sienna     - Color the border in red
+//
+// Markup:
+// <div style="height:100px; width: 100px" class="{$modifiers}"></div>
+//
+// Styleguide 1.2.3
+
+.for(@palette-colors, border);

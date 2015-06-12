@@ -1,0 +1,133 @@
+@import "variables.less";
+
+// Unstyled list
+//
+// Remove the default user agent style on list with `.list-unstyled`
+//
+// Markup:
+// <ul class="list-unstyled">
+// 	<li> Eggs </li>
+// 	<li> Milk </li>
+// 	<li> Beers </li>
+// </ul>
+//
+// Styleguide 3.1
+
+.list-unstyled {
+  	padding-left: 0;
+  	list-style: none;
+    margin: 0;
+}
+
+
+// Standard list
+//
+// A standard list in ev-fdm. You can add the base class `.ev-list` to any `div`. All of its direct
+// children will be styled like list element.
+//
+// Markup:
+// <ul class="ev-list">
+// 	<li> Eggs </li>
+// 	<li> Milk </li>
+// 	<li> Beers </li>
+// </ul>
+//
+// Styleguide 3.2.0
+
+.ev-list-elem() {
+	background-color: @list-color;
+	padding: @list-vertical-padding @list-horizontal-padding;
+	padding-bottom: @list-vertical-padding + 1px;
+	border-top: solid 1px @list-border-color;
+}
+
+.ev-list {
+	.list-unstyled;
+	margin: 0;
+	> * {
+		.ev-list-elem();
+		&:first-child {
+			border-top: none;
+		}
+	}
+}
+
+// List without separator
+//
+// Remove separators between items of the list
+//
+// Markup:
+// <ul class="ev-list ev-list-activable ev-list-no-separator">
+// 	<li> Eggs </li>
+// 	<li> Milk </li>
+// 	<li> Beers </li>
+// </ul>
+//
+// Styleguide 3.2.1
+
+
+.ev-list.ev-list-no-separator > * {
+	border-top: none;
+}
+
+
+// Activable lists
+//
+// For activable list, you can add the `.ev-list-activable`. This useful with the `activable-set` directive.
+//
+// Markup:
+// <ul class="ev-list ev-list-activable">
+// 	<li activable> Eggs </li>
+// 	<li activable class="active"> Milk </li>
+// 	<li activable> Beers </li>
+// </ul>
+//
+// Styleguide 3.2.2
+
+.ev-activable-elem-mixin(@color, @selector) {
+    @box-shadow       : inset @list-emphasis-size 0 0 0 @color;
+    @box-shadow-hover : inset @list-emphasis-size 0 0 0 fade(@color, @list-emphasis-fade-factor);
+    cursor: pointer;
+    &.active {
+        background-color: @list-active-color;
+    	@{selector} {
+        	box-shadow: @box-shadow;
+    	}
+    }
+    &:not(.active):hover @{selector} {
+        box-shadow: @box-shadow-hover;
+    }
+}
+
+.ev-activable-list-mixin(@color) {
+    .ev-list.ev-list-activable > * {
+        .ev-activable-elem-mixin(@color, ~'')
+    }
+}
+.ev-activable-list-mixin(@list-emphasis-color);
+
+// Item styling
+//
+// You can style add any of the following class to a child element of an `ev-list` class
+//
+// .ev-separator-top	 	- Add a strong separator to the top of the element
+// .ev-separator-bottom	 	- Add a strong separator to the bottom of the element
+//
+// Markup:
+// <ul class="ev-list ev-list-activable">
+// 	<li> Eggs </li>
+// 	<li> Milk </li>
+// 	<li class="{$modifiers}"> Beers </li>
+// </ul>
+//
+// Styleguide 3.3
+
+.ev-list {
+	& > .ev-separator-top {
+		border-top: solid @list-separator-size @list-border-color;
+	}
+
+	& > .ev-separator-bottom {
+		border-bottom: solid @list-separator-size @list-border-color;
+	}
+}

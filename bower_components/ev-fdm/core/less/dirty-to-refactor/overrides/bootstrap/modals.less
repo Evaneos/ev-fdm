@@ -1,0 +1,270 @@
+@import (reference) "../../../buttons/buttons.less";
+@import "../../../colors/variables.less";
+
+.modal-backdrop {
+    z-index: @zindex-modal-background;
+}
+
+.modal {
+    outline: none;
+    .modal-body {
+        padding-top: 10px;
+    }
+    .modal-dialog {
+        padding-top: 80px;
+        .modal-content {
+            border: none;
+        }
+        .modal-header {
+            padding: 9px 16px;
+            background: @white-soil;
+            border-bottom: none;
+
+            .modal-title {
+                font-size: 20px;
+                text-transform: uppercase;
+                line-height: 1.7em;
+                margin-right: 30px;
+                .text-overflow();
+            }
+            .close {
+                font-size: 32px;
+                color: @soil;
+                opacity: 1;
+                margin-top: 0;
+                margin-right: -14px;
+                width: 50px;
+                height: 100%;
+                box-shadow: none;
+                text-shadow: none;
+                outline: none;
+
+                &:hover {
+                    color: @deep-soil;
+                }
+            }
+        }
+
+        .modal-footer {
+            margin-top: 0;
+            .btn {
+                margin-left: 10px;
+                min-width: 150px;
+                &:first-child {
+                    margin-left: 0;
+                }
+            }
+            background-color: @white-soil;
+        }
+
+        .modal-body.modal-message {
+            text-align: center;
+            font-size: 24px;
+            padding: 40px 20px;
+        }
+        .modal-body h4 {
+            margin-top: 10px;
+            color: @soil;
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-bottom: 10px;
+            &:first-child {
+                margin-top: 0px;
+            }
+
+            &.no-margin {
+                margin: 0;
+            }
+        }
+
+        @media(min-width: @screen-tablet) {
+            width: 750px;
+        }
+    }
+
+    @media(max-width: @screen-tablet) {
+
+        z-index: @zindex-modal-background;
+        background: #FFF;
+
+        .modal-dialog {
+            padding: 0;
+
+            .modal-content {
+                border: none;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .modal-body.modal-message {
+                font-size: 18px;
+                padding: 20px;
+            }
+        }
+    }
+
+    /**
+     * Error version of the popup
+     */
+    &.error {
+        .modal-dialog {
+            color: @brand-danger;
+            // extends small dialog
+            .modal.small .modal-dialog;
+            .modal-header {
+                display: none;
+            }
+            .modal-footer {
+                text-align: center;
+                .btn {
+                    .btn-orange;
+                }
+                background-color: @white-soil;
+            }
+            .modal-body {
+                text-align: center;
+                font-size: @font-size-large;
+                &:before {
+                    &:extend(.icon-emo-sad all);
+                    content: "\e623";
+                    font-size: 80px;
+                    margin-bottom: 20px;
+                }
+            }
+        }
+    }
+
+    /**
+     * Small version of the popup
+     */
+    &.small .modal-dialog {
+        @media(min-width: @screen-tablet) {
+            width: 500px;
+        }
+    }
+
+    /**
+     * Big version of the popup
+     */
+    &.big .modal-dialog {
+        @media(min-width: @screen-tablet) {
+            width: 900px;
+        }
+    }
+
+    /**
+     * This was a nightmare to position
+     */
+    &.right {
+        position: fixed;
+        right: 0;
+        top: @menu-height;
+        bottom: 0;
+        left: auto;
+        width: 550px;
+        overflow: visible;
+        // actual bs modals should overlay
+        // our right affixed evaneos modals
+        // AND menu dropdowns
+        // BS handles z-index himself, we have to use important here
+        z-index: (@zindex-modal-background - 4) !important;
+
+        &.big {
+            width: 750px;
+        }
+
+        .modal-dialog {
+            padding: 0;
+            width: 100%;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: 0 0 10px rgba(0,0,0,.3);
+
+            .modal-content {
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                box-shadow: none;
+                overflow-x: hidden;
+                overflow-y: auto;
+                border-radius: 0;
+                box-shadow: none;
+                border-left: 5px solid @white-soil;
+
+                .modal-header {
+                    //position: inherit !important;
+                    padding: 5px 5px 14px 5px;
+
+                    .modal-action-bar {
+                        margin-top: 3px;
+                    }
+                }
+
+                .modal-body {
+                    //position: inherit !important;
+                    overflow-x: hidden;
+                    overflow-y: auto;
+                    padding-top: 10px;
+                    padding-left: 10px;
+                    padding-right: 10px;
+
+                    .common-data {
+                        margin-left: 5px;
+                        margin-right: 5px;
+                    }
+
+                    hr {
+                        border-top: 2px solid @white-soil;
+                        margin: 10px -20px;
+                    }
+
+                    &.no-footer {
+                        bottom: 0px;
+                    }
+                    &.no-header {
+                        top: 0px;
+                    }
+                }
+
+                .modal-footer {
+                    position: absolute;
+                    bottom: 0; left: 0; right: 0;
+                    border-top: 5px solid @white-soil;
+                    background-color: @white-soil;
+                }
+            }
+        }
+
+        // replace the from-top animation
+        // by a from-right
+        &.fade {
+            .modal-dialog {
+                .translate(25%, 0);
+            }
+            &.in {
+                .modal-dialog {
+                    .translate(0, 0);
+                }
+            }
+        }
+
+        // On mobile screens, popup take the whole
+        // screen, and show up without animations
+        @media(max-width: @screen-tablet) {
+            width: auto;
+            left: 0;
+
+            &.fade,
+            &.fade .modal-dialog {
+                transition: none !important;
+            }
+        }
+    }
+}
+
+/**
+ * Re-enable body scroll when a popup is opened
+ * (This aws set by Tw bootstrap to prevent body scroll)
+ */
+body.modal-open {
+    overflow: auto !important;
+}
