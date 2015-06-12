@@ -1,0 +1,130 @@
+@import "../../colors/variables.less";
+
+.navbar {
+    min-height: @menu-height;
+    border: none;
+    position: fixed;
+    margin-bottom: 0;
+    position: absolute;
+    width: 100%;
+
+    .navbar-brand img {
+        height: 20px;
+        position: relative;
+        top: 3px;
+    }
+
+    #main-menu {
+        position: absolute;
+        left: 87px;
+        right: 300px;
+        text-align: center;
+    }
+
+    .navbar-nav {
+        li {
+            min-width: 115px;
+            display: inline-block;
+            float: none;
+            color: white;
+
+            a {
+                opacity: 0.9;
+                color: white !important;
+                padding: 5px 8px 4px 8px;
+            }
+
+            &.active {
+                opacity: 1;
+                .caret {
+                    display: inline-block;
+                    position: absolute;
+                    left: 50%;
+                    top: -1px;
+                    margin-left: -7px;
+                    border-top: 5px solid #FFF;
+                    border-right: 7px solid transparent;
+                    border-left: 7px solid transparent;
+                }
+
+                font-weight: bold;
+            }
+            &:hover {
+                opacity: 1;
+            }
+            .icon {
+                display: none;
+            }
+        }
+
+        .caret {
+            border-top-color: white !important;
+            border-bottom-color: white !important;
+        }
+
+        .caret {
+            display: none;
+        }
+
+        .menu-help {
+            background: @orange;
+            opacity: 1;
+            a {
+                .icon {
+                    display: inline-block;
+                }
+            }
+
+        }
+    }
+
+    .navbar-nav .dropdown {
+        li {
+            width: 100%;
+        }
+    }
+
+    .navbar-nav .dropdown-toggle {
+        .caret {
+            display: inline-block;
+        }
+    }
+
+    .dropdown {
+        .caret {
+            margin-left: 5px;
+            display: inline-block;
+        }
+        .dropdown-menu {
+            opacity: 1;
+            left: -1px;
+            padding: 0;
+            border-top: none;
+            text-align: left;
+            > li {
+                width: 100%;
+                opacity: 1;
+                color: @deep-soil;
+                a {
+                    color: @deep-soil !important;
+                    padding: 10px;
+
+                }
+
+                .icon {
+                    display: inline-block;
+                    font-size: 20px;
+                    margin-right: 10px;
+                    position: relative;
+                    top: 5px;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * SMALL VERSION
+ */
+
+@import "menu-small.less";

@@ -1,7 +1,7 @@
 install:
 	npm install
 	bower install
-	gem install github-pages
+	bundle install
 
 serve:
 	gulp

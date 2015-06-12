@@ -1,0 +1,10 @@
+@import "../mixins/loop.less";
+@import "../environment/variables.less";
+@import "index.less";
+
+// Loop throught each color list and define lists on the go.
+.for(@env-colors, env-lists);
+.-each(@color, env-lists) { .env-@{color} {
+	.ev-activable-list-mixin(@@color);
+	.ev-activable-table-mixin(@@color);
+} }

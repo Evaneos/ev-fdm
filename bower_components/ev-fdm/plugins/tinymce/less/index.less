@@ -1,0 +1,224 @@
+// Copy of the original tinymce theme
+// So you can add or custom what you need
+
+@import "Variables.less";
+
+// @import "src/AbsoluteLayout.less";
+// @import "src/Animations.less";
+// @import "src/ButtonGroup.less";
+// @import "src/Button.less";
+// @import "src/Checkbox.less";
+// @import "src/ColorBox.less";
+// @import "src/ColorButton.less";
+// @import "src/ColorPicker.less";
+@import "src/ComboBox.less";
+@import "src/Container.less";
+// @import "src/Content.Inline.less";
+// @import "src/Content.less";
+@import "src/Content.Objects.less";
+// @import "src/FieldSet.less";
+// @import "src/FitLayout.less";
+@import "src/FloatPanel.less";
+@import "src/FlowLayout.less";
+// @import "src/Icons.Ie7.less";
+
+@import "src/Iframe.less";
+@import "src/Label.less";
+@import "src/ListBox.less";
+// @import "src/MenuBar.less";
+// @import "src/MenuButton.less";
+// @import "src/MenuItem.less";
+// @import "src/Menu.less";
+@import "src/Mixins.less";
+@import "src/Panel.less";
+// @import "src/Path.less";
+// @import "src/Radio.less";
+@import "src/Reset.less";
+// @import "src/ResizeHandle.less";
+@import "src/Scrollable.less";
+// @import "src/Spacer.less";
+// @import "src/SplitButton.less";
+@import "src/StackLayout.less";
+// @import "src/TabPanel.less";
+@import "src/TextBox.less";
+// @import "src/Throbber.less";
+@import "src/TinyMCE.less";
+// @import "src/ToolTip.less";
+// @import "src/Variables.less";
+@import "src/Window.less";
+
+
+// Customization files
+@import "Icons.less";
+
+// To be consistent with the whole design
+@import (reference) "../../../core/less/dirty-to-refactor/variables-bootstrap.less";
+@import (reference) "../../../core/less/dirty-to-refactor/overrides/bootstrap/index.less";
+
+
+/* Icons */
+@font-face {
+  font-family: 'tinymce';
+  src:url('@{path-fonts}/tinymce/tinymce.eot');
+  src:url('@{path-fonts}/tinymce/tinymce.eot?#iefix') format('embedded-opentype'),
+    url('@{path-fonts}/tinymce/tinymce.woff') format('woff'),
+    url('@{path-fonts}/tinymce/tinymce.ttf') format('truetype'),
+    url('@{path-fonts}/tinymce/tinymce.svg#tinymce') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'tinymce-small';
+  src:url('@{path-fonts}/tinymce/tinymce-small.eot');
+  src:url('@{path-fonts}/tinymce/tinymce-small.eot?#iefix') format('embedded-opentype'),
+    url('@{path-fonts}/tinymce/tinymce-small.woff') format('woff'),
+    url('@{path-fonts}/tinymce/tinymce-small.ttf') format('truetype'),
+    url('@{path-fonts}/tinymce/tinymce-small.svg#tinymce') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.mce-tinymce {
+  height: 100% ;
+  box-sizing: border-box;
+
+  .mce-container-body.mce-stack-layout {
+    position: relative;
+    height: 100%;
+
+    .mce-container.mce-panel.mce-first.mce-stack-layout-item {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      padding-top: 10px;
+    }
+
+    .mce-edit-area {
+      height: 100%;
+      // border:1px solid @gray-lighter;
+    }
+  }
+
+  .mce-btn {
+    &:extend(.btn all);
+    &:extend(.btn-soil all);
+    &:extend(.btn-tertiary all);
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 7px 6px 3px 6px;
+    border: none;
+    &.mce-active {
+      background-color: @light-soil;
+    }
+    &:not(.mce-active):hover {
+        background: @bright-soil;
+    }
+    &.mce-primary {
+      &:extend(.btn-primary all);
+    }
+  }
+}
+
+.@{prefix}-toolbar-grp>.@{prefix}-container-body {
+  background: @body-bg;
+}
+
+.mce-edit-focus {
+    outline: none;
+}
+
+// .mce-content-body{
+//   color: @gray-lighter;
+//   color:red!important;
+//   line-height: @line-height-computed;
+// }
+.@{prefix}-widget.mce-tooltip {
+    display: none !important;
+}
+
+.tiny-@{prefix}-wrapper {
+  position: relative;
+  // border:1px solid @gray-light;
+  border-radius: @border-radius-base;
+  .max-chars-info {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin-right: 15px;
+    margin-bottom: 5px;
+
+    &.max-chars-warning {
+      color: @brand-warning;
+    }
+
+    &.max-chars-reached {
+      color: white;
+      background: @brand-danger;
+      padding: 3px;
+      border-radius: 3px;
+    }
+  }
+}
+
+.btn-tinymce {
+  &:extend(.btn-tertiary all);
+  color: @dark-soil;
+  padding: 5px;
+  &:hover {
+    background-color: @bright-soil;
+  }
+}
+
+// -------------------------------------
+// Ovveride and add to fit global design
+
+// Window custom (modal for link for example)
+.@{prefix}-window {
+  > .@{prefix}-container-body {
+    padding: @modal-inner-padding;
+  }
+  > .@{prefix}-foot {
+    margin-top:-3px; // Fix border removed coz of dynamic height calc in js
+    background: @gray-lighter;
+
+    > .@{prefix}-container {
+      text-align:right;
+    }
+    // Put buttons div as inline-block and apply style to child buttons
+    .@{prefix}-btn {
+      display:inline-block;
+      width:auto;
+      margin: @modal-inner-padding/2;
+      > button {
+        &:extend(.btn all);
+        &:extend(.btn-tertiary all);
+      }
+      // Primary button: always on the right, styled like in bootstrap
+      &.@{prefix}-primary {
+        float:right;
+        margin-right: @modal-inner-padding;
+        > button {
+          &:extend(.btn all);
+          &:extend(.btn-primary all);
+        }
+      }
+    }
+  }
+}
+
+.@{prefix}-content-wrapper {
+  font-family: @font-family-sans-serif;
+}
+
+
+.ev-tinymce-toolbar {
+    height: 30px;
+    position: -webkit-sticky;
+    position: sticky;
+    bottom: 0;
+}
+
+.tiny-mce-wrapper {
+    height: auto;
+}

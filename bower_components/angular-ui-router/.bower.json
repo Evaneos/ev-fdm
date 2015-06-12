@@ -1,0 +1,32 @@
+{
+  "name": "angular-ui-router",
+  "main": "./release/angular-ui-router.js",
+  "dependencies": {
+    "angular": ">= 1.0.8"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "component.json",
+    "package.json",
+    "lib",
+    "config",
+    "sample",
+    "test",
+    "tests",
+    "ngdoc_assets",
+    "Gruntfile.js",
+    "files.js"
+  ],
+  "homepage": "https://github.com/Evaneos/ui-router",
+  "_release": "7178735a25",
+  "_resolution": {
+    "type": "branch",
+    "branch": "view-prevent-update",
+    "commit": "7178735a25a7e51214954e81200e8de10dc37b35"
+  },
+  "_source": "git@github.com:Evaneos/ui-router.git",
+  "_target": "view-prevent-update",
+  "_originalSource": "git@github.com:Evaneos/ui-router"
+}

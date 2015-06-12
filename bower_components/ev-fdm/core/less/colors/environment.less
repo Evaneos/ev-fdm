@@ -1,0 +1,12 @@
+@import (reference) "../environment/variables.less";
+@import "../mixins/loop.less";
+
+// Create color classes (border, text, bg) for all the environment.
+.for(@env-colors);
+.-each(@color, default) {
+	.env-@{color} {
+		.text-env {color: @@color; }
+		.bg-env {background-color: @@color; }
+		.border-env {border-color: @@color; }
+	}
+}

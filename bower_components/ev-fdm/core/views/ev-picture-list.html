@@ -1,0 +1,63 @@
+<ul class="picture-list row">
+    <li ng-form="pictureform" ng-repeat="picture in pictures track by picture.id" class="col-xs-{{colNumberBootstrap}} ev-animate-picture-list">
+        <figure ng-hide="editable">
+            <div class="picture-thumb">
+                <img ng-src="{{picture.id | imageUrl:245:150 | escapeQuotes }}" />
+            </div>
+            <figcaption>
+                <span class="copyright">&copy;</span>
+                <span class="author">
+                    {{ picture.author }}
+                </span>
+            </figcaption>
+            <figcaption ng-if="language">
+                <span class="author">
+                    {{ picture.legend[language].name }}
+                </span>
+            </figcaption>
+        </figure>
+        <figure ng-show="editable">
+            <div class="picture-thumb">
+                <img ng-src="{{picture.id | imageUrl:300:200 | escapeQuotes }}" />
+                <button class="action btn btn-tertiary update-action ev-upload-clickable"
+                        ng-click="onUpdate({picture: picture, index: $index})"
+                        ng-show="showUpdate">
+                    <span class="icon icon-edit"></span>
+                </button>
+                <button class="action btn btn-tertiary delete-action"
+                        ng-click="onDelete({picture: picture, index: $index})"
+                        tabIndex="-1">
+                    <span class="icon icon-bin"></span>
+                </button>
+            </div>
+            <figcaption>
+                <span class="copyright">&copy;</span>
+                <ev-form-group>
+                    <input required ev-validable
+                        name="author"
+                        type="text"
+                        class="form-control author"
+                        ng-model="picture.author"
+                        ng-change="onChange({picture: picture})"/>
+                    <ev-errors>
+                        <ev-error-message input="pictureform.author" error="required">Author is required</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+            </figcaption>
+            <figcaption ng-if="language">
+                <ev-form-group>
+                    <input required ev-validable
+                        name="legend"
+                        type="text"
+                        class="form-control author"
+                        ng-model="picture.legend[language].name"
+                        ng-change="onChange({picture: picture})">
+                    <ev-errors>
+                        <ev-error-message input="pictureform.legend" error="required">Legend is required</ev-error-message>
+                    </ev-errors>
+                </ev-form-group>
+            </figcaption>
+        </figure>
+    </li>
+</ul>
+<div class="clearfix"></div>

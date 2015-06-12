@@ -1,0 +1,34 @@
+.full-height {
+    overflow-y: auto;
+    height: 100%;
+    max-height: 100%;
+}
+
+.full-width {
+    overflow-x: auto;
+    width: 100%;
+}
+
+// A sticky element
+// Experimental: This isn't supported in all browser and should only be used to improve user experience
+//
+// When out of the screen, the element stays at the top like a position absolute
+//
+// Compatible in Firefox 32+, Safari 7+.
+.ev-top-sticky {
+    position: sticky;
+    z-index: 1;
+    top: 0;
+}
+
+// A sticky element
+// Experimental: This isn't supported in all browser and should only be used to improve user experience
+//
+// When out of the screen, the element stays at the bottom like a position absolute
+//
+// Compatible in Firefox 32+, Safari 7+.
+.ev-bottom-sticky {
+    position: sticky;
+    z-index: 1;
+    bottom: 0;
+}

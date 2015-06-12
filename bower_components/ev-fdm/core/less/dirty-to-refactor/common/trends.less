@@ -1,0 +1,39 @@
+@import "../../colors/variables.less";
+
+.trend {
+
+    &.trend-up {
+        color: @brand-success;
+    }
+
+    &.trend-down {
+        color: @brand-warning;
+    }
+
+    &.trend-equal {
+        color: @deep-soil;
+    }
+
+    &.trend-reverse {
+        &.trend-up {
+            color: @brand-warning;
+        }
+
+        &.trend-down {
+            color: @brand-success;
+        }
+    }
+
+    .loading-dots {
+        display: none;
+    }
+
+    &.promise-resolving {
+        .loading-dots {
+            display: inline-block;
+        }
+        > .inner {
+            display: none;
+        }
+    }
+}
