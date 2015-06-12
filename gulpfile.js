@@ -6,8 +6,8 @@ var less = require('gulp-less');
 var concat = require('gulp-concat');
 var watch = require('gulp-watch');
 var exec = require('child_process').exec;
-var dest = 'docs';
-var bowerDirectory = './bower_components';
+var dest = '.';
+var bowerDirectory = './_bower_components';
 var nodeModuleDirectory = './node_modules';
 
 var bowerDependancies = [
@@ -99,8 +99,8 @@ gulp.task('watch-concat', function () {
 // KSS STYLEGUIDE GENERATION
 // //////////////////////////////////////////////////
 gulp.task('kss', function (cb) {
-    exec('./node_modules/kss/bin/kss-node '+ bowerDirectory + '/ev-fdm/core/less/ docs/_demos/styleguide/' +
-        ' -t kss-template/', function (err, stdout, stderr) {
+    exec('./node_modules/kss/bin/kss-node '+ bowerDirectory + '/ev-fdm/core/less/ _demos/styleguide/' +
+        ' -t _kss-template/', function (err, stdout, stderr) {
         console.log(stderr);
         cb(err);
     });
