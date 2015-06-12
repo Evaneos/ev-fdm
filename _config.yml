@@ -3,12 +3,13 @@ highlighter: pygments
 permalink:   pretty
 
 # server
-source:          docs
 baseurl:         /
 encoding:        UTF-8
 port:            3333
 title:           "ev-fdm"
 github_username: "Evaneos"
+
+safe: true
 
 collections:
   demos:
