@@ -9,7 +9,7 @@
                     {% for demo in site.demos | where:"is_index","true" %}
                         {% if demo.is_index %}
                             <li class="menu-item module ">
-                                <a href="{{ demo.url }}">
+                                <a href="{{ site.baseurl }}{{ demo.url }}">
                                     <i class="icon icon-money"></i>
                                     <span class="title">{{ demo.title }}</span>
                                     <span class="caret"></span>
@@ -33,7 +33,7 @@
             {% for demo in site.demos | where:"is_index","true" %}
                 {% if demo.is_index %}
                     <li class="menu-item module">
-                        <a href="{{ demo.url }}">
+                        <a href="{{ site.baseurl }}{{ demo.url }}">
                             <span class="title">{{ demo.title }}</span>
                             <span class="caret"></span>
                         </a>
