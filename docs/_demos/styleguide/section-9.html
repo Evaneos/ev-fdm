@@ -1,0 +1,224 @@
+---
+layout: default
+title: CSS
+is_index: false
+---
+{% raw %}
+<div class="clearfix container" ng-app="app" ev-responsive-viewport>
+    <header>
+        <hgroup><h1>CSS Styleguide</h1></hgroup>
+    </header>
+    <aside>
+        <nav><ul>
+            <li><a href="index.html">0.0: Overview</a></li>
+                <li><a href="section-1.html">1.0: Colors</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-1.html#1.1">1.1: Neutral colors classes</a>
+                    <li><a href="section-1.html#1.2">1.2: Palette color classes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-2.html">2.0: Buttons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-2.html#2.1">2.1: Default button</a>
+                    <li><a href="section-2.html#2.2">2.2: Base style &amp; state</a>
+                    <li><a href="section-2.html#2.3">2.3: Colors</a>
+                    <li><a href="section-2.html#2.4">2.4: Type</a>
+                    <li><a href="section-2.html#2.5">2.5: Size</a>
+                    <li><a href="section-2.html#2.6">2.6: Icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-3.html">3.0: Lists &amp; Tables</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-3.html#3.1">3.1: Unstyled list</a>
+                    <li><a href="section-3.html#3.2">3.2: Standard list</a>
+                    <li><a href="section-3.html#3.3">3.3: Item styling</a>
+                    <li><a href="section-3.html#3.4">3.4: Tables</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-5.html">5.0: Icons</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-5.html#5.1">5.1: Sizing &amp; colour</a>
+                    <li><a href="section-5.html#5.2">5.2: Rotation</a>
+                    <li><a href="section-5.html#5.3">5.3: Spinning &amp; transition</a>
+                    <li><a href="section-5.html#5.4">5.4: Default icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-6.html">6.0: Forms</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-6.html#6.1">6.1: Checkboxes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-7.html">7.0: Environment</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-7.html#7.1">7.1: Titles</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-8.html">8.0: Utils</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-8.html#8.1">8.1: Border</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-9.html">9.0: Typography</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-9.html#9.1">9.1: Labels</a>
+                </ul>
+            -->
+                </li>
+        </ul></nav>
+    </aside>
+    <div role="main">
+        <article>
+
+
+                    <h1><span class="text-dark">9.0</span> Typography</h1>
+
+
+
+                <section>
+
+                    <h2><span class="text-dark">9.1</span> Labels</h1>
+
+                        <p>A basic UI component, which brings attention to discrete pieces of informations (eg: tags).
+They are usually linked to a main content, and do not stand on their own. Generally employed on a <code>&lt;span&gt;</code></p>
+<p>You can change the color background with the <code>label-&lt;color&gt;</code> classes. You can customize the list of colors available
+you need by changing the <code>@label-colors</code>list variables in the <code>small-ui/variable.less</code> file.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>default</strong>
+                            <span class="text-light"> <p>A default vanilla label</p>
+</span>
+                            <div>
+                                <span class="label default">Label</button>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>label-gold</strong>
+                            <span class="text-light"> <p>Label with a gold color</p>
+</span>
+                            <div>
+                                <span class="label label-gold">Label</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;span class=&quot;label {$modifiers}&quot;&gt;Label&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">9.1.1</span> Size</h1>
+
+                        <p>You can change the size of any label by adding these class. The font size is proportional to the parent
+(a label inside a <code>h1</code> wont have the same size as inside a <code>small</code> balise)</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.label-sm</strong>
+                            <span class="text-light"> <p>A small button</p>
+</span>
+                            <div>
+                                <span class="label-pool label-sm">Large Label</span>
+<span class="label-pool label-sm">Normal Label</span>
+<span class="label-pool label-sm">Small Label</span>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.label-md</strong>
+                            <span class="text-light"> <p>A medium button (default value, this class is optional)</p>
+</span>
+                            <div>
+                                <span class="label-pool label-md">Large Label</span>
+<span class="label-pool label-md">Normal Label</span>
+<span class="label-pool label-md">Small Label</span>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.label-lg</strong>
+                            <span class="text-light"> <p>A large button</p>
+</span>
+                            <div>
+                                <span class="label-pool label-lg">Large Label</span>
+<span class="label-pool label-lg">Normal Label</span>
+<span class="label-pool label-lg">Small Label</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;span class=&quot;label-pool {$modifiers}&quot;&gt;Large Label&lt;/span&gt;
+&lt;span class=&quot;label-pool {$modifiers}&quot;&gt;Normal Label&lt;/span&gt;
+&lt;span class=&quot;label-pool {$modifiers}&quot;&gt;Small Label&lt;/span&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">9.1.2</span> Icons</h1>
+
+                        <p>Of course, labels can also contains icons</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <div>
+                                <button class="label"><span class="icon-tick"></span>Accept</button>
+<button class="label-pool"><span class="icon-user"></span> Voyageur</button>
+<button class="btn btn-tertiary"><span class="icon icon-bin"></span>Delete</button>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;label&quot;&gt;&lt;span class=&quot;icon-tick&quot;&gt;&lt;/span&gt;Accept&lt;/button&gt;
+&lt;button class=&quot;label-pool&quot;&gt;&lt;span class=&quot;icon-user&quot;&gt;&lt;/span&gt; Voyageur&lt;/button&gt;
+&lt;button class=&quot;btn btn-tertiary&quot;&gt;&lt;span class=&quot;icon icon-bin&quot;&gt;&lt;/span&gt;Delete&lt;/button&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">9.1.4</span> Buttons inside label</h1>
+
+                        <p>The <code>label-btn</code> is for button inside label. The button is tertiary style.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <div>
+                                <span class="label">I'm a label with a <button class="label-btn">Button !</button> Yay. </span>
+<span class="label-lg"> <button class="label-btn-right">Also in the right</button></span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;span class=&quot;label&quot;&gt;I&#x27;m a label with a &lt;button class=&quot;label-btn&quot;&gt;Button !&lt;/button&gt; Yay. &lt;/span&gt;
+&lt;span class=&quot;label-lg&quot;&gt; &lt;button class=&quot;label-btn-right&quot;&gt;Also in the right&lt;/button&gt;&lt;/span&gt;</pre>
+                    </div>
+
+                </section>
+        </article>
+    </div>
+</div>
+
+{% endraw %}
+
+{% include script.html %}
+<script type='text/javascript' src='public/app.js'></script>
+<script type='text/javascript' src='/js/kss.js'></script>

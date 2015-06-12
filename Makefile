@@ -1,6 +1,8 @@
 install:
 	npm install
 	bower install
+	gem install github-pages
 
-watch:
-	gulp watch
+serve:
+	gulp
+	bundle exec jekyll serve

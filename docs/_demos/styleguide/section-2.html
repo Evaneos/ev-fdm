@@ -31,12 +31,13 @@ is_index: false
                 </ul>
             -->
                 </li>
-                <li><a href="section-3.html">3.0: Lists</a>
+                <li><a href="section-3.html">3.0: Lists &amp; Tables</a>
                 <!-- Uncomment this to add second-level navigation.
                 <ul>
                     <li><a href="section-3.html#3.1">3.1: Unstyled list</a>
                     <li><a href="section-3.html#3.2">3.2: Standard list</a>
                     <li><a href="section-3.html#3.3">3.3: Item styling</a>
+                    <li><a href="section-3.html#3.4">3.4: Tables</a>
                 </ul>
             -->
                 </li>
@@ -47,6 +48,34 @@ is_index: false
                     <li><a href="section-5.html#5.2">5.2: Rotation</a>
                     <li><a href="section-5.html#5.3">5.3: Spinning &amp; transition</a>
                     <li><a href="section-5.html#5.4">5.4: Default icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-6.html">6.0: Forms</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-6.html#6.1">6.1: Checkboxes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-7.html">7.0: Environment</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-7.html#7.1">7.1: Titles</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-8.html">8.0: Utils</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-8.html#8.1">8.1: Border</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-9.html">9.0: Typography</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-9.html#9.1">9.1: Labels</a>
                 </ul>
             -->
                 </li>
@@ -105,7 +134,7 @@ It can be applied on <code>button</code>, <code>a</code> and <code>input[type:su
                         </li>
                         <li>
                             <strong>:hover</strong>
-                            <span class="text-light"> <p>Hover state</p>
+                            <span class="text-light"> <p>Hover state (also available though <code>.hover</code>)</p>
 </span>
                             <div>
                                 <button class="btn btn-primary pseudo-class-hover">Button</button>
@@ -115,7 +144,7 @@ It can be applied on <code>button</code>, <code>a</code> and <code>input[type:su
                         </li>
                         <li>
                             <strong>:active</strong>
-                            <span class="text-light"> <p>Active state</p>
+                            <span class="text-light"> <p>Active state (also available though <code>.active</code>)</p>
 </span>
                             <div>
                                 <button class="btn btn-primary pseudo-class-active">Button</button>
@@ -212,6 +241,7 @@ you need by changing the list of colors in the <code>buttons/variable.less</code
 </span>
                             <div>
                                 <button class="btn btn-primary">Button</button>
+<button class="btn btn-primary selected">Selected button</button>
                             </div>
                         </li>
                         <li>
@@ -220,6 +250,7 @@ you need by changing the list of colors in the <code>buttons/variable.less</code
 </span>
                             <div>
                                 <button class="btn btn-secondary">Button</button>
+<button class="btn btn-secondary selected">Selected button</button>
                             </div>
                         </li>
                         <li>
@@ -228,11 +259,13 @@ you need by changing the list of colors in the <code>buttons/variable.less</code
 </span>
                             <div>
                                 <button class="btn btn-tertiary">Button</button>
+<button class="btn btn-tertiary selected">Selected button</button>
                             </div>
                         </li>
                     </ul>
                     <div class="clearfix">
-                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn {$modifiers}&quot;&gt;Button&lt;/button&gt;</pre>
+                        <pre class="prettyprint lang-html">&lt;button class=&quot;btn {$modifiers}&quot;&gt;Button&lt;/button&gt;
+&lt;button class=&quot;btn {$modifiers} selected&quot;&gt;Selected button&lt;/button&gt;</pre>
                     </div>
 
                 </section>
@@ -282,16 +315,6 @@ you need by changing the list of colors in the <code>buttons/variable.less</code
                                 <button class="btn btn-primary btn-lg">Button</button>
 <button class="btn btn-secondary btn-lg">Button</button>
 <button class="btn btn-tertiary btn-lg">Button</button>
-                            </div>
-                        </li>
-                        <li>
-                            <strong>.btn-block</strong>
-                            <span class="text-light"> <p>A block button having the full width of his parent</p>
-</span>
-                            <div>
-                                <button class="btn btn-primary btn-block">Button</button>
-<button class="btn btn-secondary btn-block">Button</button>
-<button class="btn btn-tertiary btn-block">Button</button>
                             </div>
                         </li>
                     </ul>

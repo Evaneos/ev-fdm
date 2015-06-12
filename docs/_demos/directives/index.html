@@ -4,7 +4,6 @@ title: Directives
 is_index: true
 ---
 <div ng-app="directive-demo">
-    {% include ev-templates.html %}
     {% raw %}
     <!-- Double curly braces won't be interpreted by liquid parser as we are in raw mode -->
     <div class="container" ui-view>
@@ -35,6 +34,14 @@ is_index: true
                     Save fail: <input type="checkbox" ng-model="person.saveFail">
                 </div>
             </ev-edit-section>
+        </div>
+        <h2> EvStopEvent directive </h2>
+        <p> This directive prevent events from bubbling to the parent. </p>
+        <div ng-init="clicked = 0" ng-click="clicked = clicked + 1">
+            Number of time I'm being clicked : {{clicked}}
+            <br>
+            <button class="btn"> If you click me the counter increase</button>
+            <button class="btn" ev-stop-event="click"> But if you click me, nothing happens</button>
         </div>
     </div>
     {% endraw %}

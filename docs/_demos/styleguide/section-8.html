@@ -1,7 +1,7 @@
 ---
 layout: default
 title: CSS
-is_index: true
+is_index: false
 ---
 {% raw %}
 <div class="clearfix container" ng-app="app" ev-responsive-viewport>
@@ -83,7 +83,44 @@ is_index: true
     </aside>
     <div role="main">
         <article>
-             
+
+
+                    <h1><span class="text-dark">8.0</span> Utils</h1>
+
+                        <p>A collection of utility classes that can be used everywhere in the code.</p>
+
+
+
+                <section>
+
+                    <h2><span class="text-dark">8.1</span> Border</h1>
+
+                        <p>You change the border radius of your element by using the following classes.</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.border-radius</strong>
+                            <span class="text-light"> <p>Add a standard border radius to the element</p>
+</span>
+                            <div>
+                                <div class="border-radius bg-pool" style="width:50px; height:50px"></label>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-round</strong>
+                            <span class="text-light"> <p>The border radius is 100%, useful for round thumb effect.</p>
+</span>
+                            <div>
+                                <div class="border-round bg-pool" style="width:50px; height:50px"></label>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;div class=&quot;{$modifiers} bg-pool&quot; style=&quot;width:50px; height:50px&quot;&gt;&lt;/label&gt;</pre>
+                    </div>
+
+                </section>
         </article>
     </div>
 </div>

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: CSS
-is_index: true
+is_index: false
 ---
 {% raw %}
 <div class="clearfix container" ng-app="app" ev-responsive-viewport>
@@ -83,7 +83,48 @@ is_index: true
     </aside>
     <div role="main">
         <article>
-             
+
+
+                    <h1><span class="text-dark">6.0</span> Forms</h1>
+
+                        <p>All the classes necessay to style forms</p>
+
+
+
+                <section>
+
+                    <h2><span class="text-dark">6.1</span> Checkboxes</h1>
+
+                        <p>You can style checkboxes using some of the following classes. However, take a close look to the associated html.
+You&#39;ll need to specify a <code>&lt;label&gt;</code> tag in order for this to work. Note that you could any icon specific class to that last tag for further personalisation (like color for instance)</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.tick-checkbox</strong>
+                            <span class="text-light"> <p>A checkbox with a tick. Standard one.</p>
+</span>
+                            <div>
+                                <input id="tick-checkbox" type="checkbox" class="tick-checkbox">
+<label for="tick-checkbox"></label>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.star-checkbox</strong>
+                            <span class="text-light"> <p>A checkbox star style. Useful for flagging a favorite.</p>
+</span>
+                            <div>
+                                <input id="star-checkbox" type="checkbox" class="star-checkbox">
+<label for="star-checkbox"></label>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;input id=&quot;{$modifiers}&quot; type=&quot;checkbox&quot; class=&quot;{$modifiers}&quot;&gt;
+&lt;label for=&quot;{$modifiers}&quot;&gt;&lt;/label&gt;</pre>
+                    </div>
+
+                </section>
         </article>
     </div>
 </div>

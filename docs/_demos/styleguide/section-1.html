@@ -31,12 +31,13 @@ is_index: false
                 </ul>
             -->
                 </li>
-                <li><a href="section-3.html">3.0: Lists</a>
+                <li><a href="section-3.html">3.0: Lists &amp; Tables</a>
                 <!-- Uncomment this to add second-level navigation.
                 <ul>
                     <li><a href="section-3.html#3.1">3.1: Unstyled list</a>
                     <li><a href="section-3.html#3.2">3.2: Standard list</a>
                     <li><a href="section-3.html#3.3">3.3: Item styling</a>
+                    <li><a href="section-3.html#3.4">3.4: Tables</a>
                 </ul>
             -->
                 </li>
@@ -47,6 +48,34 @@ is_index: false
                     <li><a href="section-5.html#5.2">5.2: Rotation</a>
                     <li><a href="section-5.html#5.3">5.3: Spinning &amp; transition</a>
                     <li><a href="section-5.html#5.4">5.4: Default icons</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-6.html">6.0: Forms</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-6.html#6.1">6.1: Checkboxes</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-7.html">7.0: Environment</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-7.html#7.1">7.1: Titles</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-8.html">8.0: Utils</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-8.html#8.1">8.1: Border</a>
+                </ul>
+            -->
+                </li>
+                <li><a href="section-9.html">9.0: Typography</a>
+                <!-- Uncomment this to add second-level navigation.
+                <ul>
+                    <li><a href="section-9.html#9.1">9.1: Labels</a>
                 </ul>
             -->
                 </li>
@@ -79,6 +108,14 @@ They can be used ad background color or text colors.</p>
 
 
                     <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.bg-white</strong>
+                            <span class="text-light"> <p>Add a white background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-white"></div>
+                            </div>
+                        </li>
                         <li>
                             <strong>.bg-white-soil</strong>
                             <span class="text-light"> <p>Add a white soil background</p>
@@ -142,6 +179,14 @@ They can be used ad background color or text colors.</p>
 
                     <ul class="ev-list container-fluid">
                         <li>
+                            <strong>.text-white</strong>
+                            <span class="text-light"> <p>Color the text in white</p>
+</span>
+                            <div>
+                                <p class="text-white">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
+                        <li>
                             <strong>.text-white-soil</strong>
                             <span class="text-light"> <p>Color the text in a white soil</p>
 </span>
@@ -197,6 +242,76 @@ They can be used ad background color or text colors.</p>
                 </section>
                 <section>
 
+                    <h3><span class="text-dark">1.1.3</span> Soil border colors</h1>
+
+                        <p>A scale of soil border colors</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.border-white</strong>
+                            <span class="text-light"> <p>Color the border in white</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-white"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-white-soil</strong>
+                            <span class="text-light"> <p>Color the border in a white soil</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-white-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-bright-soil</strong>
+                            <span class="text-light"> <p>Color the border in a bright soil</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-bright-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-light-soil</strong>
+                            <span class="text-light"> <p>Color the border in a light soil</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-light-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-soil</strong>
+                            <span class="text-light"> <p>Color the border in a soil</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-deep-soil</strong>
+                            <span class="text-light"> <p>Color the border in a deep soil</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-deep-soil"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-dark-soil</strong>
+                            <span class="text-light"> <p>Color the border in a dark soil</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-dark-soil"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;div style=&quot;height:100px; width: 100px&quot; class=&quot;{$modifiers}&quot;&gt;&lt;/div&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
                     <h2><span class="text-dark">1.2</span> Palette color classes</h1>
 
                         <p>These colors are defined in the brand palette. They are used when a specific meaning is associated with the element</p>
@@ -242,6 +357,14 @@ They can be used ad background color or text colors.</p>
 </span>
                             <div>
                                 <div style="height:100px; width: 100px" class="bg-lime"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.bg-sienna</strong>
+                            <span class="text-light"> <p>Add a red background</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="bg-sienna"></div>
                             </div>
                         </li>
                     </ul>
@@ -290,9 +413,71 @@ They can be used ad background color or text colors.</p>
                                 <p class="text-lime">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
                             </div>
                         </li>
+                        <li>
+                            <strong>.text-sienna</strong>
+                            <span class="text-light"> <p>Color the text in red</p>
+</span>
+                            <div>
+                                <p class="text-sienna">Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.</p>
+                            </div>
+                        </li>
                     </ul>
                     <div class="clearfix">
                         <pre class="prettyprint lang-html">&lt;p class=&quot;{$modifiers}&quot;&gt;Fusce dapibus, tellus ac cursus commodo, tortor mauris nibh.&lt;/p&gt;</pre>
+                    </div>
+
+                </section>
+                <section>
+
+                    <h3><span class="text-dark">1.2.3</span> Border colors</h1>
+
+                        <p>A scale of palette border colors</p>
+
+
+                    <ul class="ev-list container-fluid">
+                        <li>
+                            <strong>.border-orange</strong>
+                            <span class="text-light"> <p>Color the border in orange</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-orange"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-pool</strong>
+                            <span class="text-light"> <p>Color the border in blue</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-pool"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-gold</strong>
+                            <span class="text-light"> <p>Color the border in yellow</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-gold"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-lime</strong>
+                            <span class="text-light"> <p>Color the border in green</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-lime"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>.border-sienna</strong>
+                            <span class="text-light"> <p>Color the border in red</p>
+</span>
+                            <div>
+                                <div style="height:100px; width: 100px" class="border-sienna"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="clearfix">
+                        <pre class="prettyprint lang-html">&lt;div style=&quot;height:100px; width: 100px&quot; class=&quot;{$modifiers}&quot;&gt;&lt;/div&gt;</pre>
                     </div>
 
                 </section>
