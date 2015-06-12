@@ -121,6 +121,8 @@ angular.module('ev-fdm')
         RestangularStorage.prototype.getAll = function(options) {
             var parameters = {};
 
+            options = options || {};
+
             if (angular.isNumber(options.page) && options.page > 0) {
                 parameters.page = options.page;
             }
