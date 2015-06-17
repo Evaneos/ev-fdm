@@ -4,7 +4,10 @@
  * Directive to override some settings in tinymce
  * Usage:
  * <ev-tinymce
+ *     min-chars="1000"                        -- minChars this input accept (default: none)
  *     max-chars="1000"                        -- maxChars this input accept (default: unlimited)
+ *     min-words="1000"                        -- minWords this input accept (default: none)
+ *     max-words="1000"                        -- maxWords this input accept (default: unlimited)
  *     ng-model="message.body"                 -- ng-model
  *     tinymce-options="tinymceOptions"        -- override default options with yours (object expected)
  *  ></ev-tinymce>
@@ -32,6 +35,17 @@
         //     'p,!div,ul,li'
     };
 
+    // u2019 and x27 : apostrophes
+    // u00C0-\u1FFF : accents
+    var countregexp = /[\w\u2019\x27\-\u00C0-\u1FFF]+/g;
+    function countWords(text) {
+        var wordArray = text.match(countregexp);
+        if (wordArray) {
+            return wordArray.length;
+        }
+        return 0;
+    }
+
 
 angular.module('ev-tinymce', [])
     .provider('evTinymce', function() {
@@ -57,7 +71,7 @@ angular.module('ev-tinymce', [])
                 + '<div class="ev-placeholder-container"></div>'
                 + '<div class="ev-tinymce-content"></div>'
                 + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
-                + '<div class="max-chars-info"></div>'
+                + '<div class="counter-info"></div>'
                 + '</div>',
             restrict: 'AE',
             replace: true,
@@ -85,10 +99,13 @@ angular.module('ev-tinymce', [])
                 }, defaultOptions, evTinymce[attrs.configKey], scope.tinymceOptions);
 
                 // /**
-                //  * This part is used for the max-chars attibute.
+                //  * This part is used for the max-chars attribute.
                 //  * It allows us to easily limit the number of characters typed in the editor
                 //  */
+                var minChars = options.minChars = attrs.minChars || options.minChars || null;
                 var maxChars = options.maxChars = attrs.maxChars || options.maxChars || null;
+                var minWords = options.minWords = attrs.minWords || options.minWords || null;
+                var maxWords = options.maxWords = attrs.maxWords || options.maxWords || null;
                 // // We set the max char warning when the THRESHOLD is reached
                 // // Here, it's 85% of max chars
                 var THRESHOLD = 85;
@@ -96,15 +113,18 @@ angular.module('ev-tinymce', [])
                 // /**
                 //  * Update the information area about the textEditor state (maxChars, ..)
                 //  */
-                var updateCharCounter = function(currentChars, maxChars) {
-                    var maxCharInfosElm = elm.parent().find('.max-chars-info');
-                    maxCharInfosElm.text(currentChars + ' / ' + maxChars);
+                var updateCounter = function(currentValue, minValue, maxValue) {
+                    var counterInfosElm = elm.parent().find('.counter-info');
+                    counterInfosElm.text(currentValue + (maxValue ? ' / ' + maxValue : ''));
 
-                    var isThresholdReached = ((currentChars / maxChars) * 100) > THRESHOLD;
-                    var isMaxLimitReached  = currentChars >= maxChars;
+                    if (maxValue) {
+                        var isThresholdReached = ((currentValue / maxValue) * 100) > THRESHOLD;
+                        counterInfosElm.toggleClass('counter-warning', isThresholdReached);
+                    }
 
-                    maxCharInfosElm.toggleClass('max-chars-warning', isThresholdReached);
-                    maxCharInfosElm.toggleClass('max-chars-reached', isMaxLimitReached);
+                    var isMinLimitNotReached = minValue && currentValue < minValue;
+                    var isMaxLimitReached = maxValue && currentValue >= maxValue;
+                    counterInfosElm.toggleClass('counter-reached', !!(isMinLimitNotReached || isMaxLimitReached));
                 };
 
                 var hasFocus = false;
@@ -137,36 +157,62 @@ angular.module('ev-tinymce', [])
                     var editor = getTinyInstance();
                     var newHtml = tinyElm.html();
                     var newText = tinyElm.text();
-                    var newTextOverLimit = maxChars && newText.length > maxChars;
-                    var currentTextOverLimit = maxChars && currentText.length > maxChars;
+                    var newTextOverLimit = false, currentTextOverLimit = false;
+                    var newCount, minCount, maxCount;
 
                     if (placeholder && newText === attrs.placeholder) {
                         currentHtml = newHtml;
                         currentText = newText;
-                    }
-                    /*
-                     * Specific case where the old and new text are both over the limit of max chars.
-                     * This case can occur on the first initilization, if data from DB are over the
-                     * limit.
-                     * For now, we substring the content (but that break the html and everything..)
-                     */
-                    else if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
-                        var shorterText = newText.substr(0, maxChars);
-                        // be carefull, setContent call this method again
-                        editor.setContent(shorterText, { format: 'text' });
-                    } else if(currentTextOverLimit && newTextOverLimit) {
-                        editor.setContent(currentHtml); // be carefull, setContent call this method again
+                        if (maxChars || minChars || maxWords || minWords) {
+                            newCount = 0;
+                        }
                     } else {
-                        $timeout(function() {
-                            ngModel.$setViewValue(newText === '' || newText === attrs.placeholder ? '' : newHtml);
-                        });
-                        currentHtml = newHtml;
-                        currentText = newText;
+                        if (maxChars || minChars) {
+                            newCount = newText.length;
+                        } else if (maxWords || minWords) {
+                            newCount = countWords(newText);
+                        }
+
+                        if (minChars) {
+                            minCount = minChars;
+                        } else if (minWords) {
+                            minCount = minWords;
+                        }
+
+                        if (maxChars) {
+                            maxCount = maxChars;
+                            newTextOverLimit = newCount > maxChars;
+                        } else if (maxWords) {
+                            maxCount = maxWords;
+                            newTextOverLimit = newCount > maxWords;
+                        }
+
+                        /*
+                         * Specific case where the old and new text are both over the limit of max chars.
+                         * This case can occur on the first initialization, if data from DB are over the
+                         * limit.
+                         * For now, we substring the content (but that break the html and everything..)
+                         */
+                        if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
+                            var shorterText = newText.substr(0, maxChars);
+                            // be careful, setContent call this method again
+                            editor.setContent(shorterText, { format: 'text' });
+                        } else if (newTextOverLimit) {
+                            editor.setContent(currentHtml); // be careful, setContent call this method again
+                        } else {
+                            $timeout(function() {
+                                ngModel.$setViewValue(newText === '' || newText === attrs.placeholder ? '' : newHtml);
+                            });
+                            currentHtml = newHtml;
+                            currentText = newText;
+                        }
                     }
 
-                    if (maxChars) {
-                        updateCharCounter(currentText.length, maxChars);
+                    // newCount not null nor undefined
+                    if (newCount != null) {
+                        updateCounter(newCount, minCount, maxCount);
                     }
+
 
                     placeholder = newText === '' || newText === attrs.placeholder;
 
