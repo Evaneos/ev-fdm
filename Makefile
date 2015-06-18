@@ -6,10 +6,10 @@ clean:
 	rm -Rf dist
 
 build:
-	gulp
+	node_modules/.bin/gulp
 
 watch:
-	gulp watch
+	node_modules/.bin/gulp watch
 
 lint:
 	jshint core
