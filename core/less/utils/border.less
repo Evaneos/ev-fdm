@@ -4,6 +4,11 @@
 //
 // You change the border radius of your element by using the following classes.
 //
+// .border - Add a standard border
+// .border-top - Add a standard top border
+// .border-right - Add a standard right border
+// .border-bottom - Add a standard bottom border
+// .border-left - Add a standard left border
 // .border-radius - Add a standard border radius to the element
 // .border-round - The border radius is 100%, useful for round thumb effect.
 //
@@ -23,4 +28,17 @@
 .border-round {
     .border();
     border-radius: 100%;
+}
+
+.border-top {
+    border-top: @border-width solid;
+}
+.border-right {
+    border-right: @border-width solid;
+}
+.border-bottom {
+    border-bottom: @border-width solid;
+}
+.border-left {
+    border-left: @border-width solid;
 }
