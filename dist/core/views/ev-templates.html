@@ -10,7 +10,7 @@
 </div>
 </script>
 <script type="text/ng-template" id="ev-edit-section.html"><form name="editform" class="ev-list" novalidate ev-submit="save()">
-    <header class="ev-top-sticky body-bg">
+    <header class="ev-top-sticky body-bg border-botttom">
         <div class="pull-right" ng-hide="edit || inProgress">
             <button type="button" ng-if="!noteditable" class="btn btn-sm btn-tertiary" ng-click="changeToEditMode()">Edit</button>
             <button class="btn btn-sm btn-tertiary" ng-if="!notdeletable && delete" ng-click="delete()">Delete</button>
