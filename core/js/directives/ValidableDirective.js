@@ -7,7 +7,7 @@ var module = angular.module('ev-fdm')
 .directive('evValidable', function () {
     return {
         restrict: 'A',
-        require: ['ngModel', '^evSubmit', '^?evFormGroup'],
+        require: ['ngModel', '^?evSubmit', '^?evFormGroup'],
         link: function(scope, element, attrs, controllers) {
             var model = controllers[0],
                 evSubmit = controllers[1],
@@ -41,7 +41,7 @@ var module = angular.module('ev-fdm')
                 displayErrors();
             });
 
-            evSubmit.$addValidable(function() {
+            evSubmit && evSubmit.$addValidable(function() {
                 markAsBlurred();
                 markAsChanged();
                 displayErrors();
