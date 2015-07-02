@@ -1,11 +1,11 @@
 @import "../utils/border.less";
 @import "../colors/index.less";
-
+@import "variables.less";
 
 // Thumbnail
 //
-// Thumbnail are little illustrations, placed inside card or list element for instance. They occupy the full width 
-// of their parent, so you might need to put them inside a container.
+// Thumbnail are little illustrations, placed inside card or list element for instance. When apply to images
+// add a 100% width, so you might need to put them inside a container.
 //
 // .thumb         - Default thumbnail with standard border radius
 // .thumb-round   - For rounded thumbnails
@@ -20,11 +20,25 @@
 //
 // Styleguide 9.2
 
+// Icon thumbnails
+//
+// Can be apply to icon also.
+//
+// Markup:
+// <i class="icon-star icon-3x thumb-round"></i>
+//
+// Styleguide 9.2.1
+
 .thumb {
     .border-radius();
     .bg-white-soil();
-    width: 100%;
+    .text-soil();
     overflow: hidden;
+    padding: @thumb-padding;
+    img& {
+        width: 100%;
+        padding: 0px;
+    }
 }
 
 .thumb-round {
