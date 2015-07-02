@@ -6,6 +6,7 @@
 //
 // .border-radius - Add a standard border radius to the element
 // .border-round - The border radius is 100%, useful for round thumb effect.
+// .border - Add a standard norder to the element (the color is unspecified, user `.border-<color>` instead)
 //
 // Markup:
 // <div class="{$modifiers} bg-pool" style="width:50px; height:50px"></label>
@@ -17,11 +18,9 @@
 }
 
 .border-radius {
-    .border();
     border-radius: @border-radius;
 }
 
 .border-round {
-    .border();
     border-radius: 100%;
 }
