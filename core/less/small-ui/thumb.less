@@ -1,0 +1,33 @@
+@import "../utils/border.less";
+@import "../colors/index.less";
+
+
+// Thumbnail
+//
+// Thumbnail are little illustrations, placed inside card or list element for instance. They occupy the full width 
+// of their parent, so you might need to put them inside a container.
+//
+// .thumb         - Default thumbnail with standard border radius
+// .thumb-round   - For rounded thumbnails
+//
+// Markup:
+// <div class="row">
+//   <figure class="col-sm-2">
+// 	   <img src="http://static5.evaneos.com/images/reduction/180439_w-200_h-200.jpg" class="{$modifiers}">
+//	   <figcaption class="text-center"> Indian woman praying </figcaption>
+//   </figure>
+// </div>
+//
+// Styleguide 9.2
+
+.thumb {
+	.border-radius();
+	.bg-white-soil();
+	width: 100%;
+	overflow: hidden;
+}
+
+.thumb-round {
+	.thumb();
+	.border-round();
+}
