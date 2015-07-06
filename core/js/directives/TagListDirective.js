@@ -12,7 +12,8 @@ angular.module('ev-fdm')
                 className: '@',
                 maxElements: '=',
                 maxAlertMessage: '@',
-                onTagDeleted: '&'
+                onTagDeleted: '&',
+                iconRemoveClass: '@',
             },
             replace: true,
             template:
@@ -21,7 +22,7 @@ angular.module('ev-fdm')
                         '<span class="label label-default" >' +
                             '{{ displayElement(element) }}' +
                             '<button ng-show="editable" tabIndex="-1" type="button" class="label-btn" ' +
-                                'ng-click="remove($index)"><span class="icon-bin"></span></button> ' +
+                                'ng-click="remove($index)"><span class="{{ iconRemoveClass || \'icon-bin\' }}"></span></button> ' +
                         '</span>' +
                     '</li>' +
                     '<li ng-show="editable && elements.length >= maxElements" class="text-orange no-margin">' +
@@ -32,6 +33,7 @@ angular.module('ev-fdm')
                 $scope.trackBy = $scope.trackBy || function(element) {
                     return element.name;
                 };
+
                 $scope.displayElement = $scope.displayElement || function(element) {
                     return element.name;
                 };
