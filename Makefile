@@ -12,4 +12,4 @@ watch:
 	node_modules/.bin/gulp watch
 
 lint:
-	jshint core
+	node_modules/.bin/jshint core
