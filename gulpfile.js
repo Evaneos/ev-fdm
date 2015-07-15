@@ -1,7 +1,7 @@
 /* jshint node: true */
 "use strict";
-var sourcemapsPackagejson = require('./node_modules/gulp-sourcemaps/package.json');
-if (sourcemapsPackagejson.version !== '1.2.8') {
+var gulpPackagejson = require('./node_modules/gulp/package.json');
+if (gulpPackagejson.version.split('.')[1] !== '9') {
     throw new Error('Please update your node modules (npm install)');
 }
 
