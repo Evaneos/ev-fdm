@@ -1,6 +1,6 @@
 {
   "name": "ev-fdm",
-  "version": "0.20.0",
+  "version": "0.20.6",
   "homepage": "https://github.com/evaneos/pro.evaneos.com",
   "ignore": [
     "**/.*",
