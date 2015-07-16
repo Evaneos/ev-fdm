@@ -94,8 +94,11 @@
         	box-shadow: @box-shadow;
     	}
     }
-    &:not(.active):hover @{selector} {
-        box-shadow: @box-shadow-hover;
+    &:not(.active):hover {
+        background-color: @list-hover-color;
+    	@{selector} {
+        	box-shadow: @box-shadow-hover;
+        }
     }
 }
 

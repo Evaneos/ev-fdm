@@ -42,7 +42,6 @@ table.ev-table {
     .tableCell({
         .ev-list-elem;
     });
-
     > thead > tr > th {
         text-align: left;
         font-size: 12px;
@@ -73,19 +72,19 @@ table.ev-table {
 
 .ev-activable-table-mixin(@color) {
     table.ev-table.ev-table-activable > tbody > tr {
-        // The bow shadow have to be put on the first `td` since Chrome doesn't display box shadow on td.
+        // The box shadow have to be put on the first `td` since Chrome doesn't display box shadow on td.
         // See http://stackoverflow.com/a/17610047
         .ev-activable-elem-mixin(@color, ~'td:first-child');
-        &.active > td {
+        &:hover, &.active { & > td {
             background-color: inherit;
-        }
+        } }
     }
 }
 .ev-activable-table-mixin(@list-emphasis-color);
 
 // Table without separator
 //
-// Markup
+// Markup:
 // <table class="ev-table ev-table-no-separator">
 //      <thead><tr>
 //          <th> Beer </th>
@@ -113,7 +112,7 @@ table.ev-table.ev-table-no-separator {
 //
 // You can force a row to exactly fit its content by adding the class `ev-row-fit-content` to one of its cell
 //
-// Markup
+// Markup:
 // <table class="ev-table">
 //      <thead><tr>
 //          <th> Beer </th>
