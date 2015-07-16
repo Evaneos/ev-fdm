@@ -1,6 +1,6 @@
 {
   "name": "ev-fdm",
-  "version": "0.20.^",
+  "version": "0.20.6",
   "description": "Evaneos frontend framework",
   "directories": {
     "test": "test"
