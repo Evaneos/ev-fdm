@@ -1,20 +1,28 @@
 angular.module('ev-leaflet', ['leaflet-directive'])
     .provider('evLeaflet', function() {
-        this.$get =function () {
-            return {icons: this.icons};
+        this.$get = function() {
+            return {
+                icons: this.icons,
+                tiles: this.tiles
+            };
         };
 
-        this.setIcons =function (icons) {
+        this.setIcons = function(icons) {
             this.icons = icons;
+        };
+
+        this.setTiles = function(tiles) {
+            this.tiles = tiles;
         };
     })
     .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
         return {
-            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center"></leaflet>',
+            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
             restrict: 'AE',
             scope: {
                 coordinates: '=',
                 defaultCoordinates: '=?',
+                boundingbox: '=?',
                 editable: '='
             },
             controller: function($scope) {
@@ -35,6 +43,10 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                     angular.extend(angular.copy(baseIcon), icons.draggable);
                 }
 
+                var tiles = evLeaflet.tiles;
+                if (tiles) {
+                    $scope.tiles = tiles;
+                }
 
                 $scope.defaults = {
                     scrollWheelZoom: false,
@@ -59,7 +71,7 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         $log.warn('ev-leaflet: latitude is not a number');
                     }
                     $scope.markers.marker.lat = lat;
-                    centerOnMarker();
+                    centerOnMarkerOrBoungingbox();
                 });
 
                 $scope.$watch('coordinates.longitude', function(lng) {
@@ -72,11 +84,19 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         $log.warn('ev-leaflet: longitude is not a number');
                     }
                     $scope.markers.marker.lng = lng;
-                    centerOnMarker();
+                    centerOnMarkerOrBoungingbox();
                 });
 
-                centerOnMarker();
+                centerOnMarkerOrBoungingbox();
 
+                var previousBoundingbox = $scope.boundingbox;
+
+                $scope.$watch('boundingbox', function(boundingbox) {
+                    if (boundingbox && !angular.equals(boundingbox, previousBoundingbox)) {
+                        previousBoundingbox = boundingbox;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
 
                 $scope.$watch('markers.marker.lat', function(lat) {
                     if (lat != null && $scope.editable) {
@@ -91,7 +111,20 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                 });
 
                 // Setting map center
-                function centerOnMarker() {
+                function centerOnMarkerOrBoungingbox() {
+                    if ($scope.boundingbox) {
+                        $scope.bounds = {
+                            southWest: {
+                                lat: $scope.boundingbox.southLatitude,
+                                lng: $scope.boundingbox.westLongitude,
+                            },
+                            northEast: {
+                                lat: $scope.boundingbox.northLatitude,
+                                lng: $scope.boundingbox.eastLongitude,
+                            },
+                        };
+                        return;
+                    }
                     if (!$scope.center) {
                         $scope.center = {
                             lat: $scope.markers.marker.lat,
