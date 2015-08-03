@@ -379,643 +379,6 @@ angular.module('ev-fdm')
         return SearchController;
     }]);
 
-angular.module('ev-fdm').factory('confirmBox', [
-    '$modal',
-    function($modal) {
-        return function(title, message, positive, negative) {
-            return $modal.open({
-                backdrop: 'static',
-                templateUrl: 'ev-confirm-box.html',
-                controller: ['$scope', function($scope) {
-                    $scope.title    = title;
-                    $scope.message  = message;
-                    $scope.positive = positive;
-                    $scope.negative = negative;
-                }]
-            }).result;
-        };
-    }
-]);
-
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            var idFunction;
-            var timeout = 600;
-            var opt = {};
-            if (typeof dataProvider === 'object') {
-                opt = dataProvider;
-                formatter = opt.formatter;
-                resultModifier = opt.resultModifier;
-                minimumInputLength = opt.minimumInputLength;
-                key = opt.key;
-                dataProviderFilter = opt.dataProviderFilter;
-                dataProvider = opt.dataProvider;
-                timeout = opt.timeout || timeout;
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-
-                if (typeof opt.id === 'string') {
-                    idFunction = function(ressource) {return ressource[opt.id];};
-                } else if (typeof opt.id === 'function') {
-                    idFunction = opt.id;
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                },
-                id: idFunction,
-            };
-            return config;
-        };
-    }
-]);
-
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-    .filter('htmlToPlainText', function() {
-        return function(text) {
-            return String(text).replace(/<[^>]+>/gm, '');
-        };
-    }
-);
-(function() {
-'use strict';
-
-var hasOwnProp = Object.prototype.hasOwnProperty;
-var isObject = angular.isObject;
-
-function MapFilterProvider() {
-  var maps = {};
-  var defaults = {};
-
-  function assertMapping(name) {
-    if (!hasOwnProp.call(maps, name)) {
-      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
-    }
-  }
-
-  this.registerMapping = function(name, mapping) {
-    if (hasOwnProp.call(maps, name)) {
-      throw new Error('A mapping named "' + name + '" was already registered');
-    }
-    var map = maps[name] = {};
-    for (var key in mapping) {
-      if (hasOwnProp.call(mapping, key)) {
-        map[key] = mapping[key];
-      }
-    }
-  };
-
-  this.registerDefault = function(name, value) {
-    assertMapping(name);
-    defaults[name] = value;
-  };
-
-  this.$get = function factory() {
-    return function mapFilter(key, mapping) {
-      // Mapping is directly provided
-      if (isObject(mapping)) {
-        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
-      }
-      // or it's just a mapping name
-      assertMapping(mapping);
-      var map = maps[mapping];
-      switch (true) {
-        case hasOwnProp.call(map, key):
-          return map[key];
-        case hasOwnProp.call(defaults, mapping):
-          return defaults[mapping];
-        default:
-          return key;
-      }
-    };
-  };
-}
-
-
-angular.module('ev-fdm')
-  .provider('mapFilter', MapFilterProvider)
-;
-
-})();
-
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
-angular.module('ev-fdm')
-    .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
-
-        function RestangularStorage(resourceName, defaultEmbed) {
-            this.restangular = restangular;
-            this.resourceName = resourceName;
-            this.defaultEmbed = defaultEmbed || [];
-
-            this.emitEventCallbackCreator = function(eventName, elements) {
-                return function(result) {
-                    $rootScope.$broadcast(this.resourceName + '::' + eventName, elements);
-                    return result;
-                }.bind(this);
-            }.bind(this);
-        }
-
-        RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
-            var sortDir = reverseSort ? 'DESC' : 'ASC';
-            return sortKey + ':' + sortDir;
-        };
-
-        RestangularStorage.buildEmbed = function(embed) {
-            return embed.join(',');
-        };
-
-        RestangularStorage.buildParameters = function(resource, embed) {
-            var parameters = {};
-
-            if(angular.isArray(embed) && embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(embed.concat(resource.defaultEmbed));
-            }
-            else if(resource.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
-            }
-
-            return parameters;
-        };
-
-        RestangularStorage.buildFilters = function(filters) {
-            var res = {};
-
-            angular.forEach(filters, function(filter, filterKey) {
-
-                if(angular.isObject(filter) && angular.isDefined(filter.uuid)) {
-                    res[filterKey + '.uuid'] = filter.uuid;
-                }
-                else if(angular.isObject(filter) && angular.isDefined(filter.id)) {
-                    res[filterKey + '.id'] = filter.id;
-                }
-                else if(angular.isArray(filter) && filter.length > 0) {
-                    res[filterKey] = filter.join(',');
-                }
-                else if(angular.isDate(filter)) {
-                    res[filterKey] = filter.toISOString();
-                }
-                else if(angular.isDefined(filter) && filter !== '' && filter !== null) {
-                    res[filterKey] = filter;
-                }
-
-            });
-
-            return res;
-        };
-
-        RestangularStorage.updateObjectFromResult = function(object, result) {
-            (function merge(objectData, resultData, resultEmbeds) {
-                if (resultEmbeds) {
-                    resultEmbeds.forEach(function(embedName) {
-                        if (embedName in resultData) {
-                            if (!objectData[embedName] || !objectData[embedName].data) {
-                                objectData[embedName] = resultData[embedName];
-                            } else if (typeof resultData[embedName].data !== 'object' ||
-                                       Array.isArray(resultData[embedName].data)) {
-                                objectData[embedName].data = resultData[embedName].data;
-                            } else {
-                                merge(
-                                    objectData[embedName].data,
-                                    resultData[embedName].data,
-                                    resultData[embedName].embeds
-                                );
-                            }
-                            delete resultData[embedName];
-                        }
-                    });
-                }
-                angular.extend(objectData, resultData);
-            })(
-                object.data && object.embeds ? object.data : object,
-                angular.copy(restangular.stripRestangular(result)),
-                result.embeds
-            );
-        };
-        RestangularStorage.prototype.updateObjectFromResult = RestangularStorage.updateObjectFromResult;
-
-        RestangularStorage.updateObjectBeforePatch = function(object, changes) {
-            (function merge(objectData, objectEmbeds, changesData) {
-                if (objectEmbeds) {
-                    objectEmbeds.forEach(function(embedName) {
-                        if (embedName in changesData) {
-                            if (!objectData[embedName] || !objectData[embedName].data) {
-                                objectData[embedName] = changesData[embedName];
-                            } else if (typeof changesData[embedName].data !== 'object' ||
-                                       Array.isArray(changesData[embedName].data)) {
-                                objectData[embedName].data = changesData[embedName].data;
-                            } else {
-                                merge(
-                                    objectData[embedName].data,
-                                    objectData[embedName].embeds,
-                                    changesData[embedName].data
-                                );
-                            }
-                            delete changesData[embedName];
-                        }
-                    });
-                }
-                angular.extend(objectData, changesData);
-            })(object, object.embeds, angular.copy(changes));
-        };
-
-
-        RestangularStorage.prototype.getAll = function(options) {
-            var parameters = {};
-
-            options = options || {};
-
-            if (angular.isNumber(options.page) && options.page > 0) {
-                parameters.page = options.page;
-            }
-
-            if (angular.isNumber(options.number) && options.number > 0) {
-                parameters.number = options.number;
-            }
-
-            if (angular.isArray(options.embed) && options.embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(options.embed.concat(this.defaultEmbed));
-            }
-            else if (this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            if (options.sortKey) {
-                parameters.sortBy = RestangularStorage.buildSortBy(options.sortKey, options.reverseSort);
-            }
-
-            if (options.filters) {
-                var filters = RestangularStorage.buildFilters(options.filters);
-                angular.extend(parameters, filters);
-            }
-            return this.restangular.all(this.resourceName).getList(parameters);
-        };
-
-
-        RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
-            return this.getAll.call(this, {
-                number: 1,
-                page: null,
-                embed: embed,
-                filters: filters,
-                sortKey: sortKey,
-                reverseSort: reverseSort
-            }).then(function(result) {
-                return result[0];
-            });
-        };
-
-        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
-            return this.getAll.call(this, {
-                page: page,
-                embed: embed,
-                filters: filters,
-                sortKey: sortKey,
-                reverseSort: reverseSort
-            });
-        };
-
-        RestangularStorage.prototype.getById = function(id, embed) {
-            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
-        };
-
-        RestangularStorage.prototype.update = function(element, embed, options) {
-            if (!element.put) {
-                restangular.restangularizeElement(null, element, this.resourceName);
-            }
-            return element.put(RestangularStorage.buildParameters(this, embed))
-                .then(function(result) {
-                    if (!options || !options.preventObjectUpdate) {
-                        RestangularStorage.updateObjectFromResult(element, result);
-                    }
-                    return result;
-                })
-                .then(this.emitEventCallbackCreator('updated', [element]));
-        };
-
-        RestangularStorage.prototype.updateAll = function(elements, embed, options) {
-            var parameters = RestangularStorage.buildParameters(this, embed);
-
-            return $q.all(elements.map(function(element) {
-                return element.put(parameters)
-                    .then(function(result) {
-                        if (!options || !options.preventObjectUpdate) {
-                            RestangularStorage.updateObjectFromResult(element, result);
-                        }
-                        return result;
-                    });
-            })).then(this.emitEventCallbackCreator('updated', elements));
-        };
-
-        RestangularStorage.prototype.patch = function(element, changes, embed, options) {
-            if (!element.patch) {
-                restangular.restangularizeElement(null, element, this.resourceName);
-            }
-            RestangularStorage.updateObjectBeforePatch(element, changes);
-            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
-                .then(function(result) {
-                    if (!options || !options.preventObjectUpdate) {
-                        RestangularStorage.updateObjectFromResult(element, result);
-                    }
-                    return result;
-                })
-                .then(this.emitEventCallbackCreator('updated', [element]));
-        };
-
-        RestangularStorage.prototype.patchAll = function(elements, changes, embed, options) {
-            elements.forEach(function(element) {
-                RestangularStorage.updateObjectBeforePatch(element, changes);
-            });
-            var parameters = RestangularStorage.buildParameters(this, embed);
-
-            return $q.all(elements.map(function(element) {
-                return element.patch(changes, parameters)
-                    .then(function(result) {
-                        if (!options || !options.preventObjectUpdate) {
-                            RestangularStorage.updateObjectFromResult(element, result);
-                        }
-                        RestangularStorage.updateObjectFromResult(element, result);
-                        return result;
-                    });
-            })).then(this.emitEventCallbackCreator('updated', elements));
-        };
-
-        RestangularStorage.prototype.create = function(element, embed, options) {
-            return this.restangular.all(this.resourceName)
-                .post(element, RestangularStorage.buildParameters(this, embed))
-                .then(function(result) {
-                    if (!options || !options.preventObjectUpdate) {
-                        RestangularStorage.updateObjectFromResult(element, result);
-                    }
-                    return result;
-                })
-                .then(this.emitEventCallbackCreator('created', [element]));
-        };
-
-        RestangularStorage.prototype.delete = function(element) {
-            if (!element.delete) {
-                restangular.restangularizeElement(null, element, this.resourceName);
-            }
-            return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
-        };
-
-        RestangularStorage.prototype.deleteAll = function(elements) {
-
-            return $q.all(elements.map(function(element) {
-                return element.remove();
-            })).then(this.emitEventCallbackCreator('deleted', elements));
-        };
-
-        /**
-         * prefer use of create() or update()
-         */
-        RestangularStorage.prototype.save = function(element, embed, options) {
-            if (!element.save) {
-                restangular.restangularizeElement(null, element, this.resourceName);
-            }
-            return element.save(RestangularStorage.buildParameters(this, embed))
-                .then(function(result) {
-                    if (!options || !options.preventObjectUpdate) {
-                        RestangularStorage.updateObjectFromResult(element, result);
-                    }
-                    return result;
-                })
-                .then(this.emitEventCallbackCreator('updated', [element]));
-        };
-
-        RestangularStorage.prototype.saveAll = function(elements, embed, options) {
-            var parameters = RestangularStorage.buildParameters(this, embed);
-
-            return $q.all(elements.map(function(element) {
-                return element.save(parameters)
-                    .then(function(result) {
-                        if (!options || !options.preventObjectUpdate) {
-                            RestangularStorage.updateObjectFromResult(element, result);
-                        }
-                        return result;
-                    });
-            })).then(this.emitEventCallbackCreator('updated', elements));
-        };
-
-        RestangularStorage.prototype.getNew = function() {
-            return this.restangular.one(this.resourceName);
-        };
-
-        RestangularStorage.prototype.copy = function(element) {
-            return this.restangular.copy(element);
-        };
-
-        return RestangularStorage;
-    }]);
-
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2814,6 +2177,335 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
+angular.module('ev-fdm').factory('confirmBox', [
+    '$modal',
+    function($modal) {
+        return function(title, message, positive, negative) {
+            return $modal.open({
+                backdrop: 'static',
+                templateUrl: 'ev-confirm-box.html',
+                controller: ['$scope', function($scope) {
+                    $scope.title    = title;
+                    $scope.message  = message;
+                    $scope.positive = positive;
+                    $scope.negative = negative;
+                }]
+            }).result;
+        };
+    }
+]);
+
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
+            if (typeof dataProvider === 'object') {
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                },
+                id: idFunction,
+            };
+            return config;
+        };
+    }
+]);
+
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+    .filter('htmlToPlainText', function() {
+        return function(text) {
+            return String(text).replace(/<[^>]+>/gm, '');
+        };
+    }
+);
+(function() {
+'use strict';
+
+var hasOwnProp = Object.prototype.hasOwnProperty;
+var isObject = angular.isObject;
+
+function MapFilterProvider() {
+  var maps = {};
+  var defaults = {};
+
+  function assertMapping(name) {
+    if (!hasOwnProp.call(maps, name)) {
+      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
+    }
+  }
+
+  this.registerMapping = function(name, mapping) {
+    if (hasOwnProp.call(maps, name)) {
+      throw new Error('A mapping named "' + name + '" was already registered');
+    }
+    var map = maps[name] = {};
+    for (var key in mapping) {
+      if (hasOwnProp.call(mapping, key)) {
+        map[key] = mapping[key];
+      }
+    }
+  };
+
+  this.registerDefault = function(name, value) {
+    assertMapping(name);
+    defaults[name] = value;
+  };
+
+  this.$get = function factory() {
+    return function mapFilter(key, mapping) {
+      // Mapping is directly provided
+      if (isObject(mapping)) {
+        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
+      }
+      // or it's just a mapping name
+      assertMapping(mapping);
+      var map = maps[mapping];
+      switch (true) {
+        case hasOwnProp.call(map, key):
+          return map[key];
+        case hasOwnProp.call(defaults, mapping):
+          return defaults[mapping];
+        default:
+          return key;
+      }
+    };
+  };
+}
+
+
+angular.module('ev-fdm')
+  .provider('mapFilter', MapFilterProvider)
+;
+
+})();
+
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$window', '$document', function($window, $document) {
     var iframe = null;
@@ -3356,6 +3048,314 @@ module.service('UtilService', [function() {
 }]);
 
 angular.module('ev-fdm')
+    .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
+
+        function RestangularStorage(resourceName, defaultEmbed) {
+            this.restangular = restangular;
+            this.resourceName = resourceName;
+            this.defaultEmbed = defaultEmbed || [];
+
+            this.emitEventCallbackCreator = function(eventName, elements) {
+                return function(result) {
+                    $rootScope.$broadcast(this.resourceName + '::' + eventName, elements);
+                    return result;
+                }.bind(this);
+            }.bind(this);
+        }
+
+        RestangularStorage.buildSortBy = function(sortKey, reverseSort) {
+            var sortDir = reverseSort ? 'DESC' : 'ASC';
+            return sortKey + ':' + sortDir;
+        };
+
+        RestangularStorage.buildEmbed = function(embed) {
+            return embed.join(',');
+        };
+
+        RestangularStorage.buildParameters = function(resource, embed) {
+            var parameters = {};
+
+            if(angular.isArray(embed) && embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(embed.concat(resource.defaultEmbed));
+            }
+            else if(resource.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
+            }
+
+            return parameters;
+        };
+
+        RestangularStorage.buildFilters = function(filters) {
+            var res = {};
+
+            angular.forEach(filters, function(filter, filterKey) {
+
+                if(angular.isObject(filter) && angular.isDefined(filter.uuid)) {
+                    res[filterKey + '.uuid'] = filter.uuid;
+                }
+                else if(angular.isObject(filter) && angular.isDefined(filter.id)) {
+                    res[filterKey + '.id'] = filter.id;
+                }
+                else if(angular.isArray(filter) && filter.length > 0) {
+                    res[filterKey] = filter.join(',');
+                }
+                else if(angular.isDate(filter)) {
+                    res[filterKey] = filter.toISOString();
+                }
+                else if(angular.isDefined(filter) && filter !== '' && filter !== null) {
+                    res[filterKey] = filter;
+                }
+
+            });
+
+            return res;
+        };
+
+        RestangularStorage.updateObjectFromResult = function(object, result) {
+            (function merge(objectData, resultData, resultEmbeds) {
+                if (resultEmbeds) {
+                    resultEmbeds.forEach(function(embedName) {
+                        if (embedName in resultData) {
+                            if (!objectData[embedName] || !objectData[embedName].data) {
+                                objectData[embedName] = resultData[embedName];
+                            } else if (typeof resultData[embedName].data !== 'object' ||
+                                       Array.isArray(resultData[embedName].data)) {
+                                objectData[embedName].data = resultData[embedName].data;
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    resultData[embedName].data,
+                                    resultData[embedName].embeds
+                                );
+                            }
+                            delete resultData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, resultData);
+            })(
+                object.data && object.embeds ? object.data : object,
+                angular.copy(restangular.stripRestangular(result)),
+                result.embeds
+            );
+        };
+        RestangularStorage.prototype.updateObjectFromResult = RestangularStorage.updateObjectFromResult;
+
+        RestangularStorage.updateObjectBeforePatch = function(object, changes) {
+            (function merge(objectData, objectEmbeds, changesData) {
+                if (objectEmbeds) {
+                    objectEmbeds.forEach(function(embedName) {
+                        if (embedName in changesData) {
+                            if (!objectData[embedName] || !objectData[embedName].data) {
+                                objectData[embedName] = changesData[embedName];
+                            } else if (typeof changesData[embedName].data !== 'object' ||
+                                       Array.isArray(changesData[embedName].data)) {
+                                objectData[embedName].data = changesData[embedName].data;
+                            } else {
+                                merge(
+                                    objectData[embedName].data,
+                                    objectData[embedName].embeds,
+                                    changesData[embedName].data
+                                );
+                            }
+                            delete changesData[embedName];
+                        }
+                    });
+                }
+                angular.extend(objectData, changesData);
+            })(object, object.embeds, angular.copy(changes));
+        };
+
+
+        RestangularStorage.prototype.getAll = function(options) {
+            var parameters = {};
+
+            options = options || {};
+
+            if (angular.isNumber(options.page) && options.page > 0) {
+                parameters.page = options.page;
+            }
+
+            if (angular.isNumber(options.number) && options.number > 0) {
+                parameters.number = options.number;
+            }
+
+            if (angular.isArray(options.embed) && options.embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(options.embed.concat(this.defaultEmbed));
+            }
+            else if (this.defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
+            }
+
+            if (options.sortKey) {
+                parameters.sortBy = RestangularStorage.buildSortBy(options.sortKey, options.reverseSort);
+            }
+
+            if (options.filters) {
+                var filters = RestangularStorage.buildFilters(options.filters);
+                angular.extend(parameters, filters);
+            }
+            return this.restangular.all(this.resourceName).getList(parameters);
+        };
+
+
+        RestangularStorage.prototype.getFirst = function(embed, filters, sortKey, reverseSort) {
+            return this.getAll.call(this, {
+                number: 1,
+                page: null,
+                embed: embed,
+                filters: filters,
+                sortKey: sortKey,
+                reverseSort: reverseSort
+            }).then(function(result) {
+                return result[0];
+            });
+        };
+
+        RestangularStorage.prototype.getList = function(page, embed, filters, sortKey, reverseSort) {
+            return this.getAll.call(this, {
+                page: page,
+                embed: embed,
+                filters: filters,
+                sortKey: sortKey,
+                reverseSort: reverseSort
+            });
+        };
+
+        RestangularStorage.prototype.getById = function(id, embed) {
+            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
+        };
+
+        RestangularStorage.prototype.update = function(element, embed, options) {
+            if (!element.put) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
+            return element.put(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
+                    return result;
+                })
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
+
+        RestangularStorage.prototype.updateAll = function(elements, embed, options) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
+
+            return $q.all(elements.map(function(element) {
+                return element.put(parameters)
+                    .then(function(result) {
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
+                        return result;
+                    });
+            })).then(this.emitEventCallbackCreator('updated', elements));
+        };
+
+        RestangularStorage.prototype.patch = function(element, changes, embed, options) {
+            if (!element.patch) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
+            RestangularStorage.updateObjectBeforePatch(element, changes);
+            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
+                    return result;
+                })
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
+
+        RestangularStorage.prototype.patchAll = function(elements, changes, embed, options) {
+            elements.forEach(function(element) {
+                RestangularStorage.updateObjectBeforePatch(element, changes);
+            });
+            var parameters = RestangularStorage.buildParameters(this, embed);
+
+            return $q.all(elements.map(function(element) {
+                return element.patch(changes, parameters)
+                    .then(function(result) {
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
+                        RestangularStorage.updateObjectFromResult(element, result);
+                        return result;
+                    });
+            })).then(this.emitEventCallbackCreator('updated', elements));
+        };
+
+        RestangularStorage.prototype.create = function(element, embed, options) {
+            return this.restangular.all(this.resourceName)
+                .post(element, RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
+                    return result;
+                })
+                .then(this.emitEventCallbackCreator('created', [element]));
+        };
+
+        RestangularStorage.prototype.delete = function(element) {
+            if (!element.delete) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
+            return element.remove().then(this.emitEventCallbackCreator('deleted', [element]));
+        };
+
+        RestangularStorage.prototype.deleteAll = function(elements) {
+
+            return $q.all(elements.map(function(element) {
+                return element.remove();
+            })).then(this.emitEventCallbackCreator('deleted', elements));
+        };
+
+        /**
+         * prefer use of create() or update()
+         */
+        RestangularStorage.prototype.save = function(element, embed, options) {
+            if (!element.save) {
+                restangular.restangularizeElement(null, element, this.resourceName);
+            }
+            return element.save(RestangularStorage.buildParameters(this, embed))
+                .then(function(result) {
+                    if (!options || !options.preventObjectUpdate) {
+                        RestangularStorage.updateObjectFromResult(element, result);
+                    }
+                    return result;
+                })
+                .then(this.emitEventCallbackCreator('updated', [element]));
+        };
+
+        RestangularStorage.prototype.saveAll = function(elements, embed, options) {
+            var parameters = RestangularStorage.buildParameters(this, embed);
+
+            return $q.all(elements.map(function(element) {
+                return element.save(parameters)
+                    .then(function(result) {
+                        if (!options || !options.preventObjectUpdate) {
+                            RestangularStorage.updateObjectFromResult(element, result);
+                        }
+                        return result;
+                    });
+            })).then(this.emitEventCallbackCreator('updated', elements));
+        };
+
+        RestangularStorage.prototype.getNew = function() {
+            return this.restangular.one(this.resourceName);
+        };
+
+        RestangularStorage.prototype.copy = function(element) {
+            return this.restangular.copy(element);
+        };
+
+        return RestangularStorage;
+    }]);
+
+angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
       require: '^form',
@@ -3478,8 +3478,11 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         }
                         $log.warn('ev-leaflet: latitude is not a number');
                     }
-                    $scope.markers.marker.lat = lat;
-                    centerOnMarkerOrBoungingbox();
+
+                    if ($scope.markers.marker.lat != lat) {
+                        $scope.markers.marker.lat = lat;
+                        centerOnMarkerOrBoungingbox();
+                    }
                 });
 
                 $scope.$watch('coordinates.longitude', function(lng) {
@@ -3491,19 +3494,17 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         }
                         $log.warn('ev-leaflet: longitude is not a number');
                     }
-                    $scope.markers.marker.lng = lng;
-                    centerOnMarkerOrBoungingbox();
+
+                    if ($scope.markers.marker.lng != lng) {
+                        $scope.markers.marker.lng = lng;
+                        centerOnMarkerOrBoungingbox();
+                    }
                 });
 
                 centerOnMarkerOrBoungingbox();
 
-                var previousBoundingbox = $scope.boundingbox;
-
                 $scope.$watch('boundingbox', function(boundingbox) {
-                    if (boundingbox && !angular.equals(boundingbox, previousBoundingbox)) {
-                        previousBoundingbox = boundingbox;
-                        centerOnMarkerOrBoungingbox();
-                    }
+                    centerOnMarkerOrBoungingbox();
                 });
 
                 $scope.$watch('markers.marker.lat', function(lat) {
@@ -3521,28 +3522,24 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                 // Setting map center
                 function centerOnMarkerOrBoungingbox() {
                     if ($scope.boundingbox) {
-                        $scope.bounds = {
-                            southWest: {
-                                lat: $scope.boundingbox.southLatitude,
-                                lng: $scope.boundingbox.westLongitude,
-                            },
-                            northEast: {
-                                lat: $scope.boundingbox.northLatitude,
-                                lng: $scope.boundingbox.eastLongitude,
-                            },
-                        };
+                        if (!$scope.bounds) {
+                            $scope.bounds = {
+                                southWest: {},
+                                northEast: {},
+                            };
+                        }
+                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
+                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
+                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
+                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
                         return;
                     }
+
                     if (!$scope.center) {
-                        $scope.center = {
-                            lat: $scope.markers.marker.lat,
-                            lng: $scope.markers.marker.lng,
-                            zoom: 8
-                        };
-                    } else {
-                        $scope.center.lat = $scope.markers.marker.lat;
-                        $scope.center.lng = $scope.markers.marker.lng;
+                        $scope.center = { zoom: 8 };
                     }
+                    $scope.center.lat = $scope.markers.marker.lat;
+                    $scope.center.lng = $scope.markers.marker.lng;
                 }
 
                 $scope.$watch('editable', function () {
@@ -3553,6 +3550,458 @@ angular.module('ev-leaflet', ['leaflet-directive'])
             }
         };
     }]);
+
+/* jshint camelcase: false */
+/* global tinymce */
+/**
+ * Directive to override some settings in tinymce
+ * Usage:
+ * <ev-tinymce
+ *     min-chars="1000"                        -- minChars this input accept (default: none)
+ *     max-chars="1000"                        -- maxChars this input accept (default: unlimited)
+ *     min-words="1000"                        -- minWords this input accept (default: none)
+ *     max-words="1000"                        -- maxWords this input accept (default: unlimited)
+ *     ng-model="message.body"                 -- ng-model
+ *     tinymce-options="tinymceOptions"        -- override default options with yours (object expected)
+ *  ></ev-tinymce>
+ */
+(function (tinyMCE) {
+    var defaultOptions = {
+        menubar: false,
+        statusbar: false,
+        //resize: false,
+        toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
+        skin: false,
+        'verify_html': true,
+        'convert_fonts_to_spans': true,
+        //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
+        inline: true,
+        browser_spellcheck : true,
+
+        // We choose to have a restrictive approach here.
+        // The aim is to output the cleanest html possible.
+        // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
+        // 'valid_elements':
+        //     'strong,em' +
+        //     'span[!style<text-decoration: underline;],' +
+        //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
+        //     'p,!div,ul,li'
+    };
+
+    // u2019 and x27 : apostrophes
+    // u00C0-\u1FFF : accents
+    var countregexp = /[\w\u2019\x27\-\u00C0-\u1FFF]+/g;
+    function countWords(text) {
+        var wordArray = text.match(countregexp);
+        if (wordArray) {
+            return wordArray.length;
+        }
+        return 0;
+    }
+
+
+angular.module('ev-tinymce', [])
+    .provider('evTinymce', function() {
+        var configs = {};
+
+        this.register = function(name, value) {
+            if (configs.hasOwnProperty(name)) {
+                throw new Error('A config named "' + name + '" was already registered');
+            }
+            configs[name] = value;
+        };
+
+        this.get = function(name) {
+            return configs[name];
+        };
+
+        this.$get = function() { return configs; };
+    })
+    .directive('evTinymce', ['$timeout', 'evTinymce', function($timeout, evTinymce) {
+        var generatedIds = 0;
+        return {
+            template: '<div class="tiny-mce-wrapper form-control">'
+                + '<div class="ev-placeholder-container"></div>'
+                + '<div class="ev-tinymce-content"></div>'
+                + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
+                + '<div class="counter-info"></div>'
+                + '</div>',
+            restrict: 'AE',
+            replace: true,
+            require: '?ngModel',
+
+            scope: {
+                tinymceOptions: '=',
+            },
+
+            link: function (scope, elm, attrs, ngModel) {
+                var tinyId = 'uiTinymce' + generatedIds++;
+                var tinyElm = elm.find('.ev-tinymce-content');
+                tinyElm.attr('id', tinyId);
+                elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
+
+                var tinyInstance;
+                var getTinyInstance = function() {
+                    if (!tinyInstance) {
+                        tinyInstance = tinyMCE.get(tinyId);
+                    }
+                    return tinyInstance;
+                };
+                var options = angular.extend({
+                    fixed_toolbar_container: '#' + tinyId + 'toolbar',
+                }, defaultOptions, evTinymce[attrs.configKey], scope.tinymceOptions);
+
+                // /**
+                //  * This part is used for the max-chars attribute.
+                //  * It allows us to easily limit the number of characters typed in the editor
+                //  */
+                var minChars = options.minChars = attrs.minChars || options.minChars || null;
+                var maxChars = options.maxChars = attrs.maxChars || options.maxChars || null;
+                var minWords = options.minWords = attrs.minWords || options.minWords || null;
+                var maxWords = options.maxWords = attrs.maxWords || options.maxWords || null;
+                // // We set the max char warning when the THRESHOLD is reached
+                // // Here, it's 85% of max chars
+                var THRESHOLD = 85;
+
+                // /**
+                //  * Update the information area about the textEditor state (maxChars, ..)
+                //  */
+                var updateCounter = function(currentValue, minValue, maxValue) {
+                    var counterInfosElm = elm.parent().find('.counter-info');
+                    counterInfosElm.text(currentValue + (maxValue ? ' / ' + maxValue : ''));
+
+                    if (maxValue) {
+                        var isThresholdReached = ((currentValue / maxValue) * 100) > THRESHOLD;
+                        counterInfosElm.toggleClass('counter-warning', isThresholdReached);
+                    }
+
+                    var isMinLimitNotReached = minValue && currentValue < minValue;
+                    var isMaxLimitReached = maxValue && currentValue >= maxValue;
+                    counterInfosElm.toggleClass('counter-reached', !!(isMinLimitNotReached || isMaxLimitReached));
+                };
+
+                var hasFocus = false;
+                var placeholder = false;
+                var currentHtml = '';
+                var currentText = '';
+
+                var setPlaceholder = function() {
+                    var editor = getTinyInstance();
+                    tinymce.DOM.addClass(tinyElm, 'placeholder-light');
+                    editor.setContent(attrs.placeholder);
+                };
+
+                var updatePlaceholder = function(newText) {
+                    var editor = getTinyInstance();
+                    if (hasFocus) {
+                        if (currentText === attrs.placeholder) {
+                            editor.setContent('');
+                            editor.selection.setCursorLocation();
+                            tinymce.DOM.removeClass(tinyElm, 'placeholder-light');
+                        }
+                    } else {
+                        if (newText !== attrs.placeholder) {
+                            setPlaceholder();
+                        }
+                    }
+                };
+
+                var updateView = function () {
+                    var editor = getTinyInstance();
+                    var newHtml = tinyElm.html();
+                    var newText = tinyElm.text();
+                    var newTextOverLimit = false, currentTextOverLimit = false;
+                    var newCount, minCount, maxCount;
+
+                    if (placeholder && newText === attrs.placeholder) {
+                        currentHtml = newHtml;
+                        currentText = newText;
+                        if (maxChars || minChars || maxWords || minWords) {
+                            newCount = 0;
+                        }
+                    } else {
+                        if (maxChars || minChars) {
+                            newCount = newText.length;
+                        } else if (maxWords || minWords) {
+                            newCount = countWords(newText);
+                        }
+
+                        if (minChars) {
+                            minCount = minChars;
+                        } else if (minWords) {
+                            minCount = minWords;
+                        }
+
+                        if (maxChars) {
+                            maxCount = maxChars;
+                            newTextOverLimit = newCount > maxChars;
+                        } else if (maxWords) {
+                            maxCount = maxWords;
+                            newTextOverLimit = newCount > maxWords;
+                        }
+
+                        /*
+                         * Specific case where the old and new text are both over the limit of max chars.
+                         * This case can occur on the first initialization, if data from DB are over the
+                         * limit.
+                         * For now, we substring the content (but that break the html and everything..)
+                         */
+                        if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
+                            var shorterText = newText.substr(0, maxChars);
+                            // be careful, setContent call this method again
+                            editor.setContent(shorterText, { format: 'text' });
+                        } else if (newTextOverLimit) {
+                            editor.setContent(currentHtml); // be careful, setContent call this method again
+                        } else {
+                            $timeout(function() {
+                                ngModel.$setViewValue(newText === '' || newText === attrs.placeholder ? '' : newHtml);
+                            });
+                            currentHtml = newHtml;
+                            currentText = newText;
+                        }
+                    }
+
+                    // newCount not null nor undefined
+                    if (newCount != null) {
+                        updateCounter(newCount, minCount, maxCount);
+                    }
+
+
+                    placeholder = newText === '' || newText === attrs.placeholder;
+
+                    if (placeholder && attrs.placeholder) {
+                        updatePlaceholder(newText);
+                    }
+                };
+
+                ngModel.$render = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        if (ngModel.$viewValue) {
+                            editor.setContent(ngModel.$viewValue);
+                        } else if (attrs.placeholder) {
+                            placeholder = true;
+                            setPlaceholder();
+                        }
+                    }
+                };
+
+                scope.focusTinymce = function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.focus();
+                    }
+                };
+
+                /* Options */
+
+                var setup = function(editor) {
+                    editor.on('init', function() {
+                        if (ngModel.$viewValue) {
+                            ngModel.$render();
+                        }
+                    });
+                    // Update model on button click
+                    editor.on('ExecCommand', function (e) {
+                        updateView();
+                    });
+                    // Update model on keypress
+                    editor.on('KeyUp', function (e) {
+                        updateView();
+                    });
+                    // Update model on change, i.e. copy/pasted text, plugins altering content
+                    editor.on('SetContent', function (e) {
+                        if (!e.initial) {
+                            updateView();
+                        }
+                    });
+                    editor.on('blur', function(e) {
+                        if (hasFocus) {
+                            hasFocus = false;
+                            updateView();
+                        }
+                        tinyElm.blur();
+                    });
+
+                    editor.on('focus', function (e) {
+                        if (!hasFocus) {
+                            hasFocus = true;
+                            updateView();
+                        }
+                    });
+                };
+
+                // extend options with initial uiTinymceConfig and options from directive attribute value
+                options.setup = setup;
+                options.elems = tinyId;
+                options.mode = 'exact';
+
+                tinyMCE.init(options);
+
+                scope.$on('$destroy', function() {
+                    var editor = getTinyInstance();
+                    if (editor) {
+                        editor.destroy();
+                    }
+                });
+
+                tinyMCE.execCommand('mceToggleEditor', false, tinyId);
+            },
+        };
+    }]);
+}) (window.tinyMCE);
+
+/* global tinymce */
+
+tinymce.PluginManager.add('evelements', function(editor) {
+    var evelementsConfig = editor.settings.evelements;
+    var evelementsOptions = editor.settings.evelementsOptions;
+
+    function setElement(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            if (node && elementConfig.matches(node)) {
+                dom.remove(node, true);
+            } else {
+                editor.insertContent(
+                    dom.createHTML(
+                        elementConfig.name,
+                        {},
+                        dom.encode(editor.selection.getContent({ format: 'text' }))
+                    )
+                );
+            }
+        };
+    }
+
+    function showDialog(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            var attributes = null;
+
+            if (node && elementConfig.matches(node)) {
+                attributes = {};
+                var attribs = dom.getAttribs(node);
+                for (var i = 0; i < attribs.length; ++i) {
+                    var item = attribs[i];
+                    attributes[item.name] = item.value;
+                }
+            } else {
+                node = null;
+            }
+
+            var key = elementConfig.key || elementConfig.name;
+            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
+            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
+                                 : editor.selection.getContent({ format: 'text' });
+            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
+                if (node) {
+                    editor.focus();
+                    if (!newAttributes && !text) {
+                        dom.remove(node, true);
+                        editor.undoManager.add();
+                        return;
+                    }
+                    dom.removeAllAttribs(node);
+                    dom.setAttribs(node, newAttributes);
+                    if (text) {
+                        if ('innerText' in node) {
+                            node.innerText = text;
+                        } else {
+                            node.textContent = text;
+                        }
+                    }
+                    editor.selection.select(node);
+                    editor.undoManager.add();
+                } else {
+                    editor.focus();
+                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
+                    editor.selection.setContent(node);
+                    editor.undoManager.add();
+                }
+            }, text, evelementsOptions);
+        };
+    }
+
+    if (typeof evelementsConfig === 'string') {
+        evelementsConfig = evelementsConfig.split(' ');
+    }
+
+    evelementsConfig.forEach(function(elementConfig) {
+        if (typeof elementConfig === 'string') {
+            elementConfig = {
+                name: elementConfig
+            };
+        }
+
+        elementConfig.matches = elementConfig.matches || function(node) {
+            return node.nodeName.toLowerCase() === elementConfig.name;
+        };
+
+        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
+
+        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
+            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
+            icon: elementConfig.icon,
+            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
+            shortcut: elementConfig.shortcut,
+            onclick: callbackAction,
+            stateSelector: elementConfig.selector || elementConfig.name,
+        });
+
+        if (elementConfig.shortcut) {
+            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
+        }
+    });
+});
+
+/* global tinymce, console */
+
+tinymce.PluginManager.add('evimage', function(editor) {
+    console.log('evimage is deprecated: use evelements');
+    function showDialog() {
+        var dom = editor.dom;
+        var node = editor.selection.getNode();
+        var attributes = null;
+
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
+            };
+        }
+
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.removeAllAttribs(node);
+                dom.setAttribs(node, attributesNew);
+            } else {
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
+            }
+        });
+    }
+
+    editor.addButton('evimage', {
+        icon: 'image',
+        tooltip: 'Insert/edit image',
+        onclick: showDialog,
+        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
+    });
+
+    editor.addMenuItem('evimage', {
+        icon: 'image',
+        text: 'Insert image',
+        onclick: showDialog,
+        context: 'insert',
+        prependToContext: true
+    });
+
+    editor.addCommand('mceImage', showDialog);
+});
 
 (function () {
     'use strict';
@@ -4043,456 +4492,4 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
-/* jshint camelcase: false */
-/* global tinymce */
-/**
- * Directive to override some settings in tinymce
- * Usage:
- * <ev-tinymce
- *     min-chars="1000"                        -- minChars this input accept (default: none)
- *     max-chars="1000"                        -- maxChars this input accept (default: unlimited)
- *     min-words="1000"                        -- minWords this input accept (default: none)
- *     max-words="1000"                        -- maxWords this input accept (default: unlimited)
- *     ng-model="message.body"                 -- ng-model
- *     tinymce-options="tinymceOptions"        -- override default options with yours (object expected)
- *  ></ev-tinymce>
- */
-(function (tinyMCE) {
-    var defaultOptions = {
-        menubar: false,
-        statusbar: false,
-        //resize: false,
-        toolbar: 'bold italic underline | alignleft aligncenter alignright | bullist',
-        skin: false,
-        'verify_html': true,
-        'convert_fonts_to_spans': true,
-        //'content_css': '/bower_components/ev-fdm/dist/css/ev-fdm.min.css',
-        inline: true,
-        browser_spellcheck : true,
-
-        // We choose to have a restrictive approach here.
-        // The aim is to output the cleanest html possible.
-        // See http://www.tinymce.com/wiki.php/Configuration:valid_elements
-        // 'valid_elements':
-        //     'strong,em' +
-        //     'span[!style<text-decoration: underline;],' +
-        //     '@[style<text-align: right;?text-align: left;?text-align: center;],' +
-        //     'p,!div,ul,li'
-    };
-
-    // u2019 and x27 : apostrophes
-    // u00C0-\u1FFF : accents
-    var countregexp = /[\w\u2019\x27\-\u00C0-\u1FFF]+/g;
-    function countWords(text) {
-        var wordArray = text.match(countregexp);
-        if (wordArray) {
-            return wordArray.length;
-        }
-        return 0;
-    }
-
-
-angular.module('ev-tinymce', [])
-    .provider('evTinymce', function() {
-        var configs = {};
-
-        this.register = function(name, value) {
-            if (configs.hasOwnProperty(name)) {
-                throw new Error('A config named "' + name + '" was already registered');
-            }
-            configs[name] = value;
-        };
-
-        this.get = function(name) {
-            return configs[name];
-        };
-
-        this.$get = function() { return configs; };
-    })
-    .directive('evTinymce', ['$timeout', 'evTinymce', function($timeout, evTinymce) {
-        var generatedIds = 0;
-        return {
-            template: '<div class="tiny-mce-wrapper form-control">'
-                + '<div class="ev-placeholder-container"></div>'
-                + '<div class="ev-tinymce-content"></div>'
-                + '<div ng-click="focusTinymce()" class="ev-tinymce-toolbar"></div>'
-                + '<div class="counter-info"></div>'
-                + '</div>',
-            restrict: 'AE',
-            replace: true,
-            require: '?ngModel',
-
-            scope: {
-                tinymceOptions: '=',
-            },
-
-            link: function (scope, elm, attrs, ngModel) {
-                var tinyId = 'uiTinymce' + generatedIds++;
-                var tinyElm = elm.find('.ev-tinymce-content');
-                tinyElm.attr('id', tinyId);
-                elm.find('.ev-tinymce-toolbar').attr('id', tinyId + 'toolbar');
-
-                var tinyInstance;
-                var getTinyInstance = function() {
-                    if (!tinyInstance) {
-                        tinyInstance = tinyMCE.get(tinyId);
-                    }
-                    return tinyInstance;
-                };
-                var options = angular.extend({
-                    fixed_toolbar_container: '#' + tinyId + 'toolbar',
-                }, defaultOptions, evTinymce[attrs.configKey], scope.tinymceOptions);
-
-                // /**
-                //  * This part is used for the max-chars attribute.
-                //  * It allows us to easily limit the number of characters typed in the editor
-                //  */
-                var minChars = options.minChars = attrs.minChars || options.minChars || null;
-                var maxChars = options.maxChars = attrs.maxChars || options.maxChars || null;
-                var minWords = options.minWords = attrs.minWords || options.minWords || null;
-                var maxWords = options.maxWords = attrs.maxWords || options.maxWords || null;
-                // // We set the max char warning when the THRESHOLD is reached
-                // // Here, it's 85% of max chars
-                var THRESHOLD = 85;
-
-                // /**
-                //  * Update the information area about the textEditor state (maxChars, ..)
-                //  */
-                var updateCounter = function(currentValue, minValue, maxValue) {
-                    var counterInfosElm = elm.parent().find('.counter-info');
-                    counterInfosElm.text(currentValue + (maxValue ? ' / ' + maxValue : ''));
-
-                    if (maxValue) {
-                        var isThresholdReached = ((currentValue / maxValue) * 100) > THRESHOLD;
-                        counterInfosElm.toggleClass('counter-warning', isThresholdReached);
-                    }
-
-                    var isMinLimitNotReached = minValue && currentValue < minValue;
-                    var isMaxLimitReached = maxValue && currentValue >= maxValue;
-                    counterInfosElm.toggleClass('counter-reached', !!(isMinLimitNotReached || isMaxLimitReached));
-                };
-
-                var hasFocus = false;
-                var placeholder = false;
-                var currentHtml = '';
-                var currentText = '';
-
-                var setPlaceholder = function() {
-                    var editor = getTinyInstance();
-                    tinymce.DOM.addClass(tinyElm, 'placeholder-light');
-                    editor.setContent(attrs.placeholder);
-                };
-
-                var updatePlaceholder = function(newText) {
-                    var editor = getTinyInstance();
-                    if (hasFocus) {
-                        if (currentText === attrs.placeholder) {
-                            editor.setContent('');
-                            editor.selection.setCursorLocation();
-                            tinymce.DOM.removeClass(tinyElm, 'placeholder-light');
-                        }
-                    } else {
-                        if (newText !== attrs.placeholder) {
-                            setPlaceholder();
-                        }
-                    }
-                };
-
-                var updateView = function () {
-                    var editor = getTinyInstance();
-                    var newHtml = tinyElm.html();
-                    var newText = tinyElm.text();
-                    var newTextOverLimit = false, currentTextOverLimit = false;
-                    var newCount, minCount, maxCount;
-
-                    if (placeholder && newText === attrs.placeholder) {
-                        currentHtml = newHtml;
-                        currentText = newText;
-                        if (maxChars || minChars || maxWords || minWords) {
-                            newCount = 0;
-                        }
-                    } else {
-                        if (maxChars || minChars) {
-                            newCount = newText.length;
-                        } else if (maxWords || minWords) {
-                            newCount = countWords(newText);
-                        }
-
-                        if (minChars) {
-                            minCount = minChars;
-                        } else if (minWords) {
-                            minCount = minWords;
-                        }
-
-                        if (maxChars) {
-                            maxCount = maxChars;
-                            newTextOverLimit = newCount > maxChars;
-                        } else if (maxWords) {
-                            maxCount = maxWords;
-                            newTextOverLimit = newCount > maxWords;
-                        }
-
-                        /*
-                         * Specific case where the old and new text are both over the limit of max chars.
-                         * This case can occur on the first initialization, if data from DB are over the
-                         * limit.
-                         * For now, we substring the content (but that break the html and everything..)
-                         */
-                        if (newTextOverLimit && (currentTextOverLimit || !currentText.length)) {
-                            var shorterText = newText.substr(0, maxChars);
-                            // be careful, setContent call this method again
-                            editor.setContent(shorterText, { format: 'text' });
-                        } else if (newTextOverLimit) {
-                            editor.setContent(currentHtml); // be careful, setContent call this method again
-                        } else {
-                            $timeout(function() {
-                                ngModel.$setViewValue(newText === '' || newText === attrs.placeholder ? '' : newHtml);
-                            });
-                            currentHtml = newHtml;
-                            currentText = newText;
-                        }
-                    }
-
-                    // newCount not null nor undefined
-                    if (newCount != null) {
-                        updateCounter(newCount, minCount, maxCount);
-                    }
-
-
-                    placeholder = newText === '' || newText === attrs.placeholder;
-
-                    if (placeholder && attrs.placeholder) {
-                        updatePlaceholder(newText);
-                    }
-                };
-
-                ngModel.$render = function() {
-                    var editor = getTinyInstance();
-                    if (editor) {
-                        if (ngModel.$viewValue) {
-                            editor.setContent(ngModel.$viewValue);
-                        } else if (attrs.placeholder) {
-                            placeholder = true;
-                            setPlaceholder();
-                        }
-                    }
-                };
-
-                scope.focusTinymce = function() {
-                    var editor = getTinyInstance();
-                    if (editor) {
-                        editor.focus();
-                    }
-                };
-
-                /* Options */
-
-                var setup = function(editor) {
-                    editor.on('init', function() {
-                        if (ngModel.$viewValue) {
-                            ngModel.$render();
-                        }
-                    });
-                    // Update model on button click
-                    editor.on('ExecCommand', function (e) {
-                        updateView();
-                    });
-                    // Update model on keypress
-                    editor.on('KeyUp', function (e) {
-                        updateView();
-                    });
-                    // Update model on change, i.e. copy/pasted text, plugins altering content
-                    editor.on('SetContent', function (e) {
-                        if (!e.initial) {
-                            updateView();
-                        }
-                    });
-                    editor.on('blur', function(e) {
-                        if (hasFocus) {
-                            hasFocus = false;
-                            updateView();
-                        }
-                        tinyElm.blur();
-                    });
-
-                    editor.on('focus', function (e) {
-                        if (!hasFocus) {
-                            hasFocus = true;
-                            updateView();
-                        }
-                    });
-                };
-
-                // extend options with initial uiTinymceConfig and options from directive attribute value
-                options.setup = setup;
-                options.elems = tinyId;
-                options.mode = 'exact';
-
-                tinyMCE.init(options);
-
-                scope.$on('$destroy', function() {
-                    var editor = getTinyInstance();
-                    if (editor) {
-                        editor.destroy();
-                    }
-                });
-
-                tinyMCE.execCommand('mceToggleEditor', false, tinyId);
-            },
-        };
-    }]);
-}) (window.tinyMCE);
-
-/* global tinymce */
-
-tinymce.PluginManager.add('evelements', function(editor) {
-    var evelementsConfig = editor.settings.evelements;
-    var evelementsOptions = editor.settings.evelementsOptions;
-
-    function setElement(elementConfig) {
-        return function() {
-            var dom = editor.dom;
-            var node = editor.selection.getNode();
-            if (node && elementConfig.matches(node)) {
-                dom.remove(node, true);
-            } else {
-                editor.insertContent(
-                    dom.createHTML(
-                        elementConfig.name,
-                        {},
-                        dom.encode(editor.selection.getContent({ format: 'text' }))
-                    )
-                );
-            }
-        };
-    }
-
-    function showDialog(elementConfig) {
-        return function() {
-            var dom = editor.dom;
-            var node = editor.selection.getNode();
-            var attributes = null;
-
-            if (node && elementConfig.matches(node)) {
-                attributes = {};
-                var attribs = dom.getAttribs(node);
-                for (var i = 0; i < attribs.length; ++i) {
-                    var item = attribs[i];
-                    attributes[item.name] = item.value;
-                }
-            } else {
-                node = null;
-            }
-
-            var key = elementConfig.key || elementConfig.name;
-            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
-            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
-                                 : editor.selection.getContent({ format: 'text' });
-            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
-                if (node) {
-                    editor.focus();
-                    if (!newAttributes && !text) {
-                        dom.remove(node, true);
-                        editor.undoManager.add();
-                        return;
-                    }
-                    dom.removeAllAttribs(node);
-                    dom.setAttribs(node, newAttributes);
-                    if (text) {
-                        if ('innerText' in node) {
-                            node.innerText = text;
-                        } else {
-                            node.textContent = text;
-                        }
-                    }
-                    editor.selection.select(node);
-                    editor.undoManager.add();
-                } else {
-                    editor.focus();
-                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
-                    editor.selection.setContent(node);
-                    editor.undoManager.add();
-                }
-            }, text, evelementsOptions);
-        };
-    }
-
-    if (typeof evelementsConfig === 'string') {
-        evelementsConfig = evelementsConfig.split(' ');
-    }
-
-    evelementsConfig.forEach(function(elementConfig) {
-        if (typeof elementConfig === 'string') {
-            elementConfig = {
-                name: elementConfig
-            };
-        }
-
-        elementConfig.matches = elementConfig.matches || function(node) {
-            return node.nodeName.toLowerCase() === elementConfig.name;
-        };
-
-        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
-
-        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
-            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
-            icon: elementConfig.icon,
-            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
-            shortcut: elementConfig.shortcut,
-            onclick: callbackAction,
-            stateSelector: elementConfig.selector || elementConfig.name,
-        });
-
-        if (elementConfig.shortcut) {
-            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
-        }
-    });
-});
-
-/* global tinymce, console */
-
-tinymce.PluginManager.add('evimage', function(editor) {
-    console.log('evimage is deprecated: use evelements');
-    function showDialog() {
-        var dom = editor.dom;
-        var node = editor.selection.getNode();
-        var attributes = null;
-
-        if (node && node.getAttribute('data-picture-id')) {
-            attributes = {
-                src: dom.getAttrib(node, 'src'),
-                alt: dom.getAttrib(node, 'alt'),
-                'class': dom.getAttrib(node, 'class'),
-                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
-            };
-        }
-
-        editor.settings.evimage(attributes, function(attributesNew) {
-            if (attributes) {
-                dom.removeAllAttribs(node);
-                dom.setAttribs(node, attributesNew);
-            } else {
-                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
-            }
-        });
-    }
-
-    editor.addButton('evimage', {
-        icon: 'image',
-        tooltip: 'Insert/edit image',
-        onclick: showDialog,
-        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
-    });
-
-    editor.addMenuItem('evimage', {
-        icon: 'image',
-        text: 'Insert image',
-        onclick: showDialog,
-        context: 'insert',
-        prependToContext: true
-    });
-
-    editor.addCommand('mceImage', showDialog);
-});
-
 //# sourceMappingURL=ev-fdm.js.map
