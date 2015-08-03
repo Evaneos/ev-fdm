@@ -70,8 +70,11 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         }
                         $log.warn('ev-leaflet: latitude is not a number');
                     }
-                    $scope.markers.marker.lat = lat;
-                    centerOnMarkerOrBoungingbox();
+
+                    if ($scope.markers.marker.lat != lat) {
+                        $scope.markers.marker.lat = lat;
+                        centerOnMarkerOrBoungingbox();
+                    }
                 });
 
                 $scope.$watch('coordinates.longitude', function(lng) {
@@ -83,19 +86,17 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                         }
                         $log.warn('ev-leaflet: longitude is not a number');
                     }
-                    $scope.markers.marker.lng = lng;
-                    centerOnMarkerOrBoungingbox();
+
+                    if ($scope.markers.marker.lng != lng) {
+                        $scope.markers.marker.lng = lng;
+                        centerOnMarkerOrBoungingbox();
+                    }
                 });
 
                 centerOnMarkerOrBoungingbox();
 
-                var previousBoundingbox = $scope.boundingbox;
-
                 $scope.$watch('boundingbox', function(boundingbox) {
-                    if (boundingbox && !angular.equals(boundingbox, previousBoundingbox)) {
-                        previousBoundingbox = boundingbox;
-                        centerOnMarkerOrBoungingbox();
-                    }
+                    centerOnMarkerOrBoungingbox();
                 });
 
                 $scope.$watch('markers.marker.lat', function(lat) {
@@ -113,28 +114,24 @@ angular.module('ev-leaflet', ['leaflet-directive'])
                 // Setting map center
                 function centerOnMarkerOrBoungingbox() {
                     if ($scope.boundingbox) {
-                        $scope.bounds = {
-                            southWest: {
-                                lat: $scope.boundingbox.southLatitude,
-                                lng: $scope.boundingbox.westLongitude,
-                            },
-                            northEast: {
-                                lat: $scope.boundingbox.northLatitude,
-                                lng: $scope.boundingbox.eastLongitude,
-                            },
-                        };
+                        if (!$scope.bounds) {
+                            $scope.bounds = {
+                                southWest: {},
+                                northEast: {},
+                            };
+                        }
+                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
+                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
+                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
+                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
                         return;
                     }
+
                     if (!$scope.center) {
-                        $scope.center = {
-                            lat: $scope.markers.marker.lat,
-                            lng: $scope.markers.marker.lng,
-                            zoom: 8
-                        };
-                    } else {
-                        $scope.center.lat = $scope.markers.marker.lat;
-                        $scope.center.lng = $scope.markers.marker.lng;
+                        $scope.center = { zoom: 8 };
                     }
+                    $scope.center.lat = $scope.markers.marker.lat;
+                    $scope.center.lng = $scope.markers.marker.lng;
                 }
 
                 $scope.$watch('editable', function () {
