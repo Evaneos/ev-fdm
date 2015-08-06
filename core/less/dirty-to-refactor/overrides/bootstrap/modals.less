@@ -17,10 +17,10 @@
         padding-top: 80px;
         .modal-content {
             border: none;
+            background: @white-soil;
         }
         .modal-header {
             padding: 9px 16px;
-            background: @white-soil;
             border-bottom: none;
 
             .modal-title {
@@ -28,6 +28,7 @@
                 text-transform: uppercase;
                 line-height: 1.7em;
                 margin-right: 30px;
+                color: @soil;
                 .text-overflow();
             }
             .close {
@@ -50,6 +51,7 @@
 
         .modal-footer {
             margin-top: 0;
+            border: none;
             .btn {
                 margin-left: 10px;
                 min-width: 150px;
@@ -57,7 +59,6 @@
                     margin-left: 0;
                 }
             }
-            background-color: @white-soil;
         }
 
         .modal-body.modal-message {
@@ -84,12 +85,12 @@
             width: 750px;
         }
     }
-    
+
 
     @media(max-width: @screen-tablet) {
 
         z-index: @zindex-modal-background;
-        background: #FFF;
+        background: @white-soil;
 
         .modal-dialog {
             padding: 0;
@@ -123,7 +124,6 @@
                 .btn {
                     .btn-orange;
                 }
-                background-color: @white-soil;
             }
             .modal-body {
                 text-align: center;
@@ -232,8 +232,6 @@
                 .modal-footer {
                     position: absolute;
                     bottom: 0; left: 0; right: 0;
-                    border-top: 5px solid @white-soil;
-                    background-color: @white-soil;
                 }
             }
         }
