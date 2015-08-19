@@ -379,186 +379,6 @@ angular.module('ev-fdm')
         return SearchController;
     }]);
 
-angular.module('ev-fdm').factory('confirmBox', [
-    '$modal',
-    function($modal) {
-        return function(title, message, positive, negative) {
-            return $modal.open({
-                backdrop: 'static',
-                templateUrl: 'ev-confirm-box.html',
-                controller: ['$scope', function($scope) {
-                    $scope.title    = title;
-                    $scope.message  = message;
-                    $scope.positive = positive;
-                    $scope.negative = negative;
-                }]
-            }).result;
-        };
-    }
-]);
-
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            var idFunction;
-            var timeout = 600;
-            var opt = {};
-            if (typeof dataProvider === 'object') {
-                opt = dataProvider;
-                formatter = opt.formatter;
-                resultModifier = opt.resultModifier;
-                minimumInputLength = opt.minimumInputLength;
-                key = opt.key;
-                dataProviderFilter = opt.dataProviderFilter;
-                dataProvider = opt.dataProvider;
-                timeout = opt.timeout || timeout;
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-
-                if (typeof opt.id === 'string') {
-                    idFunction = function(ressource) {return ressource[opt.id];};
-                } else if (typeof opt.id === 'function') {
-                    idFunction = opt.id;
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                },
-                id: idFunction,
-            };
-            return config;
-        };
-    }
-]);
-
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2357,6 +2177,186 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
+angular.module('ev-fdm').factory('confirmBox', [
+    '$modal',
+    function($modal) {
+        return function(title, message, positive, negative) {
+            return $modal.open({
+                backdrop: 'static',
+                templateUrl: 'ev-confirm-box.html',
+                controller: ['$scope', function($scope) {
+                    $scope.title    = title;
+                    $scope.message  = message;
+                    $scope.positive = positive;
+                    $scope.negative = negative;
+                }]
+            }).result;
+        };
+    }
+]);
+
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
+            if (typeof dataProvider === 'object') {
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                },
+                id: idFunction,
+            };
+            return config;
+        };
+    }
+]);
+
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -3072,7 +3072,7 @@ angular.module('ev-fdm')
             return embed.join(',');
         };
 
-        RestangularStorage.buildParameters = function(resource, embed) {
+        RestangularStorage.buildEmbedParameters = function(resource, embed) {
             var parameters = {};
 
             if(angular.isArray(embed) && embed.length) {
@@ -3080,6 +3080,37 @@ angular.module('ev-fdm')
             }
             else if(resource.defaultEmbed.length) {
                 parameters.embed = RestangularStorage.buildEmbed(resource.defaultEmbed);
+            }
+
+            return parameters;
+        };
+
+        RestangularStorage.buildParameters = function(options, defaultEmbed) {
+            var parameters = {};
+
+            options = options || {};
+
+            if (angular.isNumber(options.page) && options.page > 0) {
+                parameters.page = options.page;
+            }
+
+            if (angular.isNumber(options.number) && options.number > 0) {
+                parameters.number = options.number;
+            }
+
+            if (angular.isArray(options.embed) && options.embed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(options.embed.concat(defaultEmbed));
+            } else if (defaultEmbed && defaultEmbed.length) {
+                parameters.embed = RestangularStorage.buildEmbed(defaultEmbed);
+            }
+
+            if (options.sortKey) {
+                parameters.sortBy = RestangularStorage.buildSortBy(options.sortKey, options.reverseSort);
+            }
+
+            if (options.filters) {
+                var filters = RestangularStorage.buildFilters(options.filters);
+                angular.extend(parameters, filters);
             }
 
             return parameters;
@@ -3166,35 +3197,9 @@ angular.module('ev-fdm')
             })(object, object.embeds, angular.copy(changes));
         };
 
-
         RestangularStorage.prototype.getAll = function(options) {
-            var parameters = {};
+            var parameters = RestangularStorage.buildParameters(options, this.defaultEmbed);
 
-            options = options || {};
-
-            if (angular.isNumber(options.page) && options.page > 0) {
-                parameters.page = options.page;
-            }
-
-            if (angular.isNumber(options.number) && options.number > 0) {
-                parameters.number = options.number;
-            }
-
-            if (angular.isArray(options.embed) && options.embed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(options.embed.concat(this.defaultEmbed));
-            }
-            else if (this.defaultEmbed.length) {
-                parameters.embed = RestangularStorage.buildEmbed(this.defaultEmbed);
-            }
-
-            if (options.sortKey) {
-                parameters.sortBy = RestangularStorage.buildSortBy(options.sortKey, options.reverseSort);
-            }
-
-            if (options.filters) {
-                var filters = RestangularStorage.buildFilters(options.filters);
-                angular.extend(parameters, filters);
-            }
             return this.restangular.all(this.resourceName).getList(parameters);
         };
 
@@ -3223,14 +3228,14 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.getById = function(id, embed) {
-            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildParameters(this, embed));
+            return this.restangular.one(this.resourceName, id).get(RestangularStorage.buildEmbedParameters(this, embed));
         };
 
         RestangularStorage.prototype.update = function(element, embed, options) {
             if (!element.put) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
-            return element.put(RestangularStorage.buildParameters(this, embed))
+            return element.put(RestangularStorage.buildEmbedParameters(this, embed))
                 .then(function(result) {
                     if (!options || !options.preventObjectUpdate) {
                         RestangularStorage.updateObjectFromResult(element, result);
@@ -3241,7 +3246,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.updateAll = function(elements, embed, options) {
-            var parameters = RestangularStorage.buildParameters(this, embed);
+            var parameters = RestangularStorage.buildEmbedParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
                 return element.put(parameters)
@@ -3259,7 +3264,7 @@ angular.module('ev-fdm')
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
             RestangularStorage.updateObjectBeforePatch(element, changes);
-            return element.patch(changes, RestangularStorage.buildParameters(this, embed))
+            return element.patch(changes, RestangularStorage.buildEmbedParameters(this, embed))
                 .then(function(result) {
                     if (!options || !options.preventObjectUpdate) {
                         RestangularStorage.updateObjectFromResult(element, result);
@@ -3273,7 +3278,7 @@ angular.module('ev-fdm')
             elements.forEach(function(element) {
                 RestangularStorage.updateObjectBeforePatch(element, changes);
             });
-            var parameters = RestangularStorage.buildParameters(this, embed);
+            var parameters = RestangularStorage.buildEmbedParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
                 return element.patch(changes, parameters)
@@ -3289,7 +3294,7 @@ angular.module('ev-fdm')
 
         RestangularStorage.prototype.create = function(element, embed, options) {
             return this.restangular.all(this.resourceName)
-                .post(element, RestangularStorage.buildParameters(this, embed))
+                .post(element, RestangularStorage.buildEmbedParameters(this, embed))
                 .then(function(result) {
                     if (!options || !options.preventObjectUpdate) {
                         RestangularStorage.updateObjectFromResult(element, result);
@@ -3320,7 +3325,7 @@ angular.module('ev-fdm')
             if (!element.save) {
                 restangular.restangularizeElement(null, element, this.resourceName);
             }
-            return element.save(RestangularStorage.buildParameters(this, embed))
+            return element.save(RestangularStorage.buildEmbedParameters(this, embed))
                 .then(function(result) {
                     if (!options || !options.preventObjectUpdate) {
                         RestangularStorage.updateObjectFromResult(element, result);
@@ -3331,7 +3336,7 @@ angular.module('ev-fdm')
         };
 
         RestangularStorage.prototype.saveAll = function(elements, embed, options) {
-            var parameters = RestangularStorage.buildParameters(this, embed);
+            var parameters = RestangularStorage.buildEmbedParameters(this, embed);
 
             return $q.all(elements.map(function(element) {
                 return element.save(parameters)
