@@ -25,7 +25,7 @@ angular.module('ev-fdm')
             this.$scope.reverseSort = this.defaultReverseSort;
 
             this.setElements(elements);
-
+            this.requestCounter = 0;
             /*
                 Pagination method that should be called from the template
              */
@@ -96,10 +96,18 @@ angular.module('ev-fdm')
         }
 
         ListController.prototype.update = function(page, filters, sortKey, reverseSort) {
-            return this.fetch(page, filters, sortKey, reverseSort).then(function(elements) {
-                this.setElements(elements);
-                return elements;
-            }.bind(this));
+            var doIfLast = function(counter) {
+                return function (elements) {
+                    if (counter == this.requestCounter) {
+                        // It means no request have been lauchned afterward
+                        this.setElements(elements);
+                    }
+                    return elements;
+                }.bind(this)
+            }.bind(this)
+            this.requestCounter += 1;
+            return this.fetch(page, filters, sortKey, reverseSort)
+                .then(doIfLast(this.requestCounter))
         };
 
         ListController.prototype.setElements = function(elements) {
