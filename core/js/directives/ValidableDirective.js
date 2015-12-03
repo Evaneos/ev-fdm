@@ -22,8 +22,7 @@ var module = angular.module('ev-fdm')
             };
 
             var displayErrors = function() {
-                model.evHasError = !!(!model.$valid && model.evBlurred && model.evChanged);
-
+                model.evHasError = !!(!model.$valid && model.evBlurred);
                 if (evFormGroup) {
                     evFormGroup.toggleError(model.evHasError);
                 }
