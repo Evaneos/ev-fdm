@@ -387,6 +387,186 @@ angular.module('ev-fdm')
         return SearchController;
     }]);
 
+angular.module('ev-fdm').factory('confirmBox', [
+    '$modal',
+    function($modal) {
+        return function(title, message, positive, negative) {
+            return $modal.open({
+                backdrop: 'static',
+                templateUrl: 'ev-confirm-box.html',
+                controller: ['$scope', function($scope) {
+                    $scope.title    = title;
+                    $scope.message  = message;
+                    $scope.positive = positive;
+                    $scope.negative = negative;
+                }]
+            }).result;
+        };
+    }
+]);
+
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
+            if (typeof dataProvider === 'object') {
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                },
+                id: idFunction,
+            };
+            return config;
+        };
+    }
+]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2184,186 +2364,6 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
-angular.module('ev-fdm').factory('confirmBox', [
-    '$modal',
-    function($modal) {
-        return function(title, message, positive, negative) {
-            return $modal.open({
-                backdrop: 'static',
-                templateUrl: 'ev-confirm-box.html',
-                controller: ['$scope', function($scope) {
-                    $scope.title    = title;
-                    $scope.message  = message;
-                    $scope.positive = positive;
-                    $scope.negative = negative;
-                }]
-            }).result;
-        };
-    }
-]);
-
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            var idFunction;
-            var timeout = 600;
-            var opt = {};
-            if (typeof dataProvider === 'object') {
-                opt = dataProvider;
-                formatter = opt.formatter;
-                resultModifier = opt.resultModifier;
-                minimumInputLength = opt.minimumInputLength;
-                key = opt.key;
-                dataProviderFilter = opt.dataProviderFilter;
-                dataProvider = opt.dataProvider;
-                timeout = opt.timeout || timeout;
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-
-                if (typeof opt.id === 'string') {
-                    idFunction = function(ressource) {return ressource[opt.id];};
-                } else if (typeof opt.id === 'function') {
-                    idFunction = opt.id;
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                },
-                id: idFunction,
-            };
-            return config;
-        };
-    }
-]);
-
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -3563,6 +3563,158 @@ angular.module('ev-leaflet', ['leaflet-directive'])
         };
     }]);
 
+/* global tinymce */
+
+tinymce.PluginManager.add('evelements', function(editor) {
+    var evelementsConfig = editor.settings.evelements;
+    var evelementsOptions = editor.settings.evelementsOptions;
+
+    function setElement(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            if (node && elementConfig.matches(node)) {
+                dom.remove(node, true);
+            } else {
+                editor.insertContent(
+                    dom.createHTML(
+                        elementConfig.name,
+                        {},
+                        dom.encode(editor.selection.getContent({ format: 'text' }))
+                    )
+                );
+            }
+        };
+    }
+
+    function showDialog(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            var attributes = null;
+
+            if (node && elementConfig.matches(node)) {
+                attributes = {};
+                var attribs = dom.getAttribs(node);
+                for (var i = 0; i < attribs.length; ++i) {
+                    var item = attribs[i];
+                    attributes[item.name] = item.value;
+                }
+            } else {
+                node = null;
+            }
+
+            var key = elementConfig.key || elementConfig.name;
+            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
+            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
+                                 : editor.selection.getContent({ format: 'text' });
+            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
+                if (node) {
+                    editor.focus();
+                    if (!newAttributes && !text) {
+                        dom.remove(node, true);
+                        editor.undoManager.add();
+                        return;
+                    }
+                    dom.removeAllAttribs(node);
+                    dom.setAttribs(node, newAttributes);
+                    if (text) {
+                        if ('innerText' in node) {
+                            node.innerText = text;
+                        } else {
+                            node.textContent = text;
+                        }
+                    }
+                    editor.selection.select(node);
+                    editor.undoManager.add();
+                } else {
+                    editor.focus();
+                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
+                    editor.selection.setContent(node);
+                    editor.undoManager.add();
+                }
+            }, text, evelementsOptions);
+        };
+    }
+
+    if (typeof evelementsConfig === 'string') {
+        evelementsConfig = evelementsConfig.split(' ');
+    }
+
+    evelementsConfig.forEach(function(elementConfig) {
+        if (typeof elementConfig === 'string') {
+            elementConfig = {
+                name: elementConfig
+            };
+        }
+
+        elementConfig.matches = elementConfig.matches || function(node) {
+            return node.nodeName.toLowerCase() === elementConfig.name;
+        };
+
+        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
+
+        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
+            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
+            icon: elementConfig.icon,
+            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
+            shortcut: elementConfig.shortcut,
+            onclick: callbackAction,
+            stateSelector: elementConfig.selector || elementConfig.name,
+        });
+
+        if (elementConfig.shortcut) {
+            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
+        }
+    });
+});
+
+/* global tinymce, console */
+
+tinymce.PluginManager.add('evimage', function(editor) {
+    console.log('evimage is deprecated: use evelements');
+    function showDialog() {
+        var dom = editor.dom;
+        var node = editor.selection.getNode();
+        var attributes = null;
+
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
+            };
+        }
+
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.removeAllAttribs(node);
+                dom.setAttribs(node, attributesNew);
+            } else {
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
+            }
+        });
+    }
+
+    editor.addButton('evimage', {
+        icon: 'image',
+        tooltip: 'Insert/edit image',
+        onclick: showDialog,
+        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
+    });
+
+    editor.addMenuItem('evimage', {
+        icon: 'image',
+        text: 'Insert image',
+        onclick: showDialog,
+        context: 'insert',
+        prependToContext: true
+    });
+
+    editor.addCommand('mceImage', showDialog);
+});
+
 /* jshint camelcase: false */
 /* global tinymce */
 /**
@@ -3862,158 +4014,6 @@ angular.module('ev-tinymce', [])
         };
     }]);
 }) (window.tinyMCE);
-
-/* global tinymce */
-
-tinymce.PluginManager.add('evelements', function(editor) {
-    var evelementsConfig = editor.settings.evelements;
-    var evelementsOptions = editor.settings.evelementsOptions;
-
-    function setElement(elementConfig) {
-        return function() {
-            var dom = editor.dom;
-            var node = editor.selection.getNode();
-            if (node && elementConfig.matches(node)) {
-                dom.remove(node, true);
-            } else {
-                editor.insertContent(
-                    dom.createHTML(
-                        elementConfig.name,
-                        {},
-                        dom.encode(editor.selection.getContent({ format: 'text' }))
-                    )
-                );
-            }
-        };
-    }
-
-    function showDialog(elementConfig) {
-        return function() {
-            var dom = editor.dom;
-            var node = editor.selection.getNode();
-            var attributes = null;
-
-            if (node && elementConfig.matches(node)) {
-                attributes = {};
-                var attribs = dom.getAttribs(node);
-                for (var i = 0; i < attribs.length; ++i) {
-                    var item = attribs[i];
-                    attributes[item.name] = item.value;
-                }
-            } else {
-                node = null;
-            }
-
-            var key = elementConfig.key || elementConfig.name;
-            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
-            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
-                                 : editor.selection.getContent({ format: 'text' });
-            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
-                if (node) {
-                    editor.focus();
-                    if (!newAttributes && !text) {
-                        dom.remove(node, true);
-                        editor.undoManager.add();
-                        return;
-                    }
-                    dom.removeAllAttribs(node);
-                    dom.setAttribs(node, newAttributes);
-                    if (text) {
-                        if ('innerText' in node) {
-                            node.innerText = text;
-                        } else {
-                            node.textContent = text;
-                        }
-                    }
-                    editor.selection.select(node);
-                    editor.undoManager.add();
-                } else {
-                    editor.focus();
-                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
-                    editor.selection.setContent(node);
-                    editor.undoManager.add();
-                }
-            }, text, evelementsOptions);
-        };
-    }
-
-    if (typeof evelementsConfig === 'string') {
-        evelementsConfig = evelementsConfig.split(' ');
-    }
-
-    evelementsConfig.forEach(function(elementConfig) {
-        if (typeof elementConfig === 'string') {
-            elementConfig = {
-                name: elementConfig
-            };
-        }
-
-        elementConfig.matches = elementConfig.matches || function(node) {
-            return node.nodeName.toLowerCase() === elementConfig.name;
-        };
-
-        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
-
-        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
-            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
-            icon: elementConfig.icon,
-            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
-            shortcut: elementConfig.shortcut,
-            onclick: callbackAction,
-            stateSelector: elementConfig.selector || elementConfig.name,
-        });
-
-        if (elementConfig.shortcut) {
-            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
-        }
-    });
-});
-
-/* global tinymce, console */
-
-tinymce.PluginManager.add('evimage', function(editor) {
-    console.log('evimage is deprecated: use evelements');
-    function showDialog() {
-        var dom = editor.dom;
-        var node = editor.selection.getNode();
-        var attributes = null;
-
-        if (node && node.getAttribute('data-picture-id')) {
-            attributes = {
-                src: dom.getAttrib(node, 'src'),
-                alt: dom.getAttrib(node, 'alt'),
-                'class': dom.getAttrib(node, 'class'),
-                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
-            };
-        }
-
-        editor.settings.evimage(attributes, function(attributesNew) {
-            if (attributes) {
-                dom.removeAllAttribs(node);
-                dom.setAttribs(node, attributesNew);
-            } else {
-                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
-            }
-        });
-    }
-
-    editor.addButton('evimage', {
-        icon: 'image',
-        tooltip: 'Insert/edit image',
-        onclick: showDialog,
-        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
-    });
-
-    editor.addMenuItem('evimage', {
-        icon: 'image',
-        text: 'Insert image',
-        onclick: showDialog,
-        context: 'insert',
-        prependToContext: true
-    });
-
-    editor.addCommand('mceImage', showDialog);
-});
 
 (function () {
     'use strict';
