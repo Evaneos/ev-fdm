@@ -165,6 +165,12 @@
                             progress: 0
                         };
 
+                        // upload object, encapsulate the state of the current (multi file) upload
+                        var upload = {
+                            deferred: $q.defer(),
+                            hasFileErrored: false,
+                        };
+
                         var computeOverallProgress = function () {
                             progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
                             progress.total = dropzone.getAcceptedFiles().length;
@@ -176,14 +182,9 @@
                             .off('uploadprogress', computeOverallProgress)
                             .off('maxfilesexceeded');
 
-                        // upload object, encapsulate the state of the current (multi file) upload
-                        var upload = {
-                            deferred: $q.defer(),
-                            hasFileErrored: false,
-                        };
                         computeOverallProgress();
 
-                        dropzone.once('error', function() {
+                        dropzone.once('error', function () {
                             upload.hasFileErrored = true;
                         });
 

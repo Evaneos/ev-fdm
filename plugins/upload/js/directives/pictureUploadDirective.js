@@ -103,18 +103,20 @@ angular.module('ev-upload')
                     $scope.uploadPromise = upload;
                     upload
                         .then(
-                            function success () {
+                            function success() {
                                 NotificationsService.addSuccess({
                                     text: 'Les images ont été uploadées avec succès'
                                 });
                             },
-                            function error () {
+                            function error(response) {
                                 NotificationsService.add({
-                                    type: NotificationsService.type.WARNING,
-                                    text: 'Certaines images n\'ont pas pu être uploadées.'
+                                    type: NotificationsService.type.ERROR,
+                                    text: response.status === 400 ? response.data.error.message
+                                                    : 'Certaines images n\'ont pas pu être uploadées.',
+                                    delay: 10,
                                 });
                             },
-                            function onNotify (progress) {
+                            function onNotify(progress) {
                                 $scope.upload = progress;
                             }
                         )
