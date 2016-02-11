@@ -221,18 +221,20 @@ angular.module('ev-upload')
                     $scope.uploadPromise = upload;
                     upload
                         .then(
-                            function success () {
+                            function success() {
                                 NotificationsService.addSuccess({
                                     text: 'Les images ont été uploadées avec succès'
                                 });
                             },
-                            function error () {
+                            function error(response) {
                                 NotificationsService.add({
-                                    type: NotificationsService.type.WARNING,
-                                    text: 'Certaines images n\'ont pas pu être uploadées.'
+                                    type: NotificationsService.type.ERROR,
+                                    text: response.status === 400 ? response.data.error.message
+                                                    : 'Certaines images n\'ont pas pu être uploadées.',
+                                    delay: 10,
                                 });
                             },
-                            function onNotify (progress) {
+                            function onNotify(progress) {
                                 $scope.upload = progress;
                             }
                         )
@@ -417,6 +419,12 @@ angular.module('ev-upload')
                             progress: 0
                         };
 
+                        // upload object, encapsulate the state of the current (multi file) upload
+                        var upload = {
+                            deferred: $q.defer(),
+                            hasFileErrored: false,
+                        };
+
                         var computeOverallProgress = function () {
                             progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
                             progress.total = dropzone.getAcceptedFiles().length;
@@ -428,14 +436,9 @@ angular.module('ev-upload')
                             .off('uploadprogress', computeOverallProgress)
                             .off('maxfilesexceeded');
 
-                        // upload object, encapsulate the state of the current (multi file) upload
-                        var upload = {
-                            deferred: $q.defer(),
-                            hasFileErrored: false,
-                        };
                         computeOverallProgress();
 
-                        dropzone.once('error', function() {
+                        dropzone.once('error', function () {
                             upload.hasFileErrored = true;
                         });
 
