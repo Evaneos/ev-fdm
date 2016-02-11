@@ -3418,303 +3418,6 @@ angular.module('ev-fdm')
         }
     }
 });
-angular.module('ev-leaflet', ['leaflet-directive'])
-    .provider('evLeaflet', function() {
-        this.$get = function() {
-            return {
-                icons: this.icons,
-                tiles: this.tiles
-            };
-        };
-
-        this.setIcons = function(icons) {
-            this.icons = icons;
-        };
-
-        this.setTiles = function(tiles) {
-            this.tiles = tiles;
-        };
-    })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
-        return {
-            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
-            restrict: 'AE',
-            scope: {
-                coordinates: '=',
-                defaultCoordinates: '=?',
-                boundingbox: '=?',
-                editable: '='
-            },
-            controller: function($scope) {
-
-                // Icons settings
-                var baseIcon = {
-                    iconSize:   [40, 40],
-                    shadowSize: [1, 1],
-                    iconAnchor: [1, 20]
-                };
-
-                var icons = evLeaflet.icons;
-
-                if ('default' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.default);
-                }
-                if ('draggable' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.draggable);
-                }
-
-                var tiles = evLeaflet.tiles;
-                if (tiles) {
-                    $scope.tiles = tiles;
-                }
-
-                $scope.defaults = {
-                    scrollWheelZoom: false,
-                    doubleClickZoom: false
-                };
-
-                // Setting a marker in location
-                $scope.markers = {
-                    marker: {
-                        focus: true
-                    }
-                };
-
-                // Double binding between coordinates and marker's position
-                $scope.$watch('coordinates.latitude', function(lat) {
-                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
-                            lat = $scope.defaultCoordinates.latitude;
-                        } else {
-                            lat = 0;
-                        }
-                        $log.warn('ev-leaflet: latitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lat != lat) {
-                        $scope.markers.marker.lat = lat;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                $scope.$watch('coordinates.longitude', function(lng) {
-                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
-                            lng = $scope.defaultCoordinates.longitude;
-                        } else {
-                            lng = 0;
-                        }
-                        $log.warn('ev-leaflet: longitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lng != lng) {
-                        $scope.markers.marker.lng = lng;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                centerOnMarkerOrBoungingbox();
-
-                $scope.$watch('boundingbox', function(boundingbox) {
-                    centerOnMarkerOrBoungingbox();
-                });
-
-                $scope.$watch('markers.marker.lat', function(lat) {
-                    if (lat != null && $scope.editable) {
-                        $scope.coordinates.latitude = lat;
-                    }
-                });
-
-                $scope.$watch('markers.marker.lng', function(lng) {
-                    if (lng != null && $scope.editable) {
-                        $scope.coordinates.longitude = lng;
-                    }
-                });
-
-                // Setting map center
-                function centerOnMarkerOrBoungingbox() {
-                    if ($scope.boundingbox) {
-                        if (!$scope.bounds) {
-                            $scope.bounds = {
-                                southWest: {},
-                                northEast: {},
-                            };
-                        }
-                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
-                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
-                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
-                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
-                        return;
-                    }
-
-                    if (!$scope.center) {
-                        $scope.center = { zoom: 8 };
-                    }
-                    $scope.center.lat = $scope.markers.marker.lat;
-                    $scope.center.lng = $scope.markers.marker.lng;
-                }
-
-                $scope.$watch('editable', function () {
-                    var edited = $scope.editable;
-                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
-                    $scope.markers.marker.draggable = edited;
-                });
-            }
-        };
-    }]);
-
-/* global tinymce */
-
-tinymce.PluginManager.add('evelements', function(editor) {
-    var evelementsConfig = editor.settings.evelements;
-    var evelementsOptions = editor.settings.evelementsOptions;
-
-    function setElement(elementConfig) {
-        return function() {
-            var dom = editor.dom;
-            var node = editor.selection.getNode();
-            if (node && elementConfig.matches(node)) {
-                dom.remove(node, true);
-            } else {
-                editor.insertContent(
-                    dom.createHTML(
-                        elementConfig.name,
-                        {},
-                        dom.encode(editor.selection.getContent({ format: 'text' }))
-                    )
-                );
-            }
-        };
-    }
-
-    function showDialog(elementConfig) {
-        return function() {
-            var dom = editor.dom;
-            var node = editor.selection.getNode();
-            var attributes = null;
-
-            if (node && elementConfig.matches(node)) {
-                attributes = {};
-                var attribs = dom.getAttribs(node);
-                for (var i = 0; i < attribs.length; ++i) {
-                    var item = attribs[i];
-                    attributes[item.name] = item.value;
-                }
-            } else {
-                node = null;
-            }
-
-            var key = elementConfig.key || elementConfig.name;
-            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
-            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
-                                 : editor.selection.getContent({ format: 'text' });
-            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
-                if (node) {
-                    editor.focus();
-                    if (!newAttributes && !text) {
-                        dom.remove(node, true);
-                        editor.undoManager.add();
-                        return;
-                    }
-                    dom.removeAllAttribs(node);
-                    dom.setAttribs(node, newAttributes);
-                    if (text) {
-                        if ('innerText' in node) {
-                            node.innerText = text;
-                        } else {
-                            node.textContent = text;
-                        }
-                    }
-                    editor.selection.select(node);
-                    editor.undoManager.add();
-                } else {
-                    editor.focus();
-                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
-                    editor.selection.setContent(node);
-                    editor.undoManager.add();
-                }
-            }, text, evelementsOptions);
-        };
-    }
-
-    if (typeof evelementsConfig === 'string') {
-        evelementsConfig = evelementsConfig.split(' ');
-    }
-
-    evelementsConfig.forEach(function(elementConfig) {
-        if (typeof elementConfig === 'string') {
-            elementConfig = {
-                name: elementConfig
-            };
-        }
-
-        elementConfig.matches = elementConfig.matches || function(node) {
-            return node.nodeName.toLowerCase() === elementConfig.name;
-        };
-
-        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
-
-        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
-            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
-            icon: elementConfig.icon,
-            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
-            shortcut: elementConfig.shortcut,
-            onclick: callbackAction,
-            stateSelector: elementConfig.selector || elementConfig.name,
-        });
-
-        if (elementConfig.shortcut) {
-            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
-        }
-    });
-});
-
-/* global tinymce, console */
-
-tinymce.PluginManager.add('evimage', function(editor) {
-    console.log('evimage is deprecated: use evelements');
-    function showDialog() {
-        var dom = editor.dom;
-        var node = editor.selection.getNode();
-        var attributes = null;
-
-        if (node && node.getAttribute('data-picture-id')) {
-            attributes = {
-                src: dom.getAttrib(node, 'src'),
-                alt: dom.getAttrib(node, 'alt'),
-                'class': dom.getAttrib(node, 'class'),
-                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
-            };
-        }
-
-        editor.settings.evimage(attributes, function(attributesNew) {
-            if (attributes) {
-                dom.removeAllAttribs(node);
-                dom.setAttribs(node, attributesNew);
-            } else {
-                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
-            }
-        });
-    }
-
-    editor.addButton('evimage', {
-        icon: 'image',
-        tooltip: 'Insert/edit image',
-        onclick: showDialog,
-        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
-    });
-
-    editor.addMenuItem('evimage', {
-        icon: 'image',
-        text: 'Insert image',
-        onclick: showDialog,
-        context: 'insert',
-        prependToContext: true
-    });
-
-    editor.addCommand('mceImage', showDialog);
-});
-
 /* jshint camelcase: false */
 /* global tinymce */
 /**
@@ -4015,6 +3718,303 @@ angular.module('ev-tinymce', [])
     }]);
 }) (window.tinyMCE);
 
+/* global tinymce */
+
+tinymce.PluginManager.add('evelements', function(editor) {
+    var evelementsConfig = editor.settings.evelements;
+    var evelementsOptions = editor.settings.evelementsOptions;
+
+    function setElement(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            if (node && elementConfig.matches(node)) {
+                dom.remove(node, true);
+            } else {
+                editor.insertContent(
+                    dom.createHTML(
+                        elementConfig.name,
+                        {},
+                        dom.encode(editor.selection.getContent({ format: 'text' }))
+                    )
+                );
+            }
+        };
+    }
+
+    function showDialog(elementConfig) {
+        return function() {
+            var dom = editor.dom;
+            var node = editor.selection.getNode();
+            var attributes = null;
+
+            if (node && elementConfig.matches(node)) {
+                attributes = {};
+                var attribs = dom.getAttribs(node);
+                for (var i = 0; i < attribs.length; ++i) {
+                    var item = attribs[i];
+                    attributes[item.name] = item.value;
+                }
+            } else {
+                node = null;
+            }
+
+            var key = elementConfig.key || elementConfig.name;
+            var callback = evelementsOptions[key] && evelementsOptions[key].callback;
+            var text = node ? ('innerText' in node ? node.innerText : node.textContent)
+                                 : editor.selection.getContent({ format: 'text' });
+            (callback || elementConfig.callback)(attributes, function(newAttributes, text) {
+                if (node) {
+                    editor.focus();
+                    if (!newAttributes && !text) {
+                        dom.remove(node, true);
+                        editor.undoManager.add();
+                        return;
+                    }
+                    dom.removeAllAttribs(node);
+                    dom.setAttribs(node, newAttributes);
+                    if (text) {
+                        if ('innerText' in node) {
+                            node.innerText = text;
+                        } else {
+                            node.textContent = text;
+                        }
+                    }
+                    editor.selection.select(node);
+                    editor.undoManager.add();
+                } else {
+                    editor.focus();
+                    node = dom.createHTML(elementConfig.name, newAttributes, text && dom.encode(text));
+                    editor.selection.setContent(node);
+                    editor.undoManager.add();
+                }
+            }, text, evelementsOptions);
+        };
+    }
+
+    if (typeof evelementsConfig === 'string') {
+        evelementsConfig = evelementsConfig.split(' ');
+    }
+
+    evelementsConfig.forEach(function(elementConfig) {
+        if (typeof elementConfig === 'string') {
+            elementConfig = {
+                name: elementConfig
+            };
+        }
+
+        elementConfig.matches = elementConfig.matches || function(node) {
+            return node.nodeName.toLowerCase() === elementConfig.name;
+        };
+
+        var callbackAction = elementConfig.callback ? showDialog(elementConfig) : setElement(elementConfig);
+
+        editor.addButton('ev' + (elementConfig.key || elementConfig.name), {
+            text: elementConfig.title !== undefined ? elementConfig.title : elementConfig.name,
+            icon: elementConfig.icon,
+            tooltip: elementConfig.tooltip || ('Set this text as ' + elementConfig.name),
+            shortcut: elementConfig.shortcut,
+            onclick: callbackAction,
+            stateSelector: elementConfig.selector || elementConfig.name,
+        });
+
+        if (elementConfig.shortcut) {
+            editor.addShortcut(elementConfig.shortcut, '', callbackAction);
+        }
+    });
+});
+
+/* global tinymce, console */
+
+tinymce.PluginManager.add('evimage', function(editor) {
+    console.log('evimage is deprecated: use evelements');
+    function showDialog() {
+        var dom = editor.dom;
+        var node = editor.selection.getNode();
+        var attributes = null;
+
+        if (node && node.getAttribute('data-picture-id')) {
+            attributes = {
+                src: dom.getAttrib(node, 'src'),
+                alt: dom.getAttrib(node, 'alt'),
+                'class': dom.getAttrib(node, 'class'),
+                'data-picture-id': dom.getAttrib(node, 'data-picture-id')
+            };
+        }
+
+        editor.settings.evimage(attributes, function(attributesNew) {
+            if (attributes) {
+                dom.removeAllAttribs(node);
+                dom.setAttribs(node, attributesNew);
+            } else {
+                editor.selection.setContent(editor.dom.createHTML('img', attributesNew));
+            }
+        });
+    }
+
+    editor.addButton('evimage', {
+        icon: 'image',
+        tooltip: 'Insert/edit image',
+        onclick: showDialog,
+        stateSelector: 'img[data-picture-id]:not([data-mce-object],[data-mce-placeholder])'
+    });
+
+    editor.addMenuItem('evimage', {
+        icon: 'image',
+        text: 'Insert image',
+        onclick: showDialog,
+        context: 'insert',
+        prependToContext: true
+    });
+
+    editor.addCommand('mceImage', showDialog);
+});
+
+angular.module('ev-leaflet', ['leaflet-directive'])
+    .provider('evLeaflet', function() {
+        this.$get = function() {
+            return {
+                icons: this.icons,
+                tiles: this.tiles
+            };
+        };
+
+        this.setIcons = function(icons) {
+            this.icons = icons;
+        };
+
+        this.setTiles = function(tiles) {
+            this.tiles = tiles;
+        };
+    })
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
+        return {
+            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
+            restrict: 'AE',
+            scope: {
+                coordinates: '=',
+                defaultCoordinates: '=?',
+                boundingbox: '=?',
+                editable: '='
+            },
+            controller: function($scope) {
+
+                // Icons settings
+                var baseIcon = {
+                    iconSize:   [40, 40],
+                    shadowSize: [1, 1],
+                    iconAnchor: [1, 20]
+                };
+
+                var icons = evLeaflet.icons;
+
+                if ('default' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.default);
+                }
+                if ('draggable' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.draggable);
+                }
+
+                var tiles = evLeaflet.tiles;
+                if (tiles) {
+                    $scope.tiles = tiles;
+                }
+
+                $scope.defaults = {
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false
+                };
+
+                // Setting a marker in location
+                $scope.markers = {
+                    marker: {
+                        focus: true
+                    }
+                };
+
+                // Double binding between coordinates and marker's position
+                $scope.$watch('coordinates.latitude', function(lat) {
+                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
+                            lat = $scope.defaultCoordinates.latitude;
+                        } else {
+                            lat = 0;
+                        }
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lat != lat) {
+                        $scope.markers.marker.lat = lat;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                $scope.$watch('coordinates.longitude', function(lng) {
+                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
+                            lng = $scope.defaultCoordinates.longitude;
+                        } else {
+                            lng = 0;
+                        }
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lng != lng) {
+                        $scope.markers.marker.lng = lng;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                centerOnMarkerOrBoungingbox();
+
+                $scope.$watch('boundingbox', function(boundingbox) {
+                    centerOnMarkerOrBoungingbox();
+                });
+
+                $scope.$watch('markers.marker.lat', function(lat) {
+                    if (lat != null && $scope.editable) {
+                        $scope.coordinates.latitude = lat;
+                    }
+                });
+
+                $scope.$watch('markers.marker.lng', function(lng) {
+                    if (lng != null && $scope.editable) {
+                        $scope.coordinates.longitude = lng;
+                    }
+                });
+
+                // Setting map center
+                function centerOnMarkerOrBoungingbox() {
+                    if ($scope.boundingbox) {
+                        if (!$scope.bounds) {
+                            $scope.bounds = {
+                                southWest: {},
+                                northEast: {},
+                            };
+                        }
+                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
+                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
+                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
+                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
+                        return;
+                    }
+
+                    if (!$scope.center) {
+                        $scope.center = { zoom: 8 };
+                    }
+                    $scope.center.lat = $scope.markers.marker.lat;
+                    $scope.center.lng = $scope.markers.marker.lng;
+                }
+
+                $scope.$watch('editable', function () {
+                    var edited = $scope.editable;
+                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
+                    $scope.markers.marker.draggable = edited;
+                });
+            }
+        };
+    }]);
+
 (function () {
     'use strict';
     angular.module('ev-upload', ['ev-fdm']);
@@ -4238,18 +4238,20 @@ angular.module('ev-upload')
                     $scope.uploadPromise = upload;
                     upload
                         .then(
-                            function success () {
+                            function success() {
                                 NotificationsService.addSuccess({
                                     text: 'Les images ont été uploadées avec succès'
                                 });
                             },
-                            function error () {
+                            function error(response) {
                                 NotificationsService.add({
-                                    type: NotificationsService.type.WARNING,
-                                    text: 'Certaines images n\'ont pas pu être uploadées.'
+                                    type: NotificationsService.type.ERROR,
+                                    text: response.status === 400 ? response.data.error.message
+                                                    : 'Certaines images n\'ont pas pu être uploadées.',
+                                    delay: 10,
                                 });
                             },
-                            function onNotify (progress) {
+                            function onNotify(progress) {
                                 $scope.upload = progress;
                             }
                         )
@@ -4434,6 +4436,12 @@ angular.module('ev-upload')
                             progress: 0
                         };
 
+                        // upload object, encapsulate the state of the current (multi file) upload
+                        var upload = {
+                            deferred: $q.defer(),
+                            hasFileErrored: false,
+                        };
+
                         var computeOverallProgress = function () {
                             progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
                             progress.total = dropzone.getAcceptedFiles().length;
@@ -4445,14 +4453,9 @@ angular.module('ev-upload')
                             .off('uploadprogress', computeOverallProgress)
                             .off('maxfilesexceeded');
 
-                        // upload object, encapsulate the state of the current (multi file) upload
-                        var upload = {
-                            deferred: $q.defer(),
-                            hasFileErrored: false,
-                        };
                         computeOverallProgress();
 
-                        dropzone.once('error', function() {
+                        dropzone.once('error', function () {
                             upload.hasFileErrored = true;
                         });
 
@@ -4504,4 +4507,5 @@ angular.module('ev-upload')
             };
         }]);
 }(Dropzone));
+
 //# sourceMappingURL=ev-fdm.js.map
