@@ -6,51 +6,55 @@ angular.module('ev-fdm')
             restrict: 'A',
             scope: false,
             controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
-                var self = this;
+                var _this = this;
                 this.reverseSort = false;
                 this.sortKey = '';
 
                 $scope.reverseSort = $scope.reverseSort || false;
 
-                var reverseSortGet = $parse($attrs.reverseSort),
-                    reverseSortSet = reverseSortGet.assign,
-                    sortKeyGet = $parse($attrs.sortBy),
-                    sortKeySet = sortKeyGet.assign;
+                var reverseSortGet = $parse($attrs.reverseSort);
+                var reverseSortSet = reverseSortGet.assign;
+                var sortKeyGet = $parse($attrs.sortBy);
+                var sortKeySet = sortKeyGet.assign;
 
                 $scope.$watch(function() {
                     return reverseSortGet($scope);
                 }, function(newReverseSort) {
-                    self.reverseSort = newReverseSort;
+                    _this.reverseSort = newReverseSort;
                 });
 
                 $scope.$watch(function() {
                     return sortKeyGet($scope);
                 }, function(newSortKey) {
-                    self.sortKey = newSortKey;
+                    _this.sortKey = newSortKey;
                 });
 
                 this.sortBy = function(key) {
-                    if(key == this.sortKey) {
-                        this.reverseSort = !this.reverseSort;
-                    }
-                    else {
+                    if (key == this.sortKey) {
+                        // get back to the default state here (remove the sorting)
+                        // reverseSort flow: false (default) -> true -> sorketKey = '' (reset);
+                        if (this.reverseSort) {
+                            this.sortKey = '';
+                        } else {
+                            this.reverseSort = !this.reverseSort;
+                        }
+                    } else {
                         this.reverseSort = false;
                         this.sortKey = key;
                     }
 
-                    if(reverseSortSet) {
+                    if (reverseSortSet) {
                         reverseSortSet($scope, this.reverseSort);
                     }
 
-                    if(sortKeySet) {
+                    if (sortKeySet) {
                         sortKeySet($scope, this.sortKey);
                     }
 
                     $scope.$eval($attrs.sortChange);
                 };
-
-            }]
-        };
+            },
+        ],};
     })
     .directive('sortable', function() {
         return {
@@ -76,19 +80,17 @@ angular.module('ev-fdm')
                 });
 
                 function setClasses() {
-                    if(ctrl.sortKey === key){
+                    if (ctrl.sortKey === key) {
                         element.removeClass('no-sort');
-                        if(ctrl.reverseSort) {
+                        if (ctrl.reverseSort) {
                             element.removeClass('sort-down').addClass('sort-up');
-                        }
-                        else {
+                        } else {
                             element.removeClass('sort-up').addClass('sort-down');
                         }
-                    }
-                    else {
+                    } else {
                         element.removeClass('sort-up sort-down').addClass('no-sort');
                     }
                 }
-            }
-        }
+            },
+        };
     });
