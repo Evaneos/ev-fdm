@@ -1946,51 +1946,55 @@ angular.module('ev-fdm')
             restrict: 'A',
             scope: false,
             controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
-                var self = this;
+                var _this = this;
                 this.reverseSort = false;
                 this.sortKey = '';
 
                 $scope.reverseSort = $scope.reverseSort || false;
 
-                var reverseSortGet = $parse($attrs.reverseSort),
-                    reverseSortSet = reverseSortGet.assign,
-                    sortKeyGet = $parse($attrs.sortBy),
-                    sortKeySet = sortKeyGet.assign;
+                var reverseSortGet = $parse($attrs.reverseSort);
+                var reverseSortSet = reverseSortGet.assign;
+                var sortKeyGet = $parse($attrs.sortBy);
+                var sortKeySet = sortKeyGet.assign;
 
                 $scope.$watch(function() {
                     return reverseSortGet($scope);
                 }, function(newReverseSort) {
-                    self.reverseSort = newReverseSort;
+                    _this.reverseSort = newReverseSort;
                 });
 
                 $scope.$watch(function() {
                     return sortKeyGet($scope);
                 }, function(newSortKey) {
-                    self.sortKey = newSortKey;
+                    _this.sortKey = newSortKey;
                 });
 
                 this.sortBy = function(key) {
-                    if(key == this.sortKey) {
-                        this.reverseSort = !this.reverseSort;
-                    }
-                    else {
+                    if (key == this.sortKey) {
+                        // get back to the default state here (remove the sorting)
+                        // reverseSort flow: false (default) -> true -> sorketKey = '' (reset);
+                        if (this.reverseSort) {
+                            this.sortKey = '';
+                        } else {
+                            this.reverseSort = !this.reverseSort;
+                        }
+                    } else {
                         this.reverseSort = false;
                         this.sortKey = key;
                     }
 
-                    if(reverseSortSet) {
+                    if (reverseSortSet) {
                         reverseSortSet($scope, this.reverseSort);
                     }
 
-                    if(sortKeySet) {
+                    if (sortKeySet) {
                         sortKeySet($scope, this.sortKey);
                     }
 
                     $scope.$eval($attrs.sortChange);
                 };
-
-            }]
-        };
+            },
+        ],};
     })
     .directive('sortable', function() {
         return {
@@ -2016,22 +2020,21 @@ angular.module('ev-fdm')
                 });
 
                 function setClasses() {
-                    if(ctrl.sortKey === key){
+                    if (ctrl.sortKey === key) {
                         element.removeClass('no-sort');
-                        if(ctrl.reverseSort) {
+                        if (ctrl.reverseSort) {
                             element.removeClass('sort-down').addClass('sort-up');
-                        }
-                        else {
+                        } else {
                             element.removeClass('sort-up').addClass('sort-down');
                         }
-                    }
-                    else {
+                    } else {
                         element.removeClass('sort-up sort-down').addClass('no-sort');
                     }
                 }
-            }
-        }
+            },
+        };
     });
+
 angular.module('ev-fdm')
     .directive('evStopEventPropagation', function () {
         return {
@@ -3418,6 +3421,151 @@ angular.module('ev-fdm')
         }
     }
 });
+angular.module('ev-leaflet', ['leaflet-directive'])
+    .provider('evLeaflet', function() {
+        this.$get = function() {
+            return {
+                icons: this.icons,
+                tiles: this.tiles
+            };
+        };
+
+        this.setIcons = function(icons) {
+            this.icons = icons;
+        };
+
+        this.setTiles = function(tiles) {
+            this.tiles = tiles;
+        };
+    })
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
+        return {
+            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
+            restrict: 'AE',
+            scope: {
+                coordinates: '=',
+                defaultCoordinates: '=?',
+                boundingbox: '=?',
+                editable: '='
+            },
+            controller: function($scope) {
+
+                // Icons settings
+                var baseIcon = {
+                    iconSize:   [40, 40],
+                    shadowSize: [1, 1],
+                    iconAnchor: [1, 20]
+                };
+
+                var icons = evLeaflet.icons;
+
+                if ('default' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.default);
+                }
+                if ('draggable' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.draggable);
+                }
+
+                var tiles = evLeaflet.tiles;
+                if (tiles) {
+                    $scope.tiles = tiles;
+                }
+
+                $scope.defaults = {
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false
+                };
+
+                // Setting a marker in location
+                $scope.markers = {
+                    marker: {
+                        focus: true
+                    }
+                };
+
+                // Double binding between coordinates and marker's position
+                $scope.$watch('coordinates.latitude', function(lat) {
+                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
+                            lat = $scope.defaultCoordinates.latitude;
+                        } else {
+                            lat = 0;
+                        }
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lat != lat) {
+                        $scope.markers.marker.lat = lat;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                $scope.$watch('coordinates.longitude', function(lng) {
+                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
+                            lng = $scope.defaultCoordinates.longitude;
+                        } else {
+                            lng = 0;
+                        }
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lng != lng) {
+                        $scope.markers.marker.lng = lng;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                centerOnMarkerOrBoungingbox();
+
+                $scope.$watch('boundingbox', function(boundingbox) {
+                    centerOnMarkerOrBoungingbox();
+                });
+
+                $scope.$watch('markers.marker.lat', function(lat) {
+                    if (lat != null && $scope.editable) {
+                        $scope.coordinates.latitude = lat;
+                    }
+                });
+
+                $scope.$watch('markers.marker.lng', function(lng) {
+                    if (lng != null && $scope.editable) {
+                        $scope.coordinates.longitude = lng;
+                    }
+                });
+
+                // Setting map center
+                function centerOnMarkerOrBoungingbox() {
+                    if ($scope.boundingbox) {
+                        if (!$scope.bounds) {
+                            $scope.bounds = {
+                                southWest: {},
+                                northEast: {},
+                            };
+                        }
+                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
+                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
+                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
+                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
+                        return;
+                    }
+
+                    if (!$scope.center) {
+                        $scope.center = { zoom: 8 };
+                    }
+                    $scope.center.lat = $scope.markers.marker.lat;
+                    $scope.center.lng = $scope.markers.marker.lng;
+                }
+
+                $scope.$watch('editable', function () {
+                    var edited = $scope.editable;
+                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
+                    $scope.markers.marker.draggable = edited;
+                });
+            }
+        };
+    }]);
+
 /* jshint camelcase: false */
 /* global tinymce */
 /**
@@ -3869,151 +4017,6 @@ tinymce.PluginManager.add('evimage', function(editor) {
 
     editor.addCommand('mceImage', showDialog);
 });
-
-angular.module('ev-leaflet', ['leaflet-directive'])
-    .provider('evLeaflet', function() {
-        this.$get = function() {
-            return {
-                icons: this.icons,
-                tiles: this.tiles
-            };
-        };
-
-        this.setIcons = function(icons) {
-            this.icons = icons;
-        };
-
-        this.setTiles = function(tiles) {
-            this.tiles = tiles;
-        };
-    })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
-        return {
-            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
-            restrict: 'AE',
-            scope: {
-                coordinates: '=',
-                defaultCoordinates: '=?',
-                boundingbox: '=?',
-                editable: '='
-            },
-            controller: function($scope) {
-
-                // Icons settings
-                var baseIcon = {
-                    iconSize:   [40, 40],
-                    shadowSize: [1, 1],
-                    iconAnchor: [1, 20]
-                };
-
-                var icons = evLeaflet.icons;
-
-                if ('default' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.default);
-                }
-                if ('draggable' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.draggable);
-                }
-
-                var tiles = evLeaflet.tiles;
-                if (tiles) {
-                    $scope.tiles = tiles;
-                }
-
-                $scope.defaults = {
-                    scrollWheelZoom: false,
-                    doubleClickZoom: false
-                };
-
-                // Setting a marker in location
-                $scope.markers = {
-                    marker: {
-                        focus: true
-                    }
-                };
-
-                // Double binding between coordinates and marker's position
-                $scope.$watch('coordinates.latitude', function(lat) {
-                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
-                            lat = $scope.defaultCoordinates.latitude;
-                        } else {
-                            lat = 0;
-                        }
-                        $log.warn('ev-leaflet: latitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lat != lat) {
-                        $scope.markers.marker.lat = lat;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                $scope.$watch('coordinates.longitude', function(lng) {
-                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
-                            lng = $scope.defaultCoordinates.longitude;
-                        } else {
-                            lng = 0;
-                        }
-                        $log.warn('ev-leaflet: longitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lng != lng) {
-                        $scope.markers.marker.lng = lng;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                centerOnMarkerOrBoungingbox();
-
-                $scope.$watch('boundingbox', function(boundingbox) {
-                    centerOnMarkerOrBoungingbox();
-                });
-
-                $scope.$watch('markers.marker.lat', function(lat) {
-                    if (lat != null && $scope.editable) {
-                        $scope.coordinates.latitude = lat;
-                    }
-                });
-
-                $scope.$watch('markers.marker.lng', function(lng) {
-                    if (lng != null && $scope.editable) {
-                        $scope.coordinates.longitude = lng;
-                    }
-                });
-
-                // Setting map center
-                function centerOnMarkerOrBoungingbox() {
-                    if ($scope.boundingbox) {
-                        if (!$scope.bounds) {
-                            $scope.bounds = {
-                                southWest: {},
-                                northEast: {},
-                            };
-                        }
-                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
-                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
-                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
-                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
-                        return;
-                    }
-
-                    if (!$scope.center) {
-                        $scope.center = { zoom: 8 };
-                    }
-                    $scope.center.lat = $scope.markers.marker.lat;
-                    $scope.center.lng = $scope.markers.marker.lng;
-                }
-
-                $scope.$watch('editable', function () {
-                    var edited = $scope.editable;
-                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
-                    $scope.markers.marker.draggable = edited;
-                });
-            }
-        };
-    }]);
 
 (function () {
     'use strict';
