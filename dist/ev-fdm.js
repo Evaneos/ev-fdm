@@ -387,6 +387,186 @@ angular.module('ev-fdm')
         return SearchController;
     }]);
 
+angular.module('ev-fdm').factory('confirmBox', [
+    '$modal',
+    function($modal) {
+        return function(title, message, positive, negative) {
+            return $modal.open({
+                backdrop: 'static',
+                templateUrl: 'ev-confirm-box.html',
+                controller: ['$scope', function($scope) {
+                    $scope.title    = title;
+                    $scope.message  = message;
+                    $scope.positive = positive;
+                    $scope.negative = negative;
+                }]
+            }).result;
+        };
+    }
+]);
+
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
+            if (typeof dataProvider === 'object') {
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                },
+                id: idFunction,
+            };
+            return config;
+        };
+    }
+]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2187,186 +2367,6 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
-angular.module('ev-fdm').factory('confirmBox', [
-    '$modal',
-    function($modal) {
-        return function(title, message, positive, negative) {
-            return $modal.open({
-                backdrop: 'static',
-                templateUrl: 'ev-confirm-box.html',
-                controller: ['$scope', function($scope) {
-                    $scope.title    = title;
-                    $scope.message  = message;
-                    $scope.positive = positive;
-                    $scope.negative = negative;
-                }]
-            }).result;
-        };
-    }
-]);
-
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            var idFunction;
-            var timeout = 600;
-            var opt = {};
-            if (typeof dataProvider === 'object') {
-                opt = dataProvider;
-                formatter = opt.formatter;
-                resultModifier = opt.resultModifier;
-                minimumInputLength = opt.minimumInputLength;
-                key = opt.key;
-                dataProviderFilter = opt.dataProviderFilter;
-                dataProvider = opt.dataProvider;
-                timeout = opt.timeout || timeout;
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-
-                if (typeof opt.id === 'string') {
-                    idFunction = function(ressource) {return ressource[opt.id];};
-                } else if (typeof opt.id === 'function') {
-                    idFunction = opt.id;
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                },
-                id: idFunction,
-            };
-            return config;
-        };
-    }
-]);
-
 'use strict';
 /*
     Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
@@ -3421,644 +3421,6 @@ angular.module('ev-fdm')
         }
     }
 });
-angular.module('ev-leaflet', ['leaflet-directive'])
-    .provider('evLeaflet', function() {
-        this.$get = function() {
-            return {
-                icons: this.icons,
-                tiles: this.tiles
-            };
-        };
-
-        this.setIcons = function(icons) {
-            this.icons = icons;
-        };
-
-        this.setTiles = function(tiles) {
-            this.tiles = tiles;
-        };
-    })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
-        return {
-            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
-            restrict: 'AE',
-            scope: {
-                coordinates: '=',
-                defaultCoordinates: '=?',
-                boundingbox: '=?',
-                editable: '='
-            },
-            controller: function($scope) {
-
-                // Icons settings
-                var baseIcon = {
-                    iconSize:   [40, 40],
-                    shadowSize: [1, 1],
-                    iconAnchor: [1, 20]
-                };
-
-                var icons = evLeaflet.icons;
-
-                if ('default' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.default);
-                }
-                if ('draggable' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.draggable);
-                }
-
-                var tiles = evLeaflet.tiles;
-                if (tiles) {
-                    $scope.tiles = tiles;
-                }
-
-                $scope.defaults = {
-                    scrollWheelZoom: false,
-                    doubleClickZoom: false
-                };
-
-                // Setting a marker in location
-                $scope.markers = {
-                    marker: {
-                        focus: true
-                    }
-                };
-
-                // Double binding between coordinates and marker's position
-                $scope.$watch('coordinates.latitude', function(lat) {
-                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
-                            lat = $scope.defaultCoordinates.latitude;
-                        } else {
-                            lat = 0;
-                        }
-                        $log.warn('ev-leaflet: latitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lat != lat) {
-                        $scope.markers.marker.lat = lat;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                $scope.$watch('coordinates.longitude', function(lng) {
-                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
-                            lng = $scope.defaultCoordinates.longitude;
-                        } else {
-                            lng = 0;
-                        }
-                        $log.warn('ev-leaflet: longitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lng != lng) {
-                        $scope.markers.marker.lng = lng;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                centerOnMarkerOrBoungingbox();
-
-                $scope.$watch('boundingbox', function(boundingbox) {
-                    centerOnMarkerOrBoungingbox();
-                });
-
-                $scope.$watch('markers.marker.lat', function(lat) {
-                    if (lat != null && $scope.editable) {
-                        $scope.coordinates.latitude = lat;
-                    }
-                });
-
-                $scope.$watch('markers.marker.lng', function(lng) {
-                    if (lng != null && $scope.editable) {
-                        $scope.coordinates.longitude = lng;
-                    }
-                });
-
-                // Setting map center
-                function centerOnMarkerOrBoungingbox() {
-                    if ($scope.boundingbox) {
-                        if (!$scope.bounds) {
-                            $scope.bounds = {
-                                southWest: {},
-                                northEast: {},
-                            };
-                        }
-                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
-                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
-                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
-                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
-                        return;
-                    }
-
-                    if (!$scope.center) {
-                        $scope.center = { zoom: 8 };
-                    }
-                    $scope.center.lat = $scope.markers.marker.lat;
-                    $scope.center.lng = $scope.markers.marker.lng;
-                }
-
-                $scope.$watch('editable', function () {
-                    var edited = $scope.editable;
-                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
-                    $scope.markers.marker.draggable = edited;
-                });
-            }
-        };
-    }]);
-
-(function () {
-    'use strict';
-    angular.module('ev-upload', ['ev-fdm']);
-}) ();
-; (function () {
-'use strict';
-angular.module('ev-upload')
-    .directive('evPictureButtonUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {
-
-/*  ev-picture-button-upload
-    =================
-    Hi! I'm a directive used for uploading pictures but I'm just a button.
-    If you want a more advanced one, you can use the evPictureUpload
-
-    You can parameter me with:
-    - `url`:  which is the place where I'll upload the pictures
-    - `pictureSuccess`:  a function called each time a picture has successfully been uploaded (by flickr
-        or manually). The picture is passed as argument.
-
-*/
-        return {
-            restrict: 'AE',
-            scope: {
-                pictures: '=',
-                buttonText: '@',
-                tooltipText: '@',
-                iconName: '@',
-                url: '@',
-                language: '=',
-                maxFiles: '@',
-                addPicture: '&',
-                onPictureAdded: '&'
-            },
-            template:
-            '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
-                'upload="newUpload(promise)">' +
-                '<div ng-hide="uploading">' +
-                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-env ev-upload-clickable"' +
-                            'tooltip="{{tooltipText}}"' +
-                            'tooltip-placement="top">' +
-                        '<span class="icon {{iconName}}"></span> ' +
-                       '{{buttonText}}' +
-                    '</button>' +
-                '</div>' +
-                '<div class="ev-picture-uploading" ng-show="uploading">' +
-                    '<div class="ev-picture-upload-label"> {{"Transfert en cours"| i18n}} </div>' +
-                    '<p> {{upload.done}} / {{upload.total}} </p>' +
-                '</div>' +
-                '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
-            '</ev-upload>',
-
-            link: function ($scope, elem, attrs) {
-                $scope.uploading = false;
-
-                $scope.settings = {
-                    acceptedFiles: 'image/*',
-                    url: $scope.url,
-                    maxFiles: $scope.maxFiles || 100
-                };
-
-                $scope.pictures = $scope.pictures || [];
-
-                $scope.$watch('url', function (url) {
-                    $scope.settings.url = url;
-                });
-
-                $scope.newUpload = function (upload) {
-                    $scope.upload = {
-                        done: 0,
-                        total: '?'
-                    };
-                    $scope.uploading = true;
-                    $scope.uploadPromise = upload;
-                    upload
-                        .then(
-                            function success () {
-                                NotificationsService.addSuccess({
-                                    text: 'Les images ont été transférées avec succès'
-                                });
-                            },
-                            function error () {
-                                NotificationsService.add({
-                                    type: NotificationsService.type.WARNING,
-                                    text: 'Certaines images n\'ont pas pu être transférées.'
-                                });
-                            },
-                            function onNotify (progress) {
-                                $scope.upload = progress;
-                            }
-                        )
-                        .finally(function () {
-                            $scope.uploading = false;
-                        });
-                };
-
-                // This allow us to override the add picture
-                if(!attrs.addPicture) {
-                    $scope.addPicture = function(picture) {
-                        picture = picture.picture;
-                        var pictureData = picture.data[0];
-                        if($scope.language) {
-                            if (Array.isArray(pictureData.legend)) {
-                                pictureData.legend = {};
-                            }
-                            if (!pictureData.legend[$scope.language]) {
-                                pictureData.legend[$scope.language] = { name: '' };
-                            }
-                        }
-
-                        $scope.pictures.unshift(pictureData);
-                        $scope.onPictureAdded();
-                    };
-                }
-            }
-        };
-}]);
-}) ();
-
-/* jshint maxlen: 200 */
-; (function () {
-'use strict';
-angular.module('ev-upload')
-    .directive('evPictureUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {
-
-/*  ev-picture-upload
-    =================
-    Hi! I'm a directive used for uploading pictures. I'm based on the `ev-upload` directive. But I can also
-    manage flickr uploads !
-
-    You can parameter me with:
-    - `url`:  which is the place where I'll upload the pictures
-    - `addPicture`:  a function called each time a picture has successfully been uploaded (by flickr
-        or manually). The picture is passed as argument.
-
-*/
-        return {
-            restrict: 'AE',
-            scope: {
-                addPicture: '=',
-                url: '@',
-                language: '='
-            },
-            template:
-            '<ev-upload settings="settings" file-success="pictureUploaded(file)"' +
-                'class="ev-picture-upload" upload="newUpload(promise)">' +
-                '<div ng-hide="uploading">' +
-                    '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
-                    '<table style="width:100%"><tr><td style="width:114px">'+
-                            '<button type="button" tabIndex="-1" class="btn ev-upload-clickable">' +
-                                '{{ "Importer..." | i18n}}' +
-                            '</button>' +
-                        '</td>'+
-                        '<td style="width:30px´; line-height: 36px;">'+
-                            '{{ "ou" | i18n }}' +
-                        '</td>'+
-                        '<td>'+
-                            '<ng-form novalidate name="flickr" ' +
-                                'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
-                                '<input name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
-                                    'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" ' +
-                                    'class="form-control" ng-change="uploadFlickrUrl(flickr)"/>' +
-                                '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
-                                    '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
-                                        '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
-                                '</div>' +
-                            '</ng-form>' +
-                        '</td></tr></table>'+
-                '</div>' +
-                '<div class="ev-picture-uploading" ng-show="uploading">' +
-                    '<div class="ev-picture-upload-label"> {{"Upload en cours"| i18n}} </div>' +
-                    '<div class="spinner"></div>' +
-                    '<p> {{upload.done}} / {{upload.total}} {{ "photo(s) uploadée(s)" | i18n }} </p>' +
-                '</div>' +
-                '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
-            '</ev-upload>',
-
-            link: function ($scope) {
-                $scope.flickrUrlPattern = /^(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+.*$/;
-                $scope.settings = {
-                    acceptedFiles: 'image/*',
-                    url: $scope.url
-                };
-            },
-            controller: function ($scope) {
-                $scope.uploading = false;
-                $scope.$watch('url', function (url) {
-                    $scope.settings.url = url;
-                });
-                $scope.uploadFlickrUrl = function (flickrForm) {
-                    /* Trailing the ends in order to have a https://www.flickr.com/photos/{user-id}/{photo-id} url
-                        Warning: `.*` is greedy, so an address like:
-                            https://www.flickr.com/photos/{user-id}/{photo-id}/blabla/1512
-                        will not be parsed nicely
-                     */
-                    if (!flickrForm.$valid || !$scope.flickrUrl) {
-                        return;
-                    }
-                    var flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/ .exec($scope.flickrUrl)[0];
-                    var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
-                    uploadPromise
-                        .success(function (pictureUploaded) {
-                            var picture = pictureUploaded.data[0];
-                            $scope.addPicture(picture);
-                        })
-                        .success(function () {
-                            flickrForm.$setPristine();
-                            $scope.flickrUrl = "";
-                        });
-
-                    $scope.newUpload(uploadPromise);
-                    $scope.upload = {
-                        done: 0,
-                        total: 1,
-                        progress: 0
-                    };
-                };
-
-                $scope.newUpload = function (upload) {
-                    $scope.upload = null;
-                    $scope.uploading = true;
-                    $scope.uploadPromise = upload;
-                    upload
-                        .then(
-                            function success() {
-                                NotificationsService.addSuccess({
-                                    text: 'Les images ont été uploadées avec succès'
-                                });
-                            },
-                            function error(response) {
-                                NotificationsService.add({
-                                    type: NotificationsService.type.ERROR,
-                                    text: response.status === 400 ? response.data.error.message
-                                                    : 'Certaines images n\'ont pas pu être uploadées.',
-                                    delay: 10,
-                                });
-                            },
-                            function onNotify(progress) {
-                                $scope.upload = progress;
-                            }
-                        )
-                        .finally(function () {
-                            $scope.uploading = false;
-                        });
-                };
-
-                $scope.pictureUploaded = function(pictureUploaded) {
-                    var picture = pictureUploaded.data[0];
-                    $scope.addPicture(picture);
-                };
-            }
-        };
-}]);
-}) ();
-
-/* global Dropzone */
-; (function (Dropzone) {
-    'use strict';
-    angular.module('ev-upload')
-        .directive('evUpload', ['$log', '$q', '$timeout', function ($log, $q, $timeout) {
-
-    /*  ev-upload
-        =========
-        Hi! I'm a directive used for uploading files.
-
-        You can give me three callback: `uploadStart`, `fileSuccess` and `fileAdded`
-        - `uploadStart` will be called when a new multiple upload start (for instance, when the user dropped some files
-            on the dropzone). It will be call with an argument: the promise for the status of the whole upload.
-        - `fileSuccess` will be called each time a file has successfully been uploaded, with the data returned by the
-            server.
-        - `fileAdded` will be called each time a file is added to the queue. It will be called with 3 arguments :
-            - dropzoneFile : the Dropzone file being uploaded
-            - promise : the promise associated with the file
-            - cancel : a function that can be called to cancel the upload of the file.
-
-        Clickable Element : you can define a clickable element inside the directive with the
-                            class '.ev-upload-clickable'
-
-        Dropzone Element : you can define a clickable element inside the directive with the class '.ev-upload-dropzone'
-                           If the class is not present, it will use the root element.
-
-        My inner heart is powered by Dropzone. You can pass any settings to it through my `settings` parameter.
-        Consequently, you can do whatever you want. Be wise :)
-
-        ** Careful, if you change the settings parameters, all the current upload will be canceled, as a new dropzone
-        object will be created. **
-    */
-
-        var BASE_CONFIG = {
-            previewTemplate: false,
-            previewsContainer: false,
-            autoQueue: true,
-            maxFilesize: 12,
-            maxFiles: 100,
-
-            uploadMultiple: false,
-            parallelUploads: 3
-        };
-
-            return {
-                transclude: true,
-                restrict: 'EA',
-                replace: true,
-                scope: {
-                    settings: '=',
-                    uploadStart: '&upload',
-                    fileSuccess: '&',
-                    fileAdded: '&'
-                },
-                template: '<div class="ev-upload"><div ng-transclude> </div></div>',
-                link: function ($scope, elem, attrs) {
-
-                    $scope.fileSuccess = $scope.fileSuccess || function() {};
-                    $scope.fileAdded = $scope.fileAdded || function() {};
-
-                    var dropzone = null;
-                    var progress = null;
-
-                    var filesPromises = {};
-                    function getBytes (status) {
-                        return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
-                            return bytes + file.upload[status];
-                        }, 0);
-                    }
-
-                    function getDropzoneElement() {
-                        var dz = elem.find('.ev-upload-dropzone');
-                        if (dz.length === 0) {
-                            dz = elem;
-                        }
-                        dz.addClass("dz-default");
-                        dz.addClass("dz-message");
-                        return dz[0];
-                    }
-
-                    function getClickableElement() {
-                        return elem.find('.ev-upload-clickable')[0];
-                    }
-
-                    $scope.$watch('settings', function (settings) {
-                        if (!settings.url) {
-                            $log.warn('No url provided to the upload zone');
-                            return;
-                        }
-                        if (dropzone !== null) {
-                            dropzone.destroy();
-                        }
-                        settings = angular.extend(BASE_CONFIG, settings);
-                        dropzone = new Dropzone(
-                            getDropzoneElement(),
-                            angular.extend({clickable: getClickableElement()},settings)
-                        );
-                        // the promise for the whole upload
-
-                        $scope.currentUpload = null;
-
-                        // When a file is added to the queue
-                        dropzone.on('addedfile', function (file) {
-                            if ($scope.currentUpload === null) {
-                                $scope.$apply(startNewUpload);
-                            }
-                            var deferred = $q.defer();
-                            filesPromises[file.name] = deferred;
-                            var cancel = function () {
-                                dropzone.removeFile(file);
-                            };
-                            $scope.$apply(function($scope) {
-                                $scope.fileAdded({
-                                    dropzoneFile: file,
-                                    promise: deferred.promise,
-                                    cancel: cancel
-                                });
-                            });
-                        });
-
-                        dropzone.on('uploadprogress', function (file, progress) {
-                            $scope.$apply(function ($scope) {
-                                filesPromises[file.name].notify(progress);
-                            });
-                        });
-
-                        dropzone.on('success', function (file, response) {
-                            $scope.$apply(function ($scope) {
-                                filesPromises[file.name].resolve({file: response});
-                                $scope.fileSuccess({file: response});
-                            });
-                        });
-
-                        dropzone.on('error', function (file, response, xhr) {
-                            if (!response && xhr.status === 500) {
-                                response = settings.dictResponseError || 'Unexpected error during the upload';
-                            }
-                            if (response === 'Upload canceled.') {
-                                response = settings.dictCanceledUpload || 'The upload has been canceled';
-                            }
-                            $scope.$apply(function ($scope) {
-                                filesPromises[file.name].reject(response);
-                            });
-                        });
-
-                        dropzone.on('canceled', function (file) {
-                            var deferred = filesPromises[file.name];
-                            $scope.$apply(function ($scope) {
-                                deferred.reject(settings.dictCanceledUpload || 'The upload has been canceled');
-                            });
-                        });
-
-                        dropzone.on('complete', function (file) {
-                            if(angular.isDefined(progress)){
-                                progress.done += 1;
-                            }
-                        });
-
-                    }, true);
-
-                    // Create a new overall upload object
-                    function startNewUpload($scope) {
-                        progress = {
-                            done: 0,
-                            progress: 0
-                        };
-
-                        // upload object, encapsulate the state of the current (multi file) upload
-                        var upload = {
-                            deferred: $q.defer(),
-                            hasFileErrored: false,
-                        };
-
-                        var computeOverallProgress = function () {
-                            progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
-                            progress.total = dropzone.getAcceptedFiles().length;
-                            upload.deferred.notify(progress);
-                        };
-
-                        // De-register all events
-                        dropzone
-                            .off('uploadprogress', computeOverallProgress)
-                            .off('maxfilesexceeded');
-
-                        computeOverallProgress();
-
-                        dropzone.once('error', function () {
-                            upload.hasFileErrored = true;
-                        });
-
-
-                        dropzone.on('uploadprogress', computeOverallProgress);
-
-                        var isUploadComplete = function () {
-                            return !dropzone.files.filter(function (file) {
-                                return file.status === Dropzone.QUEUED ||
-                                file.status === Dropzone.ADDED ||
-                                file.status === Dropzone.UPLOADING;
-                            }).length;
-                        };
-
-                        var stopIfComplete = function () {
-                            $scope.$apply(function ($scope) {
-                                $timeout(function () {
-                                    if ( !isUploadComplete() ) { return; }
-                                    dropzone.off('complete', stopIfComplete);
-                                    $timeout(function () {
-                                        if (upload.hasFileErrored) {
-                                            upload.deferred.reject('filehaserrored');
-                                        } else {
-                                            upload.deferred.resolve();
-                                        }
-                                    });
-                                });
-                            });
-                        };
-
-                        dropzone.on('maxfilesexceeded', function() {
-                            upload.deferred.reject('maxfilesexceeded');
-                        });
-                        dropzone.on('complete', stopIfComplete);
-
-                        $scope.currentUpload = upload.deferred.promise;
-                        $scope.uploadStart({promise: upload.deferred.promise});
-                        $scope.currentUpload.finally(function () {
-                            dropzone.removeAllFiles(true);
-                            $scope.currentUpload = null;
-                        });
-
-                    }
-
-                    $scope.$on('$destroy', function () {
-                        dropzone.destroy();
-                    });
-                }
-            };
-        }]);
-}(Dropzone));
-
 /* jshint camelcase: false */
 /* global tinymce */
 /**
@@ -4510,5 +3872,646 @@ tinymce.PluginManager.add('evimage', function(editor) {
 
     editor.addCommand('mceImage', showDialog);
 });
+
+angular.module('ev-leaflet', ['leaflet-directive'])
+    .provider('evLeaflet', function() {
+        this.$get = function() {
+            return {
+                icons: this.icons,
+                tiles: this.tiles
+            };
+        };
+
+        this.setIcons = function(icons) {
+            this.icons = icons;
+        };
+
+        this.setTiles = function(tiles) {
+            this.tiles = tiles;
+        };
+    })
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
+        return {
+            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
+            restrict: 'AE',
+            scope: {
+                coordinates: '=',
+                defaultCoordinates: '=?',
+                boundingbox: '=?',
+                editable: '='
+            },
+            controller: function($scope) {
+
+                // Icons settings
+                var baseIcon = {
+                    iconSize:   [40, 40],
+                    shadowSize: [1, 1],
+                    iconAnchor: [1, 20]
+                };
+
+                var icons = evLeaflet.icons;
+
+                if ('default' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.default);
+                }
+                if ('draggable' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.draggable);
+                }
+
+                var tiles = evLeaflet.tiles;
+                if (tiles) {
+                    $scope.tiles = tiles;
+                }
+
+                $scope.defaults = {
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false
+                };
+
+                // Setting a marker in location
+                $scope.markers = {
+                    marker: {
+                        focus: true
+                    }
+                };
+
+                // Double binding between coordinates and marker's position
+                $scope.$watch('coordinates.latitude', function(lat) {
+                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
+                            lat = $scope.defaultCoordinates.latitude;
+                        } else {
+                            lat = 0;
+                        }
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lat != lat) {
+                        $scope.markers.marker.lat = lat;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                $scope.$watch('coordinates.longitude', function(lng) {
+                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
+                            lng = $scope.defaultCoordinates.longitude;
+                        } else {
+                            lng = 0;
+                        }
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lng != lng) {
+                        $scope.markers.marker.lng = lng;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                centerOnMarkerOrBoungingbox();
+
+                $scope.$watch('boundingbox', function(boundingbox) {
+                    centerOnMarkerOrBoungingbox();
+                });
+
+                $scope.$watch('markers.marker.lat', function(lat) {
+                    if (lat != null && $scope.editable) {
+                        $scope.coordinates.latitude = lat;
+                    }
+                });
+
+                $scope.$watch('markers.marker.lng', function(lng) {
+                    if (lng != null && $scope.editable) {
+                        $scope.coordinates.longitude = lng;
+                    }
+                });
+
+                // Setting map center
+                function centerOnMarkerOrBoungingbox() {
+                    if ($scope.boundingbox) {
+                        if (!$scope.bounds) {
+                            $scope.bounds = {
+                                southWest: {},
+                                northEast: {},
+                            };
+                        }
+                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
+                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
+                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
+                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
+                        return;
+                    }
+
+                    if (!$scope.center) {
+                        $scope.center = { zoom: 8 };
+                    }
+                    $scope.center.lat = $scope.markers.marker.lat;
+                    $scope.center.lng = $scope.markers.marker.lng;
+                }
+
+                $scope.$watch('editable', function () {
+                    var edited = $scope.editable;
+                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
+                    $scope.markers.marker.draggable = edited;
+                });
+            }
+        };
+    }]);
+
+(function () {
+    'use strict';
+    angular.module('ev-upload', ['ev-fdm']);
+}) ();
+; (function () {
+'use strict';
+angular.module('ev-upload')
+    .directive('evPictureButtonUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {
+
+/*  ev-picture-button-upload
+    =================
+    Hi! I'm a directive used for uploading pictures but I'm just a button.
+    If you want a more advanced one, you can use the evPictureUpload
+
+    You can parameter me with:
+    - `url`:  which is the place where I'll upload the pictures
+    - `pictureSuccess`:  a function called each time a picture has successfully been uploaded (by flickr
+        or manually). The picture is passed as argument.
+
+*/
+        return {
+            restrict: 'AE',
+            scope: {
+                pictures: '=',
+                buttonText: '@',
+                tooltipText: '@',
+                iconName: '@',
+                url: '@',
+                language: '=',
+                maxFiles: '@',
+                addPicture: '&',
+                onPictureAdded: '&'
+            },
+            template:
+            '<ev-upload settings="settings" file-success="addPicture({picture: file})"' +
+                'upload="newUpload(promise)">' +
+                '<div ng-hide="uploading">' +
+                    '<button type="button" tabIndex="-1" class="btn btn-tertiary btn-env ev-upload-clickable"' +
+                            'tooltip="{{tooltipText}}"' +
+                            'tooltip-placement="top">' +
+                        '<span class="icon {{iconName}}"></span> ' +
+                       '{{buttonText}}' +
+                    '</button>' +
+                '</div>' +
+                '<div class="ev-picture-uploading" ng-show="uploading">' +
+                    '<div class="ev-picture-upload-label"> {{"Transfert en cours"| i18n}} </div>' +
+                    '<p> {{upload.done}} / {{upload.total}} </p>' +
+                '</div>' +
+                '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
+            '</ev-upload>',
+
+            link: function ($scope, elem, attrs) {
+                $scope.uploading = false;
+
+                $scope.settings = {
+                    acceptedFiles: 'image/*',
+                    url: $scope.url,
+                    maxFiles: $scope.maxFiles || 100
+                };
+
+                $scope.pictures = $scope.pictures || [];
+
+                $scope.$watch('url', function (url) {
+                    $scope.settings.url = url;
+                });
+
+                $scope.newUpload = function (upload) {
+                    $scope.upload = {
+                        done: 0,
+                        total: '?'
+                    };
+                    $scope.uploading = true;
+                    $scope.uploadPromise = upload;
+                    upload
+                        .then(
+                            function success () {
+                                NotificationsService.addSuccess({
+                                    text: 'Les images ont été transférées avec succès'
+                                });
+                            },
+                            function error () {
+                                NotificationsService.add({
+                                    type: NotificationsService.type.WARNING,
+                                    text: 'Certaines images n\'ont pas pu être transférées.'
+                                });
+                            },
+                            function onNotify (progress) {
+                                $scope.upload = progress;
+                            }
+                        )
+                        .finally(function () {
+                            $scope.uploading = false;
+                        });
+                };
+
+                // This allow us to override the add picture
+                if(!attrs.addPicture) {
+                    $scope.addPicture = function(picture) {
+                        picture = picture.picture;
+                        var pictureData = picture.data[0];
+                        if($scope.language) {
+                            if (Array.isArray(pictureData.legend)) {
+                                pictureData.legend = {};
+                            }
+                            if (!pictureData.legend[$scope.language]) {
+                                pictureData.legend[$scope.language] = { name: '' };
+                            }
+                        }
+
+                        $scope.pictures.unshift(pictureData);
+                        $scope.onPictureAdded();
+                    };
+                }
+            }
+        };
+}]);
+}) ();
+
+/* jshint maxlen: 200 */
+; (function () {
+'use strict';
+angular.module('ev-upload')
+    .directive('evPictureUpload', ['NotificationsService', '$http', function (NotificationsService, $http) {
+
+/*  ev-picture-upload
+    =================
+    Hi! I'm a directive used for uploading pictures. I'm based on the `ev-upload` directive. But I can also
+    manage flickr uploads !
+
+    You can parameter me with:
+    - `url`:  which is the place where I'll upload the pictures
+    - `addPicture`:  a function called each time a picture has successfully been uploaded (by flickr
+        or manually). The picture is passed as argument.
+
+*/
+        return {
+            restrict: 'AE',
+            scope: {
+                addPicture: '=',
+                url: '@',
+                language: '='
+            },
+            template:
+            '<ev-upload settings="settings" file-success="pictureUploaded(file)"' +
+                'class="ev-picture-upload" upload="newUpload(promise)">' +
+                '<div ng-hide="uploading">' +
+                    '<div class="ev-picture-upload-label">{{ "Faites glisser vos images ici" | i18n }}</div>' +
+                    '<table style="width:100%"><tr><td style="width:114px">'+
+                            '<button type="button" tabIndex="-1" class="btn ev-upload-clickable">' +
+                                '{{ "Importer..." | i18n}}' +
+                            '</button>' +
+                        '</td>'+
+                        '<td style="width:30px´; line-height: 36px;">'+
+                            '{{ "ou" | i18n }}' +
+                        '</td>'+
+                        '<td>'+
+                            '<ng-form novalidate name="flickr" ' +
+                                'ng-class="{\'has-error\': flickr.$dirty && flickr.$invalid}">' +
+                                '<input name="fUrl" placeholder="{{\'Lien Flickr\' | i18n}}" ' +
+                                    'ng-model="$parent.flickrUrl" ng-pattern="flickrUrlPattern" ' +
+                                    'class="form-control" ng-change="uploadFlickrUrl(flickr)"/>' +
+                                '<div ng-show="flickr.fUrl.$dirty && flickr.fUrl.$invalid">' +
+                                    '<p class="control-label" for="fUrl" data-ng-show="flickr.fUrl.$error.pattern">'+
+                                        '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
+                                '</div>' +
+                            '</ng-form>' +
+                        '</td></tr></table>'+
+                '</div>' +
+                '<div class="ev-picture-uploading" ng-show="uploading">' +
+                    '<div class="ev-picture-upload-label"> {{"Upload en cours"| i18n}} </div>' +
+                    '<div class="spinner"></div>' +
+                    '<p> {{upload.done}} / {{upload.total}} {{ "photo(s) uploadée(s)" | i18n }} </p>' +
+                '</div>' +
+                '<div ng-show="uploading" ev-promise-progress="uploadPromise"></div>' +
+            '</ev-upload>',
+
+            link: function ($scope) {
+                $scope.flickrUrlPattern = /^(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+.*$/;
+                $scope.settings = {
+                    acceptedFiles: 'image/*',
+                    url: $scope.url
+                };
+            },
+            controller: function ($scope) {
+                $scope.uploading = false;
+                $scope.$watch('url', function (url) {
+                    $scope.settings.url = url;
+                });
+                $scope.uploadFlickrUrl = function (flickrForm) {
+                    /* Trailing the ends in order to have a https://www.flickr.com/photos/{user-id}/{photo-id} url
+                        Warning: `.*` is greedy, so an address like:
+                            https://www.flickr.com/photos/{user-id}/{photo-id}/blabla/1512
+                        will not be parsed nicely
+                     */
+                    if (!flickrForm.$valid || !$scope.flickrUrl) {
+                        return;
+                    }
+                    var flickrUrl = /(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+/ .exec($scope.flickrUrl)[0];
+                    var uploadPromise = $http.post($scope.url, {'flickr-url': flickrUrl});
+                    uploadPromise
+                        .success(function (pictureUploaded) {
+                            var picture = pictureUploaded.data[0];
+                            $scope.addPicture(picture);
+                        })
+                        .success(function () {
+                            flickrForm.$setPristine();
+                            $scope.flickrUrl = "";
+                        });
+
+                    $scope.newUpload(uploadPromise);
+                    $scope.upload = {
+                        done: 0,
+                        total: 1,
+                        progress: 0
+                    };
+                };
+
+                $scope.newUpload = function (upload) {
+                    $scope.upload = null;
+                    $scope.uploading = true;
+                    $scope.uploadPromise = upload;
+                    upload
+                        .then(
+                            function success() {
+                                NotificationsService.addSuccess({
+                                    text: 'Les images ont été uploadées avec succès'
+                                });
+                            },
+                            function error(xhr) {
+                                const response = JSON.parse(xhr.response);
+                                NotificationsService.add({
+                                    type: NotificationsService.type.ERROR,
+                                    text: xhr.status === 400 ? response.error.message
+                                                    : 'Certaines images n\'ont pas pu être uploadées.',
+                                    delay: 10,
+                                });
+                            },
+                            function onNotify(progress) {
+                                $scope.upload = progress;
+                            }
+                        )
+                        .finally(function () {
+                            $scope.uploading = false;
+                        });
+                };
+
+                $scope.pictureUploaded = function(pictureUploaded) {
+                    var picture = pictureUploaded.data[0];
+                    $scope.addPicture(picture);
+                };
+            }
+        };
+}]);
+}) ();
+
+/* global Dropzone */
+; (function (Dropzone) {
+    'use strict';
+    angular.module('ev-upload')
+        .directive('evUpload', ['$log', '$q', '$timeout', function ($log, $q, $timeout) {
+
+    /*  ev-upload
+        =========
+        Hi! I'm a directive used for uploading files.
+
+        You can give me three callback: `uploadStart`, `fileSuccess` and `fileAdded`
+        - `uploadStart` will be called when a new multiple upload start (for instance, when the user dropped some files
+            on the dropzone). It will be call with an argument: the promise for the status of the whole upload.
+        - `fileSuccess` will be called each time a file has successfully been uploaded, with the data returned by the
+            server.
+        - `fileAdded` will be called each time a file is added to the queue. It will be called with 3 arguments :
+            - dropzoneFile : the Dropzone file being uploaded
+            - promise : the promise associated with the file
+            - cancel : a function that can be called to cancel the upload of the file.
+
+        Clickable Element : you can define a clickable element inside the directive with the
+                            class '.ev-upload-clickable'
+
+        Dropzone Element : you can define a clickable element inside the directive with the class '.ev-upload-dropzone'
+                           If the class is not present, it will use the root element.
+
+        My inner heart is powered by Dropzone. You can pass any settings to it through my `settings` parameter.
+        Consequently, you can do whatever you want. Be wise :)
+
+        ** Careful, if you change the settings parameters, all the current upload will be canceled, as a new dropzone
+        object will be created. **
+    */
+
+        var BASE_CONFIG = {
+            previewTemplate: false,
+            previewsContainer: false,
+            autoQueue: true,
+            maxFilesize: 25,
+            maxFiles: 100,
+
+            uploadMultiple: false,
+            parallelUploads: 3
+        };
+
+            return {
+                transclude: true,
+                restrict: 'EA',
+                replace: true,
+                scope: {
+                    settings: '=',
+                    uploadStart: '&upload',
+                    fileSuccess: '&',
+                    fileAdded: '&'
+                },
+                template: '<div class="ev-upload"><div ng-transclude> </div></div>',
+                link: function ($scope, elem, attrs) {
+
+                    $scope.fileSuccess = $scope.fileSuccess || function() {};
+                    $scope.fileAdded = $scope.fileAdded || function() {};
+
+                    var dropzone = null;
+                    var progress = null;
+
+                    var filesPromises = {};
+                    function getBytes (status) {
+                        return dropzone.getAcceptedFiles().reduce(function (bytes, file) {
+                            return bytes + file.upload[status];
+                        }, 0);
+                    }
+
+                    function getDropzoneElement() {
+                        var dz = elem.find('.ev-upload-dropzone');
+                        if (dz.length === 0) {
+                            dz = elem;
+                        }
+                        dz.addClass("dz-default");
+                        dz.addClass("dz-message");
+                        return dz[0];
+                    }
+
+                    function getClickableElement() {
+                        return elem.find('.ev-upload-clickable')[0];
+                    }
+
+                    $scope.$watch('settings', function (settings) {
+                        if (!settings.url) {
+                            $log.warn('No url provided to the upload zone');
+                            return;
+                        }
+                        if (dropzone !== null) {
+                            dropzone.destroy();
+                        }
+                        settings = angular.extend(BASE_CONFIG, settings);
+                        dropzone = new Dropzone(
+                            getDropzoneElement(),
+                            angular.extend({clickable: getClickableElement()},settings)
+                        );
+                        // the promise for the whole upload
+
+                        $scope.currentUpload = null;
+
+                        // When a file is added to the queue
+                        dropzone.on('addedfile', function (file) {
+                            if ($scope.currentUpload === null) {
+                                $scope.$apply(startNewUpload);
+                            }
+                            var deferred = $q.defer();
+                            filesPromises[file.name] = deferred;
+                            var cancel = function () {
+                                dropzone.removeFile(file);
+                            };
+                            $scope.$apply(function($scope) {
+                                $scope.fileAdded({
+                                    dropzoneFile: file,
+                                    promise: deferred.promise,
+                                    cancel: cancel
+                                });
+                            });
+                        });
+
+                        dropzone.on('uploadprogress', function (file, progress) {
+                            $scope.$apply(function ($scope) {
+                                filesPromises[file.name].notify(progress);
+                            });
+                        });
+
+                        dropzone.on('success', function (file, response) {
+                            $scope.$apply(function ($scope) {
+                                filesPromises[file.name].resolve({file: response});
+                                $scope.fileSuccess({file: response});
+                            });
+                        });
+
+                        dropzone.on('error', function (file, response, xhr) {
+                            if (!response && xhr.status === 500) {
+                                response = settings.dictResponseError || 'Unexpected error during the upload';
+                            }
+                            if (response === 'Upload canceled.') {
+                                response = settings.dictCanceledUpload || 'The upload has been canceled';
+                            }
+                            $scope.$apply(function ($scope) {
+                                filesPromises[file.name].reject(response);
+                            });
+                        });
+
+                        dropzone.on('canceled', function (file) {
+                            var deferred = filesPromises[file.name];
+                            $scope.$apply(function ($scope) {
+                                deferred.reject(settings.dictCanceledUpload || 'The upload has been canceled');
+                            });
+                        });
+
+                        dropzone.on('complete', function (file) {
+                            if(angular.isDefined(progress)){
+                                progress.done += 1;
+                            }
+                        });
+
+                    }, true);
+
+                    // Create a new overall upload object
+                    function startNewUpload($scope) {
+                        progress = {
+                            done: 0,
+                            progress: 0
+                        };
+
+                        // upload object, encapsulate the state of the current (multi file) upload
+                        var upload = {
+                            deferred: $q.defer(),
+                            hasFileErrored: false,
+                            hasFileErroredResponse: null,
+                        };
+
+                        var computeOverallProgress = function () {
+                            progress.progress = 100 * getBytes('bytesSent') / getBytes('total');
+                            progress.total = dropzone.getAcceptedFiles().length;
+                            upload.deferred.notify(progress);
+                        };
+
+                        // De-register all events
+                        dropzone
+                            .off('uploadprogress', computeOverallProgress)
+                            .off('maxfilesexceeded');
+
+                        computeOverallProgress();
+
+                        dropzone.once('error', function (response) {
+                            upload.hasFileErroredResponse = response.xhr;
+                            upload.hasFileErrored = true;
+                        });
+
+
+                        dropzone.on('uploadprogress', computeOverallProgress);
+
+                        var isUploadComplete = function () {
+                            return !dropzone.files.filter(function (file) {
+                                return file.status === Dropzone.QUEUED ||
+                                file.status === Dropzone.ADDED ||
+                                file.status === Dropzone.UPLOADING;
+                            }).length;
+                        };
+
+                        var stopIfComplete = function () {
+                            $scope.$apply(function ($scope) {
+                                $timeout(function () {
+                                    if ( !isUploadComplete() ) { return; }
+                                    dropzone.off('complete', stopIfComplete);
+                                    $timeout(function () {
+                                        if (upload.hasFileErrored) {
+                                            upload.deferred.reject(upload.hasFileErroredResponse);
+                                        } else {
+                                            upload.deferred.resolve();
+                                        }
+                                    });
+                                });
+                            });
+                        };
+
+                        dropzone.on('maxfilesexceeded', function() {
+                            upload.deferred.reject('maxfilesexceeded');
+                        });
+                        dropzone.on('complete', stopIfComplete);
+
+                        $scope.currentUpload = upload.deferred.promise;
+                        $scope.uploadStart({promise: upload.deferred.promise});
+                        $scope.currentUpload.finally(function () {
+                            dropzone.removeAllFiles(true);
+                            $scope.currentUpload = null;
+                        });
+
+                    }
+
+                    $scope.$on('$destroy', function () {
+                        dropzone.destroy();
+                    });
+                }
+            };
+        }]);
+}(Dropzone));
 
 //# sourceMappingURL=ev-fdm.js.map

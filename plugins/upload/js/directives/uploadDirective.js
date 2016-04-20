@@ -35,7 +35,7 @@
             previewTemplate: false,
             previewsContainer: false,
             autoQueue: true,
-            maxFilesize: 12,
+            maxFilesize: 25,
             maxFiles: 100,
 
             uploadMultiple: false,
@@ -169,6 +169,7 @@
                         var upload = {
                             deferred: $q.defer(),
                             hasFileErrored: false,
+                            hasFileErroredResponse: null,
                         };
 
                         var computeOverallProgress = function () {
@@ -184,7 +185,8 @@
 
                         computeOverallProgress();
 
-                        dropzone.once('error', function () {
+                        dropzone.once('error', function (response) {
+                            upload.hasFileErroredResponse = response.xhr;
                             upload.hasFileErrored = true;
                         });
 
@@ -206,7 +208,7 @@
                                     dropzone.off('complete', stopIfComplete);
                                     $timeout(function () {
                                         if (upload.hasFileErrored) {
-                                            upload.deferred.reject('filehaserrored');
+                                            upload.deferred.reject(upload.hasFileErroredResponse);
                                         } else {
                                             upload.deferred.resolve();
                                         }

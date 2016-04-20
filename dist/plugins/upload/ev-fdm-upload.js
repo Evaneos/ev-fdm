@@ -226,10 +226,11 @@ angular.module('ev-upload')
                                     text: 'Les images ont été uploadées avec succès'
                                 });
                             },
-                            function error(response) {
+                            function error(xhr) {
+                                const response = JSON.parse(xhr.response);
                                 NotificationsService.add({
                                     type: NotificationsService.type.ERROR,
-                                    text: response.status === 400 ? response.data.error.message
+                                    text: xhr.status === 400 ? response.error.message
                                                     : 'Certaines images n\'ont pas pu être uploadées.',
                                     delay: 10,
                                 });
@@ -289,7 +290,7 @@ angular.module('ev-upload')
             previewTemplate: false,
             previewsContainer: false,
             autoQueue: true,
-            maxFilesize: 12,
+            maxFilesize: 25,
             maxFiles: 100,
 
             uploadMultiple: false,
@@ -423,6 +424,7 @@ angular.module('ev-upload')
                         var upload = {
                             deferred: $q.defer(),
                             hasFileErrored: false,
+                            hasFileErroredResponse: null,
                         };
 
                         var computeOverallProgress = function () {
@@ -438,7 +440,8 @@ angular.module('ev-upload')
 
                         computeOverallProgress();
 
-                        dropzone.once('error', function () {
+                        dropzone.once('error', function (response) {
+                            upload.hasFileErroredResponse = response.xhr;
                             upload.hasFileErrored = true;
                         });
 
@@ -460,7 +463,7 @@ angular.module('ev-upload')
                                     dropzone.off('complete', stopIfComplete);
                                     $timeout(function () {
                                         if (upload.hasFileErrored) {
-                                            upload.deferred.reject('filehaserrored');
+                                            upload.deferred.reject(upload.hasFileErroredResponse);
                                         } else {
                                             upload.deferred.resolve();
                                         }
