@@ -108,10 +108,11 @@ angular.module('ev-upload')
                                     text: 'Les images ont été uploadées avec succès'
                                 });
                             },
-                            function error(response) {
+                            function error(xhr) {
+                                const response = JSON.parse(xhr.response);
                                 NotificationsService.add({
                                     type: NotificationsService.type.ERROR,
-                                    text: response.status === 400 ? response.data.error.message
+                                    text: xhr.status === 400 ? response.error.message
                                                     : 'Certaines images n\'ont pas pu être uploadées.',
                                     delay: 10,
                                 });
