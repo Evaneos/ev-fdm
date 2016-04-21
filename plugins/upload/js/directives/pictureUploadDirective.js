@@ -112,8 +112,9 @@ angular.module('ev-upload')
                                 const response = JSON.parse(xhr.response);
                                 NotificationsService.add({
                                     type: NotificationsService.type.ERROR,
-                                    text: xhr.status === 400 ? response.error.message
-                                                    : 'Certaines images n\'ont pas pu être uploadées.',
+                                    text: (xhr.status === 400 && response !== null)
+                                                ? response.error.message
+                                                : 'Certaines images n\'ont pas pu être uploadées.',
                                     delay: 10,
                                 });
                             },
