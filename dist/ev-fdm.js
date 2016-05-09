@@ -387,6 +387,186 @@ angular.module('ev-fdm')
         return SearchController;
     }]);
 
+angular.module('ev-fdm').factory('confirmBox', [
+    '$modal',
+    function($modal) {
+        return function(title, message, positive, negative) {
+            return $modal.open({
+                backdrop: 'static',
+                templateUrl: 'ev-confirm-box.html',
+                controller: ['$scope', function($scope) {
+                    $scope.title    = title;
+                    $scope.message  = message;
+                    $scope.positive = positive;
+                    $scope.negative = negative;
+                }]
+            }).result;
+        };
+    }
+]);
+
+'use strict';
+
+function FilterServiceFactory($rootScope, $timeout) {
+
+    function FilterService() {
+        
+        this.filters = {};
+
+        var listeners = [];
+        var modifier = null;
+
+        var self = this;
+        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
+            if(oldFilters === newFilters) {
+                return;
+            }
+
+            $timeout(function() {
+                if(self.modifier) {
+                    self.modifier.call(self, newFilters, oldFilters);
+                }
+                else {
+                    self.callListeners();
+                }
+            }, 0);
+
+        }, true);
+
+        this.setModifier = function(callback) {
+            if(angular.isFunction(callback)) {
+                this.modifier = callback;
+            }
+        };
+
+        this.addListener = function(scope, callback) {
+            if(angular.isFunction(callback)) {          
+                listeners.push(callback);
+
+                scope.$on('$destroy', function() {
+                    self.removeListener(callback);
+                });
+            }
+        };
+
+        this.removeListener = function(callback) {
+            angular.forEach(listeners, function(listener, index) {
+                if(listener === callback) {
+                    listeners.splice(index, 1);
+                }
+            });
+        };
+
+        this.callListeners = function() {
+            var self = this;
+            angular.forEach(listeners, function(listener) {
+                listener(self.filters);
+            })
+        }
+    }
+
+    return new FilterService();
+}
+
+angular.module('ev-fdm')
+    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
+
+/* jshint sub: true */
+angular.module('ev-fdm').factory('Select2Configuration', [
+    '$timeout',
+    function($timeout) {
+        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
+            var dataProviderFilter;
+            var idFunction;
+            var timeout = 600;
+            var opt = {};
+            if (typeof dataProvider === 'object') {
+                opt = dataProvider;
+                formatter = opt.formatter;
+                resultModifier = opt.resultModifier;
+                minimumInputLength = opt.minimumInputLength;
+                key = opt.key;
+                dataProviderFilter = opt.dataProviderFilter;
+                dataProvider = opt.dataProvider;
+                timeout = opt.timeout || timeout;
+                if (typeof dataProviderFilter === 'object') {
+                    var filter = dataProviderFilter;
+                    dataProviderFilter = function() { return filter; };
+                } else if (typeof dataProviderFilter !== 'function') {
+                    dataProviderFilter = function() { return {}; };
+                }
+
+                if (typeof opt.id === 'string') {
+                    idFunction = function(ressource) {return ressource[opt.id];};
+                } else if (typeof opt.id === 'function') {
+                    idFunction = opt.id;
+                }
+            }
+            var oldQueryTerm = '', filterTextTimeout;
+
+            var config = {
+                minimumInputLength: angular.isDefined(minimumInputLength)
+                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
+                allowClear: true,
+                query: function(query) {
+                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
+
+                    oldQueryTerm = query.term;
+
+                    if (filterTextTimeout) {
+                        $timeout.cancel(filterTextTimeout);
+                    }
+
+                    filterTextTimeout = $timeout(function() {
+                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
+
+                            var res = [];
+                            if (resultModifier) {
+                                angular.forEach(resources, function(resource) {
+                                    res.push(resultModifier(resource));
+                                });
+                            }
+
+                            var result = {
+                                results: res.length ? res : resources
+                            };
+
+                            if (resources.pagination &&
+                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
+                                result.more = true;
+                            }
+                            if (key && query.term.length) {
+                                var value = { id: null };
+                                value[key] = query.term;
+                                if (result.results.length) {
+                                    var tmp = result.results.shift();
+                                    result.results.unshift(tmp, value);
+                                } else {
+                                    result.results.unshift(value);
+                                }
+                            }
+                            query.callback(result);
+                        });
+
+                    }, timeoutDuration);
+
+                },
+                formatResult: function(resource, container, query, escapeMarkup) {
+                    return formatter(resource);
+                },
+                formatSelection: function(resource) {
+                    return formatter(resource);
+                },
+                initSelection: function() {
+                    return {};
+                },
+                id: idFunction,
+            };
+            return config;
+        };
+    }
+]);
+
 'use strict';
 
 var module = angular.module('ev-fdm');
@@ -2187,335 +2367,6 @@ angular.module('ev-fdm')
             templateUrl: 'ev-value.html'
         };
     });
-angular.module('ev-fdm').factory('confirmBox', [
-    '$modal',
-    function($modal) {
-        return function(title, message, positive, negative) {
-            return $modal.open({
-                backdrop: 'static',
-                templateUrl: 'ev-confirm-box.html',
-                controller: ['$scope', function($scope) {
-                    $scope.title    = title;
-                    $scope.message  = message;
-                    $scope.positive = positive;
-                    $scope.negative = negative;
-                }]
-            }).result;
-        };
-    }
-]);
-
-'use strict';
-
-function FilterServiceFactory($rootScope, $timeout) {
-
-    function FilterService() {
-        
-        this.filters = {};
-
-        var listeners = [];
-        var modifier = null;
-
-        var self = this;
-        $rootScope.$watch(function() { return self.filters; }, function(newFilters, oldFilters) {
-            if(oldFilters === newFilters) {
-                return;
-            }
-
-            $timeout(function() {
-                if(self.modifier) {
-                    self.modifier.call(self, newFilters, oldFilters);
-                }
-                else {
-                    self.callListeners();
-                }
-            }, 0);
-
-        }, true);
-
-        this.setModifier = function(callback) {
-            if(angular.isFunction(callback)) {
-                this.modifier = callback;
-            }
-        };
-
-        this.addListener = function(scope, callback) {
-            if(angular.isFunction(callback)) {          
-                listeners.push(callback);
-
-                scope.$on('$destroy', function() {
-                    self.removeListener(callback);
-                });
-            }
-        };
-
-        this.removeListener = function(callback) {
-            angular.forEach(listeners, function(listener, index) {
-                if(listener === callback) {
-                    listeners.splice(index, 1);
-                }
-            });
-        };
-
-        this.callListeners = function() {
-            var self = this;
-            angular.forEach(listeners, function(listener) {
-                listener(self.filters);
-            })
-        }
-    }
-
-    return new FilterService();
-}
-
-angular.module('ev-fdm')
-    .factory('FilterService', ['$rootScope', '$timeout', FilterServiceFactory]);
-
-/* jshint sub: true */
-angular.module('ev-fdm').factory('Select2Configuration', [
-    '$timeout',
-    function($timeout) {
-        return function(dataProvider, formatter, resultModifier, minimumInputLength, key) {
-            var dataProviderFilter;
-            var idFunction;
-            var timeout = 600;
-            var opt = {};
-            if (typeof dataProvider === 'object') {
-                opt = dataProvider;
-                formatter = opt.formatter;
-                resultModifier = opt.resultModifier;
-                minimumInputLength = opt.minimumInputLength;
-                key = opt.key;
-                dataProviderFilter = opt.dataProviderFilter;
-                dataProvider = opt.dataProvider;
-                timeout = opt.timeout || timeout;
-                if (typeof dataProviderFilter === 'object') {
-                    var filter = dataProviderFilter;
-                    dataProviderFilter = function() { return filter; };
-                } else if (typeof dataProviderFilter !== 'function') {
-                    dataProviderFilter = function() { return {}; };
-                }
-
-                if (typeof opt.id === 'string') {
-                    idFunction = function(ressource) {return ressource[opt.id];};
-                } else if (typeof opt.id === 'function') {
-                    idFunction = opt.id;
-                }
-            }
-            var oldQueryTerm = '', filterTextTimeout;
-
-            var config = {
-                minimumInputLength: angular.isDefined(minimumInputLength)
-                    && angular.isNumber(minimumInputLength) ? minimumInputLength : 3,
-                allowClear: true,
-                query: function(query) {
-                    var timeoutDuration = oldQueryTerm === query.term ? 0 : 600;
-
-                    oldQueryTerm = query.term;
-
-                    if (filterTextTimeout) {
-                        $timeout.cancel(filterTextTimeout);
-                    }
-
-                    filterTextTimeout = $timeout(function() {
-                        dataProvider(query.term, query.page, dataProviderFilter).then(function(resources) {
-
-                            var res = [];
-                            if (resultModifier) {
-                                angular.forEach(resources, function(resource) {
-                                    res.push(resultModifier(resource));
-                                });
-                            }
-
-                            var result = {
-                                results: res.length ? res : resources
-                            };
-
-                            if (resources.pagination &&
-                                resources.pagination['current_page'] < resources.pagination['total_pages']) {
-                                result.more = true;
-                            }
-                            if (key && query.term.length) {
-                                var value = { id: null };
-                                value[key] = query.term;
-                                if (result.results.length) {
-                                    var tmp = result.results.shift();
-                                    result.results.unshift(tmp, value);
-                                } else {
-                                    result.results.unshift(value);
-                                }
-                            }
-                            query.callback(result);
-                        });
-
-                    }, timeoutDuration);
-
-                },
-                formatResult: function(resource, container, query, escapeMarkup) {
-                    return formatter(resource);
-                },
-                formatSelection: function(resource) {
-                    return formatter(resource);
-                },
-                initSelection: function() {
-                    return {};
-                },
-                id: idFunction,
-            };
-            return config;
-        };
-    }
-]);
-
-'use strict';
-/*
-    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
-*/
-angular.module('ev-fdm')
-    .filter('cleanupDate', function() {
-        return function(input) {
-            var res = '';
-            if (input) {
-                var y = input.slice (0,4);
-                var m = input.slice (5,7);
-                var day = input.slice (8,10);
-
-                res = day + '/'+ m + '/' + y;
-            }
-
-            return res;
-        };
-    });
-angular.module('ev-fdm')
-    .filter('htmlToPlainText', function() {
-        return function(text) {
-            return String(text).replace(/<[^>]+>/gm, '');
-        };
-    }
-);
-(function() {
-'use strict';
-
-var hasOwnProp = Object.prototype.hasOwnProperty;
-var isObject = angular.isObject;
-
-function MapFilterProvider() {
-  var maps = {};
-  var defaults = {};
-
-  function assertMapping(name) {
-    if (!hasOwnProp.call(maps, name)) {
-      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
-    }
-  }
-
-  this.registerMapping = function(name, mapping) {
-    if (hasOwnProp.call(maps, name)) {
-      throw new Error('A mapping named "' + name + '" was already registered');
-    }
-    var map = maps[name] = {};
-    for (var key in mapping) {
-      if (hasOwnProp.call(mapping, key)) {
-        map[key] = mapping[key];
-      }
-    }
-  };
-
-  this.registerDefault = function(name, value) {
-    assertMapping(name);
-    defaults[name] = value;
-  };
-
-  this.$get = function factory() {
-    return function mapFilter(key, mapping) {
-      // Mapping is directly provided
-      if (isObject(mapping)) {
-        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
-      }
-      // or it's just a mapping name
-      assertMapping(mapping);
-      var map = maps[mapping];
-      switch (true) {
-        case hasOwnProp.call(map, key):
-          return map[key];
-        case hasOwnProp.call(defaults, mapping):
-          return defaults[mapping];
-        default:
-          return key;
-      }
-    };
-  };
-}
-
-
-angular.module('ev-fdm')
-  .provider('mapFilter', MapFilterProvider)
-;
-
-})();
-
-angular.module('ev-fdm')
-     .filter('prettySecs', [function() {
-            return function(timeInSeconds) {
-               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
-			    var hours   = Math.floor(numSec / 3600);
-			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
-			    var seconds = numSec - (hours * 3600) - (minutes * 60);
-
-			    if (hours   < 10) {hours   = "0"+hours;}
-			    if (minutes < 10) {minutes = "0"+minutes;}
-			    if (seconds < 10) {seconds = "0"+seconds;}
-			    var time    = hours+':'+minutes+':'+seconds;
-			    return time;
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('replace', [function() {
-            return function(string, regex, replace) {
-                if (!angular.isDefined(string)) {
-                    return '';
-                }
-                return string.replace(regex, replace || '');
-            };
-    }]);
-
-angular.module('ev-fdm')
-     .filter('sum', ['$parse', function($parse) {
-            return function(objects, key) {
-                if (!angular.isDefined(objects)) {
-                    return 0;
-                }
-                var getValue = $parse(key);
-                return objects.reduce(function(total, object) {
-                    var value = getValue(object);
-                    return total +
-                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
-                }, 0);
-            };
-    }]);
-
-angular.module('ev-fdm')
-	.filter('textSelect', [function() {
-
-		return function(input, choices) {
-
-			if(choices[input]) {
-        return choices[input];
-      }
-
-    	return input;
-		};
-
-	}]);
-'use strict';
-
-angular.module('ev-fdm')
-    .filter('unsafe', ['$sce', function($sce) {
-        return function(val) {
-            return $sce.trustAsHtml(val);
-        };
-    }]);
 angular.module('ev-fdm')
 .service('DownloadService', ['$window', '$document', function($window, $document) {
     var iframe = null;
@@ -3057,6 +2908,155 @@ module.service('UtilService', [function() {
     };
 }]);
 
+'use strict';
+/*
+    Takes a string in the form 'yyyy-mm-dd hh::mn:ss'
+*/
+angular.module('ev-fdm')
+    .filter('cleanupDate', function() {
+        return function(input) {
+            var res = '';
+            if (input) {
+                var y = input.slice (0,4);
+                var m = input.slice (5,7);
+                var day = input.slice (8,10);
+
+                res = day + '/'+ m + '/' + y;
+            }
+
+            return res;
+        };
+    });
+angular.module('ev-fdm')
+    .filter('htmlToPlainText', function() {
+        return function(text) {
+            return String(text).replace(/<[^>]+>/gm, '');
+        };
+    }
+);
+(function() {
+'use strict';
+
+var hasOwnProp = Object.prototype.hasOwnProperty;
+var isObject = angular.isObject;
+
+function MapFilterProvider() {
+  var maps = {};
+  var defaults = {};
+
+  function assertMapping(name) {
+    if (!hasOwnProp.call(maps, name)) {
+      throw new Error('Mapping "' + name + '" is not valid, did you register it using mapSymbolFilterProvider#registerMapping() ?');
+    }
+  }
+
+  this.registerMapping = function(name, mapping) {
+    if (hasOwnProp.call(maps, name)) {
+      throw new Error('A mapping named "' + name + '" was already registered');
+    }
+    var map = maps[name] = {};
+    for (var key in mapping) {
+      if (hasOwnProp.call(mapping, key)) {
+        map[key] = mapping[key];
+      }
+    }
+  };
+
+  this.registerDefault = function(name, value) {
+    assertMapping(name);
+    defaults[name] = value;
+  };
+
+  this.$get = function factory() {
+    return function mapFilter(key, mapping) {
+      // Mapping is directly provided
+      if (isObject(mapping)) {
+        return hasOwnProp.call(mapping, key) ? mapping[key] : key;
+      }
+      // or it's just a mapping name
+      assertMapping(mapping);
+      var map = maps[mapping];
+      switch (true) {
+        case hasOwnProp.call(map, key):
+          return map[key];
+        case hasOwnProp.call(defaults, mapping):
+          return defaults[mapping];
+        default:
+          return key;
+      }
+    };
+  };
+}
+
+
+angular.module('ev-fdm')
+  .provider('mapFilter', MapFilterProvider)
+;
+
+})();
+
+angular.module('ev-fdm')
+     .filter('prettySecs', [function() {
+            return function(timeInSeconds) {
+               	var numSec = parseInt(timeInSeconds, 10); // don't forget the second param
+			    var hours   = Math.floor(numSec / 3600);
+			    var minutes = Math.floor((numSec - (hours * 3600)) / 60);
+			    var seconds = numSec - (hours * 3600) - (minutes * 60);
+
+			    if (hours   < 10) {hours   = "0"+hours;}
+			    if (minutes < 10) {minutes = "0"+minutes;}
+			    if (seconds < 10) {seconds = "0"+seconds;}
+			    var time    = hours+':'+minutes+':'+seconds;
+			    return time;
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('replace', [function() {
+            return function(string, regex, replace) {
+                if (!angular.isDefined(string)) {
+                    return '';
+                }
+                return string.replace(regex, replace || '');
+            };
+    }]);
+
+angular.module('ev-fdm')
+     .filter('sum', ['$parse', function($parse) {
+            return function(objects, key) {
+                if (!angular.isDefined(objects)) {
+                    return 0;
+                }
+                var getValue = $parse(key);
+                return objects.reduce(function(total, object) {
+                    var value = getValue(object);
+                    return total +
+                        ((angular.isDefined(value) && angular.isNumber(value)) ? parseFloat(value) : 0);
+                }, 0);
+            };
+    }]);
+
+angular.module('ev-fdm')
+	.filter('textSelect', [function() {
+
+		return function(input, choices) {
+
+			if(choices[input]) {
+        return choices[input];
+      }
+
+    	return input;
+		};
+
+	}]);
+'use strict';
+
+angular.module('ev-fdm')
+    .filter('unsafe', ['$sce', function($sce) {
+        return function(val) {
+            return $sce.trustAsHtml(val);
+        };
+    }]);
 angular.module('ev-fdm')
     .factory('RestangularStorage', ['$rootScope', '$q', 'Restangular', function($rootScope, $q, restangular) {
 
@@ -3421,6 +3421,151 @@ angular.module('ev-fdm')
         }
     }
 });
+angular.module('ev-leaflet', ['leaflet-directive'])
+    .provider('evLeaflet', function() {
+        this.$get = function() {
+            return {
+                icons: this.icons,
+                tiles: this.tiles
+            };
+        };
+
+        this.setIcons = function(icons) {
+            this.icons = icons;
+        };
+
+        this.setTiles = function(tiles) {
+            this.tiles = tiles;
+        };
+    })
+    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
+        return {
+            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
+            restrict: 'AE',
+            scope: {
+                coordinates: '=',
+                defaultCoordinates: '=?',
+                boundingbox: '=?',
+                editable: '='
+            },
+            controller: function($scope) {
+
+                // Icons settings
+                var baseIcon = {
+                    iconSize:   [40, 40],
+                    shadowSize: [1, 1],
+                    iconAnchor: [1, 20]
+                };
+
+                var icons = evLeaflet.icons;
+
+                if ('default' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.default);
+                }
+                if ('draggable' in icons) {
+                    angular.extend(angular.copy(baseIcon), icons.draggable);
+                }
+
+                var tiles = evLeaflet.tiles;
+                if (tiles) {
+                    $scope.tiles = tiles;
+                }
+
+                $scope.defaults = {
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false
+                };
+
+                // Setting a marker in location
+                $scope.markers = {
+                    marker: {
+                        focus: true
+                    }
+                };
+
+                // Double binding between coordinates and marker's position
+                $scope.$watch('coordinates.latitude', function(lat) {
+                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
+                            lat = $scope.defaultCoordinates.latitude;
+                        } else {
+                            lat = 0;
+                        }
+                        $log.warn('ev-leaflet: latitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lat != lat) {
+                        $scope.markers.marker.lat = lat;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                $scope.$watch('coordinates.longitude', function(lng) {
+                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
+                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
+                            lng = $scope.defaultCoordinates.longitude;
+                        } else {
+                            lng = 0;
+                        }
+                        $log.warn('ev-leaflet: longitude is not a number');
+                    }
+
+                    if ($scope.markers.marker.lng != lng) {
+                        $scope.markers.marker.lng = lng;
+                        centerOnMarkerOrBoungingbox();
+                    }
+                });
+
+                centerOnMarkerOrBoungingbox();
+
+                $scope.$watch('boundingbox', function(boundingbox) {
+                    centerOnMarkerOrBoungingbox();
+                });
+
+                $scope.$watch('markers.marker.lat', function(lat) {
+                    if (lat != null && $scope.editable) {
+                        $scope.coordinates.latitude = lat;
+                    }
+                });
+
+                $scope.$watch('markers.marker.lng', function(lng) {
+                    if (lng != null && $scope.editable) {
+                        $scope.coordinates.longitude = lng;
+                    }
+                });
+
+                // Setting map center
+                function centerOnMarkerOrBoungingbox() {
+                    if ($scope.boundingbox) {
+                        if (!$scope.bounds) {
+                            $scope.bounds = {
+                                southWest: {},
+                                northEast: {},
+                            };
+                        }
+                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
+                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
+                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
+                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
+                        return;
+                    }
+
+                    if (!$scope.center) {
+                        $scope.center = { zoom: 8 };
+                    }
+                    $scope.center.lat = $scope.markers.marker.lat;
+                    $scope.center.lng = $scope.markers.marker.lng;
+                }
+
+                $scope.$watch('editable', function () {
+                    var edited = $scope.editable;
+                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
+                    $scope.markers.marker.draggable = edited;
+                });
+            }
+        };
+    }]);
+
 /* jshint camelcase: false */
 /* global tinymce */
 /**
@@ -3873,151 +4018,6 @@ tinymce.PluginManager.add('evimage', function(editor) {
     editor.addCommand('mceImage', showDialog);
 });
 
-angular.module('ev-leaflet', ['leaflet-directive'])
-    .provider('evLeaflet', function() {
-        this.$get = function() {
-            return {
-                icons: this.icons,
-                tiles: this.tiles
-            };
-        };
-
-        this.setIcons = function(icons) {
-            this.icons = icons;
-        };
-
-        this.setTiles = function(tiles) {
-            this.tiles = tiles;
-        };
-    })
-    .directive('evLeaflet', ['leafletData', 'evLeaflet', '$log', function (leafletData, evLeaflet, $log) {
-        return {
-            template: '<leaflet class="ev-leaflet" defaults="defaults" markers="markers" center="center" tiles="tiles" bounds="bounds"></leaflet>',
-            restrict: 'AE',
-            scope: {
-                coordinates: '=',
-                defaultCoordinates: '=?',
-                boundingbox: '=?',
-                editable: '='
-            },
-            controller: function($scope) {
-
-                // Icons settings
-                var baseIcon = {
-                    iconSize:   [40, 40],
-                    shadowSize: [1, 1],
-                    iconAnchor: [1, 20]
-                };
-
-                var icons = evLeaflet.icons;
-
-                if ('default' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.default);
-                }
-                if ('draggable' in icons) {
-                    angular.extend(angular.copy(baseIcon), icons.draggable);
-                }
-
-                var tiles = evLeaflet.tiles;
-                if (tiles) {
-                    $scope.tiles = tiles;
-                }
-
-                $scope.defaults = {
-                    scrollWheelZoom: false,
-                    doubleClickZoom: false
-                };
-
-                // Setting a marker in location
-                $scope.markers = {
-                    marker: {
-                        focus: true
-                    }
-                };
-
-                // Double binding between coordinates and marker's position
-                $scope.$watch('coordinates.latitude', function(lat) {
-                    if (isNaN(lat) || lat == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.latitude != null) {
-                            lat = $scope.defaultCoordinates.latitude;
-                        } else {
-                            lat = 0;
-                        }
-                        $log.warn('ev-leaflet: latitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lat != lat) {
-                        $scope.markers.marker.lat = lat;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                $scope.$watch('coordinates.longitude', function(lng) {
-                    if (isNaN(lng) || lng == null) { // simple == : null or undefined
-                        if ($scope.defaultCoordinates && $scope.defaultCoordinates.longitude != null) {
-                            lng = $scope.defaultCoordinates.longitude;
-                        } else {
-                            lng = 0;
-                        }
-                        $log.warn('ev-leaflet: longitude is not a number');
-                    }
-
-                    if ($scope.markers.marker.lng != lng) {
-                        $scope.markers.marker.lng = lng;
-                        centerOnMarkerOrBoungingbox();
-                    }
-                });
-
-                centerOnMarkerOrBoungingbox();
-
-                $scope.$watch('boundingbox', function(boundingbox) {
-                    centerOnMarkerOrBoungingbox();
-                });
-
-                $scope.$watch('markers.marker.lat', function(lat) {
-                    if (lat != null && $scope.editable) {
-                        $scope.coordinates.latitude = lat;
-                    }
-                });
-
-                $scope.$watch('markers.marker.lng', function(lng) {
-                    if (lng != null && $scope.editable) {
-                        $scope.coordinates.longitude = lng;
-                    }
-                });
-
-                // Setting map center
-                function centerOnMarkerOrBoungingbox() {
-                    if ($scope.boundingbox) {
-                        if (!$scope.bounds) {
-                            $scope.bounds = {
-                                southWest: {},
-                                northEast: {},
-                            };
-                        }
-                        $scope.bounds.southWest.lat = $scope.boundingbox.southLatitude;
-                        $scope.bounds.southWest.lng = $scope.boundingbox.westLongitude;
-                        $scope.bounds.northEast.lat = $scope.boundingbox.northLatitude;
-                        $scope.bounds.northEast.lng = $scope.boundingbox.eastLongitude;
-                        return;
-                    }
-
-                    if (!$scope.center) {
-                        $scope.center = { zoom: 8 };
-                    }
-                    $scope.center.lat = $scope.markers.marker.lat;
-                    $scope.center.lng = $scope.markers.marker.lng;
-                }
-
-                $scope.$watch('editable', function () {
-                    var edited = $scope.editable;
-                    $scope.markers.marker.icon = edited ? icons.draggable : icons['default'];
-                    $scope.markers.marker.draggable = edited;
-                });
-            }
-        };
-    }]);
-
 (function () {
     'use strict';
     angular.module('ev-upload', ['ev-fdm']);
@@ -4247,7 +4247,7 @@ angular.module('ev-upload')
                                 });
                             },
                             function error(xhr) {
-                                const response = JSON.parse(xhr.response);
+                                const response = (typeof(xhr.data) == 'object') ? xhr.data : JSON.parse(xhr.response);
                                 NotificationsService.add({
                                     type: NotificationsService.type.ERROR,
                                     text: (xhr.status === 400 && response !== null)
