@@ -227,7 +227,7 @@ angular.module('ev-upload')
                                 });
                             },
                             function error(xhr) {
-                                const response = (typeof(xhr.data) == 'object') ? xhr.data : JSON.parse(xhr.response);
+                                var response = (typeof(xhr.data) == 'object') ? xhr.data : JSON.parse(xhr.response);
                                 NotificationsService.add({
                                     type: NotificationsService.type.ERROR,
                                     text: (xhr.status === 400 && response !== null)
