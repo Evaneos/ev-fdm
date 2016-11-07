@@ -10,6 +10,7 @@ angular.module('ev-fdm').directive('evPictureList', function() {
           showUpdate: '=',
           language: '=',
           colNumber: '=',
+          download: '=',
           onPictureDeleted: '&'
         },
         templateUrl: 'ev-picture-list.html',
