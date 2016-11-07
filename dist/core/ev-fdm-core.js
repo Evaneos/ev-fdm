@@ -387,1806 +387,6 @@ angular.module('ev-fdm')
         return SearchController;
     }]);
 
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-/**
- * evAccordion directive works as an attribute
- * and it's working with the accordion directive (required)
- *
- * His role is to add methods to the scope of the accordion
- */
-module.directive('evAccordion', ['accordionDirective', function(accordionDirective) {
-  return {
-    restrict:'A',
-    require: 'accordion',
-    link: function(scope, element, attr, accordionCtrl) {
-
-        scope.expandAll   = setIsOpenAll.bind(null, true);
-        scope.collapseAll = setIsOpenAll.bind(null, false);
-        scope.showableAccordionButton = showableAccordionButton;
-
-        // Set the isOpen property for ALL groups (to true or false)
-        function setIsOpenAll(isOpen) {
-            accordionCtrl.groups.forEach(function(group) {
-                group.isOpen = isOpen;
-            });
-        }
-
-        /**
-         * Should we display that 'type' of button?
-         *  - type can have the value: 'expand' or 'collapse'
-         *
-         * Expand btn is displayed when all groups are closed
-         * Collaspe btn is displayed when at least one group is open
-         */
-        function showableAccordionButton(type) {
-            var groups = accordionCtrl.groups;
-            if(groups.length === 0) {
-                return false;
-            }
-
-            if(type === 'expand') {
-                return groups.every(function(group) {
-                    return !group.isOpen;
-                });
-            } else {
-                return groups.some(function(group) {
-                    return group.isOpen;
-                });
-            }
-        }
-    }
-  };
-}]);
-
-'use strict';
-
-angular.module('ev-fdm').directive('activableSet', function() {
-    return {
-        restrict: 'A',
-        scope: false,
-        controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
-
-            var activeElementGet = $parse($attrs.activeElement);
-            var activeElementSet = activeElementGet.assign;
-
-            var self = this;
-            $scope.$watch(function() {
-                return activeElementGet($scope);
-            }, function(newActiveElement) {
-                self.activeElement = newActiveElement;
-            });
-
-           this.toggleActive = function(value) {
-                if(value !== this.activeElement) {
-                    if (activeElementSet) {
-                        activeElementSet($scope, value);
-                    }
-
-                    this.activeElement = value;
-                }
-                else {
-                    if(activeElementSet) {
-                        activeElementSet($scope, null);
-                    }
-
-                    this.activeElement = undefined;
-                }
-
-                $scope.$eval($attrs.activeChange);
-           };
-
-        }]
-    };
-});
-angular.module('ev-fdm').directive('activable', ['$parse', function($parse) {
-    return {
-        restrict: 'A',
-        require: '^activableSet',
-        link: function(scope, element, attr, ctrl) {
-            element.addClass('clickable');
-            var elementGetter = $parse(attr.activable);
-            var currentElement = elementGetter(scope);
-
-
-            scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
-              currentElement = newCurrentElement;
-            });
-
-            scope.$watch(
-                function() { return ctrl.activeElement; },
-                function(newActiveElement, oldActiveElement) {
-                    if(newActiveElement && currentElement === newActiveElement) {
-                        element.addClass('active');
-                    }
-                    else {
-                        element.removeClass('active');
-                    }
-                }
-            );
-
-            element.on('click', function(event) {
-                if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
-                    scope.$apply(function() {
-                        ctrl.toggleActive(currentElement);
-                    });
-                }
-            });
-        }
-    };
-}]);
-
-angular.module('ev-fdm').directive('evAddTagInList', [
-    function() {
-        return {
-            restrict: 'EA',
-            transclude: true,
-            scope: {
-                elements: '=',
-                addElement: '=',
-                maxElements: '=',
-                iconName: '@',
-                buttonText: '@',
-                tooltipText: '@',
-            },
-            template:
-                '<span ng-hide="elements.length >= maxElements"> ' +
-                    '<button type="button" ' +
-                        'class="btn btn-tertiary btn-env" ' +
-                        'tabIndex="-1"' +
-                        'tooltip="{{ tooltipText }}"' +
-                        'tooltip-placement="top"' +
-                        'tabIndex="-1"' +
-                        'ng-hide="context.showSelect" ' +
-                        'ng-click="context.showSelect = true"> ' +
-                        '<span class="icon {{ iconName }}"></span> ' +
-                        '{{ buttonText }} ' +
-                    '</button> ' +
-                    '<span ng-show="context.showSelect"> ' +
-                        '<div class="transclude-addtaginlist"></div>' +
-                    '</span> ' +
-                '</span> ',
-            link: function(scope, element, attrs, controller, transcludeFn) {
-                scope.context = {
-                    showSelect: false,
-                };
-
-                transcludeFn(function(clone, transcludedScope) {
-                    transcludedScope.add = function(element) {
-                        return scope.addElement(scope.elements, element);
-                    };
-
-                    // append body to template
-                    element.find('.transclude-addtaginlist').append(clone);
-                });
-            },
-        };
-    },
-]);
-
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('clearable', [function() {
-
-    return {
-        restrict: 'A',
-        require: 'ngModel',
-        link: function(scope, element, attr, ctrl) {
-
-            var clearButton = angular.element('<button class="clear" ng-click="clear()">×</button>');
-            element.after(clearButton);
-
-            clearButton.on('click', function() {
-                scope.$apply(function() {
-                    element.val(''); 
-                    ctrl.$setViewValue('');
-                });
-            });
-
-            scope.$watch(function() { return ctrl.$isEmpty(ctrl.$viewValue); }, function(isEmpty) {
-                if(isEmpty) {
-                    clearButton.hide();
-                }
-                else {
-                    clearButton.show();
-                }
-            });
-
-        }
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm')
-.directive('evDatepicker', function() {
-    return {
-        restrict: 'A',
-        require : 'ngModel',
-        link : function (scope, element, attrs, ngModelCtrl) {
-
-            var dateCanBeInTheFutur = attrs.futurAllowed !== 'false',
-                dateFormat = attrs.dateFormat || 'dd/mm/yy';
-
-            $(function(){
-                element.datepicker({
-                    dateFormat: dateFormat,
-                    maxDate: dateCanBeInTheFutur? null : 0,
-                    onSelect:function (date) {
-                        ngModelCtrl.$setViewValue(date);
-                        scope.$apply();
-                    }
-                });
-
-            });
-        }
-    }
-});
-angular.module('ev-fdm')
-.directive('download', ['$http', '$location', '$document', 'DownloadService', function($http, $location, $document, downloadService) {
-    return {
-        link: function(scope, elm, attrs) {
-            elm.on('click', function(event) {
-                $http.get(attrs.download).success(function(data) {
-                	downloadService.download(data.url);
-                });
-            });
-        }
-    }
-}]);
-'use strict';
-
-angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', function (notificationsService) {
-    return {
-        restrict: 'AE',
-        transclude: true,
-        scope: {
-            options: '=',
-            args: '=?',
-            title: '@', // deprecated
-            headerTitle: '@',
-            noteditable: '=?',
-            notdeletable: '=?',
-        },
-        templateUrl: 'ev-edit-section.html',
-
-        link: function(scope, element, attrs, controller, transcludeFn) {
-            var _transcludedScope = {};
-            var options = scope.options;
-            var triedToSave = false;
-
-            function setEditMode(editMode) {
-                _transcludedScope.edit = editMode;
-                scope.edit = editMode;
-                _transcludedScope.editform = scope.editform;
-            }
-
-
-            scope.changeToEditMode = function() {
-                if (!options.onEdit || options.onEdit && options.onEdit.apply(null, scope.args || []) !== false) {
-                    setEditMode(true);
-                }
-            };
-
-            scope.save = function() {
-                if (!scope.editform.$valid) {
-                    triedToSave = true;
-                    return;
-                }
-                var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
-                if (resultSave && resultSave.then) {
-                    scope.inProgress = true;
-                    resultSave.then(
-                        function success() {
-                            notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
-                            if (options.success) {
-                                options.success();
-                            }
-                            scope.inProgress = false;
-                            setEditMode(false);
-                        },
-                        function error() {
-                            scope.inProgress = false;
-                            notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
-                        }
-                    );
-                } else if (resultSave !== false) {
-                    setEditMode(false);
-                }
-            };
-
-            scope.cancel = function() {
-                if (!options.onCancel || options.onCancel && options.onCancel.apply(null, scope.args || []) !== false) {
-                    setEditMode(false);
-                }
-            };
-
-            scope.delete = options.onDelete && function() {
-                var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
-
-                if (result && result.then) {
-                    scope.inProgress = true;
-                    result.then(
-                        function success() {
-                            notificationsService.addSuccess({ text: attrs.successDeleteMessage });
-                            if (options.success) {
-                                options.success();
-                            }
-                            scope.inProgress = false;
-                            setEditMode(false);
-                        },
-                        function error() {
-                            scope.inProgress = false;
-                            notificationsService.addError({ text: attrs.errorDeleteMessage });
-                        }
-                    );
-                }
-            };
-
-            transcludeFn(function(clone, transcludedScope) {
-                // default state
-                transcludedScope.edit = scope.edit = !!attrs.edit;
-
-                // usefull methods
-                transcludedScope.showErrorMessage = function(fieldName, errorName) {
-                    var field = scope.editform[fieldName];
-                    return (triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
-                };
-
-                // transclude values
-                _transcludedScope = transcludedScope;
-
-                // append body to template
-                element.find('.transclude').append(clone);
-            });
-        }
-    };
-}]);
-
-'use strict';
-
-angular.module('ev-fdm')
-.directive('ngEnter', function() {
-    return function(scope, element, attrs) {
-        element.bind("keydown keypress", function(event) {
-            if(event.which === 13) {
-                scope.$apply(function(){
-                    scope.$eval(attrs.ngEnter);
-                });
-
-                event.preventDefault();
-            }
-        });
-    };
-});
-var module = angular.module('ev-fdm')
-.directive('evErrorMessage', function () {
-    return {
-        restrict: 'E',
-        transclude: true,
-        scope: {
-            input: '=',
-            error: '@'
-        },
-        template: '<li ng-show="input[\'evHasError\'] && input.$error[error]"><div ng-transclude></div></li>'
-    };
-});
-
-var module = angular.module('ev-fdm')
-.directive('evErrors', function () {
-    return {
-        restrict: 'E',
-        transclude: true,
-        replace: true,
-        template: '<ul class="errors text-danger" ng-transclude></ul>'
-    };
-});
-
-'use strict';
-
-function MenuManagerProvider() {
-
-    var self = this;
-    this.tabs = [];
-    this.activeTab = null;
-    this.lastTab = null;
-
-    this.addTab = function(tab) {
-        this.tabs.push(tab);
-        return this;
-    };
-
-    function findTab(stateName) {
-        var res = null;
-        angular.forEach(self.tabs, function(tab) {
-            if(stateName === tab.state) {
-                res = tab;
-            }
-        });
-
-        return res;
-    }
-
-    function selectTab(tab) {
-        tab = tab || {};
-        tab = findTab(tab.state);
-
-        if(!tab) {
-            return;
-        }
-
-        if(self.activeTab) {
-            self.lastTab = self.activeTab;
-            self.activeTab.active = false;
-        }
-
-        tab.active = true;
-        self.activeTab = tab;
-    }
-
-    this.$get = ['$rootScope', '$state', function($rootScope, $state) {
-
-        // Handle first page load
-        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
-            if (fromState.name === '') {
-                var toTab = findTab(toState.name);
-
-                if(toTab) {
-                    selectTab(toTab);
-                }
-            }
-        });
-
-        $rootScope.$on('$stateChangeError', function(event) {
-            selectTab(self.lastTab);
-        });
-
-        return {
-            tabs: self.tabs,
-            selectTab: selectTab
-        };
-    }];
-}
-
-function EvMenuDirective(menuManager) {
-    return {
-        restrict: 'E',
-        replace: true,
-        template:   '<ul class="module-tabs ev-header nav nav-tabs" ng-cloak>' +
-                        '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
-                            '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
-                        '</li>' +
-                    '</ul>',
-        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
-            $scope.tabs = menuManager.tabs;
-
-            if($rootScope['evmenu-state']) {
-                menuManager.selectTab($rootScope['evmenu-state']);
-            }
-
-            $scope.selectTab = function(tab) {
-                menuManager.selectTab(tab);
-                $state.go(tab.state);
-            };
-        }]
-    };
-}
-
-angular.module('ev-fdm')
-    .provider('menuManager', [MenuManagerProvider])
-    .directive('evMenu', ['menuManager', EvMenuDirective]);
-'use strict';
-
-var module = angular.module('ev-fdm')
-.directive('evFlag', function () {
-    return {
-        restrict: 'E',
-        replace: true,
-        scope: {
-            lang: '='
-        },
-        template: '<i class="icon icon-flag flag-{{lang}}"></i>'
-    };
-});
-angular.module('ev-fdm')
-.directive('focus', [function() {
-    return {
-        link: function(scope, elm, attrs, ctrl) {
-            scope.$evalAsync(function() {
-                elm[0].focus();
-            });
-        }
-    }
-}]);
-var module = angular.module('ev-fdm')
-.directive('evFormGroup', ['$parse', '$rootScope', function($parse, $rootScope) {
-    return {
-        restrict: 'EA',
-        scope: true,
-        transclude: true,
-        replace: true,
-        template: '<div class="form-group" ng-transclude></div>',
-        controller: function($scope, $element, $attrs) {
-            this.toggleError = $element.toggleClass.bind($element, 'has-error');
-        }
-    };
-}]);
-
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('linkDisabled', function() {
-        return {
-            restrict: 'A',
-            link: function(scope, element, attrs) {
-                var oldNgClick = attrs.ngClick;
-                if (oldNgClick) {
-                    scope.$watch(attrs.linkDisabled, function (value, oldValue) {
-                        if (!! value) {
-                            element.unbind('click');
-                            element.attr('disabled', 'disabled');
-                        } else if (oldValue) {
-                            attrs.$set('ngClick', oldNgClick);
-                            element.bind('click', function () {
-                                scope.$apply(attrs.ngClick);
-                            });
-                            element.removeAttr('disabled');
-                        }
-                    });
-                }
-            }
-        };
-    });
-'use strict';
-
-var module = angular.module('ev-fdm')
-.directive('evLoadingDots', function () {
-    return {
-        restrict: 'E',
-        replace: true,
-        template: '<span class="loading-dots"><span></span><span></span><span></span></span>'
-    };
-});
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('mouseFollower', ['$document', function ($document) {
-        return {
-            restrict: 'A',
-            link : function (scope, element, attr){
-                element = angular.element(element);
-                element.css('position', 'absolute');
-                element.css('z-index', 1500);
-
-                $document.on('mousemove', function(evt) {
-                    element.css({
-                        left:  evt.pageX,
-                        top:   evt.pageY
-                    });
-                });
-            }
-        }
-    }]);
-'use strict';
-
-var module = angular.module('ev-fdm')
-    .directive('evPagination', [function () {
-        var ELLIPSIS = '...';
-        return {
-            restrict: 'AE',
-            replace: true,
-            templateUrl: 'ev-pagination.html',
-            scope: {
-                currPage:     '=',
-                nbPage:       '=',
-                onPageChange: '='
-            },
-
-            link: function (scope){
-                scope.paginationButtons = [];
-                scope.prevClass = '';
-                scope.nextClass = '';
-
-                scope.currPage = scope.currPage || 1;
-                scope.nbPage   = scope.nbPage   || 1;
-
-                scope.generateButtons = function () {
-                    var i = 0;
-                    var nbAround = 2; // We want to have this amount of links around the current page.
-
-                    scope.paginationButtons = [];
-                    // Add 1
-                    scope.paginationButtons.push ({value: 1, class:scope.currPage==1 ? 'active':'' });
-
-                    // Add the 3 dots
-                    if (scope.currPage-nbAround > 2) {
-                        scope.paginationButtons.push({ value: ELLIPSIS, class:'disabled' });
-                    }
-
-                    // add the surrounding page numbers
-                    for (i = nbAround; i > 0; i--) {
-                        if (scope.currPage-i > 1) {
-                            scope.paginationButtons.push ({value: scope.currPage-i});
-                        }
-                    }
-
-                    // add the actual page
-                    if (scope.currPage != 1 && scope.currPage != scope.nbPage) {
-                        scope.paginationButtons.push ({ value: scope.currPage, class:'active' });
-                    }
-
-                    // add the surrounding page numbers
-                    for (i = 1; i <= nbAround; i++) {
-                        if (scope.currPage+i < scope.nbPage) {
-                            scope.paginationButtons.push ({value: scope.currPage+i});
-                        }
-                    }
-
-                    // Add the 3 dots
-                    if (scope.currPage+nbAround < scope.nbPage-1){
-                        scope.paginationButtons.push ({ value: ELLIPSIS, class:'disabled' });
-                    }
-
-                    // Add final page number
-                    if (scope.nbPage > 1){
-                        scope.paginationButtons.push ({value: scope.nbPage,class:scope.currPage==scope.nbPage ? 'active':''});
-                    }
-                    // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
-                    // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
-                };
-
-                scope.previousPage = function (){
-                    if (scope.currPage > 1) {
-                        var oldPage = scope.currPage;
-                        scope.currPage--;
-                        if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage, oldPage, 'previousPage');
-                        }
-                    }
-
-                };
-
-                scope.changePage = function (value){
-                    if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
-                         var oldPage = scope.currPage;
-                        scope.currPage = value;
-
-                        if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(value, oldPage);
-                        }
-                    }
-                };
-
-                scope.nextPage = function (){
-                    if (scope.currPage < scope.nbPage){
-                        var oldPage = scope.currPage;
-                        scope.currPage++;
-
-                        if(angular.isFunction(scope.onPageChange)) {
-                            scope.onPageChange(scope.currPage, oldPage, 'nextPage');
-                        }
-                    }
-                };
-
-                scope.$watch('nbPage + currPage', function() {
-                    scope.generateButtons ();
-                });
-            }
-        };
-    }]);
-
-/* global console */
-angular.module('ev-fdm').directive('evPictureList', function() {
-    return {
-        restrict: 'EA',
-        scope: {
-          pictures: '=',
-          editable: '=',
-          onDelete: '&',
-          onChange: '&',
-          showUpdate: '=',
-          language: '=',
-          colNumber: '=',
-          onPictureDeleted: '&'
-        },
-        templateUrl: 'ev-picture-list.html',
-        link: function($scope, elem, attrs) {
-            $scope.pictures = $scope.pictures || [];
-
-            // Number of columns for pictures
-            var colNumber = $scope.colNumber || 2;
-            // Convert it to bootstrap convention (12)
-            $scope.colNumberBootstrap = 12 / colNumber;
-
-            if (!attrs.onDelete) {
-                $scope.onDelete = function(params) {
-                    $scope.pictures.splice(params.index, 1);
-                    $scope.onPictureDeleted();
-                };
-                $scope.onUpdate = function(params) {
-                    // Not implemented yet
-                    console.log(params);
-                };
-            }
-        }
-    };
-});
-
-(function () {
-    'use strict';
-        // update popover template for binding unsafe html
-    angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
-        $templateCache.put("template/popover/popover.html",
-          "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
-          "  <div class=\"arrow\"></div>\n" +
-          "\n" +
-          "  <div class=\"popover-inner\">\n" +
-          "      <h3 class=\"popover-title\" ng-bind-html=\"title\" ng-show=\"title\"></h3>\n" +
-          "      <div class=\"popover-content\"ng-bind-html=\"content\"></div>\n" +
-          "  </div>\n" +
-          "</div>\n" +
-          "");
-    }]);
-    angular.module('ev-fdm')
-        .directive('popover', ['$timeout', function ($timeout) {
-        	return {
-        		restrict: 'A',
-				link: function ($scope, elem, attrs) {
-                    var showTimeout;
-                    elem.bind('focus', function () {
-                        elem.triggerHandler('focus-not-typing');
-                    });
-					elem.bind('blur', function () {
-                        if (showTimeout) {$timeout.cancel(showTimeout);}
-                        elem.triggerHandler('blur-or-typing');
-                    });
-                    elem.bind('keypress', function () {
-                        if (showTimeout) {$timeout.cancel(showTimeout);}
-                        elem.triggerHandler('blur-or-typing');
-                        showTimeout = $timeout(function () {
-                            elem.triggerHandler('focus-not-typing');
-                        }, 1000);
-                    });
-				}
-        	};
-        }]);
-}) ();
-
-/**
- * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
- * + Supports empty lists by displaying a message (promise-empty)
- *
- * Options :
- * - emptyMessage (string) - display a message when promise resolves to empty array
- * - promiseDefaultStyles (boolean, default true) - apply spinning evaneos logo when resolving
- *
- * Examples :
- * <div promise="myPromise"
- *     empty-message="No quote"
- *     promise-default-styles="true">
- *
- */
-angular.module('ev-fdm').directive('promise', [
-    function () {
-        function applyClass(classes, element) {
-            element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
-            element.addClass(classes);
-        }
-
-        return {
-            restrict: 'A',
-            replace: false,
-
-            controller: ['$scope', '$attrs', '$parse', '$element', function($scope, $attrs, $parse, $element) {
-                var promiseGetter = $parse($attrs.promise);
-                var emptyMessage = $attrs.emptyMessage;
-                var promiseDefaultStyles = ($attrs.promiseDefaultStyles !== 'false');
-                if (promiseDefaultStyles) {
-                    applyClass('promise-default-styles', $element);
-                }
-                if (emptyMessage) {
-                    $element.append('<div class="promise-empty-message">' + emptyMessage + '</div>');
-                }
-                $scope.$watch(function() {
-                    return promiseGetter($scope);
-                }, function(promise) {
-                    if (promise) {
-                        applyClass('promise-resolving', $element);
-                        promise.then(function(result) {
-                            // make sure we are dealing with arrays
-                            // otherwise (not a collection, we can't assume it's empty or non empty)
-                            if (emptyMessage && angular.isArray(result) && !result.length) {
-                                applyClass('promise-resolved promise-empty', $element);
-                            } else {
-                                applyClass('promise-resolved', $element);
-                            }
-
-                            return result;
-                        }, function() {
-                            applyClass('promise-rejected', $element);
-                        });
-                    } else {
-                        applyClass('promise-resolved', $element);
-                    }
-                });
-            }]
-        };
-
-    }
-]);
-
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evPromiseProgress', [function () {
-
-    /*  ev-promise-progress
-        ===================
-        Hi! I'm a directive that link a progress bar to a promise.
-
-        Just give me a promise argument. I'll update automatically each time the `notify` callback is called. Of course
-        I assume that a percentage progress is given.
-
-        Beware! Each time the promise changes, and is replaced by a new one, I bind the progress bar to the new promise.
-        Without unbinding from the previous one. If it wasn't completed, it can leads to strange behavior (i.e. the
-        progress bar taking value from both at the same time, doing back and forth).
-    */
-            return {
-                restrict: 'A',
-                replace: true,
-                scope: {
-                    promise: '=evPromiseProgress',
-                },
-                template: '<div role="progressbar" class="ev-progress" aria-valuemin="0" aria-valuemax="100"' +
-                    'aria-valuenow="0"> <div class="ev-progress-overlay"></div> </div> ',
-                link: function ($scope, elem, attrs) {
-                    var progressBar = elem.find(angular.element(document.querySelector('.ev-progress-overlay')));
-                    progressBar.css({width: '0%'});
-                    $scope.$watch('promise', function (newPromise) {
-                        if (!newPromise || !newPromise.then) { return; }
-                        progressBar.css({width: '0%'});
-                        newPromise.then(null, null, function notify (progress) {
-                            if (typeof(progress) === 'object') {
-                                progress = progress.progress;
-                            }
-                            progressBar.css({width: progress + '%'});
-                        });
-                        newPromise.finally(function () {
-                            progressBar.css({width: '100%'});
-                        });
-                    });
-                }
-            };
-        }]);
-}());
-'use strict';
-
-
-angular.module('ev-fdm')
-    .directive('evResizableColumn', ['$window', '$rootScope', function($window, $rootScope) {
-
-        function getLimitWidth(elm, minOrMax) {
-            var limitWidth  = elm.css(minOrMax + '-width').replace('px', '');
-            return (limitWidth !== "none") ? limitWidth : null;
-        }
-        function getMinDelta (elm, width) {
-            return (getLimitWidth(elm, 'min') || 0) - width; 
-        }
-
-        function getMaxDelta (elm, width) {
-            return (getLimitWidth(elm, 'max') || Number.POSITIVE_INFINITY) - width; 
-        }
-        return {
-            restrict: 'A',
-            scope: false,
-            link: function (scope, elm, attr) {
-                var handleElm = angular.element('<div class="ev-resizable-column-handle"></div>'); 
-                elm.append(handleElm);
-                handleElm.on('mousedown', function (event) {
-                    var x1 = event.pageX;
-                    document.body.style.cursor = "ew-resize";
-                    event.stopPropagation();
-                    var nextElm = elm.next();
-
-                    elm.addClass('unselectable');
-                    nextElm.addClass('unselectable');
-                    
-
-                    var elmWidth = elm.outerWidth();
-                    var nextElmWidth = nextElm.outerWidth();
-                    
-                    // COMPUTE MAX AND MIN DELTA (reset min width)
-                    nextElm.css('min-width', '');
-                    elm.css('min-width', '');
-
-                    var maxDelta = Math.min(getMaxDelta(elm, elmWidth), -getMinDelta(nextElm, nextElmWidth));
-                    var minDelta = Math.max(getMinDelta(elm, elmWidth), -getMaxDelta(nextElm, nextElmWidth));
-
-                    // Reassign min width
-                    nextElm.css('min-width', nextElmWidth);
-                    elm.css('min-width', elmWidth);
-
-                    // Creating the helper
-                    var helper = angular.element('<div class="ev-resizable-helper"></div>');
-                    helper.css('min-width', nextElmWidth - maxDelta);
-                    helper.css('max-width', nextElmWidth - minDelta);
-                    helper.width(nextElmWidth);
-                    nextElm.append(helper);
-
-
-                    var onMousemove = function (event) {
-                        var delta = event.pageX - x1;
-                        helper.width(nextElmWidth - delta);
-                    };
-
-                    var onMouseup = function (event) {
-                        document.body.style.cursor = null;
-                        var delta = event.pageX - x1;
-                        // Bound the delta based on min/max width of the two columns 
-                        if (delta > 0) {
-                            delta = Math.min(delta, maxDelta);
-                        } else {
-                            delta = Math.max(delta, minDelta);
-                        }
-
-                        // Apply new width
-                        // NB: as we are dealing with flexbox we are obliged to use minWidth
-                        elm.css('minWidth', elmWidth + delta);
-                        nextElm.css('minWidth', nextElmWidth - delta);
-
-                        // Remove helpers
-                        helper.remove();
-
-                        $window.removeEventListener('mouseup', onMouseup);  
-                        $window.removeEventListener('mousemove', onMousemove);  
-
-                        elm.removeClass('unselectable');
-                        nextElm.removeClass('unselectable');
-                        $rootScope.$broadcast('module-layout-changed');
-                    };
-
-                    $window.addEventListener('mouseup', onMouseup);  
-                    $window.addEventListener('mousemove', onMousemove);
-                });
-
-            }
-        };
-    }]);
-'use strict';
-
-angular.module('ev-fdm').directive('body', [
-    '$rootScope',
-    'NotificationsService',
-    '$state',
-    function($rootScope, notificationsService, $state) {
-        return {
-            restrict: 'E',
-            link: function(scope, element, attrs) {
-
-                $rootScope.$on('$stateChangeStart', function(event, toState) {
-                    // not a tab changing
-                    var dotX = $state.current.name.indexOf('.');
-                    var stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
-
-                    if (!stateName || toState.name.indexOf(stateName) !== 0) {
-                        $('body').addClass('state-resolving');
-                    }
-                });
-
-                $rootScope.$on('$stateChangeSuccess', function() {
-                    element.removeClass('state-resolving');
-                });
-
-                /**
-                 * When there is an error on a state change
-                 *
-                 * In your state config you can add the following.
-                 * This will allows the router to fallback to this state on error
-                 * while displaying the specified message
-
-                      fallback: {
-                        state: 'list',
-                        message: t('Unable to open this transaction!')
-                      }
-                 */
-                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error) {
-                    if (console.error) {
-                        console.error(
-                            'toState=', toState,
-                            'toParams=', toParams,
-                            'fromState=', fromState,
-                            'error=', error,
-                            'event=', event
-                        );
-                    }
-                    $('body').removeClass('state-resolving');
-
-                    var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
-
-                    notificationsService.addError({
-                        text: errorMessage
-                    });
-
-                    // Redirect to the fallback we defined in our state
-                    if (toState && toState.fallback && toState.fallback.state) {
-                      $state.go(toState.fallback.state);
-                    }
-                });
-            }
-        };
-    }
-]);
-
-/*
-    responsive-viewport
-    ===================
-
-    I'm a directive that place the proper class responsive class dependanding on the size of the element I'm attached.
-
-*/
-
-"use strict";
-angular.module('ev-fdm')
-    .provider('evResponsiveViewport', function () {
-        var breakpoints = {
-            400: 'ev-viewport-xs',
-            600: 'ev-viewport-sm',
-            900: 'ev-viewport-md'
-        };
-        this.$get =function () {
-            return breakpoints;
-        };
-
-        this.setXsBreakpoint = function (breakpoint) {
-            breakpoints[breakpoint] = 'ev-viewport-xs';
-        };
-
-        this.setSmBreakpoint = function (breakpoint) {
-            breakpoints[breakpoint] = 'ev-viewport-sm';
-        };
-
-        this.setMdBreakpoint = function (breakpoint) {
-            breakpoints[breakpoint] = 'ev-viewport-md';
-        };
-
-        this.setBreakpoints = function (breaks) {
-            if (breaks.length !== 3) {
-                throw new Error('There should be three breakpoints');
-            }
-            breaks.sort();
-            breakpoints[breaks[0]] = 'ev-viewport-xs';
-            breakpoints[breaks[1]] = 'ev-viewport-sm';
-            breakpoints[breaks[2]] = 'ev-viewport-md';
-        };
-    })
-    .directive('evResponsiveViewport', ['evResponsiveViewport', function (breakpoints) {
-        return {
-            link: function (scope, elm) {
-                var updateViewport = function () {
-
-                    var elmWidth = elm.width();
-                    var _class;
-
-                    var largeViewport = !Object.keys(breakpoints).some(function (breakpoint) {
-                        _class = breakpoints[breakpoint];
-                        return elmWidth < breakpoint;
-                    });
-                    if (largeViewport) {
-                        _class = 'ev-viewport-lg';
-                    }
-
-                    if (!elm.hasClass(_class)) {
-                        Object.keys(breakpoints).forEach(function (key) {
-                                elm.removeClass(breakpoints[key]);
-                            });
-                        elm.removeClass('ev-viewport-lg');
-                        elm.addClass(_class);
-                    }
-                };
-
-                updateViewport();
-                scope.$on('module-layout-changed', updateViewport);
-            }
-        };
-    }]);
-
-angular.module('ev-fdm')
-    .provider('evSelectLanguage', function() {
-        this.$get = function () {
-            return {
-                availableLang: this.availableLang || [],
-                defaultLang: this.defaultLang
-            };
-        };
-
-        this.setAvailableLang = function (availableLang) {
-            this.availableLang = availableLang;
-        };
-        this.setDefaultLang =function (defaultLang) {
-            this.defaultLang = defaultLang;
-        };
-    })
-    .directive('evSelectLanguage', ['evSelectLanguage', function (cfg) {
-        return {
-            template:
-                '<div class="ev-language-tabs">' +
-                    '<div class="btn-group">' +
-                        '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
-                            'ng-class="{active: selectedLang===lang}"' +
-                            'ng-click="$parent.selectedLang=lang">' +
-                            '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
-                        '</button>' +
-                    '</div>' +
-                '</div>',
-            restrict: 'AE',
-            scope: {
-                selectedLang: '=lang'
-            },
-            link: function($scope) {
-                $scope.availableLang = cfg.availableLang;
-                if (!$scope.selectedLang) {
-                    $scope.selectedLang = cfg.defaultLang;
-                }
-            }
-        };
-    }]);
-
-'use strict';
-/// This directive currently depend on ng-repeat $index for the
-///  shift selection. It would be great to remove this depency.
-angular.module('ev-fdm')
-    .directive('selectableSet', [function() {
-        return {
-            restrict: 'A',
-            controller: ['$scope', '$parse', '$element', '$attrs', '$document',
-            function($scope, $parse, $element, $attrs, $document) {
-                var self = this,
-                    shiftKey = 16;
-
-                var selectedElementsGet = $parse($attrs.selectedElements);
-
-                this.selectableElements = [];
-                this.selectedElement = [];
-
-                var lastClickedIndex,
-                    shiftSelectedElements = [];
-
-                $scope.$watch(function() {
-                    return selectedElementsGet($scope);
-                  },
-                  function() {
-                    self.selectedElements = angular.isArray(selectedElementsGet($scope))?
-                      selectedElementsGet($scope) : [];
-                  }
-                );
-
-                // Toggle a noselect class on the element when the shift key is pressed
-                // This allows us to disable selection overlay via css
-                $document.on('keydown', function(event) {
-                    if(event.keyCode === shiftKey) {
-                        $element.addClass('noselect');
-                    }
-                });
-
-                $document.on('keyup', function(event) {
-                    if(event.keyCode === shiftKey) {
-                        $element.removeClass('noselect');
-                    }
-                });
-
-                this.toggleSelection = function(element, index) {
-                    lastClickedIndex = index;
-                    shiftSelectedElements.length = 0;
-
-                    if(this.isElementSelected(element)) {
-                        unselectElement(element);
-                    }
-                    else {
-                        selectElement(element);
-                    }
-                };
-
-                this.toggleSelectAll = function() {
-
-                    if(this.selectedElements.length === this.selectableElements.length){
-                        this.selectedElements.length = 0;
-                    }
-                    else {
-                      angular.forEach(this.selectableElements, function(element) {
-                        if(!self.isElementSelected(element)) {
-                          selectElement(element);
-                          }
-                      });
-                    }
-                };
-
-                this.shiftedClick = function(element, index) {
-                    if(typeof lastClickedIndex !== undefined) {
-                        toggleRangeUpTo(lastClickedIndex, index);
-                    }
-                };
-
-                this.registerElement = function(element, directive) {
-                  this.selectableElements.push(element);
-                };
-
-                this.unregisterElement = function(element) {
-                  var index = this.selectableElements.indexOf(element);
-                  if(index > -1) {
-                      this.selectableElements.splice(index, 1);
-                  }
-
-                  index = this.selectedElements.indexOf(element);
-                  if(index > -1) {
-                      this.selectedElements.splice(index, 1);
-                  }
-                };
-
-                this.areAllElementSelected = function() {
-                  return this.selectedElements.length === this.selectableElements.length
-                     && this.selectedElements.length !== 0;
-                };
-
-                this.isElementSelected = function(element) {
-                    return self.selectedElements.indexOf(element) > -1;
-                };
-
-                function toggleRangeUpTo(firstIndex, lastIndex) {
-
-                    var lastElement = getElementAtIndex(lastIndex),
-                        min = Math.min(firstIndex, lastIndex),
-                        max = Math.max(firstIndex, lastIndex),
-                        element,
-                        i;
-
-                    angular.forEach(shiftSelectedElements, function(element, index) {
-                        unselectElement(element);
-                    });
-
-                    if(self.isElementSelected(lastElement)) {
-                        for(i = min; i <= max; i++) {
-                            element = getElementAtIndex(i);
-                            unselectElement(element);
-                        }
-
-                        lastClickedIndex = lastIndex;
-                        shiftSelectedElements.length = 0;
-                    }
-                    else {
-                        shiftSelectedElements.length = 0;
-                        for(i = min; i <= max; i++) {
-                            element = getElementAtIndex(i);
-                            selectElement(element);
-                            shiftSelectedElements.push(element);
-                        }
-                    }
-                }
-
-                function getElementAtIndex(index) {
-                    return self.selectableElements[index];
-                }
-
-                function selectElement(element) {
-                    if(!self.isElementSelected(element)) {
-                        self.selectedElements.push(element);
-                    }
-                }
-
-                function unselectElement(element) {
-                    var index = self.selectedElements.indexOf(element);
-                    if(index > -1) {
-                        self.selectedElements.splice(index, 1);
-                    }
-                }
-            }]
-        };
-    }])
-    .directive('selectable', ['$parse', function($parse) {
-      return {
-          restrict: 'A',
-          require: ['^selectableSet', '?ngModel'],
-          link: function(scope, element, attr, ctrls) {
-
-              var currentElementGetter = $parse(attr.selectable);
-              var currentElement = currentElementGetter(scope);
-
-              var ctrl = ctrls[0],
-                  modelCtrl = ctrls[1];
-
-              ctrl.registerElement(currentElement);
-
-              scope.$on('$destroy', function() {
-                  ctrl.unregisterElement(currentElement);
-              });
-
-              scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
-                scope.selected = ctrl.isElementSelected(currentElement);
-                if(modelCtrl) {
-                  modelCtrl.$setViewValue(scope.selected);
-                }
-              });
-
-              element.on('click', function(event) {
-                  scope.$apply(function() {
-                      handleClick(event);
-                  });
-              });
-
-              function handleClick(event) {
-                  if (event.shiftKey) {
-                      ctrl.shiftedClick(currentElement, scope.$index);
-                  }
-                  else if (event.ctrlKey || angular.element(event.target).is('[type=checkbox]')) {
-                      ctrl.toggleSelection(currentElement, scope.$index);
-                  }
-              }
-
-          }
-      };
-  }])
-    .directive('selectBox', function() {
-        return {
-            restrict: 'E',
-            require: '^selectable',
-            replace: true,
-            controller: ['$scope', function ($scope) {
-                $scope.idRand = String(Math.random());
-            }],
-            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="selected"><label ng-attr-for="{{idRand}}"></label></span>'
-            // template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
-        };
-    })
-    .directive('selectAll', function() {
-        return {
-            restrict: 'E',
-            require: '^selectableSet',
-            scope: true,
-            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="allSelected" ng-click="toggleSelectAll()"><label ng-attr-for="{{idRand}}"></label></span>',
-            //'<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
-            link: function(scope, element, attr, ctrl) {
-                scope.idRand = String(Math.random());
-                scope.toggleSelectAll = function () {
-                    ctrl.toggleSelectAll();
-                };
-
-                scope.$watchCollection(function() { return ctrl.areAllElementSelected(); }, function() {
-                    scope.allSelected = ctrl.areAllElementSelected();
-                });
-            }
-        };
-    });
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('sortableSet', function() {
-        return {
-            restrict: 'A',
-            scope: false,
-            controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
-                var _this = this;
-                this.reverseSort = false;
-                this.sortKey = '';
-
-                $scope.reverseSort = $scope.reverseSort || false;
-
-                var reverseSortGet = $parse($attrs.reverseSort);
-                var reverseSortSet = reverseSortGet.assign;
-                var sortKeyGet = $parse($attrs.sortBy);
-                var sortKeySet = sortKeyGet.assign;
-
-                $scope.$watch(function() {
-                    return reverseSortGet($scope);
-                }, function(newReverseSort) {
-                    _this.reverseSort = newReverseSort;
-                });
-
-                $scope.$watch(function() {
-                    return sortKeyGet($scope);
-                }, function(newSortKey) {
-                    _this.sortKey = newSortKey;
-                });
-
-                this.sortBy = function(key) {
-                    if (key == this.sortKey) {
-                        // get back to the default state here (remove the sorting)
-                        // reverseSort flow: false (default) -> true -> sorketKey = '' (reset);
-                        if (this.reverseSort) {
-                            this.sortKey = '';
-                        } else {
-                            this.reverseSort = !this.reverseSort;
-                        }
-                    } else {
-                        this.reverseSort = false;
-                        this.sortKey = key;
-                    }
-
-                    if (reverseSortSet) {
-                        reverseSortSet($scope, this.reverseSort);
-                    }
-
-                    if (sortKeySet) {
-                        sortKeySet($scope, this.sortKey);
-                    }
-
-                    $scope.$eval($attrs.sortChange);
-                };
-            },
-        ],};
-    })
-    .directive('sortable', function() {
-        return {
-            restrict: 'A',
-            scope: false,
-            require: '^sortableSet',
-            link: function(scope, element, attr, ctrl) {
-                var key = attr.sortable;
-                element.addClass('sortable sort');
-
-                scope.$watch(function() { return ctrl.sortKey;}, function() {
-                    setClasses();
-                });
-
-                scope.$watch(function() { return ctrl.reverseSort;}, function() {
-                    setClasses();
-                });
-
-                element.on('click', function() {
-                    scope.$apply(function() {
-                        ctrl.sortBy(key);
-                    });
-                });
-
-                function setClasses() {
-                    if (ctrl.sortKey === key) {
-                        element.removeClass('no-sort');
-                        if (ctrl.reverseSort) {
-                            element.removeClass('sort-down').addClass('sort-up');
-                        } else {
-                            element.removeClass('sort-up').addClass('sort-down');
-                        }
-                    } else {
-                        element.removeClass('sort-up sort-down').addClass('no-sort');
-                    }
-                }
-            },
-        };
-    });
-
-angular.module('ev-fdm')
-    .directive('evStopEventPropagation', function () {
-        return {
-            restrict: 'A',
-            link: function (scope, element, attr) {
-                attr.evStopEventPropagation
-                    .split(',')
-                    .forEach(function (eventName) {
-                        element.bind(eventName.trim(), function (e) {
-                            e.stopPropagation();
-                        });
-                    });
-            }
-        };
-     });
-var module = angular.module('ev-fdm')
-.directive('evSubmit', ['$parse', function($parse) {
-    return {
-        restrict: 'A',
-        require: 'form',
-        controller: function($scope, $element, $attrs) {
-            var validables = [];
-
-            this.$addValidable = function(makeValidable) {
-                validables.push(makeValidable)
-            };
-
-            var fn = $parse($attrs['evSubmit'], /* interceptorFn */ null, /* expensiveChecks */ true);
-
-            $element.on('submit', function(event) {
-                var callback = function() {
-                    if ($scope.form.$valid) {
-                        fn($scope, {$event:event});
-                    }
-                };
-
-                validables.forEach(function(makeValidable) {
-                  makeValidable();
-                });
-
-                $scope.$apply(callback);
-            });
-        },
-        link: function(scope, element, attrs, form) {
-            scope.form = form;
-        }
-    };
-}]);
-
-(function () {
-    'use strict';
-    angular.module('ev-fdm')
-        .directive('evTab', function () {
-            return {
-                restrict: 'E',
-                transclude: true,
-                scope: {},
-                controller: function($scope, $element) {
-                    var panes = $scope.panes = [];
-
-
-                    $scope.select = function(pane) {
-                        angular.forEach(panes, function(pane) {
-                            pane.selected = false;
-                        });
-                        pane.selected = true;
-                    };
-
-
-                    this.addPane = function(pane) {
-                        if (panes.length === 0) { $scope.select(pane); }
-                        panes.push(pane);
-                    };
-
-                    var selectFuture = function (panes) {
-                        var futurePane;
-                        panes.some(function (pane) {
-                            var isSelected = $scope.isShowed(pane);
-                            if (isSelected) {
-                                futurePane = pane;
-                            }
-                            return isSelected;
-                        });
-                       return futurePane;
-                    };
-
-                    this.selectNext = function() {
-                        var selectedIndex = $scope.selectedIndex();
-                        var nextPanes = panes.slice(selectedIndex + 1);
-                        $scope.select(selectFuture(nextPanes) || panes[selectedIndex]);
-                    };
-
-                    this.selectPrevious = function() {
-                        var selectedIndex = $scope.selectedIndex();
-                        var previousPanes = panes.slice(0, selectedIndex).reverse();
-                        $scope.select(selectFuture(previousPanes) || panes[selectedIndex]);
-                    };
-
-                    $scope.selectedIndex = function() {
-                        for (var i = 0; i < panes.length; i++) {
-                            var pane = panes[i];
-
-                            if (pane.selected) {
-                                return i;
-                            }
-                        }
-                    };
-
-                    $scope.isShowed = function (pane) {
-                        return pane.alwaysShow || !!pane.tabShow;
-                    };
-                },
-                template:
-                    '<div class="tabbable ev-fixed-header">' +
-                        '<ul class="nav nav-tabs ev-header">' +
-                            '<li ng-repeat="pane in panes | filter:isShowed" ' +
-                                'ng-class="{active:pane.selected}" '+
-                                'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
-                                '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
-                                    '<span ng-show="pane.tabIcon" class="icon {{pane.tabIcon}}"></span> '+
-                                    '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
-                                '</a>' +
-                            '</li>' +
-                        '</ul>' +
-                        '<div class="tab-content ev-body" ng-transclude></div>' +
-                    '</div>',
-                replace: true
-            };
-        })
-        .directive('evPane', function() {
-            return {
-                require: '^evTab',
-                restrict: 'E',
-                transclude: true,
-                scope: {
-                    tabTitle: '@',
-                    tabIcon: '@',
-                    tabClick: '&',
-                    tabShow: '='
-                },
-                link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
-                    scope.alwaysShow = true;
-                    if(angular.isDefined(attrs.tabShow)) {
-                        scope.alwaysShow = false;
-                    }
-
-                    var childScope;
-                    var transclude = function transclude (clone, transcludedScope) {
-                        childScope = transcludedScope;
-                        transcludedScope.$selectNext     = tabsCtrl.selectNext;
-                        transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
-                        var el = element.find('.transclude');
-                        el.children().remove();
-                        el.append(clone);
-                    };
-                    scope.$watch('selected', function (selected) {
-                        if (!angular.isDefined(attrs.tabReset)) {
-                            return;
-                        }
-                        if (selected) {
-                            transcludeFn(transclude);
-                        } else if (childScope) {
-                            childScope.$destroy();
-                        }
-                    });
-                    tabsCtrl.addPane(scope);
-                    transcludeFn(transclude);
-                },
-                template:
-                    '<div class="tab-pane" ng-class="{active: selected}">' +
-                        '<div class="section transclude"></div>' +
-                    '</div>',
-                replace: true
-            };
-        });
-}) ();
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('evTagList', function () {
-        return {
-            restrict: 'EA',
-            scope: {
-                elements: '=',
-                trackBy: '=?',
-                displayElement: '=?',
-                editable: '=',
-                className: '@',
-                maxElements: '=',
-                maxAlertMessage: '@',
-                onTagDeleted: '&',
-                iconRemoveClass: '@',
-            },
-            replace: true,
-            template:
-                '<ul class="list-inline {{ className }}">' +
-                    '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
-                        '<span class="label label-default" >' +
-                            '{{ displayElement(element) }}' +
-                            '<button ng-show="editable" tabIndex="-1" type="button" class="label-btn" ' +
-                                'ng-click="remove($index)"><span class="{{ iconRemoveClass || \'icon-bin\' }}"></span></button> ' +
-                        '</span>' +
-                    '</li>' +
-                    '<li ng-show="editable && elements.length >= maxElements" class="text-orange no-margin">' +
-                        ' {{ maxAlertMessage }}' +
-                    '</li>' +
-                '</ul>',
-            link: function ($scope, elem, attrs) {
-                $scope.trackBy = $scope.trackBy || function(element) {
-                    return element.name;
-                };
-
-                $scope.displayElement = $scope.displayElement || function(element) {
-                    return element.name;
-                };
-
-                $scope.remove = function (index) {
-                    $scope.elements.splice(index, 1);
-                    $scope.onTagDeleted();
-                };
-            }
-        };
-    });
-
-'use strict';
-
-var module = angular.module('ev-fdm');
-
-module.directive('throttle', ['$timeout', function($timeout) {
-
-    return {
-        restrict: 'A',
-        require: 'ngModel',
-        priority: 1,
-        link: function(scope, element, attr, ctrl) {
-
-            var originalSetViewValue = ctrl.$setViewValue,
-                originalViewListeners = angular.copy(ctrl.$viewChangeListeners);
-
-            ctrl.$viewChangeListeners = [];
-
-            var throttleGuard;
-            ctrl.$setViewValue = function(value) {
-                var callViewListeners = ctrl.$modelValue !== value;
-
-                originalSetViewValue.apply(ctrl, [value]);
-
-                if (callViewListeners) {
-                    if(throttleGuard) {
-                        $timeout.cancel(throttleGuard);
-                    }
-
-                    throttleGuard = $timeout(function() {
-                        angular.forEach(originalViewListeners, function(listener) {
-                            try {
-                                listener();
-                            } catch(e) {
-                                $exceptionHandler(e);
-                            }
-                        });
-                    }, 600);
-                }
-
-            };
-        }
-    }
-}]);
-var module = angular.module('ev-fdm')
-/**
- * DONE: makeValidable only happens after first blur or when ev-validable event occurs.
- * TO DO: expose makeValidable, to provides validation directly
- * on focus or on when a key is entered
- */
-.directive('evValidable', function () {
-    return {
-        restrict: 'A',
-        require: ['ngModel', '^?evSubmit', '^?evFormGroup'],
-        link: function(scope, element, attrs, controllers) {
-            var model = controllers[0],
-                evSubmit = controllers[1],
-                evFormGroup = controllers[2];
-
-            var markAsBlurred = function() {
-                model.evBlurred = true;
-            };
-
-            var markAsChanged = function() {
-                model.evChanged = true;
-            };
-
-            var displayErrors = function() {
-                model.evHasError = !!(!model.$valid && model.evBlurred);
-                if (evFormGroup) {
-                    evFormGroup.toggleError(model.evHasError);
-                }
-            };
-
-            element.on('blur', function() {
-                scope.$evalAsync(function() {
-                    markAsBlurred();
-                    displayErrors();
-                });
-            });
-
-            model.$viewChangeListeners.push(function() {
-                markAsChanged();
-                displayErrors();
-            });
-
-            evSubmit && evSubmit.$addValidable(function() {
-                markAsBlurred();
-                markAsChanged();
-                displayErrors();
-            });
-        }
-    };
-});
-
-'use strict';
-
-angular.module('ev-fdm')
-    .directive('evValue', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                value: '=',
-                noValue: '@',
-            },
-            templateUrl: 'ev-value.html'
-        };
-    });
 angular.module('ev-fdm').factory('confirmBox', [
     '$modal',
     function($modal) {
@@ -3370,6 +1570,1807 @@ angular.module('ev-fdm')
         return RestangularStorage;
     }]);
 
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+/**
+ * evAccordion directive works as an attribute
+ * and it's working with the accordion directive (required)
+ *
+ * His role is to add methods to the scope of the accordion
+ */
+module.directive('evAccordion', ['accordionDirective', function(accordionDirective) {
+  return {
+    restrict:'A',
+    require: 'accordion',
+    link: function(scope, element, attr, accordionCtrl) {
+
+        scope.expandAll   = setIsOpenAll.bind(null, true);
+        scope.collapseAll = setIsOpenAll.bind(null, false);
+        scope.showableAccordionButton = showableAccordionButton;
+
+        // Set the isOpen property for ALL groups (to true or false)
+        function setIsOpenAll(isOpen) {
+            accordionCtrl.groups.forEach(function(group) {
+                group.isOpen = isOpen;
+            });
+        }
+
+        /**
+         * Should we display that 'type' of button?
+         *  - type can have the value: 'expand' or 'collapse'
+         *
+         * Expand btn is displayed when all groups are closed
+         * Collaspe btn is displayed when at least one group is open
+         */
+        function showableAccordionButton(type) {
+            var groups = accordionCtrl.groups;
+            if(groups.length === 0) {
+                return false;
+            }
+
+            if(type === 'expand') {
+                return groups.every(function(group) {
+                    return !group.isOpen;
+                });
+            } else {
+                return groups.some(function(group) {
+                    return group.isOpen;
+                });
+            }
+        }
+    }
+  };
+}]);
+
+'use strict';
+
+angular.module('ev-fdm').directive('activableSet', function() {
+    return {
+        restrict: 'A',
+        scope: false,
+        controller: ['$scope', '$attrs', '$parse', function($scope, $attrs, $parse) {
+
+            var activeElementGet = $parse($attrs.activeElement);
+            var activeElementSet = activeElementGet.assign;
+
+            var self = this;
+            $scope.$watch(function() {
+                return activeElementGet($scope);
+            }, function(newActiveElement) {
+                self.activeElement = newActiveElement;
+            });
+
+           this.toggleActive = function(value) {
+                if(value !== this.activeElement) {
+                    if (activeElementSet) {
+                        activeElementSet($scope, value);
+                    }
+
+                    this.activeElement = value;
+                }
+                else {
+                    if(activeElementSet) {
+                        activeElementSet($scope, null);
+                    }
+
+                    this.activeElement = undefined;
+                }
+
+                $scope.$eval($attrs.activeChange);
+           };
+
+        }]
+    };
+});
+angular.module('ev-fdm').directive('activable', ['$parse', function($parse) {
+    return {
+        restrict: 'A',
+        require: '^activableSet',
+        link: function(scope, element, attr, ctrl) {
+            element.addClass('clickable');
+            var elementGetter = $parse(attr.activable);
+            var currentElement = elementGetter(scope);
+
+
+            scope.$watch(function() { return elementGetter(scope); }, function(newCurrentElement) {
+              currentElement = newCurrentElement;
+            });
+
+            scope.$watch(
+                function() { return ctrl.activeElement; },
+                function(newActiveElement, oldActiveElement) {
+                    if(newActiveElement && currentElement === newActiveElement) {
+                        element.addClass('active');
+                    }
+                    else {
+                        element.removeClass('active');
+                    }
+                }
+            );
+
+            element.on('click', function(event) {
+                if(!$(event.target).closest('.block-active').length && !event.ctrlKey && ! event.shiftKey) {
+                    scope.$apply(function() {
+                        ctrl.toggleActive(currentElement);
+                    });
+                }
+            });
+        }
+    };
+}]);
+
+angular.module('ev-fdm').directive('evAddTagInList', [
+    function() {
+        return {
+            restrict: 'EA',
+            transclude: true,
+            scope: {
+                elements: '=',
+                addElement: '=',
+                maxElements: '=',
+                iconName: '@',
+                buttonText: '@',
+                tooltipText: '@',
+            },
+            template:
+                '<span ng-hide="elements.length >= maxElements"> ' +
+                    '<button type="button" ' +
+                        'class="btn btn-tertiary btn-env" ' +
+                        'tabIndex="-1"' +
+                        'tooltip="{{ tooltipText }}"' +
+                        'tooltip-placement="top"' +
+                        'tabIndex="-1"' +
+                        'ng-hide="context.showSelect" ' +
+                        'ng-click="context.showSelect = true"> ' +
+                        '<span class="icon {{ iconName }}"></span> ' +
+                        '{{ buttonText }} ' +
+                    '</button> ' +
+                    '<span ng-show="context.showSelect"> ' +
+                        '<div class="transclude-addtaginlist"></div>' +
+                    '</span> ' +
+                '</span> ',
+            link: function(scope, element, attrs, controller, transcludeFn) {
+                scope.context = {
+                    showSelect: false,
+                };
+
+                transcludeFn(function(clone, transcludedScope) {
+                    transcludedScope.add = function(element) {
+                        return scope.addElement(scope.elements, element);
+                    };
+
+                    // append body to template
+                    element.find('.transclude-addtaginlist').append(clone);
+                });
+            },
+        };
+    },
+]);
+
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('clearable', [function() {
+
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function(scope, element, attr, ctrl) {
+
+            var clearButton = angular.element('<button class="clear" ng-click="clear()">×</button>');
+            element.after(clearButton);
+
+            clearButton.on('click', function() {
+                scope.$apply(function() {
+                    element.val(''); 
+                    ctrl.$setViewValue('');
+                });
+            });
+
+            scope.$watch(function() { return ctrl.$isEmpty(ctrl.$viewValue); }, function(isEmpty) {
+                if(isEmpty) {
+                    clearButton.hide();
+                }
+                else {
+                    clearButton.show();
+                }
+            });
+
+        }
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm')
+.directive('evDatepicker', function() {
+    return {
+        restrict: 'A',
+        require : 'ngModel',
+        link : function (scope, element, attrs, ngModelCtrl) {
+
+            var dateCanBeInTheFutur = attrs.futurAllowed !== 'false',
+                dateFormat = attrs.dateFormat || 'dd/mm/yy';
+
+            $(function(){
+                element.datepicker({
+                    dateFormat: dateFormat,
+                    maxDate: dateCanBeInTheFutur? null : 0,
+                    onSelect:function (date) {
+                        ngModelCtrl.$setViewValue(date);
+                        scope.$apply();
+                    }
+                });
+
+            });
+        }
+    }
+});
+angular.module('ev-fdm')
+.directive('download', ['$http', '$location', '$document', 'DownloadService', function($http, $location, $document, downloadService) {
+    return {
+        link: function(scope, elm, attrs) {
+            elm.on('click', function(event) {
+                $http.get(attrs.download).success(function(data) {
+                	downloadService.download(data.url);
+                });
+            });
+        }
+    }
+}]);
+'use strict';
+
+angular.module('ev-fdm').directive('evEditSection', ['NotificationsService', function (notificationsService) {
+    return {
+        restrict: 'AE',
+        transclude: true,
+        scope: {
+            options: '=',
+            args: '=?',
+            title: '@', // deprecated
+            headerTitle: '@',
+            noteditable: '=?',
+            notdeletable: '=?',
+        },
+        templateUrl: 'ev-edit-section.html',
+
+        link: function(scope, element, attrs, controller, transcludeFn) {
+            var _transcludedScope = {};
+            var options = scope.options;
+            var triedToSave = false;
+
+            function setEditMode(editMode) {
+                _transcludedScope.edit = editMode;
+                scope.edit = editMode;
+                _transcludedScope.editform = scope.editform;
+            }
+
+
+            scope.changeToEditMode = function() {
+                if (!options.onEdit || options.onEdit && options.onEdit.apply(null, scope.args || []) !== false) {
+                    setEditMode(true);
+                }
+            };
+
+            scope.save = function() {
+                if (!scope.editform.$valid) {
+                    triedToSave = true;
+                    return;
+                }
+                var resultSave = !options.onSave || options.onSave && options.onSave.apply(null, scope.args || []);
+                if (resultSave && resultSave.then) {
+                    scope.inProgress = true;
+                    resultSave.then(
+                        function success() {
+                            notificationsService.addSuccess({ text: options.successMessage || attrs.successMessage });
+                            if (options.success) {
+                                options.success();
+                            }
+                            scope.inProgress = false;
+                            setEditMode(false);
+                        },
+                        function error() {
+                            scope.inProgress = false;
+                            notificationsService.addError({ text: options.errorMessage || attrs.errorMessage });
+                        }
+                    );
+                } else if (resultSave !== false) {
+                    setEditMode(false);
+                }
+            };
+
+            scope.cancel = function() {
+                if (!options.onCancel || options.onCancel && options.onCancel.apply(null, scope.args || []) !== false) {
+                    setEditMode(false);
+                }
+            };
+
+            scope.delete = options.onDelete && function() {
+                var result = options.onDelete && options.onDelete.apply(null, scope.args || []);
+
+                if (result && result.then) {
+                    scope.inProgress = true;
+                    result.then(
+                        function success() {
+                            notificationsService.addSuccess({ text: attrs.successDeleteMessage });
+                            if (options.success) {
+                                options.success();
+                            }
+                            scope.inProgress = false;
+                            setEditMode(false);
+                        },
+                        function error() {
+                            scope.inProgress = false;
+                            notificationsService.addError({ text: attrs.errorDeleteMessage });
+                        }
+                    );
+                }
+            };
+
+            transcludeFn(function(clone, transcludedScope) {
+                // default state
+                transcludedScope.edit = scope.edit = !!attrs.edit;
+
+                // usefull methods
+                transcludedScope.showErrorMessage = function(fieldName, errorName) {
+                    var field = scope.editform[fieldName];
+                    return (triedToSave || field.$dirty) && (!errorName ? field.$invalid : field.$error[errorName]);
+                };
+
+                // transclude values
+                _transcludedScope = transcludedScope;
+
+                // append body to template
+                element.find('.transclude').append(clone);
+            });
+        }
+    };
+}]);
+
+'use strict';
+
+angular.module('ev-fdm')
+.directive('ngEnter', function() {
+    return function(scope, element, attrs) {
+        element.bind("keydown keypress", function(event) {
+            if(event.which === 13) {
+                scope.$apply(function(){
+                    scope.$eval(attrs.ngEnter);
+                });
+
+                event.preventDefault();
+            }
+        });
+    };
+});
+var module = angular.module('ev-fdm')
+.directive('evErrorMessage', function () {
+    return {
+        restrict: 'E',
+        transclude: true,
+        scope: {
+            input: '=',
+            error: '@'
+        },
+        template: '<li ng-show="input[\'evHasError\'] && input.$error[error]"><div ng-transclude></div></li>'
+    };
+});
+
+var module = angular.module('ev-fdm')
+.directive('evErrors', function () {
+    return {
+        restrict: 'E',
+        transclude: true,
+        replace: true,
+        template: '<ul class="errors text-danger" ng-transclude></ul>'
+    };
+});
+
+'use strict';
+
+function MenuManagerProvider() {
+
+    var self = this;
+    this.tabs = [];
+    this.activeTab = null;
+    this.lastTab = null;
+
+    this.addTab = function(tab) {
+        this.tabs.push(tab);
+        return this;
+    };
+
+    function findTab(stateName) {
+        var res = null;
+        angular.forEach(self.tabs, function(tab) {
+            if(stateName === tab.state) {
+                res = tab;
+            }
+        });
+
+        return res;
+    }
+
+    function selectTab(tab) {
+        tab = tab || {};
+        tab = findTab(tab.state);
+
+        if(!tab) {
+            return;
+        }
+
+        if(self.activeTab) {
+            self.lastTab = self.activeTab;
+            self.activeTab.active = false;
+        }
+
+        tab.active = true;
+        self.activeTab = tab;
+    }
+
+    this.$get = ['$rootScope', '$state', function($rootScope, $state) {
+
+        // Handle first page load
+        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
+            if (fromState.name === '') {
+                var toTab = findTab(toState.name);
+
+                if(toTab) {
+                    selectTab(toTab);
+                }
+            }
+        });
+
+        $rootScope.$on('$stateChangeError', function(event) {
+            selectTab(self.lastTab);
+        });
+
+        return {
+            tabs: self.tabs,
+            selectTab: selectTab
+        };
+    }];
+}
+
+function EvMenuDirective(menuManager) {
+    return {
+        restrict: 'E',
+        replace: true,
+        template:   '<ul class="module-tabs ev-header nav nav-tabs" ng-cloak>' +
+                        '<li ng-repeat="tab in tabs" ng-class="{active: tab.active}">' +
+                            '<a ng-click="selectTab(tab)">{{ tab.name }}</a>' +
+                        '</li>' +
+                    '</ul>',
+        controller: [ '$scope', '$state', '$rootScope', function($scope, $state, $rootScope) {
+            $scope.tabs = menuManager.tabs;
+
+            if($rootScope['evmenu-state']) {
+                menuManager.selectTab($rootScope['evmenu-state']);
+            }
+
+            $scope.selectTab = function(tab) {
+                menuManager.selectTab(tab);
+                $state.go(tab.state);
+            };
+        }]
+    };
+}
+
+angular.module('ev-fdm')
+    .provider('menuManager', [MenuManagerProvider])
+    .directive('evMenu', ['menuManager', EvMenuDirective]);
+'use strict';
+
+var module = angular.module('ev-fdm')
+.directive('evFlag', function () {
+    return {
+        restrict: 'E',
+        replace: true,
+        scope: {
+            lang: '='
+        },
+        template: '<i class="icon icon-flag flag-{{lang}}"></i>'
+    };
+});
+angular.module('ev-fdm')
+.directive('focus', [function() {
+    return {
+        link: function(scope, elm, attrs, ctrl) {
+            scope.$evalAsync(function() {
+                elm[0].focus();
+            });
+        }
+    }
+}]);
+var module = angular.module('ev-fdm')
+.directive('evFormGroup', ['$parse', '$rootScope', function($parse, $rootScope) {
+    return {
+        restrict: 'EA',
+        scope: true,
+        transclude: true,
+        replace: true,
+        template: '<div class="form-group" ng-transclude></div>',
+        controller: function($scope, $element, $attrs) {
+            this.toggleError = $element.toggleClass.bind($element, 'has-error');
+        }
+    };
+}]);
+
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('linkDisabled', function() {
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs) {
+                var oldNgClick = attrs.ngClick;
+                if (oldNgClick) {
+                    scope.$watch(attrs.linkDisabled, function (value, oldValue) {
+                        if (!! value) {
+                            element.unbind('click');
+                            element.attr('disabled', 'disabled');
+                        } else if (oldValue) {
+                            attrs.$set('ngClick', oldNgClick);
+                            element.bind('click', function () {
+                                scope.$apply(attrs.ngClick);
+                            });
+                            element.removeAttr('disabled');
+                        }
+                    });
+                }
+            }
+        };
+    });
+'use strict';
+
+var module = angular.module('ev-fdm')
+.directive('evLoadingDots', function () {
+    return {
+        restrict: 'E',
+        replace: true,
+        template: '<span class="loading-dots"><span></span><span></span><span></span></span>'
+    };
+});
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('mouseFollower', ['$document', function ($document) {
+        return {
+            restrict: 'A',
+            link : function (scope, element, attr){
+                element = angular.element(element);
+                element.css('position', 'absolute');
+                element.css('z-index', 1500);
+
+                $document.on('mousemove', function(evt) {
+                    element.css({
+                        left:  evt.pageX,
+                        top:   evt.pageY
+                    });
+                });
+            }
+        }
+    }]);
+'use strict';
+
+var module = angular.module('ev-fdm')
+    .directive('evPagination', [function () {
+        var ELLIPSIS = '...';
+        return {
+            restrict: 'AE',
+            replace: true,
+            templateUrl: 'ev-pagination.html',
+            scope: {
+                currPage:     '=',
+                nbPage:       '=',
+                onPageChange: '='
+            },
+
+            link: function (scope){
+                scope.paginationButtons = [];
+                scope.prevClass = '';
+                scope.nextClass = '';
+
+                scope.currPage = scope.currPage || 1;
+                scope.nbPage   = scope.nbPage   || 1;
+
+                scope.generateButtons = function () {
+                    var i = 0;
+                    var nbAround = 2; // We want to have this amount of links around the current page.
+
+                    scope.paginationButtons = [];
+                    // Add 1
+                    scope.paginationButtons.push ({value: 1, class:scope.currPage==1 ? 'active':'' });
+
+                    // Add the 3 dots
+                    if (scope.currPage-nbAround > 2) {
+                        scope.paginationButtons.push({ value: ELLIPSIS, class:'disabled' });
+                    }
+
+                    // add the surrounding page numbers
+                    for (i = nbAround; i > 0; i--) {
+                        if (scope.currPage-i > 1) {
+                            scope.paginationButtons.push ({value: scope.currPage-i});
+                        }
+                    }
+
+                    // add the actual page
+                    if (scope.currPage != 1 && scope.currPage != scope.nbPage) {
+                        scope.paginationButtons.push ({ value: scope.currPage, class:'active' });
+                    }
+
+                    // add the surrounding page numbers
+                    for (i = 1; i <= nbAround; i++) {
+                        if (scope.currPage+i < scope.nbPage) {
+                            scope.paginationButtons.push ({value: scope.currPage+i});
+                        }
+                    }
+
+                    // Add the 3 dots
+                    if (scope.currPage+nbAround < scope.nbPage-1){
+                        scope.paginationButtons.push ({ value: ELLIPSIS, class:'disabled' });
+                    }
+
+                    // Add final page number
+                    if (scope.nbPage > 1){
+                        scope.paginationButtons.push ({value: scope.nbPage,class:scope.currPage==scope.nbPage ? 'active':''});
+                    }
+                    // if (scope.currPage == 1)            { scope.prevClass='inactive'; }
+                    // if (scope.currPage == scope.nbPage) { scope.nextClass='inactive'; }
+                };
+
+                scope.previousPage = function (){
+                    if (scope.currPage > 1) {
+                        var oldPage = scope.currPage;
+                        scope.currPage--;
+                        if(angular.isFunction(scope.onPageChange)) {
+                            scope.onPageChange(scope.currPage, oldPage, 'previousPage');
+                        }
+                    }
+
+                };
+
+                scope.changePage = function (value){
+                    if (value != ELLIPSIS && value >=1 && value <= scope.nbPage){
+                         var oldPage = scope.currPage;
+                        scope.currPage = value;
+
+                        if(angular.isFunction(scope.onPageChange)) {
+                            scope.onPageChange(value, oldPage);
+                        }
+                    }
+                };
+
+                scope.nextPage = function (){
+                    if (scope.currPage < scope.nbPage){
+                        var oldPage = scope.currPage;
+                        scope.currPage++;
+
+                        if(angular.isFunction(scope.onPageChange)) {
+                            scope.onPageChange(scope.currPage, oldPage, 'nextPage');
+                        }
+                    }
+                };
+
+                scope.$watch('nbPage + currPage', function() {
+                    scope.generateButtons ();
+                });
+            }
+        };
+    }]);
+
+/* global console */
+angular.module('ev-fdm').directive('evPictureList', function() {
+    return {
+        restrict: 'EA',
+        scope: {
+          pictures: '=',
+          editable: '=',
+          onDelete: '&',
+          onChange: '&',
+          showUpdate: '=',
+          language: '=',
+          colNumber: '=',
+          download: '=',
+          onPictureDeleted: '&'
+        },
+        templateUrl: 'ev-picture-list.html',
+        link: function($scope, elem, attrs) {
+            $scope.pictures = $scope.pictures || [];
+
+            // Number of columns for pictures
+            var colNumber = $scope.colNumber || 2;
+            // Convert it to bootstrap convention (12)
+            $scope.colNumberBootstrap = 12 / colNumber;
+
+            if (!attrs.onDelete) {
+                $scope.onDelete = function(params) {
+                    $scope.pictures.splice(params.index, 1);
+                    $scope.onPictureDeleted();
+                };
+                $scope.onUpdate = function(params) {
+                    // Not implemented yet
+                    console.log(params);
+                };
+            }
+        }
+    };
+});
+
+(function () {
+    'use strict';
+        // update popover template for binding unsafe html
+    angular.module("template/popover/popover.html", []).run(["$templateCache", function ($templateCache) {
+        $templateCache.put("template/popover/popover.html",
+          "<div class=\"popover {{placement}}\" ng-class=\"{ in: isOpen(), fade: animation() }\">\n" +
+          "  <div class=\"arrow\"></div>\n" +
+          "\n" +
+          "  <div class=\"popover-inner\">\n" +
+          "      <h3 class=\"popover-title\" ng-bind-html=\"title\" ng-show=\"title\"></h3>\n" +
+          "      <div class=\"popover-content\"ng-bind-html=\"content\"></div>\n" +
+          "  </div>\n" +
+          "</div>\n" +
+          "");
+    }]);
+    angular.module('ev-fdm')
+        .directive('popover', ['$timeout', function ($timeout) {
+        	return {
+        		restrict: 'A',
+				link: function ($scope, elem, attrs) {
+                    var showTimeout;
+                    elem.bind('focus', function () {
+                        elem.triggerHandler('focus-not-typing');
+                    });
+					elem.bind('blur', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                    });
+                    elem.bind('keypress', function () {
+                        if (showTimeout) {$timeout.cancel(showTimeout);}
+                        elem.triggerHandler('blur-or-typing');
+                        showTimeout = $timeout(function () {
+                            elem.triggerHandler('focus-not-typing');
+                        }, 1000);
+                    });
+				}
+        	};
+        }]);
+}) ();
+
+/**
+ * Display a promise state as css classes (promise-resolving, promise-resolved, promise-rejected)
+ * + Supports empty lists by displaying a message (promise-empty)
+ *
+ * Options :
+ * - emptyMessage (string) - display a message when promise resolves to empty array
+ * - promiseDefaultStyles (boolean, default true) - apply spinning evaneos logo when resolving
+ *
+ * Examples :
+ * <div promise="myPromise"
+ *     empty-message="No quote"
+ *     promise-default-styles="true">
+ *
+ */
+angular.module('ev-fdm').directive('promise', [
+    function () {
+        function applyClass(classes, element) {
+            element.removeClass('promise-resolved promise-resolving promise-empty promise-rejected');
+            element.addClass(classes);
+        }
+
+        return {
+            restrict: 'A',
+            replace: false,
+
+            controller: ['$scope', '$attrs', '$parse', '$element', function($scope, $attrs, $parse, $element) {
+                var promiseGetter = $parse($attrs.promise);
+                var emptyMessage = $attrs.emptyMessage;
+                var promiseDefaultStyles = ($attrs.promiseDefaultStyles !== 'false');
+                if (promiseDefaultStyles) {
+                    applyClass('promise-default-styles', $element);
+                }
+                if (emptyMessage) {
+                    $element.append('<div class="promise-empty-message">' + emptyMessage + '</div>');
+                }
+                $scope.$watch(function() {
+                    return promiseGetter($scope);
+                }, function(promise) {
+                    if (promise) {
+                        applyClass('promise-resolving', $element);
+                        promise.then(function(result) {
+                            // make sure we are dealing with arrays
+                            // otherwise (not a collection, we can't assume it's empty or non empty)
+                            if (emptyMessage && angular.isArray(result) && !result.length) {
+                                applyClass('promise-resolved promise-empty', $element);
+                            } else {
+                                applyClass('promise-resolved', $element);
+                            }
+
+                            return result;
+                        }, function() {
+                            applyClass('promise-rejected', $element);
+                        });
+                    } else {
+                        applyClass('promise-resolved', $element);
+                    }
+                });
+            }]
+        };
+
+    }
+]);
+
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evPromiseProgress', [function () {
+
+    /*  ev-promise-progress
+        ===================
+        Hi! I'm a directive that link a progress bar to a promise.
+
+        Just give me a promise argument. I'll update automatically each time the `notify` callback is called. Of course
+        I assume that a percentage progress is given.
+
+        Beware! Each time the promise changes, and is replaced by a new one, I bind the progress bar to the new promise.
+        Without unbinding from the previous one. If it wasn't completed, it can leads to strange behavior (i.e. the
+        progress bar taking value from both at the same time, doing back and forth).
+    */
+            return {
+                restrict: 'A',
+                replace: true,
+                scope: {
+                    promise: '=evPromiseProgress',
+                },
+                template: '<div role="progressbar" class="ev-progress" aria-valuemin="0" aria-valuemax="100"' +
+                    'aria-valuenow="0"> <div class="ev-progress-overlay"></div> </div> ',
+                link: function ($scope, elem, attrs) {
+                    var progressBar = elem.find(angular.element(document.querySelector('.ev-progress-overlay')));
+                    progressBar.css({width: '0%'});
+                    $scope.$watch('promise', function (newPromise) {
+                        if (!newPromise || !newPromise.then) { return; }
+                        progressBar.css({width: '0%'});
+                        newPromise.then(null, null, function notify (progress) {
+                            if (typeof(progress) === 'object') {
+                                progress = progress.progress;
+                            }
+                            progressBar.css({width: progress + '%'});
+                        });
+                        newPromise.finally(function () {
+                            progressBar.css({width: '100%'});
+                        });
+                    });
+                }
+            };
+        }]);
+}());
+'use strict';
+
+
+angular.module('ev-fdm')
+    .directive('evResizableColumn', ['$window', '$rootScope', function($window, $rootScope) {
+
+        function getLimitWidth(elm, minOrMax) {
+            var limitWidth  = elm.css(minOrMax + '-width').replace('px', '');
+            return (limitWidth !== "none") ? limitWidth : null;
+        }
+        function getMinDelta (elm, width) {
+            return (getLimitWidth(elm, 'min') || 0) - width; 
+        }
+
+        function getMaxDelta (elm, width) {
+            return (getLimitWidth(elm, 'max') || Number.POSITIVE_INFINITY) - width; 
+        }
+        return {
+            restrict: 'A',
+            scope: false,
+            link: function (scope, elm, attr) {
+                var handleElm = angular.element('<div class="ev-resizable-column-handle"></div>'); 
+                elm.append(handleElm);
+                handleElm.on('mousedown', function (event) {
+                    var x1 = event.pageX;
+                    document.body.style.cursor = "ew-resize";
+                    event.stopPropagation();
+                    var nextElm = elm.next();
+
+                    elm.addClass('unselectable');
+                    nextElm.addClass('unselectable');
+                    
+
+                    var elmWidth = elm.outerWidth();
+                    var nextElmWidth = nextElm.outerWidth();
+                    
+                    // COMPUTE MAX AND MIN DELTA (reset min width)
+                    nextElm.css('min-width', '');
+                    elm.css('min-width', '');
+
+                    var maxDelta = Math.min(getMaxDelta(elm, elmWidth), -getMinDelta(nextElm, nextElmWidth));
+                    var minDelta = Math.max(getMinDelta(elm, elmWidth), -getMaxDelta(nextElm, nextElmWidth));
+
+                    // Reassign min width
+                    nextElm.css('min-width', nextElmWidth);
+                    elm.css('min-width', elmWidth);
+
+                    // Creating the helper
+                    var helper = angular.element('<div class="ev-resizable-helper"></div>');
+                    helper.css('min-width', nextElmWidth - maxDelta);
+                    helper.css('max-width', nextElmWidth - minDelta);
+                    helper.width(nextElmWidth);
+                    nextElm.append(helper);
+
+
+                    var onMousemove = function (event) {
+                        var delta = event.pageX - x1;
+                        helper.width(nextElmWidth - delta);
+                    };
+
+                    var onMouseup = function (event) {
+                        document.body.style.cursor = null;
+                        var delta = event.pageX - x1;
+                        // Bound the delta based on min/max width of the two columns 
+                        if (delta > 0) {
+                            delta = Math.min(delta, maxDelta);
+                        } else {
+                            delta = Math.max(delta, minDelta);
+                        }
+
+                        // Apply new width
+                        // NB: as we are dealing with flexbox we are obliged to use minWidth
+                        elm.css('minWidth', elmWidth + delta);
+                        nextElm.css('minWidth', nextElmWidth - delta);
+
+                        // Remove helpers
+                        helper.remove();
+
+                        $window.removeEventListener('mouseup', onMouseup);  
+                        $window.removeEventListener('mousemove', onMousemove);  
+
+                        elm.removeClass('unselectable');
+                        nextElm.removeClass('unselectable');
+                        $rootScope.$broadcast('module-layout-changed');
+                    };
+
+                    $window.addEventListener('mouseup', onMouseup);  
+                    $window.addEventListener('mousemove', onMousemove);
+                });
+
+            }
+        };
+    }]);
+'use strict';
+
+angular.module('ev-fdm').directive('body', [
+    '$rootScope',
+    'NotificationsService',
+    '$state',
+    function($rootScope, notificationsService, $state) {
+        return {
+            restrict: 'E',
+            link: function(scope, element, attrs) {
+
+                $rootScope.$on('$stateChangeStart', function(event, toState) {
+                    // not a tab changing
+                    var dotX = $state.current.name.indexOf('.');
+                    var stateName = (dotX != -1) ? $state.current.name.substring(0, dotX) : $state.current.name;
+
+                    if (!stateName || toState.name.indexOf(stateName) !== 0) {
+                        $('body').addClass('state-resolving');
+                    }
+                });
+
+                $rootScope.$on('$stateChangeSuccess', function() {
+                    element.removeClass('state-resolving');
+                });
+
+                /**
+                 * When there is an error on a state change
+                 *
+                 * In your state config you can add the following.
+                 * This will allows the router to fallback to this state on error
+                 * while displaying the specified message
+
+                      fallback: {
+                        state: 'list',
+                        message: t('Unable to open this transaction!')
+                      }
+                 */
+                $rootScope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error) {
+                    if (console.error) {
+                        console.error(
+                            'toState=', toState,
+                            'toParams=', toParams,
+                            'fromState=', fromState,
+                            'error=', error,
+                            'event=', event
+                        );
+                    }
+                    $('body').removeClass('state-resolving');
+
+                    var errorMessage = (toState.fallback && toState.fallback.message) || 'Error';
+
+                    notificationsService.addError({
+                        text: errorMessage
+                    });
+
+                    // Redirect to the fallback we defined in our state
+                    if (toState && toState.fallback && toState.fallback.state) {
+                      $state.go(toState.fallback.state);
+                    }
+                });
+            }
+        };
+    }
+]);
+
+/*
+    responsive-viewport
+    ===================
+
+    I'm a directive that place the proper class responsive class dependanding on the size of the element I'm attached.
+
+*/
+
+"use strict";
+angular.module('ev-fdm')
+    .provider('evResponsiveViewport', function () {
+        var breakpoints = {
+            400: 'ev-viewport-xs',
+            600: 'ev-viewport-sm',
+            900: 'ev-viewport-md'
+        };
+        this.$get =function () {
+            return breakpoints;
+        };
+
+        this.setXsBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-xs';
+        };
+
+        this.setSmBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-sm';
+        };
+
+        this.setMdBreakpoint = function (breakpoint) {
+            breakpoints[breakpoint] = 'ev-viewport-md';
+        };
+
+        this.setBreakpoints = function (breaks) {
+            if (breaks.length !== 3) {
+                throw new Error('There should be three breakpoints');
+            }
+            breaks.sort();
+            breakpoints[breaks[0]] = 'ev-viewport-xs';
+            breakpoints[breaks[1]] = 'ev-viewport-sm';
+            breakpoints[breaks[2]] = 'ev-viewport-md';
+        };
+    })
+    .directive('evResponsiveViewport', ['evResponsiveViewport', function (breakpoints) {
+        return {
+            link: function (scope, elm) {
+                var updateViewport = function () {
+
+                    var elmWidth = elm.width();
+                    var _class;
+
+                    var largeViewport = !Object.keys(breakpoints).some(function (breakpoint) {
+                        _class = breakpoints[breakpoint];
+                        return elmWidth < breakpoint;
+                    });
+                    if (largeViewport) {
+                        _class = 'ev-viewport-lg';
+                    }
+
+                    if (!elm.hasClass(_class)) {
+                        Object.keys(breakpoints).forEach(function (key) {
+                                elm.removeClass(breakpoints[key]);
+                            });
+                        elm.removeClass('ev-viewport-lg');
+                        elm.addClass(_class);
+                    }
+                };
+
+                updateViewport();
+                scope.$on('module-layout-changed', updateViewport);
+            }
+        };
+    }]);
+
+angular.module('ev-fdm')
+    .provider('evSelectLanguage', function() {
+        this.$get = function () {
+            return {
+                availableLang: this.availableLang || [],
+                defaultLang: this.defaultLang
+            };
+        };
+
+        this.setAvailableLang = function (availableLang) {
+            this.availableLang = availableLang;
+        };
+        this.setDefaultLang =function (defaultLang) {
+            this.defaultLang = defaultLang;
+        };
+    })
+    .directive('evSelectLanguage', ['evSelectLanguage', function (cfg) {
+        return {
+            template:
+                '<div class="ev-language-tabs">' +
+                    '<div class="btn-group">' +
+                        '<button class="btn btn-lg" ng-repeat="lang in availableLang"'+
+                            'ng-class="{active: selectedLang===lang}"' +
+                            'ng-click="$parent.selectedLang=lang">' +
+                            '<span class="ev-icons-flags" ng-class="\'icon-\' + lang"></span>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>',
+            restrict: 'AE',
+            scope: {
+                selectedLang: '=lang'
+            },
+            link: function($scope) {
+                $scope.availableLang = cfg.availableLang;
+                if (!$scope.selectedLang) {
+                    $scope.selectedLang = cfg.defaultLang;
+                }
+            }
+        };
+    }]);
+
+'use strict';
+/// This directive currently depend on ng-repeat $index for the
+///  shift selection. It would be great to remove this depency.
+angular.module('ev-fdm')
+    .directive('selectableSet', [function() {
+        return {
+            restrict: 'A',
+            controller: ['$scope', '$parse', '$element', '$attrs', '$document',
+            function($scope, $parse, $element, $attrs, $document) {
+                var self = this,
+                    shiftKey = 16;
+
+                var selectedElementsGet = $parse($attrs.selectedElements);
+
+                this.selectableElements = [];
+                this.selectedElement = [];
+
+                var lastClickedIndex,
+                    shiftSelectedElements = [];
+
+                $scope.$watch(function() {
+                    return selectedElementsGet($scope);
+                  },
+                  function() {
+                    self.selectedElements = angular.isArray(selectedElementsGet($scope))?
+                      selectedElementsGet($scope) : [];
+                  }
+                );
+
+                // Toggle a noselect class on the element when the shift key is pressed
+                // This allows us to disable selection overlay via css
+                $document.on('keydown', function(event) {
+                    if(event.keyCode === shiftKey) {
+                        $element.addClass('noselect');
+                    }
+                });
+
+                $document.on('keyup', function(event) {
+                    if(event.keyCode === shiftKey) {
+                        $element.removeClass('noselect');
+                    }
+                });
+
+                this.toggleSelection = function(element, index) {
+                    lastClickedIndex = index;
+                    shiftSelectedElements.length = 0;
+
+                    if(this.isElementSelected(element)) {
+                        unselectElement(element);
+                    }
+                    else {
+                        selectElement(element);
+                    }
+                };
+
+                this.toggleSelectAll = function() {
+
+                    if(this.selectedElements.length === this.selectableElements.length){
+                        this.selectedElements.length = 0;
+                    }
+                    else {
+                      angular.forEach(this.selectableElements, function(element) {
+                        if(!self.isElementSelected(element)) {
+                          selectElement(element);
+                          }
+                      });
+                    }
+                };
+
+                this.shiftedClick = function(element, index) {
+                    if(typeof lastClickedIndex !== undefined) {
+                        toggleRangeUpTo(lastClickedIndex, index);
+                    }
+                };
+
+                this.registerElement = function(element, directive) {
+                  this.selectableElements.push(element);
+                };
+
+                this.unregisterElement = function(element) {
+                  var index = this.selectableElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectableElements.splice(index, 1);
+                  }
+
+                  index = this.selectedElements.indexOf(element);
+                  if(index > -1) {
+                      this.selectedElements.splice(index, 1);
+                  }
+                };
+
+                this.areAllElementSelected = function() {
+                  return this.selectedElements.length === this.selectableElements.length
+                     && this.selectedElements.length !== 0;
+                };
+
+                this.isElementSelected = function(element) {
+                    return self.selectedElements.indexOf(element) > -1;
+                };
+
+                function toggleRangeUpTo(firstIndex, lastIndex) {
+
+                    var lastElement = getElementAtIndex(lastIndex),
+                        min = Math.min(firstIndex, lastIndex),
+                        max = Math.max(firstIndex, lastIndex),
+                        element,
+                        i;
+
+                    angular.forEach(shiftSelectedElements, function(element, index) {
+                        unselectElement(element);
+                    });
+
+                    if(self.isElementSelected(lastElement)) {
+                        for(i = min; i <= max; i++) {
+                            element = getElementAtIndex(i);
+                            unselectElement(element);
+                        }
+
+                        lastClickedIndex = lastIndex;
+                        shiftSelectedElements.length = 0;
+                    }
+                    else {
+                        shiftSelectedElements.length = 0;
+                        for(i = min; i <= max; i++) {
+                            element = getElementAtIndex(i);
+                            selectElement(element);
+                            shiftSelectedElements.push(element);
+                        }
+                    }
+                }
+
+                function getElementAtIndex(index) {
+                    return self.selectableElements[index];
+                }
+
+                function selectElement(element) {
+                    if(!self.isElementSelected(element)) {
+                        self.selectedElements.push(element);
+                    }
+                }
+
+                function unselectElement(element) {
+                    var index = self.selectedElements.indexOf(element);
+                    if(index > -1) {
+                        self.selectedElements.splice(index, 1);
+                    }
+                }
+            }]
+        };
+    }])
+    .directive('selectable', ['$parse', function($parse) {
+      return {
+          restrict: 'A',
+          require: ['^selectableSet', '?ngModel'],
+          link: function(scope, element, attr, ctrls) {
+
+              var currentElementGetter = $parse(attr.selectable);
+              var currentElement = currentElementGetter(scope);
+
+              var ctrl = ctrls[0],
+                  modelCtrl = ctrls[1];
+
+              ctrl.registerElement(currentElement);
+
+              scope.$on('$destroy', function() {
+                  ctrl.unregisterElement(currentElement);
+              });
+
+              scope.$watch(function() { return ctrl.isElementSelected(currentElement); }, function() {
+                scope.selected = ctrl.isElementSelected(currentElement);
+                if(modelCtrl) {
+                  modelCtrl.$setViewValue(scope.selected);
+                }
+              });
+
+              element.on('click', function(event) {
+                  scope.$apply(function() {
+                      handleClick(event);
+                  });
+              });
+
+              function handleClick(event) {
+                  if (event.shiftKey) {
+                      ctrl.shiftedClick(currentElement, scope.$index);
+                  }
+                  else if (event.ctrlKey || angular.element(event.target).is('[type=checkbox]')) {
+                      ctrl.toggleSelection(currentElement, scope.$index);
+                  }
+              }
+
+          }
+      };
+  }])
+    .directive('selectBox', function() {
+        return {
+            restrict: 'E',
+            require: '^selectable',
+            replace: true,
+            controller: ['$scope', function ($scope) {
+                $scope.idRand = String(Math.random());
+            }],
+            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="selected"><label ng-attr-for="{{idRand}}"></label></span>'
+            // template: '<span class="checkbox" ng-class="{ \'icon-tick\': selected }"></span>'
+        };
+    })
+    .directive('selectAll', function() {
+        return {
+            restrict: 'E',
+            require: '^selectableSet',
+            scope: true,
+            template: '<span><input ng-attr-id="{{idRand}}" type="checkbox" class="tick-checkbox" ng-checked="allSelected" ng-click="toggleSelectAll()"><label ng-attr-for="{{idRand}}"></label></span>',
+            //'<span class="checkbox" ng-class="{ \'icon-tick\': allSelected }" ng-click="toggleSelectAll()"></span>',
+            link: function(scope, element, attr, ctrl) {
+                scope.idRand = String(Math.random());
+                scope.toggleSelectAll = function () {
+                    ctrl.toggleSelectAll();
+                };
+
+                scope.$watchCollection(function() { return ctrl.areAllElementSelected(); }, function() {
+                    scope.allSelected = ctrl.areAllElementSelected();
+                });
+            }
+        };
+    });
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('sortableSet', function() {
+        return {
+            restrict: 'A',
+            scope: false,
+            controller: ['$scope', '$parse', '$element', '$attrs', function($scope, $parse, $element, $attrs) {
+                var _this = this;
+                this.reverseSort = false;
+                this.sortKey = '';
+
+                $scope.reverseSort = $scope.reverseSort || false;
+
+                var reverseSortGet = $parse($attrs.reverseSort);
+                var reverseSortSet = reverseSortGet.assign;
+                var sortKeyGet = $parse($attrs.sortBy);
+                var sortKeySet = sortKeyGet.assign;
+
+                $scope.$watch(function() {
+                    return reverseSortGet($scope);
+                }, function(newReverseSort) {
+                    _this.reverseSort = newReverseSort;
+                });
+
+                $scope.$watch(function() {
+                    return sortKeyGet($scope);
+                }, function(newSortKey) {
+                    _this.sortKey = newSortKey;
+                });
+
+                this.sortBy = function(key) {
+                    if (key == this.sortKey) {
+                        // get back to the default state here (remove the sorting)
+                        // reverseSort flow: false (default) -> true -> sorketKey = '' (reset);
+                        if (this.reverseSort) {
+                            this.sortKey = '';
+                        } else {
+                            this.reverseSort = !this.reverseSort;
+                        }
+                    } else {
+                        this.reverseSort = false;
+                        this.sortKey = key;
+                    }
+
+                    if (reverseSortSet) {
+                        reverseSortSet($scope, this.reverseSort);
+                    }
+
+                    if (sortKeySet) {
+                        sortKeySet($scope, this.sortKey);
+                    }
+
+                    $scope.$eval($attrs.sortChange);
+                };
+            },
+        ],};
+    })
+    .directive('sortable', function() {
+        return {
+            restrict: 'A',
+            scope: false,
+            require: '^sortableSet',
+            link: function(scope, element, attr, ctrl) {
+                var key = attr.sortable;
+                element.addClass('sortable sort');
+
+                scope.$watch(function() { return ctrl.sortKey;}, function() {
+                    setClasses();
+                });
+
+                scope.$watch(function() { return ctrl.reverseSort;}, function() {
+                    setClasses();
+                });
+
+                element.on('click', function() {
+                    scope.$apply(function() {
+                        ctrl.sortBy(key);
+                    });
+                });
+
+                function setClasses() {
+                    if (ctrl.sortKey === key) {
+                        element.removeClass('no-sort');
+                        if (ctrl.reverseSort) {
+                            element.removeClass('sort-down').addClass('sort-up');
+                        } else {
+                            element.removeClass('sort-up').addClass('sort-down');
+                        }
+                    } else {
+                        element.removeClass('sort-up sort-down').addClass('no-sort');
+                    }
+                }
+            },
+        };
+    });
+
+angular.module('ev-fdm')
+    .directive('evStopEventPropagation', function () {
+        return {
+            restrict: 'A',
+            link: function (scope, element, attr) {
+                attr.evStopEventPropagation
+                    .split(',')
+                    .forEach(function (eventName) {
+                        element.bind(eventName.trim(), function (e) {
+                            e.stopPropagation();
+                        });
+                    });
+            }
+        };
+     });
+var module = angular.module('ev-fdm')
+.directive('evSubmit', ['$parse', function($parse) {
+    return {
+        restrict: 'A',
+        require: 'form',
+        controller: function($scope, $element, $attrs) {
+            var validables = [];
+
+            this.$addValidable = function(makeValidable) {
+                validables.push(makeValidable)
+            };
+
+            var fn = $parse($attrs['evSubmit'], /* interceptorFn */ null, /* expensiveChecks */ true);
+
+            $element.on('submit', function(event) {
+                var callback = function() {
+                    if ($scope.form.$valid) {
+                        fn($scope, {$event:event});
+                    }
+                };
+
+                validables.forEach(function(makeValidable) {
+                  makeValidable();
+                });
+
+                $scope.$apply(callback);
+            });
+        },
+        link: function(scope, element, attrs, form) {
+            scope.form = form;
+        }
+    };
+}]);
+
+(function () {
+    'use strict';
+    angular.module('ev-fdm')
+        .directive('evTab', function () {
+            return {
+                restrict: 'E',
+                transclude: true,
+                scope: {},
+                controller: function($scope, $element) {
+                    var panes = $scope.panes = [];
+
+
+                    $scope.select = function(pane) {
+                        angular.forEach(panes, function(pane) {
+                            pane.selected = false;
+                        });
+                        pane.selected = true;
+                    };
+
+
+                    this.addPane = function(pane) {
+                        if (panes.length === 0) { $scope.select(pane); }
+                        panes.push(pane);
+                    };
+
+                    var selectFuture = function (panes) {
+                        var futurePane;
+                        panes.some(function (pane) {
+                            var isSelected = $scope.isShowed(pane);
+                            if (isSelected) {
+                                futurePane = pane;
+                            }
+                            return isSelected;
+                        });
+                       return futurePane;
+                    };
+
+                    this.selectNext = function() {
+                        var selectedIndex = $scope.selectedIndex();
+                        var nextPanes = panes.slice(selectedIndex + 1);
+                        $scope.select(selectFuture(nextPanes) || panes[selectedIndex]);
+                    };
+
+                    this.selectPrevious = function() {
+                        var selectedIndex = $scope.selectedIndex();
+                        var previousPanes = panes.slice(0, selectedIndex).reverse();
+                        $scope.select(selectFuture(previousPanes) || panes[selectedIndex]);
+                    };
+
+                    $scope.selectedIndex = function() {
+                        for (var i = 0; i < panes.length; i++) {
+                            var pane = panes[i];
+
+                            if (pane.selected) {
+                                return i;
+                            }
+                        }
+                    };
+
+                    $scope.isShowed = function (pane) {
+                        return pane.alwaysShow || !!pane.tabShow;
+                    };
+                },
+                template:
+                    '<div class="tabbable ev-fixed-header">' +
+                        '<ul class="nav nav-tabs ev-header">' +
+                            '<li ng-repeat="pane in panes | filter:isShowed" ' +
+                                'ng-class="{active:pane.selected}" '+
+                                'tooltip="{{pane.tabTitle}}" tooltip-placement="bottom" tooltip-append-to-body="true">'+
+                                '<a href="" ng-click="select(pane); pane.tabClick()"> ' +
+                                    '<span ng-show="pane.tabIcon" class="icon {{pane.tabIcon}}"></span> '+
+                                    '<span ng-hide="pane.tabIcon">{{pane.tabTitle}}</span>'+
+                                '</a>' +
+                            '</li>' +
+                        '</ul>' +
+                        '<div class="tab-content ev-body" ng-transclude></div>' +
+                    '</div>',
+                replace: true
+            };
+        })
+        .directive('evPane', function() {
+            return {
+                require: '^evTab',
+                restrict: 'E',
+                transclude: true,
+                scope: {
+                    tabTitle: '@',
+                    tabIcon: '@',
+                    tabClick: '&',
+                    tabShow: '='
+                },
+                link: function(scope, element, attrs, tabsCtrl, transcludeFn) {
+                    scope.alwaysShow = true;
+                    if(angular.isDefined(attrs.tabShow)) {
+                        scope.alwaysShow = false;
+                    }
+
+                    var childScope;
+                    var transclude = function transclude (clone, transcludedScope) {
+                        childScope = transcludedScope;
+                        transcludedScope.$selectNext     = tabsCtrl.selectNext;
+                        transcludedScope.$selectPrevious = tabsCtrl.selectPrevious;
+                        var el = element.find('.transclude');
+                        el.children().remove();
+                        el.append(clone);
+                    };
+                    scope.$watch('selected', function (selected) {
+                        if (!angular.isDefined(attrs.tabReset)) {
+                            return;
+                        }
+                        if (selected) {
+                            transcludeFn(transclude);
+                        } else if (childScope) {
+                            childScope.$destroy();
+                        }
+                    });
+                    tabsCtrl.addPane(scope);
+                    transcludeFn(transclude);
+                },
+                template:
+                    '<div class="tab-pane" ng-class="{active: selected}">' +
+                        '<div class="section transclude"></div>' +
+                    '</div>',
+                replace: true
+            };
+        });
+}) ();
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('evTagList', function () {
+        return {
+            restrict: 'EA',
+            scope: {
+                elements: '=',
+                trackBy: '=?',
+                displayElement: '=?',
+                editable: '=',
+                className: '@',
+                maxElements: '=',
+                maxAlertMessage: '@',
+                onTagDeleted: '&',
+                iconRemoveClass: '@',
+            },
+            replace: true,
+            template:
+                '<ul class="list-inline {{ className }}">' +
+                    '<li ng-repeat="element in elements track by trackBy(element)" class="ev-animate-tag-list">' +
+                        '<span class="label label-default" >' +
+                            '{{ displayElement(element) }}' +
+                            '<button ng-show="editable" tabIndex="-1" type="button" class="label-btn" ' +
+                                'ng-click="remove($index)"><span class="{{ iconRemoveClass || \'icon-bin\' }}"></span></button> ' +
+                        '</span>' +
+                    '</li>' +
+                    '<li ng-show="editable && elements.length >= maxElements" class="text-orange no-margin">' +
+                        ' {{ maxAlertMessage }}' +
+                    '</li>' +
+                '</ul>',
+            link: function ($scope, elem, attrs) {
+                $scope.trackBy = $scope.trackBy || function(element) {
+                    return element.name;
+                };
+
+                $scope.displayElement = $scope.displayElement || function(element) {
+                    return element.name;
+                };
+
+                $scope.remove = function (index) {
+                    $scope.elements.splice(index, 1);
+                    $scope.onTagDeleted();
+                };
+            }
+        };
+    });
+
+'use strict';
+
+var module = angular.module('ev-fdm');
+
+module.directive('throttle', ['$timeout', function($timeout) {
+
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        priority: 1,
+        link: function(scope, element, attr, ctrl) {
+
+            var originalSetViewValue = ctrl.$setViewValue,
+                originalViewListeners = angular.copy(ctrl.$viewChangeListeners);
+
+            ctrl.$viewChangeListeners = [];
+
+            var throttleGuard;
+            ctrl.$setViewValue = function(value) {
+                var callViewListeners = ctrl.$modelValue !== value;
+
+                originalSetViewValue.apply(ctrl, [value]);
+
+                if (callViewListeners) {
+                    if(throttleGuard) {
+                        $timeout.cancel(throttleGuard);
+                    }
+
+                    throttleGuard = $timeout(function() {
+                        angular.forEach(originalViewListeners, function(listener) {
+                            try {
+                                listener();
+                            } catch(e) {
+                                $exceptionHandler(e);
+                            }
+                        });
+                    }, 600);
+                }
+
+            };
+        }
+    }
+}]);
+var module = angular.module('ev-fdm')
+/**
+ * DONE: makeValidable only happens after first blur or when ev-validable event occurs.
+ * TO DO: expose makeValidable, to provides validation directly
+ * on focus or on when a key is entered
+ */
+.directive('evValidable', function () {
+    return {
+        restrict: 'A',
+        require: ['ngModel', '^?evSubmit', '^?evFormGroup'],
+        link: function(scope, element, attrs, controllers) {
+            var model = controllers[0],
+                evSubmit = controllers[1],
+                evFormGroup = controllers[2];
+
+            var markAsBlurred = function() {
+                model.evBlurred = true;
+            };
+
+            var markAsChanged = function() {
+                model.evChanged = true;
+            };
+
+            var displayErrors = function() {
+                model.evHasError = !!(!model.$valid && model.evBlurred);
+                if (evFormGroup) {
+                    evFormGroup.toggleError(model.evHasError);
+                }
+            };
+
+            element.on('blur', function() {
+                scope.$evalAsync(function() {
+                    markAsBlurred();
+                    displayErrors();
+                });
+            });
+
+            model.$viewChangeListeners.push(function() {
+                markAsChanged();
+                displayErrors();
+            });
+
+            evSubmit && evSubmit.$addValidable(function() {
+                markAsBlurred();
+                markAsChanged();
+                displayErrors();
+            });
+        }
+    };
+});
+
+'use strict';
+
+angular.module('ev-fdm')
+    .directive('evValue', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '=',
+                noValue: '@',
+            },
+            templateUrl: 'ev-value.html'
+        };
+    });
 angular.module('ev-fdm')
   .directive('disableValidation', function() {
     return {
