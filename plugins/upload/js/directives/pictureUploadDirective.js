@@ -46,7 +46,25 @@ angular.module('ev-upload')
                                         '{{ "L\'url doit être une photo flickr" | i18n}}</p>' +
                                 '</div>' +
                             '</ng-form>' +
-                        '</td></tr></table>'+
+                        '</td></tr>'+
+                        '<tr><td style="width:114px"></td>'+
+                            '<td style="width:30px´; line-height: 36px;">'+
+                                '{{ "ou" | i18n }}' +
+                            '</td>'+
+                            '<td>'+
+                                '<ng-form novalidate name="shutterstock" ' +
+                                    'ng-class="{\'has-error\': shutterstock.$dirty && shutterstock.$invalid}">' +
+                                    '<input name="sUrl" placeholder="{{\'Lien Shutterstock\' | i18n}}" ' +
+                                        'ng-model="$parent.shutterstockUrl" ng-pattern="shutterstockUrlPattern" ' +
+                                        'class="form-control" ng-change="uploadShutterstockUrl(shutterstock)"/>' +
+                                        '<div ng-show="shutterstock.sUrl.$dirty && shutterstock.sUrl.$invalid">' +
+                                            '<p class="control-label" for="fUrl" data-ng-show="shutterstock.sUrl.$error.pattern">'+
+                                            '{{ "L\'url doit être une photo shutterstock" | i18n}}</p>' +
+                                        '</div>' +
+                                '</ng-form>' +
+                            '</td>'+
+                        '</tr>'+
+                    '</table>'+
                 '</div>' +
                 '<div class="ev-picture-uploading" ng-show="uploading">' +
                     '<div class="ev-picture-upload-label"> {{"Upload en cours"| i18n}} </div>' +
@@ -58,6 +76,7 @@ angular.module('ev-upload')
 
             link: function ($scope) {
                 $scope.flickrUrlPattern = /^(https\:\/\/)?www\.flickr\.com\/photos\/.*\/\d+.*$/;
+                $scope.shutterstockUrlPattern = /^(https\:\/\/)?www\.shutterstock\.com\/([a-z]{2})\/image-photo\/(.*)-\d+.*$/;
                 $scope.settings = {
                     acceptedFiles: 'image/*',
                     url: $scope.url
@@ -87,6 +106,31 @@ angular.module('ev-upload')
                         .success(function () {
                             flickrForm.$setPristine();
                             $scope.flickrUrl = "";
+                        });
+
+                    $scope.newUpload(uploadPromise);
+                    $scope.upload = {
+                        done: 0,
+                        total: 1,
+                        progress: 0
+                    };
+                };
+
+                $scope.uploadShutterstockUrl = function (shutterstockForm) {
+                    if (!shutterstockForm.$valid || !$scope.shutterstockUrl) {
+                        return;
+                    }
+                    console.log(shutterstockForm);
+                    var shutterstockUrl = shutterstockForm.sUrl.$modelValue;
+                    var uploadPromise = $http.post($scope.url, {'shutterstock-url': shutterstockUrl});
+                    uploadPromise
+                        .success(function (pictureUploaded) {
+                            var picture = pictureUploaded.data[0];
+                            $scope.addPicture(picture);
+                        })
+                        .success(function () {
+                            shutterstockForm.$setPristine();
+                            $scope.shutterstockUrl = "";
                         });
 
                     $scope.newUpload(uploadPromise);
