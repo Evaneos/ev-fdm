@@ -10,7 +10,7 @@
   "dependencies": {
     "jquery": "~2.0.3",
     "angular": "1.2.18",
-    "angular-ui-router": "git@github.com:Evaneos/ui-router#view-prevent-update",
+    "angular-ui-router": "Evaneos/ui-router#view-prevent-update",
     "angular-animate": "1.2.18",
     "angular-ui-select2": "~0.0.2",
     "angular-loading-bar": "~0.6.0",
